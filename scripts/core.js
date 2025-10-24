@@ -1,10 +1,12 @@
 // ==========================================================
-// 🌙 Tema e aparência
+// 🌙 Tema com alternância suave e correção de fundo
 // ==========================================================
 const body = document.body;
 const themeBtn = document.getElementById('btn-theme');
 
-function applyTheme(mode) {
+function applyTheme(mode, animate = false) {
+  if (animate) body.classList.add('fading');
+
   if (mode === 'light') {
     body.classList.add('light');
     localStorage.setItem('liora_theme', 'light');
@@ -14,20 +16,25 @@ function applyTheme(mode) {
     localStorage.setItem('liora_theme', 'dark');
     themeBtn.textContent = '🌙';
   }
+
+  // força o repaint para evitar tela branca
+  body.style.backgroundColor = getComputedStyle(document.documentElement)
+    .getPropertyValue('--bg');
+  body.offsetHeight; // reflow forçado
+
+  if (animate) setTimeout(() => body.classList.remove('fading'), 200);
 }
 
+// Alternar ao clicar
 themeBtn?.addEventListener('click', () => {
   const current = body.classList.contains('light') ? 'light' : 'dark';
-  applyTheme(current === 'light' ? 'dark' : 'light');
+  const next = current === 'light' ? 'dark' : 'light';
+  applyTheme(next, true);
 });
 
-applyTheme(localStorage.getItem('liora_theme') || 'dark');
-
-function blink() {
-  body.classList.add('fading');
-  setTimeout(() => body.classList.remove('fading'), 150);
-}
-blink();
+// Aplica tema salvo (ou escuro padrão)
+const saved = localStorage.getItem('liora_theme');
+applyTheme(saved || 'dark');
 
 // ==========================================================
 // 🧩 Estado global básico
@@ -55,7 +62,7 @@ const updateCtx = () =>
   (els.ctx.textContent = `${state.materialTexto ? 'Material enviado' : state.tema || 'Sem tema'} · ${state.dias} sessões`);
 
 // ==========================================================
-// 📚 Leitura de arquivos locais
+// 📚 Leitura de arquivos locais (TXT, PDF, DOCX)
 // ==========================================================
 async function readFileContent(file) {
   const ext = (file.name.split('.').pop() || '').toLowerCase();
@@ -105,7 +112,7 @@ els.inpFile?.addEventListener('change', async e => {
 });
 
 // ==========================================================
-// 🧠 Geração simples do plano de estudo
+// 🧠 Geração do plano de estudo
 // ==========================================================
 function extrairTopicos(texto, tema, n) {
   let candidatos = [];
