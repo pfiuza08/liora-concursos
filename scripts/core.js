@@ -65,60 +65,56 @@ function updateCtx() {
 }
 
 // ==========================================================
-// 🧩 Normalizar para detectar melhor o tipo
+// 🧩 Normalização + Detecção inteligente de tipo de material
 // ==========================================================
-
 function normalizarTextoParaPrograma(texto) {
   return texto
-    // Quebra entre numeração e novo item
     .replace(/(\d+)\s+(?=[A-ZÁÉÍÓÚÂÊÔÃÕ])/g, '\n$1 ')
-    // Quebra após ponto seguido de número ou letra maiúscula
     .replace(/\. (?=\d|\b[A-ZÁÉÍÓÚÂÊÔÃÕ])/g, '.\n')
-    // Quebra após dois pontos antes de palavra com inicial maiúscula
     .replace(/:\s+(?=[A-ZÁÉÍÓÚÂÊÔÃÕ])/g, ':\n')
-    // Quebra entre “;” e novo item
     .replace(/;\s+(?=[A-ZÁÉÍÓÚÂÊÔÃÕ])/g, ';\n')
-    // Remove múltiplas quebras
     .replace(/\n{2,}/g, '\n')
     .trim();
 }
 
-
-// ==========================================================
-// 🧩 Detecção do tipo de material
-// ==========================================================
 function detectarTipoMaterial(texto) {
+  if (!texto || texto.length < 50) return 'conteudo';
+
   const normalizado = normalizarTextoParaPrograma(texto);
   const linhas = normalizado.split(/\n+/).map(l => l.trim()).filter(Boolean);
   if (!linhas.length) return 'conteudo';
 
-  let linhasCurtas = 0;
-  let linhasComMarcador = 0;
-  let linhasComPontoFinal = 0;
-  let verbosProvaveis = 0;
-
-  const verboRegex = /\b(estudar|analisar|compreender|aprender|definir|conceituar|explicar|descrever|avaliar|aplicar|entender|identificar|reconhecer)\b/i;
+  let curtas = 0;
+  let marcadas = 0;
+  let comPonto = 0;
+  let verbais = 0;
+  const verboRegex = /\b(estudar|analisar|compreender|aprender|definir|conceituar|explicar|descrever|avaliar|aplicar|entender|identificar|reconhecer|caracteriza|refere|corresponde)\b/i;
 
   for (const l of linhas) {
     const palavras = l.split(/\s+/);
-    if (palavras.length <= 8) linhasCurtas++;
-    if (/^[\d•\-–]/.test(l)) linhasComMarcador++;
-    if (/[.!?]$/.test(l)) linhasComPontoFinal++;
-    if (verboRegex.test(l)) verbosProvaveis++;
+    if (palavras.length <= 8) curtas++;
+    if (/^[\d•\-–]/.test(l)) marcadas++;
+    if (/[.!?]$/.test(l)) comPonto++;
+    if (verboRegex.test(l)) verbais++;
   }
 
-  // Heurística de decisão
-  const proporcaoCurtas = linhasCurtas / linhas.length;
-  const proporcaoMarcadas = linhasComMarcador / linhas.length;
-  const proporcaoPontos = linhasComPontoFinal / linhas.length;
-  const proporcaoVerbos = verbosProvaveis / linhas.length;
+  const pCurtas = curtas / linhas.length;
+  const pMarcadas = marcadas / linhas.length;
+  const pComPonto = comPonto / linhas.length;
+  const pVerbais = verbais / linhas.length;
 
-  if ((proporcaoCurtas > 0.65 && proporcaoMarcadas > 0.25 && proporcaoPontos < 0.3) || proporcaoVerbos < 0.05) {
+  // 🧮 Nova lógica equilibrada:
+  // programa → muitas linhas curtas, baixa pontuação e poucos verbos
+  // conteúdo → frases longas, verbos e pontuação
+  const pontuacaoPrograma = (pCurtas * 0.5 + pMarcadas * 0.4) - (pComPonto * 0.3 + pVerbais * 0.4);
+
+  if (pontuacaoPrograma > 0.15 && pVerbais < 0.2) {
     return 'programa';
+  } else {
+    return 'conteudo';
   }
-
-  return 'conteudo';
 }
+
 
 
 // ==========================================================
