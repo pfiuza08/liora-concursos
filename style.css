@@ -417,4 +417,106 @@ label.block:hover {
   color: var(--brand);
   transition: color 0.25s ease;
 }
+/* ==========================================================
+   🧭 Cabeçalho — Refinamento visual e interativo
+   ========================================================== */
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 1.5rem;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid var(--stroke);
+  padding-bottom: 1rem;
+  transition: border-color 0.3s ease;
+}
+
+header .flex.items-center.gap-3 {
+  align-items: flex-start;
+}
+
+header h1 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  color: var(--fg);
+  margin-bottom: 0.2rem;
+}
+
+header p {
+  font-size: 0.85rem;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+/* Logo da Liora */
+header .w-10.h-10 {
+  background: var(--brand);
+  color: #fff;
+  font-weight: 800;
+  font-size: 1.2rem;
+  border-radius: 14px;
+  box-shadow: 0 0 10px rgba(196,75,4,0.5);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+header .w-10.h-10:hover {
+  transform: rotate(-8deg) scale(1.05);
+  box-shadow: 0 0 14px rgba(196,75,4,0.7);
+}
+
+/* Chips do cabeçalho */
+header .chip {
+  font-size: 0.8rem;
+  font-weight: 500;
+  border-radius: 999px;
+  background: transparent;
+  border: 1px solid var(--stroke);
+  transition: all 0.3s ease;
+}
+header .chip:hover {
+  background: var(--brand);
+  color: #fff;
+  transform: translateY(-2px);
+}
+
+/* Ícone de tema */
+#btn-theme {
+  font-size: 1rem;
+  transition: transform 0.4s ease, color 0.3s ease;
+  cursor: pointer;
+}
+#btn-theme:hover {
+  transform: rotate(20deg);
+  color: var(--brand);
+}
+
+/* Dot de status online */
+.dot {
+  width: 9px;
+  height: 9px;
+  background: #10b981;
+  border-radius: 50%;
+  margin-left: 0.5rem;
+  box-shadow: 0 0 6px rgba(16,185,129,0.7);
+  animation: pulse 1.8s infinite ease-in-out;
+}
+@keyframes pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.3); opacity: 0.6; }
+}
+
+/* Efeito ao alternar tema */
+body.fading header,
+body.fading footer {
+  opacity: 0.6;
+  transition: opacity 0.3s ease;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  header h1 { font-size: 1.1rem; }
+  header p { font-size: 0.8rem; }
+  header .chip { font-size: 0.75rem; padding: 0.3rem 0.6rem; }
+}
 
