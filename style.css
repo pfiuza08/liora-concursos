@@ -613,43 +613,47 @@ body.fading footer {
    📁 Área de Upload — Refinamento visual e feedback
    ========================================================== */
 .upload-zone {
+  position: relative;
   border: 2px dashed var(--stroke);
   border-radius: 1rem;
   padding: 1.2rem;
   text-align: center;
   cursor: pointer;
-  transition: border-color 0.3s ease, background 0.3s ease, transform 0.2s ease;
+  transition: border-color 0.3s ease, background 0.3s ease;
   background: rgba(255,255,255,0.02);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 .upload-zone:hover {
   border-color: var(--brand);
   background: rgba(196,75,4,0.05);
-  transform: translateY(-2px);
 }
-
-#upload-icon {
-  font-size: 2rem;
-  margin-bottom: 0.4rem;
-  opacity: 0.9;
+.upload-zone input[type="file"] {
+  opacity: 0;
+  position: absolute;
+  inset: 0;
+  cursor: pointer;
 }
-
-#upload-text {
-  font-size: 0.9rem;
-  color: var(--muted);
-  margin: 0;
-}
-
 .upload-zone.dragover {
   border-color: var(--brand);
   background: rgba(196,75,4,0.1);
   box-shadow: 0 0 10px rgba(196,75,4,0.3);
 }
-
+#upload-icon {
+  font-size: 2rem;
+  margin-bottom: 0.4rem;
+  opacity: 0.9;
+}
+#upload-text {
+  font-size: 0.9rem;
+  color: var(--muted);
+  margin: 0;
+}
 #file-name {
   font-size: 0.85rem !important;
   color: var(--brand);
   font-weight: 500;
   margin-top: 0.5rem;
 }
-
-
