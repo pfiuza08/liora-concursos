@@ -22,15 +22,28 @@ body.light {
   --shadow:0 2px 10px rgba(0,0,0,0.1);
 }
 
+/* ==========================================================
+   🩶 Correção: garantir tema escuro como padrão
+   ========================================================== */
+body.dark {
+  --brand:#c44b04;
+  --bg:#0b0b0b;
+  --fg:#ffffff;
+  --card:#151515;
+  --muted:#bfbfbf;
+  --stroke:#252525;
+  --shadow:0 2px 8px rgba(0,0,0,0.4);
+}
+
 /* Corpo e estrutura */
 html, body {
   height:100%;
+  background:var(--bg);
+  color:var(--fg);
   transition: background-color 0.4s ease, color 0.4s ease;
 }
 
 body {
-  background:var(--bg);
-  color:var(--fg);
   font-family:'Inter', ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", sans-serif;
   line-height:1.7;
   opacity:1;
@@ -215,15 +228,6 @@ body.dark select option {
   to { transform: rotate(360deg); }
 }
 
-/* Rodapé */
-footer {
-  opacity: 0.75;
-  transition: opacity 0.3s ease;
-}
-footer:hover {
-  opacity: 1;
-}
-
 /* ==========================================================
    💬 Caixa de sugestão interativa — Liora
    ========================================================== */
@@ -281,3 +285,11 @@ footer:hover {
   to { opacity: 1; transform: translateY(0); }
 }
 
+/* Rodapé */
+footer {
+  opacity: 0.75;
+  transition: opacity 0.3s ease;
+}
+footer:hover {
+  opacity: 1;
+}
