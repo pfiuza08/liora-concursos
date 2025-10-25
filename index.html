@@ -3,123 +3,92 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Liora Concursos — Estudo Inteligente</title>
-  <meta name="description" content="Liora Concursos: ambiente inteligente para estudar com foco, leveza e simulados no formato dos principais concursos públicos." />
+  <title>Liora — Espaço de Estudo</title>
+  <meta name="description" content="Liora é um espaço inteligente e tranquilo de estudo guiado, com temas personalizáveis e simulados interativos." />
 
-   <!-- Biblioteca PDF.js com worker configurado -->
+  <!-- Tailwind -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- PDF.js + Worker configurado -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.14.305/pdf.min.js"></script>
   <script>
-    // Configura o caminho do worker para execução no Vercel
     pdfjsLib.GlobalWorkerOptions.workerSrc =
-    "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.14.305/pdf.worker.min.js";
+      "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.14.305/pdf.worker.min.js";
   </script>
 
-  
-   <!-- Tailwind para layout -->
-   <script src="https://cdn.tailwindcss.com"></script>
-
-   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.14.305/pdf.min.js"></script>
- 
-  <!-- Fallback escuro para evitar tela branca -->
-  <style>
-    html,body{background:#0b0b0b;color:#fff;margin:0;padding:0;}
-  </style>
-
-  <!-- CSS principal -->
-  <link rel="stylesheet" href="style.css?v=4" />
+  <!-- Estilos principais -->
+  <link rel="stylesheet" href="/style.css" />
 </head>
 <body class="dark">
   <header class="max-w-5xl mx-auto px-4 pt-8">
     <div class="flex items-center justify-between">
       <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-2xl flex items-center justify-center text-white font-black" style="background:#c44b04;">Li</div>
+        <div class="w-10 h-10 rounded-2xl flex items-center justify-center text-white font-black" style="background:var(--brand)">Li</div>
         <div>
-          <h1 class="text-xl font-bold">Liora Concursos <span class="dot" title="online"></span></h1>
+          <h1 class="text-xl font-bold">Liora — Espaço de Estudo <span class="dot" title="online"></span></h1>
           <p class="text-sm text-[var(--muted)]">Ambiente inteligente para aprender com foco.</p>
         </div>
       </div>
       <div class="flex items-center gap-2">
         <button id="btn-theme" class="chip" title="Alternar tema">🌙</button>
+        <span class="chip">Sessão salva</span>
         <button id="btn-reset" class="chip" title="Limpar estado"><span class="kbd">Reset</span></button>
       </div>
     </div>
   </header>
 
   <main class="max-w-5xl mx-auto px-4 py-8 grid lg:grid-cols-3 gap-6">
+    <!-- Painel esquerdo -->
     <section class="lg:col-span-1 card p-5">
       <h2 class="section-title mb-1">Configurar estudo</h2>
-      <p class="text-sm text-[var(--muted)] mb-4">
-        Escolha um tema ou envie seu material (PDF, TXT, DOCX) para criar um plano personalizado com sessões e simulados.
-      </p>
+      <p class="text-sm text-[var(--muted)] mb-4">Escolha um tema ou envie seu material para criar um plano personalizado com sessões e desafios.</p>
 
       <label class="block text-sm font-medium mb-1">Tema</label>
-      <input id="inp-tema" type="text" placeholder="Ex.: Direito Administrativo" class="mb-3" />
+      <input id="inp-tema" type="text" placeholder="Ex.: IA Generativa, História, Biologia" class="mb-3" />
 
       <div class="text-center my-2 text-xs text-[var(--muted)]">ou</div>
 
-    <label class="block text-sm font-medium mb-1">Upload de material</label>
+      <label class="block text-sm font-medium mb-1">Upload de material</label>
+      <label id="upload-zone" class="upload-zone">
+        <div id="upload-icon">📁</div>
+        <p id="upload-text">Clique aqui ou arraste um arquivo (.txt, .pdf)</p>
+        <div id="upload-spinner"></div>
+        <input id="inp-file" type="file" accept=".pdf,.txt" />
+      </label>
+      <p id="file-name" class="text-[11px] text-[var(--muted)] mt-2"></p>
+      <p id="file-type" class="text-[12px] text-[var(--muted)] mt-1 italic"></p>
+      <p class="text-[11px] text-[var(--muted)] mt-1">Arquivos TXT e PDF são suportados neste protótipo.</p>
 
-    <!-- Zona de upload com label clicável -->
-     <label id="upload-zone" class="upload-zone">
-     <div id="upload-icon">📁</div>
-      <p id="upload-text"> <div id="upload-spinner"></div>Clique aqui ou arraste um arquivo (.txt, .pdf)</p>
-     <input id="inp-file" type="file" accept=".pdf,.txt" />
-     </label>
-
-    <p id="file-name" class="text-[11px] text-[var(--muted)] mt-2"></p>
-    <p class="text-[11px] text-[var(--muted)]">Arquivos TXT e PDF são suportados neste protótipo.</p>
-
-      <div class="mt-4">
-        <label class="block text-sm font-medium mb-1">Sessões</label>
-        <select id="sel-dias">
-          <option>5</option>
-          <option>7</option>
-          <option>10</option>
-        </select>
+      <div class="mt-4 grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-sm font-medium mb-1">Sessões</label>
+          <select id="sel-dias">
+            <option>5</option>
+            <option>7</option>
+            <option>10</option>
+          </select>
+        </div>
       </div>
 
       <button id="btn-gerar" class="btn w-full mt-5">Gerar plano</button>
       <p id="status" class="text-xs text-[var(--muted)] mt-2"></p>
     </section>
 
+    <!-- Painel direito -->
     <section class="lg:col-span-2 card p-5">
       <div class="flex items-center justify-between mb-3">
         <h2 class="section-title">Seu plano de estudo</h2>
         <div class="text-sm text-[var(--muted)]" id="ctx"></div>
       </div>
       <div id="plano" class="space-y-3"></div>
-
-      <div class="mt-8">
-        <h2 class="section-title mb-2">Simulado</h2>
-        <div class="flex gap-3 mb-3">
-          <select id="sel-formato">
-            <option value="CESPE">CESPE</option>
-            <option value="FGV">FGV</option>
-            <option value="VUNESP">VUNESP</option>
-          </select>
-          <select id="sel-qtd">
-            <option>5</option>
-            <option>10</option>
-            <option>15</option>
-          </select>
-          <button id="btn-simulado" class="btn flex-1">Gerar Simulado</button>
-        </div>
-        <div class="bar mb-2"><div id="bar-progress"></div></div>
-        <p id="resultado" class="text-sm text-[var(--muted)] mb-3"></p>
-        <div id="simulado" class="space-y-4"></div>
-      </div>
     </section>
   </main>
 
   <footer class="max-w-5xl mx-auto px-4 pb-10 text-xs text-[var(--muted)] text-center">
-    <p>Liora Concursos — um ambiente de estudo guiado e inspirador. © Intellih</p>
+    <p>Liora — um ambiente de estudo guiado e inspirador. © Intellih</p>
   </footer>
 
-  <!-- Scripts -->
+  <!-- Scripts principais -->
   <script src="/scripts/core.js" defer></script>
-  <script src="/scripts/concursos.js" defer></script>
-
-
-  
 </body>
 </html>
