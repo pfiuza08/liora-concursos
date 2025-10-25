@@ -211,38 +211,30 @@ const zone = document.getElementById('upload-zone');
 const inputFile = document.getElementById('inp-file');
 const fileName = document.getElementById('file-name');
 
+// Garante bloqueio de comportamento padrão em qualquer contexto
+['dragenter', 'dragover', 'dragleave', 'drop'].forEach(evt =>
+  document.addEventListener(evt, e => e.preventDefault(), true)
+);
+
 if (zone && inputFile) {
-  // Garante compatibilidade total com navegadores modernos
-  zone.addEventListener('click', (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (inputFile) inputFile.click();
-  });
-
-  // Arrastar e soltar
-  zone.addEventListener('dragover', e => {
-    e.preventDefault();
-    zone.classList.add('dragover');
-  });
+  zone.addEventListener('dragover', () => zone.classList.add('dragover'));
   zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
-
-  // Soltar arquivo
   zone.addEventListener('drop', e => {
     e.preventDefault();
     zone.classList.remove('dragover');
-    const file = e.dataTransfer.files[0];
+    const file = e.dataTransfer.files?.[0];
     if (file) {
       inputFile.files = e.dataTransfer.files;
       handleFileSelection(file);
     }
   });
 
-  // Selecionar arquivo manualmente
   inputFile.addEventListener('change', e => {
     const file = e.target.files[0];
     if (file) handleFileSelection(file);
   });
 }
+
 
 
 // Função para feedback de arquivo
