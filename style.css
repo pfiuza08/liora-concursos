@@ -177,3 +177,120 @@ footer:hover { opacity:1; }
   .card { padding:1rem; }
   h1 { font-size:1.25rem; }
 }
+/* ==========================================================
+   🧠 Painel de Simulado — Refinamento visual
+   ========================================================== */
+
+/* Área principal do simulado */
+#simulado {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  margin-top: 0.5rem;
+}
+
+/* Cartão da questão */
+.qcard {
+  background: var(--card);
+  border: 1px solid var(--stroke);
+  border-radius: 1rem;
+  padding: 1rem 1.2rem 1.2rem 1.2rem;
+  box-shadow: var(--shadow);
+  transition: all 0.3s ease;
+}
+.qcard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.45);
+}
+
+/* Enunciado da questão */
+.qcard .text-sm.font-semibold {
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.5;
+  color: var(--fg);
+}
+
+/* Alternativas */
+.opt {
+  border: 1px solid var(--stroke);
+  border-radius: 8px;
+  padding: 0.7rem 0.9rem;
+  cursor: pointer;
+  transition: background 0.25s ease, border-color 0.25s ease, transform 0.1s ease;
+  line-height: 1.5;
+}
+.opt:hover {
+  background: rgba(196, 75, 4, 0.07);
+  border-color: var(--brand);
+  transform: translateX(3px);
+}
+
+/* Quando marcada */
+.opt.correct {
+  border-color: #10b981;
+  background: rgba(16, 185, 129, 0.08);
+}
+.opt.wrong {
+  border-color: #ef4444;
+  background: rgba(239, 68, 68, 0.08);
+}
+
+/* Letra da alternativa */
+.opt span {
+  font-weight: 600;
+  width: 1.5rem;
+  display: inline-block;
+  color: var(--muted);
+}
+
+/* Explicação da questão */
+[id^="exp-"] {
+  border-left: 3px solid var(--brand);
+  padding-left: 0.6rem;
+  margin-top: 0.7rem;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  opacity: 0.85;
+  color: var(--muted);
+  transition: opacity 0.3s ease;
+}
+
+/* Barra de progresso */
+.bar {
+  width: 100%;
+  height: 12px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 9999px;
+  overflow: hidden;
+  border: 1px solid var(--stroke);
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.2);
+}
+.bar > div {
+  height: 100%;
+  background: linear-gradient(90deg, var(--brand), #f77f3f);
+  width: 0%;
+  transition: width .4s ease;
+  border-radius: 9999px;
+}
+
+/* Texto de resultado */
+#resultado {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--muted);
+  letter-spacing: 0.3px;
+  margin-bottom: 0.75rem;
+}
+
+/* Animação de fade nas explicações */
+.qcard .hidden {
+  display: none;
+}
+.qcard .fade-in {
+  animation: fadeIn 0.4s ease forwards;
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-2px); }
+  to { opacity: 1; transform: translateY(0); }
+}
