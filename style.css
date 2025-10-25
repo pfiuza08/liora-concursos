@@ -519,4 +519,94 @@ body.fading footer {
   header p { font-size: 0.8rem; }
   header .chip { font-size: 0.75rem; padding: 0.3rem 0.6rem; }
 }
+/* ==========================================================
+   📘 Painel de Plano de Estudo — Refinamento visual
+   ========================================================== */
+
+/* Área principal do plano */
+#plano {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  margin-top: 0.75rem;
+}
+
+/* Card de sessão */
+.session-card {
+  background: var(--card);
+  border: 1px solid var(--stroke);
+  border-radius: 1rem;
+  padding: 1rem 1.2rem 1.2rem 1.2rem;
+  box-shadow: var(--shadow);
+  transition: transform 0.25s ease, box-shadow 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+.session-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+}
+
+/* Número da sessão */
+.session-card::before {
+  content: attr(data-dia);
+  position: absolute;
+  top: 0.8rem;
+  right: 1rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--brand);
+  opacity: 0.7;
+}
+
+/* Título da sessão */
+.session-card h3 {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--fg);
+  margin-bottom: 0.4rem;
+}
+
+/* Tópico da sessão */
+.session-card .topico {
+  color: var(--brand);
+  font-weight: 500;
+  font-size: 0.9rem;
+  margin-bottom: 0.4rem;
+}
+
+/* Descrição da sessão */
+.session-card p {
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: var(--muted);
+}
+
+/* Indicador lateral de progresso */
+.session-card::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: linear-gradient(180deg, var(--brand), transparent);
+  opacity: 0.6;
+  border-radius: 4px 0 0 4px;
+}
+
+/* Contexto (subtítulo acima do plano) */
+#ctx {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--muted);
+  letter-spacing: 0.3px;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  #plano { gap: 1rem; }
+  .session-card { padding: 1rem; }
+  .session-card h3 { font-size: 1rem; }
+}
 
