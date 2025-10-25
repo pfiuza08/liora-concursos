@@ -1,5 +1,5 @@
 // ==========================================================
-// 🎯 Liora Concursos — Módulo de Simulados Inteligentes
+// 🎯 Liora Concursos — Simulados adaptativos (conteúdo/programa)
 // ==========================================================
 
 // Referências principais do DOM
@@ -14,7 +14,7 @@ const resultado = document.getElementById('resultado');
 state.simulado = { questoes: [], respostas: {} };
 
 // ==========================================================
-// 🔤 Processamento básico do texto
+// 🔤 Utilitários básicos
 // ==========================================================
 function tokenize(text) {
   return (text || '')
@@ -48,38 +48,48 @@ function sample(arr) {
 }
 
 // ==========================================================
-// 🧮 Geração de questões específicas
+// 🧠 Geração de questões adaptadas ao tipo de material
 // ==========================================================
-function gerarQuestoesConcurso(texto, qtd, formato = 'FGV') {
-  const kws = keywords(texto, Math.max(10, qtd * 3));
-  if (!kws.length) kws.push('tema principal');
+function gerarQuestoesConcurso(texto, qtd, formato = 'FGV', tipo = 'conteudo') {
+  let base = [];
+
+  if (tipo === 'programa') {
+    // Divide o texto em linhas curtas (tópicos)
+    base = texto.split(/\n+/).map(l => l.trim()).filter(Boolean);
+  } else {
+    // Extrai palavras-chave do texto
+    base = keywords(texto, Math.max(10, qtd * 3));
+  }
+
+  if (!base.length) base = ['tema principal'];
 
   const moldes = [
     k => `Sobre o tema “${k}”, assinale a alternativa correta.`,
-    k => `No contexto do conteúdo estudado, “${k}” está relacionado a:`,
-    k => `Acerca de “${k}”, é correto afirmar que:`,
-    k => `Assinale a alternativa que melhor define “${k}”.`
-  ];
-
-  const distratores = [
-    k => `Apresenta conceito incorreto de “${k}”.`,
-    k => `Confunde “${k}” com outro tema.`,
-    k => `Afirmação genérica e incompleta sobre “${k}”.`,
-    k => `Aplica “${k}” em contexto inadequado.`
+    k => `No contexto de concursos públicos, o termo “${k}” está relacionado a:`,
+    k => `Acerca do assunto “${k}”, é correto afirmar que:`,
+    k => `Assinale a alternativa que melhor define o conceito de “${k}”.`
   ];
 
   const corretas = [
     k => `Definição adequada de “${k}”, conforme o conteúdo estudado.`,
-    k => `Explica corretamente o papel de “${k}”.`,
-    k => `Aplica “${k}” de forma apropriada no contexto proposto.`
+    k => `Explica corretamente o conceito de “${k}”.`,
+    k => `Aplica “${k}” de forma apropriada em um contexto prático.`
+  ];
+
+  const distratores = [
+    k => `Apresenta conceito incorreto sobre “${k}”.`,
+    k => `Confunde “${k}” com outro tema do edital.`,
+    k => `Define “${k}” de forma incompleta.`,
+    k => `Aplica “${k}” em contexto inadequado.`
   ];
 
   const questoes = [];
 
   for (let i = 0; i < qtd; i++) {
-    const k = kws[i % kws.length];
+    const k = base[i % base.length];
     const enunciado = sample(moldes)(k);
     const corretaIdx = Math.floor(Math.random() * 5);
+
     let alternativas = [];
 
     if (formato === 'CESPE') {
@@ -106,7 +116,7 @@ function gerarQuestoesConcurso(texto, qtd, formato = 'FGV') {
       enunciado,
       alternativas,
       correta: corretaIdx,
-      explicacao: `A resposta correta reflete o uso adequado de “${k}”.`
+      explicacao: `A resposta correta reflete o uso adequado de “${k}” conforme o tema do edital.`
     });
   }
 
@@ -114,7 +124,7 @@ function gerarQuestoesConcurso(texto, qtd, formato = 'FGV') {
 }
 
 // ==========================================================
-// 🧩 Renderização das questões e interatividade
+// 🧩 Renderização das questões
 // ==========================================================
 function renderSimulado() {
   const qs = state.simulado.questoes || [];
@@ -199,17 +209,18 @@ function atualizarResultado() {
 }
 
 // ==========================================================
-// 🚀 Geração do simulado
+// 🚀 Geração do simulado adaptativo
 // ==========================================================
 btnSim?.addEventListener('click', () => {
   const qtd = parseInt(selQtd.value, 10) || 5;
   const formato = selFormato.value || 'FGV';
+  const tipo = state.tipoMaterial || 'conteudo';
   const base =
     state.materialTexto && state.materialTexto.length > 50
       ? state.materialTexto
       : state.tema || 'Concurso público';
 
-  state.simulado.questoes = gerarQuestoesConcurso(base, qtd, formato);
+  state.simulado.questoes = gerarQuestoesConcurso(base, qtd, formato, tipo);
   state.simulado.respostas = {};
   renderSimulado();
 });
