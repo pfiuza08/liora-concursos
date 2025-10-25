@@ -8,6 +8,7 @@
     { "src": "scripts/concursos.js", "use": "@vercel/static" }
   ],
   "routes": [
-    { "src": "/(.*)", "dest": "/index.html" }
+    { "src": "/(.*)\\.(css|js|png|jpg|svg|json|ico|pdf)", "dest": "/$1.$2" },
+    { "src": "/", "dest": "/index.html" }
   ]
 }
