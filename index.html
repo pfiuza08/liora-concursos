@@ -50,8 +50,16 @@
       <div class="text-center my-2 text-xs text-[var(--muted)]">ou</div>
 
       <label class="block text-sm font-medium mb-1">Upload de material</label>
-      <input id="inp-file" type="file" accept=".pdf,.txt,.doc,.docx" class="text-sm" />
-      <p class="text-[11px] text-[var(--muted)] mt-2">Arquivos TXT oferecem melhor resultado neste protótipo.</p>
+
+       <div id="upload-zone" class="upload-zone">
+       <div id="upload-icon">📁</div>
+      <p id="upload-text">Clique ou arraste um arquivo (.txt, .pdf)</p>
+      <input id="inp-file" type="file" accept=".pdf,.txt" hidden />
+     </div>
+
+   <p id="file-name" class="text-[11px] text-[var(--muted)] mt-2"></p>
+   <p class="text-[11px] text-[var(--muted)]">Arquivos TXT e PDF são suportados neste protótipo.</p>
+
 
       <div class="mt-4">
         <label class="block text-sm font-medium mb-1">Sessões</label>
