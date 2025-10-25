@@ -49,13 +49,17 @@
 
       <div class="text-center my-2 text-xs text-[var(--muted)]">ou</div>
 
-      <label class="block text-sm font-medium mb-1">Upload de material</label>
+    <label class="block text-sm font-medium mb-1">Upload de material</label>
 
-       <div id="upload-zone" class="upload-zone">
-       <div id="upload-icon">📁</div>
-      <p id="upload-text">Clique ou arraste um arquivo (.txt, .pdf)</p>
-      <input id="inp-file" type="file" accept=".pdf,.txt" hidden />
-     </div>
+    <!-- Zona de upload com label clicável -->
+     <label id="upload-zone" class="upload-zone">
+     <div id="upload-icon">📁</div>
+      <p id="upload-text">Clique aqui ou arraste um arquivo (.txt, .pdf)</p>
+     <input id="inp-file" type="file" accept=".pdf,.txt" />
+     </label>
+
+    <p id="file-name" class="text-[11px] text-[var(--muted)] mt-2"></p>
+    <p class="text-[11px] text-[var(--muted)]">Arquivos TXT e PDF são suportados neste protótipo.</p>
 
    <p id="file-name" class="text-[11px] text-[var(--muted)] mt-2"></p>
    <p class="text-[11px] text-[var(--muted)]">Arquivos TXT e PDF são suportados neste protótipo.</p>
