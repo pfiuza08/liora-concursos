@@ -65,7 +65,7 @@ function updateCtx() {
 }
 
 // ==========================================================
-// 🧩 Normalização + Detecção inteligente de tipo de material
+// 🧩 Normalização e detecção semântica de tipo de material
 // ==========================================================
 function normalizarTextoParaPrograma(texto) {
   return texto
@@ -78,17 +78,15 @@ function normalizarTextoParaPrograma(texto) {
 }
 
 function detectarTipoMaterial(texto) {
-  if (!texto || texto.length < 50) return 'conteudo';
+  if (!texto || texto.length < 80) return 'conteudo';
 
   const normalizado = normalizarTextoParaPrograma(texto);
   const linhas = normalizado.split(/\n+/).map(l => l.trim()).filter(Boolean);
   if (!linhas.length) return 'conteudo';
 
-  let curtas = 0;
-  let marcadas = 0;
-  let comPonto = 0;
-  let verbais = 0;
-  const verboRegex = /\b(estudar|analisar|compreender|aprender|definir|conceituar|explicar|descrever|avaliar|aplicar|entender|identificar|reconhecer|caracteriza|refere|corresponde)\b/i;
+  let curtas = 0, marcadas = 0, comPonto = 0, verbais = 0, conectivos = 0;
+  const verboRegex = /\b(é|são|está|estão|representa|consiste|permite|define|explica|indica|utiliza|refere|aplica|envolve|caracteriza)\b/i;
+  const conectivosRegex = /\b(porque|além|entretanto|porém|como|assim|logo|também|portanto|quando|enquanto|ou seja|por isso)\b/i;
 
   for (const l of linhas) {
     const palavras = l.split(/\s+/);
@@ -96,23 +94,22 @@ function detectarTipoMaterial(texto) {
     if (/^[\d•\-–]/.test(l)) marcadas++;
     if (/[.!?]$/.test(l)) comPonto++;
     if (verboRegex.test(l)) verbais++;
+    if (conectivosRegex.test(l)) conectivos++;
   }
 
-  const pCurtas = curtas / linhas.length;
-  const pMarcadas = marcadas / linhas.length;
-  const pComPonto = comPonto / linhas.length;
-  const pVerbais = verbais / linhas.length;
+  const total = linhas.length;
+  const pCurtas = curtas / total;
+  const pMarcadas = marcadas / total;
+  const pComPonto = comPonto / total;
+  const pVerbais = verbais / total;
+  const pConectivos = conectivos / total;
 
-  // 🧮 Nova lógica equilibrada:
-  // programa → muitas linhas curtas, baixa pontuação e poucos verbos
-  // conteúdo → frases longas, verbos e pontuação
-  const pontuacaoPrograma = (pCurtas * 0.5 + pMarcadas * 0.4) - (pComPonto * 0.3 + pVerbais * 0.4);
+  // 🧮 Regras balanceadas:
+  // Programa → predominância estrutural + baixa densidade semântica
+  // Conteúdo → frases mais longas, verbos e conectivos
+  const scorePrograma = (pCurtas * 0.5 + pMarcadas * 0.4) - (pVerbais * 0.5 + pConectivos * 0.3 + pComPonto * 0.2);
 
-  if (pontuacaoPrograma > 0.15 && pVerbais < 0.2) {
-    return 'programa';
-  } else {
-    return 'conteudo';
-  }
+  return scorePrograma > 0.18 ? 'programa' : 'conteudo';
 }
 
 
