@@ -3,126 +3,98 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Liora Concursos — Agente de Microlearning</title>
-  <meta name="description" content="Liora Concursos é um agente de microlearning que gera planos de estudo e simulados inteligentes a partir de temas ou materiais enviados pelo usuário." />
+  <title>Liora Concursos — Estudo Inteligente</title>
+  <meta name="description" content="Liora Concursos: ambiente inteligente para estudar com foco, leveza e simulados no formato dos principais concursos públicos." />
 
-  <!-- Framework base -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-  <script>
-    if (window.pdfjsLib) {
-      pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
-    }
-  </script>
-  <script src="https://unpkg.com/mammoth/mammoth.browser.min.js"></script>
+  <!-- Fallback escuro para evitar tela branca -->
+  <style>
+    html,body{background:#0b0b0b;color:#fff;margin:0;padding:0;}
+  </style>
 
-  <!-- Estilos -->
-  <link rel="stylesheet" href="style.css" />
+  <!-- CSS principal -->
+  <link rel="stylesheet" href="style.css?v=4" />
 </head>
-
 <body class="dark">
   <header class="max-w-5xl mx-auto px-4 pt-8">
     <div class="flex items-center justify-between">
       <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-2xl flex items-center justify-center text-white font-black" style="background:var(--brand)">Li</div>
+        <div class="w-10 h-10 rounded-2xl flex items-center justify-center text-white font-black" style="background:#c44b04;">Li</div>
         <div>
           <h1 class="text-xl font-bold">Liora Concursos <span class="dot" title="online"></span></h1>
-          <p class="text-sm text-[var(--muted)]">Agente inteligente de microlearning para concursos públicos.</p>
+          <p class="text-sm text-[var(--muted)]">Ambiente inteligente para aprender com foco.</p>
         </div>
       </div>
       <div class="flex items-center gap-2">
         <button id="btn-theme" class="chip" title="Alternar tema">🌙</button>
-        <button id="btn-reset" class="chip" title="Limpar estado">Reset</button>
+        <button id="btn-reset" class="chip" title="Limpar estado"><span class="kbd">Reset</span></button>
       </div>
     </div>
   </header>
 
   <main class="max-w-5xl mx-auto px-4 py-8 grid lg:grid-cols-3 gap-6">
-    <!-- Painel esquerdo -->
     <section class="lg:col-span-1 card p-5">
       <h2 class="section-title mb-1">Configurar estudo</h2>
       <p class="text-sm text-[var(--muted)] mb-4">
-        Escolha um tema ou envie seu material de estudo para gerar um plano e simulados no estilo de concursos.
+        Escolha um tema ou envie seu material (PDF, TXT, DOCX) para criar um plano personalizado com sessões e simulados.
       </p>
 
       <label class="block text-sm font-medium mb-1">Tema</label>
-      <input id="inp-tema" type="text" placeholder="Ex.: Direito Constitucional, Raciocínio Lógico" class="mb-3" />
+      <input id="inp-tema" type="text" placeholder="Ex.: Direito Administrativo" class="mb-3" />
 
       <div class="text-center my-2 text-xs text-[var(--muted)]">ou</div>
 
       <label class="block text-sm font-medium mb-1">Upload de material</label>
-      <input id="inp-file" type="file" class="text-sm" />
-      <p class="text-[11px] text-[var(--muted)] mt-2">
-        Envie um arquivo <strong>TXT</strong>, <strong>PDF</strong> ou <strong>DOCX</strong>.
-      </p>
+      <input id="inp-file" type="file" accept=".pdf,.txt,.doc,.docx" class="text-sm" />
+      <p class="text-[11px] text-[var(--muted)] mt-2">Arquivos TXT oferecem melhor resultado neste protótipo.</p>
 
-      <div class="mt-4 grid grid-cols-2 gap-3">
-        <div>
-          <label class="block text-sm font-medium mb-1">Sessões</label>
-          <select id="sel-dias">
-            <option>5</option>
-            <option>7</option>
-            <option>10</option>
-          </select>
-        </div>
-        <div>
-          <label class="block text-sm font-medium mb-1">Formato</label>
-          <select id="sel-formato">
-            <option value="CESPE">CESPE (Certo/Errado)</option>
-            <option value="FGV">FGV (5 alternativas)</option>
-            <option value="VUNESP">VUNESP (4 alternativas)</option>
-          </select>
-        </div>
+      <div class="mt-4">
+        <label class="block text-sm font-medium mb-1">Sessões</label>
+        <select id="sel-dias">
+          <option>5</option>
+          <option>7</option>
+          <option>10</option>
+        </select>
       </div>
 
       <button id="btn-gerar" class="btn w-full mt-5">Gerar plano</button>
       <p id="status" class="text-xs text-[var(--muted)] mt-2"></p>
     </section>
 
-    <!-- Painel central -->
     <section class="lg:col-span-2 card p-5">
       <div class="flex items-center justify-between mb-3">
         <h2 class="section-title">Seu plano de estudo</h2>
         <div class="text-sm text-[var(--muted)]" id="ctx"></div>
       </div>
       <div id="plano" class="space-y-3"></div>
-    </section>
 
-    <!-- Simulados -->
-    <section class="lg:col-span-3 card p-5">
-      <div class="flex items-center justify-between mb-3">
-        <h2 class="section-title">Gerar Simulado</h2>
-        <div class="text-sm text-[var(--muted)]">Baseado no seu tema ou material</div>
-      </div>
-
-      <div class="grid md:grid-cols-4 gap-4">
-        <div>
-          <label class="block text-sm font-medium mb-1">Quantidade</label>
+      <div class="mt-8">
+        <h2 class="section-title mb-2">Simulado</h2>
+        <div class="flex gap-3 mb-3">
+          <select id="sel-formato">
+            <option value="CESPE">CESPE</option>
+            <option value="FGV">FGV</option>
+            <option value="VUNESP">VUNESP</option>
+          </select>
           <select id="sel-qtd">
             <option>5</option>
             <option>10</option>
+            <option>15</option>
           </select>
+          <button id="btn-simulado" class="btn flex-1">Gerar Simulado</button>
         </div>
-        <div class="flex items-end">
-          <button id="btn-simulado" class="btn w-full">Gerar simulado</button>
-        </div>
+        <div class="bar mb-2"><div id="bar-progress"></div></div>
+        <p id="resultado" class="text-sm text-[var(--muted)] mb-3"></p>
+        <div id="simulado" class="space-y-4"></div>
       </div>
-
-      <div class="mt-4">
-        <div class="bar"><div id="bar-progress"></div></div>
-        <div id="resultado" class="mt-2 text-sm text-[var(--muted)]"></div>
-      </div>
-
-      <div id="simulado" class="mt-4 space-y-3"></div>
     </section>
   </main>
 
   <footer class="max-w-5xl mx-auto px-4 pb-10 text-xs text-[var(--muted)] text-center">
-    <p>Liora Concursos — um agente de microlearning da Intellih. © 2025</p>
+    <p>Liora Concursos — um ambiente de estudo guiado e inspirador. © Intellih</p>
   </footer>
 
-  <!-- Núcleo e regras específicas -->
-  <script src="scripts/core.js"></script>
-  <script src="scripts/concursos.js"></script>
+  <!-- Scripts -->
+  <script src="scripts/core.js?v=4" defer></script>
+  <script src="scripts/concursos.js?v=4" defer></script>
 </body>
 </html>
