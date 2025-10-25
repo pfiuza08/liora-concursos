@@ -41,7 +41,7 @@ const savedTheme = localStorage.getItem('liora_theme');
 setTheme(savedTheme || 'dark');
 
 // ==========================================================
-// 🧩 Normalização e detecção semântica de tipo de material
+// 🧩 Normalização e detecção semântica
 // ==========================================================
 function normalizarTextoParaPrograma(texto) {
   return texto
@@ -55,7 +55,6 @@ function normalizarTextoParaPrograma(texto) {
 
 function detectarTipoMaterial(texto) {
   if (!texto || texto.length < 80) return 'conteudo';
-
   const normalizado = normalizarTextoParaPrograma(texto);
   const linhas = normalizado.split(/\n+/).map(l => l.trim()).filter(Boolean);
   if (!linhas.length) return 'conteudo';
@@ -85,7 +84,7 @@ function detectarTipoMaterial(texto) {
 }
 
 // ==========================================================
-// 📁 Upload e feedback visual
+// 📁 Upload e leitura de arquivo
 // ==========================================================
 const zone = document.getElementById('upload-zone');
 const inputFile = document.getElementById('inp-file');
@@ -120,8 +119,8 @@ async function handleFileSelection(file) {
   spinner.style.display = 'block';
   fileName.textContent = `Carregando ${file.name}...`;
   fileType.textContent = '';
-  const sugestaoAntiga = document.getElementById('sugestao-sessoes');
-  if (sugestaoAntiga) sugestaoAntiga.remove();
+  const antiga = document.getElementById('sugestao-sessoes');
+  if (antiga) antiga.remove();
 
   try {
     const ext = file.name.split('.').pop().toLowerCase();
@@ -153,7 +152,7 @@ async function handleFileSelection(file) {
         : '📘 Detectado: conteúdo explicativo (texto narrativo)';
 
     // ======================================================
-    // 📅 Sugestão automática de número de sessões
+    // 📅 Sugestão automática + interação com o usuário
     // ======================================================
     const linhas = text.split(/\n+/).map(l => l.trim()).filter(Boolean);
     if (state.tipoMaterial === 'programa' && linhas.length > 5) {
@@ -166,16 +165,40 @@ async function handleFileSelection(file) {
       else if (linhas.length <= 400) sugestao = 20;
       else sugestao = 30;
 
-      // Atualiza select
       const selDias = document.getElementById('sel-dias');
       selDias.value = sugestao;
 
-      // Mostra sugestão na interface
-      const sugestaoEl = document.createElement('p');
-      sugestaoEl.id = 'sugestao-sessoes';
-      sugestaoEl.className = 'text-[12px] text-[var(--muted)] mt-1 italic';
-      sugestaoEl.textContent = `📅 Sugerido: ${sugestao} sessões (com base em ${linhas.length} tópicos detectados).`;
-      fileType.insertAdjacentElement('afterend', sugestaoEl);
+      // Remove sugestão anterior
+      const antiga = document.getElementById('sugestao-sessoes');
+      if (antiga) antiga.remove();
+
+      const box = document.createElement('div');
+      box.id = 'sugestao-sessoes';
+      box.className = 'mt-2 p-3 rounded-lg border border-[var(--stroke)] bg-[var(--card)] text-[13px] shadow-sm animate-fadeIn';
+      box.innerHTML = `
+        <p>📅 Sugerido: <strong>${sugestao}</strong> sessões (com base em ${linhas.length} tópicos detectados).</p>
+        <p class="mt-1 text-[var(--muted)]">💬 Deseja manter essa sugestão?</p>
+        <div class="mt-2 flex gap-2">
+          <button id="btn-aceitar" class="btn text-[12px] py-1 px-2">✅ Aceitar</button>
+          <button id="btn-ajustar" class="chip text-[12px] py-1 px-2">✏️ Ajustar manualmente</button>
+        </div>
+      `;
+      fileType.insertAdjacentElement('afterend', box);
+
+      const btnAceitar = document.getElementById('btn-aceitar');
+      const btnAjustar = document.getElementById('btn-ajustar');
+
+      btnAceitar.addEventListener('click', () => {
+        box.innerHTML = `<p>📘 Sessões confirmadas: ${sugestao}.</p>`;
+        setTimeout(() => box.remove(), 1500);
+      });
+
+      btnAjustar.addEventListener('click', () => {
+        box.innerHTML = `<p>✏️ Ajuste o número de sessões manualmente no seletor abaixo.</p>`;
+        selDias.focus();
+        selDias.classList.add('border-[var(--brand)]', 'shadow-[0_0_8px_rgba(196,75,4,0.4)]');
+        setTimeout(() => box.remove(), 2500);
+      });
     }
 
   } catch (err) {
@@ -198,9 +221,7 @@ const els = {
   ctx: document.getElementById('ctx')
 };
 
-function setStatus(msg) {
-  if (els.status) els.status.textContent = msg;
-}
+function setStatus(msg) { els.status.textContent = msg; }
 function updateCtx() {
   els.ctx.textContent = `${state.tema ? 'Tema: ' + state.tema + ' · ' : ''}${state.plano.length} sessões geradas`;
 }
@@ -209,7 +230,6 @@ function extrairTopicos(texto, tema, maxTopicos = 7) {
   const palavras = texto.toLowerCase().match(/[a-záéíóúâêîôûãõç]+/gi) || [];
   const freq = {};
   for (const p of palavras) freq[p] = (freq[p] || 0) + 1;
-
   return Object.entries(freq)
     .filter(([w]) => w.length > 4)
     .sort((a, b) => b[1] - a[1])
@@ -246,12 +266,11 @@ els.btnGerar?.addEventListener('click', () => {
   if (tipo === 'programa') {
     const linhas = state.materialTexto.split(/\n+/).map(l => l.trim()).filter(Boolean);
     const blocos = Math.ceil(linhas.length / state.dias);
-    plano = [];
     for (let i = 0; i < state.dias; i++) {
       const inicio = i * blocos;
       const fim = inicio + blocos;
       const grupo = linhas.slice(inicio, fim);
-      if (grupo.length === 0) break;
+      if (!grupo.length) break;
       plano.push({
         dia: i + 1,
         titulo: `Sessão ${i + 1}`,
@@ -272,7 +291,6 @@ els.btnGerar?.addEventListener('click', () => {
 });
 
 function renderPlano() {
-  if (!els.plano) return;
   els.plano.innerHTML = '';
   if (!state.plano.length) {
     els.plano.innerHTML = `<p class="text-sm text-[var(--muted)]">Nenhum plano de estudo gerado.</p>`;
@@ -281,11 +299,7 @@ function renderPlano() {
   state.plano.forEach(sessao => {
     const div = document.createElement('div');
     div.className = 'session-card';
-    div.innerHTML = `
-      <h3>${sessao.titulo}</h3>
-      <div class="topico">${sessao.topico}</div>
-      <p>${sessao.descricao}</p>
-    `;
+    div.innerHTML = `<h3>${sessao.titulo}</h3><div class="topico">${sessao.topico}</div><p>${sessao.descricao}</p>`;
     els.plano.appendChild(div);
   });
 }
