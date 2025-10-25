@@ -223,3 +223,61 @@ footer {
 footer:hover {
   opacity: 1;
 }
+
+/* ==========================================================
+   💬 Caixa de sugestão interativa — Liora
+   ========================================================== */
+#sugestao-sessoes {
+  border: 1px solid var(--stroke);
+  background: var(--card);
+  border-radius: 1rem;
+  padding: 1rem;
+  font-size: 0.88rem;
+  color: var(--fg);
+  line-height: 1.5;
+  animation: fadeIn 0.4s ease forwards;
+  box-shadow: var(--shadow);
+  transition: all 0.3s ease;
+}
+
+#sugestao-sessoes strong {
+  color: var(--brand);
+}
+
+#sugestao-sessoes p {
+  margin: 0.2rem 0;
+}
+
+#sugestao-sessoes button {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+#sugestao-sessoes .btn {
+  padding: 0.4rem 0.8rem;
+  font-size: 0.78rem;
+  border-radius: 10px;
+}
+
+#sugestao-sessoes .chip {
+  padding: 0.4rem 0.8rem;
+  font-size: 0.78rem;
+  border-radius: 10px;
+}
+
+#sugestao-sessoes .btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 0 10px rgba(196,75,4,0.5);
+}
+
+#sugestao-sessoes .chip:hover {
+  background: var(--brand);
+  color: #fff;
+}
+
+/* 🔄 Animação de entrada */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
