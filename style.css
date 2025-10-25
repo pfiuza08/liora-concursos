@@ -657,3 +657,21 @@ body.fading footer {
   font-weight: 500;
   margin-top: 0.5rem;
 }
+
+/* ==========================================================
+   🔄 Spinner de carregamento no upload
+   ========================================================== */
+#upload-spinner {
+  display: none;
+  margin: 0.4rem auto;
+  border: 3px solid var(--stroke);
+  border-top: 3px solid var(--brand);
+  border-radius: 50%;
+  width: 26px;
+  height: 26px;
+  animation: spin 1s linear infinite;
+}
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
