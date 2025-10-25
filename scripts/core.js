@@ -129,14 +129,18 @@ async function handleFileSelection(file) {
     if (ext === 'txt') {
       text = await file.text();
     } else if (ext === 'pdf') {
-      const arrayBuffer = await file.arrayBuffer();
-      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-      for (let i = 1; i <= pdf.numPages; i++) {
+       const arrayBuffer = await file.arrayBuffer();
+       const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+       let textContent = '';
+       for (let i = 1; i <= pdf.numPages; i++) {
         const page = await pdf.getPage(i);
         const content = await page.getTextContent();
-        text += content.items.map(item => item.str).join(' ') + '\n';
-      }
-    } else {
+        const strings = content.items.map(item => item.str);
+        textContent += strings.join(' ') + '\n';
+       }
+      text = textContent;
+ }
+ else {
       alert('Formato não suportado. Use .txt ou .pdf');
       spinner.style.display = 'none';
       return;
