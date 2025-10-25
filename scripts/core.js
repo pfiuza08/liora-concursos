@@ -265,37 +265,45 @@ if (zone && inputFile) {
 
 // Função para feedback de arquivo
 async function handleFileSelection(file) {
+  const spinner = document.getElementById('upload-spinner');
+  spinner.style.display = 'block';
   fileName.textContent = `Carregando ${file.name}...`;
   setStatus('Processando arquivo...');
+
   try {
     const ext = file.name.split('.').pop().toLowerCase();
+    let text = '';
+
     if (ext === 'txt') {
-      const text = await file.text();
-      state.materialTexto = text;
-      state.tipoMaterial = detectarTipoMaterial(text);
+      text = await file.text();
     } else if (ext === 'pdf') {
       const arrayBuffer = await file.arrayBuffer();
       const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-      let textContent = '';
       for (let i = 1; i <= pdf.numPages; i++) {
         const page = await pdf.getPage(i);
         const content = await page.getTextContent();
-        textContent += content.items.map(item => item.str).join(' ') + '\n';
+        text += content.items.map(item => item.str).join(' ') + '\n';
       }
-      state.materialTexto = textContent;
-      state.tipoMaterial = detectarTipoMaterial(textContent);
     } else {
       alert('Formato não suportado. Use .txt ou .pdf');
+      spinner.style.display = 'none';
       return;
     }
-    fileName.textContent = `✅ ${file.name} carregado`;
-    setStatus('Arquivo processado com sucesso.');
+
+    state.materialTexto = text;
+    state.tipoMaterial = detectarTipoMaterial(text);
+
+    fileName.textContent = `✅ ${file.name} carregado (${state.tipoMaterial.toUpperCase()})`;
+    setStatus(`Arquivo lido com sucesso. Tipo: ${state.tipoMaterial}.`);
   } catch (err) {
     console.error(err);
     fileName.textContent = '⚠️ Erro ao processar o arquivo.';
     setStatus('Erro ao ler o arquivo.');
+  } finally {
+    spinner.style.display = 'none';
   }
 }
+
 
 
   
