@@ -65,10 +65,31 @@ function updateCtx() {
 }
 
 // ==========================================================
+// 🧩 Normalizar para detectar melhor o tipo
+// ==========================================================
+
+function normalizarTextoParaPrograma(texto) {
+  return texto
+    // Quebra entre numeração e novo item
+    .replace(/(\d+)\s+(?=[A-ZÁÉÍÓÚÂÊÔÃÕ])/g, '\n$1 ')
+    // Quebra após ponto seguido de número ou letra maiúscula
+    .replace(/\. (?=\d|\b[A-ZÁÉÍÓÚÂÊÔÃÕ])/g, '.\n')
+    // Quebra após dois pontos antes de palavra com inicial maiúscula
+    .replace(/:\s+(?=[A-ZÁÉÍÓÚÂÊÔÃÕ])/g, ':\n')
+    // Quebra entre “;” e novo item
+    .replace(/;\s+(?=[A-ZÁÉÍÓÚÂÊÔÃÕ])/g, ';\n')
+    // Remove múltiplas quebras
+    .replace(/\n{2,}/g, '\n')
+    .trim();
+}
+
+
+// ==========================================================
 // 🧩 Detecção do tipo de material
 // ==========================================================
 function detectarTipoMaterial(texto) {
-  const linhas = texto.split(/\n+/).map(l => l.trim()).filter(Boolean);
+  const normalizado = normalizarTextoParaPrograma(texto);
+  const linhas = normalizado.split(/\n+/).map(l => l.trim()).filter(Boolean);
   if (!linhas.length) return 'conteudo';
 
   let linhasCurtas = 0;
