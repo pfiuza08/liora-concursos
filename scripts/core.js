@@ -69,10 +69,36 @@ function updateCtx() {
 // ==========================================================
 function detectarTipoMaterial(texto) {
   const linhas = texto.split(/\n+/).map(l => l.trim()).filter(Boolean);
-  const curtas = linhas.filter(l => l.split(' ').length <= 6).length;
-  const longas = linhas.filter(l => l.split(' ').length > 6).length;
-  return curtas > longas * 1.5 ? 'programa' : 'conteudo';
+  if (!linhas.length) return 'conteudo';
+
+  let linhasCurtas = 0;
+  let linhasComMarcador = 0;
+  let linhasComPontoFinal = 0;
+  let verbosProvaveis = 0;
+
+  const verboRegex = /\b(estudar|analisar|compreender|aprender|definir|conceituar|explicar|descrever|avaliar|aplicar|entender|identificar|reconhecer)\b/i;
+
+  for (const l of linhas) {
+    const palavras = l.split(/\s+/);
+    if (palavras.length <= 8) linhasCurtas++;
+    if (/^[\d•\-–]/.test(l)) linhasComMarcador++;
+    if (/[.!?]$/.test(l)) linhasComPontoFinal++;
+    if (verboRegex.test(l)) verbosProvaveis++;
+  }
+
+  // Heurística de decisão
+  const proporcaoCurtas = linhasCurtas / linhas.length;
+  const proporcaoMarcadas = linhasComMarcador / linhas.length;
+  const proporcaoPontos = linhasComPontoFinal / linhas.length;
+  const proporcaoVerbos = verbosProvaveis / linhas.length;
+
+  if ((proporcaoCurtas > 0.65 && proporcaoMarcadas > 0.25 && proporcaoPontos < 0.3) || proporcaoVerbos < 0.05) {
+    return 'programa';
+  }
+
+  return 'conteudo';
 }
+
 
 // ==========================================================
 // 📄 Leitura de arquivos (TXT e PDF via pdf.js)
