@@ -2,7 +2,6 @@
 // 🧠 Liora Concursos — Núcleo principal (core.js)
 // ==========================================================
 
-// Estado global
 const state = {
   tema: '',
   dias: 5,
@@ -82,7 +81,6 @@ function detectarTipoMaterial(texto) {
   const pConectivos = conectivos / total;
 
   const scorePrograma = (pCurtas * 0.5 + pMarcadas * 0.4) - (pVerbais * 0.5 + pConectivos * 0.3 + pComPonto * 0.2);
-
   return scorePrograma > 0.18 ? 'programa' : 'conteudo';
 }
 
@@ -122,6 +120,9 @@ async function handleFileSelection(file) {
   spinner.style.display = 'block';
   fileName.textContent = `Carregando ${file.name}...`;
   fileType.textContent = '';
+  const sugestaoAntiga = document.getElementById('sugestao-sessoes');
+  if (sugestaoAntiga) sugestaoAntiga.remove();
+
   try {
     const ext = file.name.split('.').pop().toLowerCase();
     let text = '';
@@ -129,18 +130,14 @@ async function handleFileSelection(file) {
     if (ext === 'txt') {
       text = await file.text();
     } else if (ext === 'pdf') {
-       const arrayBuffer = await file.arrayBuffer();
-       const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-       let textContent = '';
-       for (let i = 1; i <= pdf.numPages; i++) {
+      const arrayBuffer = await file.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+      for (let i = 1; i <= pdf.numPages; i++) {
         const page = await pdf.getPage(i);
         const content = await page.getTextContent();
-        const strings = content.items.map(item => item.str);
-        textContent += strings.join(' ') + '\n';
-       }
-      text = textContent;
- }
- else {
+        text += content.items.map(item => item.str).join(' ') + '\n';
+      }
+    } else {
       alert('Formato não suportado. Use .txt ou .pdf');
       spinner.style.display = 'none';
       return;
@@ -154,6 +151,33 @@ async function handleFileSelection(file) {
       state.tipoMaterial === 'programa'
         ? '🗂️ Detectado: programa de conteúdo (estrutura de tópicos)'
         : '📘 Detectado: conteúdo explicativo (texto narrativo)';
+
+    // ======================================================
+    // 📅 Sugestão automática de número de sessões
+    // ======================================================
+    const linhas = text.split(/\n+/).map(l => l.trim()).filter(Boolean);
+    if (state.tipoMaterial === 'programa' && linhas.length > 5) {
+      let sugestao = 5;
+      if (linhas.length <= 10) sugestao = 3;
+      else if (linhas.length <= 30) sugestao = 5;
+      else if (linhas.length <= 60) sugestao = 7;
+      else if (linhas.length <= 100) sugestao = 10;
+      else if (linhas.length <= 200) sugestao = 14;
+      else if (linhas.length <= 400) sugestao = 20;
+      else sugestao = 30;
+
+      // Atualiza select
+      const selDias = document.getElementById('sel-dias');
+      selDias.value = sugestao;
+
+      // Mostra sugestão na interface
+      const sugestaoEl = document.createElement('p');
+      sugestaoEl.id = 'sugestao-sessoes';
+      sugestaoEl.className = 'text-[12px] text-[var(--muted)] mt-1 italic';
+      sugestaoEl.textContent = `📅 Sugerido: ${sugestao} sessões (com base em ${linhas.length} tópicos detectados).`;
+      fileType.insertAdjacentElement('afterend', sugestaoEl);
+    }
+
   } catch (err) {
     console.error(err);
     fileName.textContent = '⚠️ Erro ao processar o arquivo.';
@@ -221,12 +245,20 @@ els.btnGerar?.addEventListener('click', () => {
 
   if (tipo === 'programa') {
     const linhas = state.materialTexto.split(/\n+/).map(l => l.trim()).filter(Boolean);
-    plano = linhas.slice(0, state.dias).map((t, i) => ({
-      dia: i + 1,
-      titulo: `Sessão ${i + 1}`,
-      topico: t,
-      descricao: `Estudo do tópico: ${t}. Aprofunde-se nos conceitos principais e busque exemplos aplicados.`
-    }));
+    const blocos = Math.ceil(linhas.length / state.dias);
+    plano = [];
+    for (let i = 0; i < state.dias; i++) {
+      const inicio = i * blocos;
+      const fim = inicio + blocos;
+      const grupo = linhas.slice(inicio, fim);
+      if (grupo.length === 0) break;
+      plano.push({
+        dia: i + 1,
+        titulo: `Sessão ${i + 1}`,
+        topico: grupo[0].replace(/^[\d•\-–\s]+/, '').split(':')[0] || `Tópico ${i + 1}`,
+        descricao: grupo.map(t => '• ' + t).join('\n')
+      });
+    }
     setStatus('🗂️ Material identificado como programa de conteúdo.');
   } else {
     const topicos = extrairTopicos(state.materialTexto, state.tema || 'Tema', state.dias);
