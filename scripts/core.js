@@ -204,4 +204,76 @@ function renderPlano() {
     `;
     els.plano.appendChild(div);
   });
+// ==========================================================
+// 📁 Upload zone — interação e feedback visual
+// ==========================================================
+const zone = document.getElementById('upload-zone');
+const inputFile = document.getElementById('inp-file');
+const fileName = document.getElementById('file-name');
+
+if (zone && inputFile) {
+  // Clique na zona abre o seletor
+  zone.addEventListener('click', () => inputFile.click());
+
+  // Destaque ao arrastar arquivo
+  zone.addEventListener('dragover', e => {
+    e.preventDefault();
+    zone.classList.add('dragover');
+  });
+  zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
+
+  // Ao soltar arquivo
+  zone.addEventListener('drop', e => {
+    e.preventDefault();
+    zone.classList.remove('dragover');
+    const file = e.dataTransfer.files[0];
+    if (file) {
+      inputFile.files = e.dataTransfer.files;
+      handleFileSelection(file);
+    }
+  });
+
+  // Ao selecionar arquivo via seletor
+  inputFile.addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (file) handleFileSelection(file);
+  });
+}
+
+// Função para feedback de arquivo
+async function handleFileSelection(file) {
+  fileName.textContent = `Carregando ${file.name}...`;
+  setStatus('Processando arquivo...');
+  try {
+    const ext = file.name.split('.').pop().toLowerCase();
+    if (ext === 'txt') {
+      const text = await file.text();
+      state.materialTexto = text;
+      state.tipoMaterial = detectarTipoMaterial(text);
+    } else if (ext === 'pdf') {
+      const arrayBuffer = await file.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+      let textContent = '';
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const content = await page.getTextContent();
+        textContent += content.items.map(item => item.str).join(' ') + '\n';
+      }
+      state.materialTexto = textContent;
+      state.tipoMaterial = detectarTipoMaterial(textContent);
+    } else {
+      alert('Formato não suportado. Use .txt ou .pdf');
+      return;
+    }
+    fileName.textContent = `✅ ${file.name} carregado`;
+    setStatus('Arquivo processado com sucesso.');
+  } catch (err) {
+    console.error(err);
+    fileName.textContent = '⚠️ Erro ao processar o arquivo.';
+    setStatus('Erro ao ler o arquivo.');
+  }
+}
+
+
+  
 }
