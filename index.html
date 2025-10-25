@@ -6,8 +6,14 @@
   <title>Liora Concursos — Estudo Inteligente</title>
   <meta name="description" content="Liora Concursos: ambiente inteligente para estudar com foco, leveza e simulados no formato dos principais concursos públicos." />
 
-  <!-- Biblioteca para leitura de PDFs -->
+   <!-- Biblioteca PDF.js com worker configurado -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.14.305/pdf.min.js"></script>
+  <script>
+    // Configura o caminho do worker para execução no Vercel
+    pdfjsLib.GlobalWorkerOptions.workerSrc =
+    "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.14.305/pdf.worker.min.js";
+  </script>
+
   
    <!-- Tailwind para layout -->
    <script src="https://cdn.tailwindcss.com"></script>
