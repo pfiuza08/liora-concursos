@@ -11,11 +11,17 @@ const state = {
 };
 
 // ==========================================================
-// 🌓 Tema claro/escuro — correção completa (desktop + mobile)
+// 🌓 Tema claro/escuro — versão final (desktop + mobile + padrão escuro)
 // ==========================================================
+
 const themeBtn = document.getElementById('btn-theme');
 const body = document.body;
 const html = document.documentElement;
+
+// 🔧 Garante que o tema padrão seja sempre escuro na primeira carga
+if (!localStorage.getItem('liora_theme')) {
+  localStorage.setItem('liora_theme', 'dark');
+}
 
 function setTheme(mode) {
   const isLight = mode === 'light';
@@ -34,12 +40,16 @@ function toggleTheme() {
   setTheme(current === 'light' ? 'dark' : 'light');
 }
 
+// 💻 Clique (desktop)
 themeBtn.addEventListener('click', toggleTheme);
+
+// 📱 Toque (mobile)
 themeBtn.addEventListener('touchend', e => {
   e.preventDefault();
   toggleTheme();
 }, { passive: false });
 
+// 🚀 Inicializa com o tema salvo (ou escuro por padrão)
 setTheme(localStorage.getItem('liora_theme') || 'dark');
 
 
