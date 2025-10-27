@@ -17,7 +17,6 @@ const themeBtn = document.getElementById('btn-theme');
 const body = document.body;
 const html = document.documentElement;
 
-// 🔧 Garante que o padrão inicial seja sempre o tema escuro
 if (!localStorage.getItem('liora_theme')) {
   localStorage.setItem('liora_theme', 'dark');
 }
@@ -53,16 +52,14 @@ function normalizarTextoParaPrograma(texto) {
     .replace(/\r/g, "")
     .replace(/\t+/g, " ")
     .replace(/[ ]{2,}/g, " ")
-    // Quebra antes de padrões de tópicos
     .replace(/(\s|^)((\d+(\.\d+){0,3}[\.\)])|([IVXLCDM]+\.)|([A-Z]\))|([a-z]\))|[•\-–])\s+/g, "\n$2 ")
-    // Quebra após ponto final seguido de letra maiúscula (parágrafos longos)
     .replace(/([.!?])\s+(?=[A-ZÁÉÍÓÚÂÊÔÃÕÇ])/g, "$1\n")
     .replace(/\n{2,}/g, "\n")
     .trim();
 }
 
 // ==========================================================
-// 🧪 Sinais e decisão — programa, conteúdo ou híbrido
+// 🧪 Sinais e decisão — com diagnóstico visível
 // ==========================================================
 function medirSinais(textoNormalizado) {
   const linhas = textoNormalizado.split(/\n+/).map(l => l.trim()).filter(Boolean);
@@ -103,22 +100,23 @@ function medirSinais(textoNormalizado) {
 }
 
 function decidirTipo(s) {
-  if (s.pBullets < 0.18 && s.pLongas >= 0.55 && s.pFimPar >= 0.45) {
-    return { tipo: "conteudo", conf: 0.8 };
+  if (s.pBullets >= 0.25 && (s.maxRunBullets >= 2 || s.pCaps >= 0.1)) {
+    return { tipo: "programa", conf: 0.9 };
   }
-  if (s.pBullets >= 0.35 && s.maxRunBullets >= 3 && s.pLongas < 0.55 && s.pFimPar < 0.5) {
-    return { tipo: "programa", conf: 0.85 };
+
+  if (s.pLongas >= 0.55 && s.pFimPar >= 0.45 && s.pBullets < 0.25) {
+    return { tipo: "conteudo", conf: 0.85 };
   }
-  if (s.pLongas >= 0.6 && s.pFimPar >= 0.5 && s.pBullets < 0.25) {
-    return { tipo: "conteudo", conf: 0.75 };
+
+  if (s.pCaps >= 0.1 && s.pBullets >= 0.15 && s.pLongas >= 0.4) {
+    return { tipo: "hibrido", conf: 0.7 };
   }
-  if (s.pCaps >= 0.15 && s.pBullets >= 0.25) {
-    return { tipo: "programa", conf: 0.6 };
-  }
-  if (s.total < 20 && s.pLongas >= 0.4) {
+
+  if (s.total < 15 && s.pLongas >= 0.4) {
     return { tipo: "conteudo", conf: 0.6 };
   }
-  return { tipo: "hibrido", conf: 0.55 };
+
+  return { tipo: "hibrido", conf: 0.5 };
 }
 
 function detectarTipoMaterial(texto) {
@@ -165,6 +163,7 @@ async function handleFileSelection(file) {
   spinner.style.display = 'block';
   fileName.textContent = `Carregando ${file.name}...`;
   fileType.textContent = '';
+  document.querySelectorAll('#diagnostico-sinais').forEach(e => e.remove());
 
   try {
     const ext = file.name.split('.').pop().toLowerCase();
@@ -197,6 +196,80 @@ async function handleFileSelection(file) {
         ? '📘 Detectado: conteúdo híbrido (mistura de tópicos e texto)'
         : '📖 Detectado: conteúdo explicativo (texto narrativo)';
 
+    // ======================================================
+    // 📊 Diagnóstico visível — análise dos sinais
+    // ======================================================
+    try {
+      const dbg = medirSinais(normalizarTextoParaPrograma(text));
+      const diag = `
+🔎 Diagnóstico:
+• Linhas totais: ${dbg.total}
+• Marcadores (bullets): ${(dbg.pBullets * 100).toFixed(1)}%
+• Parágrafos longos: ${(dbg.pLongas * 100).toFixed(1)}%
+• Frases com pontuação final: ${(dbg.pFimPar * 100).toFixed(1)}%
+• Títulos em CAIXA ALTA: ${(dbg.pCaps * 100).toFixed(1)}%
+• Sequência máxima de marcadores: ${dbg.maxRunBullets}
+      `.trim();
+
+      const hint = document.createElement('pre');
+      hint.id = 'diagnostico-sinais';
+      hint.style.fontSize = '11px';
+      hint.style.whiteSpace = 'pre-wrap';
+      hint.style.background = 'rgba(255,255,255,0.03)';
+      hint.style.padding = '6px 8px';
+      hint.style.borderRadius = '8px';
+      hint.style.marginTop = '6px';
+      hint.style.color = 'var(--muted)';
+      hint.textContent = diag;
+      fileType.insertAdjacentElement('afterend', hint);
+    } catch (err) {
+      console.warn("Diagnóstico indisponível:", err);
+    }
+
+    // ======================================================
+    // 📅 Sugestão automática da quantidade de sessões
+    // ======================================================
+    const linhas = text.split(/\n+/).map(l => l.trim()).filter(Boolean);
+    let sugestao = 5;
+
+    if (state.tipoMaterial === 'programa') {
+      sugestao = Math.min(30, Math.max(5, Math.round(linhas.length / 10)));
+    } else if (state.tipoMaterial === 'conteudo') {
+      sugestao = Math.min(10, Math.max(3, Math.round(linhas.length / 80)));
+    } else {
+      sugestao = Math.min(15, Math.max(5, Math.round(linhas.length / 40)));
+    }
+
+    const selDias = document.getElementById('sel-dias');
+    selDias.value = sugestao;
+
+    const box = document.createElement('div');
+    box.id = 'sugestao-sessoes';
+    box.className = 'mt-2 p-3 rounded-lg border border-[var(--stroke)] bg-[var(--card)] text-[13px] shadow-sm animate-fadeIn';
+    box.innerHTML = `
+      <p>📅 Sugerido: <strong>${sugestao}</strong> sessões (com base em ${linhas.length} blocos detectados).</p>
+      <p class="mt-1 text-[var(--muted)]">💬 Deseja manter essa sugestão?</p>
+      <div class="mt-2 flex gap-2">
+        <button id="btn-aceitar" class="btn text-[12px] py-1 px-2">✅ Aceitar</button>
+        <button id="btn-ajustar" class="chip text-[12px] py-1 px-2">✏️ Ajustar manualmente</button>
+      </div>
+    `;
+    fileType.insertAdjacentElement('afterend', box);
+
+    const btnAceitar = document.getElementById('btn-aceitar');
+    const btnAjustar = document.getElementById('btn-ajustar');
+
+    btnAceitar.addEventListener('click', () => {
+      box.innerHTML = `<p>📘 Sessões confirmadas: ${sugestao}.</p>`;
+      setTimeout(() => box.remove(), 1500);
+    });
+
+    btnAjustar.addEventListener('click', () => {
+      box.innerHTML = `<p>✏️ Ajuste o número de sessões manualmente no seletor abaixo.</p>`;
+      selDias.focus();
+      setTimeout(() => box.remove(), 2500);
+    });
+
   } catch (err) {
     console.error(err);
     fileName.textContent = '⚠️ Erro ao processar o arquivo.';
@@ -206,13 +279,12 @@ async function handleFileSelection(file) {
 }
 
 // ==========================================================
-// 📘 Construção do plano de estudo
+// 📘 Construção e renderização do plano
 // ==========================================================
-function dividirEmBlocos(texto, maxTamanho = 600) {
+function dividirEmBlocos(texto, maxTamanho = 700) {
   const frases = texto.split(/(?<=[.!?])\s+/);
   const blocos = [];
   let bloco = "";
-
   for (const f of frases) {
     if ((bloco + f).length > maxTamanho) {
       blocos.push(bloco.trim());
@@ -240,7 +312,7 @@ function construirPlanoInteligente(texto, tipo, dias, tema) {
         descricao: grupo.map(t => "• " + t).join("\n")
       });
     }
-  } else if (tipo === "conteudo") {
+  } else {
     const blocos = dividirEmBlocos(texto, 800);
     const blocosPorDia = Math.ceil(blocos.length / dias);
     for (let i = 0; i < dias; i++) {
@@ -249,31 +321,8 @@ function construirPlanoInteligente(texto, tipo, dias, tema) {
       plano.push({
         dia: i + 1,
         titulo: `Sessão ${i + 1}`,
-        topico: `Leitura guiada`,
+        topico: "Leitura guiada",
         descricao: grupo.join("\n\n")
-      });
-    }
-  } else {
-    // híbrido
-    const linhasPrograma = linhas.filter(l => /^[\d•\-–A-Za-z]/.test(l));
-    const blocosConteudo = dividirEmBlocos(texto, 700);
-    const qtdProg = Math.min(dias - 2, Math.ceil(linhasPrograma.length / 10));
-    const qtdCont = dias - qtdProg;
-
-    for (let i = 0; i < qtdCont; i++) {
-      plano.push({
-        dia: i + 1,
-        titulo: `Sessão ${i + 1}`,
-        topico: `Fundamentos`,
-        descricao: blocosConteudo[i] || ""
-      });
-    }
-    for (let j = 0; j < qtdProg; j++) {
-      plano.push({
-        dia: qtdCont + j + 1,
-        titulo: `Sessão ${qtdCont + j + 1}`,
-        topico: linhasPrograma[j] || `Tópico ${j + 1}`,
-        descricao: linhasPrograma.slice(j * 5, j * 5 + 5).join("\n")
       });
     }
   }
@@ -281,9 +330,6 @@ function construirPlanoInteligente(texto, tipo, dias, tema) {
   return plano;
 }
 
-// ==========================================================
-// 🚀 Geração e renderização do plano de estudo
-// ==========================================================
 const els = {
   inpTema: document.getElementById('inp-tema'),
   selDias: document.getElementById('sel-dias'),
