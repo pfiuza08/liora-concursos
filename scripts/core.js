@@ -1,5 +1,5 @@
 // ==========================================================
-// 🧠 Liora — Núcleo principal (core.js) — versão aprimorada
+// 🧠 Liora — Núcleo principal (core.js) — versão com PDF Smart
 // ==========================================================
 
 const state = {
@@ -11,7 +11,7 @@ const state = {
 };
 
 // ==========================================================
-// 🌓 Tema claro/escuro — versão estável (desktop + mobile)
+// 🌓 Tema claro/escuro — estável (desktop + mobile)
 // ==========================================================
 const themeBtn = document.getElementById('btn-theme');
 const body = document.body;
@@ -45,24 +45,99 @@ themeBtn.addEventListener('touchend', e => {
 setTheme(localStorage.getItem('liora_theme') || 'dark');
 
 // ==========================================================
-// 🧩 Normalização (robusta para PDF/TOC/listas)
+// 🧩 Normalização/TOC
 // ==========================================================
 function normalizarTextoParaPrograma(texto) {
   return texto
     .replace(/\r/g, "")
     .replace(/\t+/g, " ")
     .replace(/[ ]{2,}/g, " ")
+    // quebras antes de marcadores/numeração
     .replace(/(\s|^)((\d+(\.\d+){0,3}[\.\)])|([IVXLCDM]+\.)|([A-Z]\))|([a-z]\))|[•\-–])\s+/g, "\n$2 ")
+    // quebra após ponto + maiúscula (parágrafo novo)
     .replace(/([.!?])\s+(?=[A-ZÁÉÍÓÚÂÊÔÃÕÇ])/g, "$1\n")
     .replace(/\n{2,}/g, "\n")
     .trim();
 }
 
 // ==========================================================
-// 🧪 Sinais e decisão — com diagnóstico visível
+// 📄 PDF — extração com preservação de linhas (X/Y)
 // ==========================================================
+async function extractTextPDFSmart(arrayBuffer) {
+  const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+  let full = '';
+
+  for (let p = 1; p <= pdf.numPages; p++) {
+    const page = await pdf.getPage(p);
+    const content = await page.getTextContent();
+    // Agrupa por Y aproximado
+    const rows = [];
+    const tolY = 2; // tolerância vertical
+    // Vamos acumular linhas ordenando por Y decrescente (PDF coord. origem no canto inferior)
+    const items = content.items.map(it => ({
+      x: it.transform[4],
+      y: Math.round(it.transform[5]),
+      str: it.str
+    })).sort((a,b) => b.y - a.y || a.x - b.x);
+
+    let currentY = null;
+    let currentLine = [];
+    for (const it of items) {
+      if (currentY === null) currentY = it.y;
+      const newLine = Math.abs(it.y - currentY) > tolY;
+      if (newLine) {
+        if (currentLine.length) rows.push(currentLine);
+        currentLine = [];
+        currentY = it.y;
+      }
+      currentLine.push(it);
+    }
+    if (currentLine.length) rows.push(currentLine);
+
+    // Ordena cada linha por X e junta com espaços
+    const lines = rows.map(line =>
+      line.sort((a,b) => a.x - b.x)
+          .map((seg, idx, arr) => {
+            const prev = arr[idx-1];
+            const gap = prev ? seg.x - (prev.x + (prev.str?.length || 1) * 4) : 0; // heurística gap
+            const glue = (idx > 0 && gap > 2) ? ' ' : (idx > 0 ? ' ' : '');
+            return glue + seg.str;
+          }).join('').trim()
+    )
+    .map(l => l.replace(/\s+([.,;:!?])/g, '$1')) // limpa espaços antes de pontuação
+    .filter(Boolean);
+
+    let pageText = lines.join('\n');
+
+    // reforça listas internas na mesma linha
+    pageText = pageText
+      .replace(/(\b\d{1,3})(\.)\s/g, '\n$1$2 ')
+      .replace(/([•\-–])\s/g, '\n$1 ')
+      .replace(/\n{3,}/g, '\n\n');
+
+    full += pageText + '\n';
+  }
+
+  // normalização final
+  full = full.replace(/\n{3,}/g, '\n\n').trim();
+  return full;
+}
+
+// ==========================================================
+// 🧪 Sinais e decisão — com fallback e diagnóstico
+// ==========================================================
+function linhasParaSinais(texto) {
+  // usa quebras existentes; se poucas linhas, cria pseudo-linhas por frases
+  let linhas = texto.split(/\n+/).map(l => l.trim()).filter(Boolean);
+  if (linhas.length < 30) {
+    const pseudo = texto.split(/(?<=[.!?])\s+/).map(l => l.trim()).filter(Boolean);
+    if (pseudo.length > linhas.length) linhas = pseudo;
+  }
+  return linhas;
+}
+
 function medirSinais(textoNormalizado) {
-  const linhas = textoNormalizado.split(/\n+/).map(l => l.trim()).filter(Boolean);
+  const linhas = linhasParaSinais(textoNormalizado);
   const total = linhas.length || 1;
 
   const marcadoresRegex = /^((\d+(\.\d+){0,3}[\.\)])|([IVXLCDM]+\.)|([A-Z]\))|([a-z]\))|[•\-–])/;
@@ -100,22 +175,22 @@ function medirSinais(textoNormalizado) {
 }
 
 function decidirTipo(s) {
+  // Listas compactas agora contam mais
   if (s.pBullets >= 0.25 && (s.maxRunBullets >= 2 || s.pCaps >= 0.1)) {
     return { tipo: "programa", conf: 0.9 };
   }
-
+  // Texto narrativo claro
   if (s.pLongas >= 0.55 && s.pFimPar >= 0.45 && s.pBullets < 0.25) {
     return { tipo: "conteudo", conf: 0.85 };
   }
-
+  // Mistos
   if (s.pCaps >= 0.1 && s.pBullets >= 0.15 && s.pLongas >= 0.4) {
     return { tipo: "hibrido", conf: 0.7 };
   }
-
+  // Curto → privilegia conteúdo
   if (s.total < 15 && s.pLongas >= 0.4) {
     return { tipo: "conteudo", conf: 0.6 };
   }
-
   return { tipo: "hibrido", conf: 0.5 };
 }
 
@@ -163,22 +238,17 @@ async function handleFileSelection(file) {
   spinner.style.display = 'block';
   fileName.textContent = `Carregando ${file.name}...`;
   fileType.textContent = '';
-  document.querySelectorAll('#diagnostico-sinais').forEach(e => e.remove());
+  document.querySelectorAll('#diagnostico-sinais, #sugestao-sessoes').forEach(e => e.remove());
 
   try {
-    const ext = file.name.split('.').pop().toLowerCase();
+    const ext = (file.name.split('.').pop() || '').toLowerCase();
     let text = '';
 
     if (ext === 'txt') {
       text = await file.text();
     } else if (ext === 'pdf') {
       const arrayBuffer = await file.arrayBuffer();
-      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-      for (let i = 1; i <= pdf.numPages; i++) {
-        const page = await pdf.getPage(i);
-        const content = await page.getTextContent();
-        text += content.items.map(item => item.str).join(' ') + '\n';
-      }
+      text = await extractTextPDFSmart(arrayBuffer);
     } else {
       alert('Formato não suportado. Use .txt ou .pdf');
       spinner.style.display = 'none';
@@ -196,21 +266,18 @@ async function handleFileSelection(file) {
         ? '📘 Detectado: conteúdo híbrido (mistura de tópicos e texto)'
         : '📖 Detectado: conteúdo explicativo (texto narrativo)';
 
-    // ======================================================
-    // 📊 Diagnóstico visível — análise dos sinais
-    // ======================================================
+    // 📊 Diagnóstico visível
     try {
       const dbg = medirSinais(normalizarTextoParaPrograma(text));
       const diag = `
 🔎 Diagnóstico:
-• Linhas totais: ${dbg.total}
+• Linhas totais (para sinais): ${dbg.total}
 • Marcadores (bullets): ${(dbg.pBullets * 100).toFixed(1)}%
 • Parágrafos longos: ${(dbg.pLongas * 100).toFixed(1)}%
 • Frases com pontuação final: ${(dbg.pFimPar * 100).toFixed(1)}%
 • Títulos em CAIXA ALTA: ${(dbg.pCaps * 100).toFixed(1)}%
 • Sequência máxima de marcadores: ${dbg.maxRunBullets}
       `.trim();
-
       const hint = document.createElement('pre');
       hint.id = 'diagnostico-sinais';
       hint.style.fontSize = '11px';
@@ -222,16 +289,14 @@ async function handleFileSelection(file) {
       hint.style.color = 'var(--muted)';
       hint.textContent = diag;
       fileType.insertAdjacentElement('afterend', hint);
-    } catch (err) {
-      console.warn("Diagnóstico indisponível:", err);
-    }
+    } catch {}
 
-    // ======================================================
-    // 📅 Sugestão automática da quantidade de sessões
-    // ======================================================
-    const linhas = text.split(/\n+/).map(l => l.trim()).filter(Boolean);
+    // 📅 Sugestão automática de sessões
+    const linhas = state.tipoMaterial === 'programa'
+      ? normalizarTextoParaPrograma(text).split(/\n+/).filter(Boolean)
+      : text.split(/(?<=[.!?])\s+/).filter(Boolean);
+
     let sugestao = 5;
-
     if (state.tipoMaterial === 'programa') {
       sugestao = Math.min(30, Math.max(5, Math.round(linhas.length / 10)));
     } else if (state.tipoMaterial === 'conteudo') {
@@ -241,11 +306,11 @@ async function handleFileSelection(file) {
     }
 
     const selDias = document.getElementById('sel-dias');
-    selDias.value = sugestao;
+    if (selDias) selDias.value = sugestao;
 
     const box = document.createElement('div');
     box.id = 'sugestao-sessoes';
-    box.className = 'mt-2 p-3 rounded-lg border border-[var(--stroke)] bg-[var(--card)] text-[13px] shadow-sm animate-fadeIn';
+    box.className = 'mt-2 p-3 rounded-lg border border-[var(--stroke)] bg-[var(--card)] text-[13px] shadow-sm';
     box.innerHTML = `
       <p>📅 Sugerido: <strong>${sugestao}</strong> sessões (com base em ${linhas.length} blocos detectados).</p>
       <p class="mt-1 text-[var(--muted)]">💬 Deseja manter essa sugestão?</p>
@@ -256,17 +321,13 @@ async function handleFileSelection(file) {
     `;
     fileType.insertAdjacentElement('afterend', box);
 
-    const btnAceitar = document.getElementById('btn-aceitar');
-    const btnAjustar = document.getElementById('btn-ajustar');
-
-    btnAceitar.addEventListener('click', () => {
+    document.getElementById('btn-aceitar')?.addEventListener('click', () => {
       box.innerHTML = `<p>📘 Sessões confirmadas: ${sugestao}.</p>`;
       setTimeout(() => box.remove(), 1500);
     });
-
-    btnAjustar.addEventListener('click', () => {
+    document.getElementById('btn-ajustar')?.addEventListener('click', () => {
       box.innerHTML = `<p>✏️ Ajuste o número de sessões manualmente no seletor abaixo.</p>`;
-      selDias.focus();
+      selDias?.focus();
       setTimeout(() => box.remove(), 2500);
     });
 
@@ -298,7 +359,7 @@ function dividirEmBlocos(texto, maxTamanho = 700) {
 
 function construirPlanoInteligente(texto, tipo, dias, tema) {
   const plano = [];
-  const linhas = texto.split(/\n+/).map(l => l.trim()).filter(Boolean);
+  const linhas = normalizarTextoParaPrograma(texto).split(/\n+/).map(l => l.trim()).filter(Boolean);
 
   if (tipo === "programa") {
     const blocos = Math.ceil(linhas.length / dias);
@@ -326,7 +387,6 @@ function construirPlanoInteligente(texto, tipo, dias, tema) {
       });
     }
   }
-
   return plano;
 }
 
