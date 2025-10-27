@@ -11,37 +11,34 @@ const state = {
 };
 
 // ==========================================================
-// 🎨 Tema claro/escuro — Compatível com mobile
+// 🌓 Tema claro/escuro — correção total (desktop + mobile)
 // ==========================================================
 const themeBtn = document.getElementById('btn-theme');
 const body = document.body;
 
-function setTheme(mode) {
-  body.classList.add('fading');
-  setTimeout(() => {
-    if (mode === 'light') {
-      body.classList.add('light');
-      localStorage.setItem('liora_theme', 'light');
-      themeBtn.textContent = '☀️';
-    } else {
-      body.classList.remove('light');
-      localStorage.setItem('liora_theme', 'dark');
-      themeBtn.textContent = '🌙';
-    }
-    setTimeout(() => body.classList.remove('fading'), 150);
-  }, 100);
+function applyTheme(mode) {
+  if (mode === 'light') {
+    body.classList.add('light');
+    localStorage.setItem('liora_theme', 'light');
+    themeBtn.textContent = '☀️';
+  } else {
+    body.classList.remove('light');
+    localStorage.setItem('liora_theme', 'dark');
+    themeBtn.textContent = '🌙';
+  }
 }
 
 function toggleTheme() {
-  const current = body.classList.contains('light') ? 'light' : 'dark';
-  setTheme(current === 'light' ? 'dark' : 'light');
+  const current = localStorage.getItem('liora_theme') || 'dark';
+  applyTheme(current === 'light' ? 'dark' : 'light');
 }
 
 themeBtn?.addEventListener('click', toggleTheme);
-themeBtn?.addEventListener('touchstart', toggleTheme, { passive: true });
+themeBtn?.addEventListener('touchend', toggleTheme, { passive: true });
 
-const savedTheme = localStorage.getItem('liora_theme');
-setTheme(savedTheme || 'dark');
+// Aplica imediatamente o tema salvo
+applyTheme(localStorage.getItem('liora_theme') || 'dark');
+
 
 // ==========================================================
 // 🧩 Normalização e detecção semântica
@@ -148,7 +145,42 @@ async function handleFileSelection(file) {
     }
 
     state.materialTexto = text;
-    state.tipoMaterial = detectarTipoMaterial(text);
+   fileName.textContent = `✅ ${file.name} carregado`;
+fileType.textContent =
+  state.tipoMaterial === 'programa'
+    ? '🗂️ Detectado: programa de conteúdo (estrutura de tópicos)'
+    : '📘 Detectado: conteúdo explicativo (texto narrativo)';
+
+// =============================
+// 📅 Sugestão automática + aviso para grandes
+// =============================
+if (state.tipoMaterial === 'programa') {
+  const linhas = text.split(/\n+/).map(l => l.trim()).filter(Boolean);
+  const total = linhas.length;
+
+  if (total > 800) {
+    const aviso = document.createElement('p');
+    aviso.textContent = '⚠️ Arquivo grande detectado: analisando apenas as 800 primeiras linhas.';
+    aviso.style.color = 'var(--brand)';
+    aviso.style.fontSize = '0.85rem';
+    aviso.style.marginTop = '0.5rem';
+    fileType.insertAdjacentElement('afterend', aviso);
+  }
+
+  const analisadas = Math.min(total, 800);
+  await new Promise(r => setTimeout(r, 150)); // pausa leve
+
+  let sugestao;
+  if (analisadas <= 10) sugestao = 3;
+  else if (analisadas <= 30) sugestao = 5;
+  else if (analisadas <= 60) sugestao = 7;
+  else if (analisadas <= 100) sugestao = 10;
+  else if (analisadas <= 200) sugestao = 14;
+  else if (analisadas <= 400) sugestao = 20;
+  else sugestao = 30;
+
+  setTimeout(() => criarCaixaSugestao(sugestao, analisadas), 300);
+}
 
     fileName.textContent = `✅ ${file.name} carregado`;
     fileType.textContent =
