@@ -293,3 +293,13 @@ footer {
 footer:hover {
   opacity: 1;
 }
+/* 🔧 Garante que o <html> também recebe o tema claro */
+html.light {
+  --brand:#f4a261;
+  --bg:#faf7f2;
+  --fg:#1e1e1e;
+  --card:#ffffff;
+  --muted:#6b6b6b;
+  --stroke:#e0ddd8;
+  --shadow:0 2px 10px rgba(0,0,0,0.1);
+}
