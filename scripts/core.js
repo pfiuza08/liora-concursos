@@ -1,6 +1,6 @@
 // ==========================================================
 // 🧠 Liora — Núcleo principal (core.js)
-// Versão com Painel Flutuante + Processamento Semântico + Densidade Cognitiva
+// Versão Inteligente com Agrupamento Semântico + Painel Flutuante + Resumo Cognitivo
 // ==========================================================
 
 const state = {
@@ -12,7 +12,7 @@ const state = {
 };
 
 // ==========================================================
-// 🌓 Tema claro/escuro (desktop + mobile)
+// 🌓 Tema claro/escuro
 // ==========================================================
 const themeBtn = document.getElementById('btn-theme');
 const body = document.body;
@@ -60,7 +60,7 @@ function normalizarTextoParaPrograma(texto) {
 }
 
 // ==========================================================
-// 📄 Extração de texto de PDF com estrutura preservada
+// 📄 Extração de texto de PDF
 // ==========================================================
 async function extractTextPDFSmart(arrayBuffer) {
   const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
@@ -104,99 +104,89 @@ async function extractTextPDFSmart(arrayBuffer) {
 
     full += lines.join('\n') + '\n';
   }
-
   return full.replace(/\n{3,}/g, '\n\n').trim();
 }
 
 // ==========================================================
-// 🧪 Sinais e decisão de tipo de material
+// 🧪 Detecção de tipo de material
 // ==========================================================
-function linhasParaSinais(texto) {
-  let linhas = texto.split(/\n+/).map(l => l.trim()).filter(Boolean);
-  if (linhas.length < 30) {
-    const pseudo = texto.split(/(?<=[.!?])\s+/).map(l => l.trim()).filter(Boolean);
-    if (pseudo.length > linhas.length) linhas = pseudo;
-  }
-  return linhas;
-}
-
 function medirSinais(textoNormalizado) {
-  const linhas = linhasParaSinais(textoNormalizado);
+  const linhas = textoNormalizado.split(/\n+/).filter(Boolean);
   const total = linhas.length || 1;
-
-  const marcadoresRegex = /^((\d+(\.\d+){0,3}[\.\)])|([IVXLCDM]+\.)|([A-Z]\))|([a-z]\))|[•\-–])/;
-  const verboRegex = /\b(é|são|representa|define|explica|trata|apresenta|demonstra|envolve|caracteriza|consiste|mostra)\b/i;
-  const fimParagrafoRegex = /[.!?]\s*$/;
-
-  let bullets = 0, longas = 0, verbais = 0, fimPar = 0, capsLike = 0;
-  let maxRunBullets = 0, run = 0;
+  let bullets = 0, longas = 0, caps = 0;
+  const marcadores = /^(\d+\.|\•|\-|\–)/;
 
   for (const l of linhas) {
-    const palavras = l.split(/\s+/);
-    const isBullet = marcadoresRegex.test(l);
-    const isLonga = palavras.length >= 12;
-    const isVerbal = verboRegex.test(l);
-    const isParagrafo = fimParagrafoRegex.test(l);
-    const isCapsLike = /^[A-ZÁÉÍÓÚÂÊÔÃÕÇ0-9 ]{6,}$/.test(l) && !/[.!?]$/.test(l);
-
-    if (isBullet) bullets++;
-    if (isLonga) longas++;
-    if (isVerbal) verbais++;
-    if (isParagrafo) fimPar++;
-    if (isCapsLike) capsLike++;
-
-    run = isBullet ? run + 1 : 0;
-    if (run > maxRunBullets) maxRunBullets = run;
+    if (marcadores.test(l)) bullets++;
+    if (l.length > 80) longas++;
+    if (/^[A-ZÁÉÍÓÚÂÊÔÃÕÇ0-9 ]{6,}$/.test(l)) caps++;
   }
 
-  return { total, pBullets: bullets/total, pLongas: longas/total, pVerbais: verbais/total, pFimPar: fimPar/total, pCaps: capsLike/total, maxRunBullets };
-}
-
-function decidirTipo(s) {
-  if (s.pBullets >= 0.25 && (s.maxRunBullets >= 2 || s.pCaps >= 0.1)) return { tipo: "programa", conf: 0.9 };
-  if (s.pLongas >= 0.55 && s.pFimPar >= 0.45 && s.pBullets < 0.25) return { tipo: "conteudo", conf: 0.85 };
-  if (s.pCaps >= 0.1 && s.pBullets >= 0.15 && s.pLongas >= 0.4) return { tipo: "hibrido", conf: 0.7 };
-  if (s.total < 15 && s.pLongas >= 0.4) return { tipo: "conteudo", conf: 0.6 };
-  return { tipo: "hibrido", conf: 0.5 };
+  return { total, pBullets: bullets/total, pLongas: longas/total, pCaps: caps/total };
 }
 
 function detectarTipoMaterial(texto) {
-  if (!texto || texto.trim().length < 80) return "conteudo";
-  const normalizado = normalizarTextoParaPrograma(texto);
-  const sinais = medirSinais(normalizado);
-  const { tipo } = decidirTipo(sinais);
-  return tipo;
+  const s = medirSinais(normalizarTextoParaPrograma(texto));
+  if (s.pBullets > 0.3 && s.pCaps > 0.1) return "programa";
+  if (s.pLongas > 0.6 && s.pBullets < 0.2) return "conteudo";
+  return "hibrido";
 }
 
 // ==========================================================
-// 🧠 Processamento semântico (resumo, conceitos e densidade)
+// 🧠 Agrupamento semântico automático
 // ==========================================================
-function analisarSemantica(texto) {
-  const palavras = texto.split(/\s+/).filter(w => w.length > 3);
-  const freq = {};
-  for (const w of palavras) {
-    const key = w.toLowerCase().replace(/[.,;:!?()"]/g, "");
-    if (!key.match(/^(para|com|como|onde|quando|entre|pois|este|esta|isso|aquele|aquela|são|estão|pode|ser|mais|menos|muito|cada|outro|porque|seja|todo|toda|essa|aquele|essa|essa)$/))
-      freq[key] = (freq[key] || 0) + 1;
+function extrairPalavrasChave(texto) {
+  return texto
+    .toLowerCase()
+    .replace(/[.,;:!?()\-–—"']/g, ' ')
+    .split(/\s+/)
+    .filter(w => w.length > 3 && !['para','como','onde','quando','porque','isso','esta','esse','essa','qual','com','sem','dos','das','nos','nas','uma','pela','entre','sobre','após','cada','pode','ser','estão','tem','mais','menos','ainda','assim','muito','pouco','todo','toda','cada','seja'].includes(w));
+}
+
+function similaridadeSemantica(a, b) {
+  const setA = new Set(a);
+  const setB = new Set(b);
+  const inter = [...setA].filter(x => setB.has(x)).length;
+  const union = new Set([...setA, ...setB]).size;
+  return inter / union;
+}
+
+function agruparTopicosSemelhantes(linhas) {
+  const grupos = [];
+  const usado = new Set();
+
+  for (let i = 0; i < linhas.length; i++) {
+    if (usado.has(i)) continue;
+    const base = extrairPalavrasChave(linhas[i]);
+    const grupo = [linhas[i]];
+    usado.add(i);
+
+    for (let j = i + 1; j < linhas.length; j++) {
+      if (usado.has(j)) continue;
+      const cand = extrairPalavrasChave(linhas[j]);
+      const sim = similaridadeSemantica(base, cand);
+      if (sim > 0.35) {
+        grupo.push(linhas[j]);
+        usado.add(j);
+      }
+    }
+    grupos.push(grupo);
   }
-  const chaves = Object.entries(freq)
-    .sort((a,b) => b[1]-a[1])
-    .slice(0,10)
-    .map(e => e[0]);
 
-  const resumo = texto.split(/[.!?]/)
-    .filter(s => s.trim().length > 40)
-    .slice(0,2)
-    .join('. ') + '.';
+  return grupos.map(g => ({
+    topicoPrincipal: g[0],
+    subitens: g.slice(1),
+    resumo: gerarResumoSintetico(g)
+  }));
+}
 
-  const titulo = chaves[0] ? chaves[0][0].toUpperCase() + chaves[0].slice(1) : "Conteúdo";
-
-  const mediaPalavras = palavras.length / (texto.split(/[.!?]/).length || 1);
-  let densidade = "📗 leve";
-  if (mediaPalavras > 18 && chaves.length > 7) densidade = "📙 densa";
-  else if (mediaPalavras > 12) densidade = "📘 média";
-
-  return { titulo, resumo, conceitos: chaves, densidade };
+function gerarResumoSintetico(grupo) {
+  const texto = grupo.join(' ');
+  const palavras = extrairPalavrasChave(texto);
+  const freq = {};
+  palavras.forEach(p => freq[p] = (freq[p] || 0) + 1);
+  const top = Object.entries(freq).sort((a,b) => b[1]-a[1]).slice(0,5).map(([p])=>p);
+  return `Foco: ${top.join(', ')}`;
 }
 
 // ==========================================================
@@ -265,7 +255,6 @@ function abrirEstruturaModal(texto) {
       color:var(--fg);
       padding:1.5rem;
       border-radius:1rem;
-      box-shadow:var(--shadow);
       width:90%;
       max-width:640px;
       max-height:80%;
@@ -274,7 +263,7 @@ function abrirEstruturaModal(texto) {
       <h3 style="font-weight:600;margin-bottom:0.5rem;">
         ${state.tipoMaterial === 'programa' ? '🗂️ Estrutura de conteúdo programático' :
           state.tipoMaterial === 'hibrido' ? '📘 Estrutura híbrida detectada' :
-          '📖 Estrutura narrativa (blocos de leitura)'}
+          '📖 Estrutura narrativa'}
       </h3>
       <p style="font-size:0.85rem;color:var(--muted);margin-bottom:0.8rem;">
         Exibindo os primeiros ${amostra.length} tópicos detectados (de ${linhas.length} blocos totais).
@@ -293,58 +282,55 @@ function abrirEstruturaModal(texto) {
 }
 
 // ==========================================================
-// 📘 Construção e renderização do plano (com semântica)
+// 📘 Construção e renderização do plano reorganizado + resumo cognitivo
 // ==========================================================
-function dividirEmBlocos(texto, maxTamanho = 700) {
-  const frases = texto.split(/(?<=[.!?])\s+/);
-  const blocos = [];
-  let bloco = "";
-  for (const f of frases) {
-    if ((bloco + f).length > maxTamanho) {
-      blocos.push(bloco.trim());
-      bloco = "";
-    }
-    bloco += f + " ";
-  }
-  if (bloco.trim()) blocos.push(bloco.trim());
-  return blocos;
-}
-
 function construirPlanoInteligente(texto, tipo, dias, tema) {
   const plano = [];
   const linhas = normalizarTextoParaPrograma(texto).split(/\n+/).map(l => l.trim()).filter(Boolean);
 
-  const gerarSessao = (grupo, i) => {
-    const sem = analisarSemantica(grupo.join(" "));
-    return {
-      dia: i + 1,
-      titulo: `Sessão ${i + 1} — ${sem.titulo}`,
-      resumo: sem.resumo,
-      conceitos: sem.conceitos,
-      densidade: sem.densidade,
-      descricao: grupo.map(t => "• " + t).join("\n")
-    };
-  };
-
   if (tipo === "programa") {
-    const blocos = Math.ceil(linhas.length / dias);
+    const grupos = agruparTopicosSemelhantes(linhas);
+    const blocos = Math.ceil(grupos.length / dias);
+
     for (let i = 0; i < dias; i++) {
-      const grupo = linhas.slice(i * blocos, (i + 1) * blocos);
+      const grupo = grupos.slice(i * blocos, (i + 1) * blocos);
       if (!grupo.length) break;
-      plano.push(gerarSessao(grupo, i));
+      const topico = grupo[0].topicoPrincipal.replace(/^[\d•\-–\s]+/, "");
+      const descricao = grupo.map(g => "• " + g.topicoPrincipal + (g.subitens.length ? "\n   " + g.subitens.join("\n   ") : "")).join("\n");
+
+      plano.push({
+        dia: i + 1,
+        titulo: `Sessão ${i + 1}`,
+        topico,
+        descricao,
+        resumo: grupo.map(g => g.resumo).join('; '),
+        densidade: grupo.length > 5 ? "📙 densa" : grupo.length > 2 ? "📘 média" : "📗 leve",
+        conceitos: extrairPalavrasChave(descricao).slice(0,4)
+      });
     }
   } else {
-    const blocos = dividirEmBlocos(texto, 800);
+    const blocos = texto.split(/(?<=[.!?])\s+/);
     const blocosPorDia = Math.ceil(blocos.length / dias);
     for (let i = 0; i < dias; i++) {
       const grupo = blocos.slice(i * blocosPorDia, (i + 1) * blocosPorDia);
       if (!grupo.length) break;
-      plano.push(gerarSessao(grupo, i));
+      plano.push({
+        dia: i + 1,
+        titulo: `Sessão ${i + 1}`,
+        topico: `Leitura guiada ${i + 1}`,
+        descricao: grupo.join(" "),
+        resumo: gerarResumoSintetico(grupo),
+        densidade: grupo.length > 10 ? "📙 densa" : grupo.length > 5 ? "📘 média" : "📗 leve",
+        conceitos: extrairPalavrasChave(grupo.join(" ")).slice(0,4)
+      });
     }
   }
   return plano;
 }
 
+// ==========================================================
+// ⚙️ Geração e renderização com gráfico + ícone flutuante ⚖️
+// ==========================================================
 const els = {
   inpTema: document.getElementById('inp-tema'),
   selDias: document.getElementById('sel-dias'),
@@ -368,7 +354,7 @@ els.btnGerar?.addEventListener("click", () => {
   state.plano = construirPlanoInteligente(state.materialTexto, tipo, state.dias, state.tema || "Tema");
 
   setStatus(tipo === "programa"
-    ? "🗂️ Programa de conteúdo identificado."
+    ? "🗂️ Programa reorganizado semanticamente."
     : tipo === "hibrido"
     ? "📘 Material híbrido detectado."
     : "📖 Texto narrativo identificado.");
@@ -377,71 +363,8 @@ els.btnGerar?.addEventListener("click", () => {
   renderPlano();
 });
 
-function renderPlano() {
-  els.plano.innerHTML = '';
-  if (!state.plano.length) {
-    els.plano.innerHTML = `<p class="text-sm text-[var(--muted)]">Nenhum plano de estudo gerado.</p>`;
-    return;
-  }
-  state.plano.forEach(sessao => {
-    const div = document.createElement('div');
-    div.className = 'session-card';
-    div.innerHTML = `
-      <div class="flex items-center justify-between mb-1">
-        <h3>${sessao.titulo}</h3>
-        <span class="text-xs opacity-70">${sessao.densidade}</span>
-      </div>
-      <p style="font-style:italic;font-size:0.85rem;color:var(--muted);margin-bottom:0.4rem;">${sessao.resumo}</p>
-      <p>${sessao.descricao.replace(/</g,'&lt;')}</p>
-      <div class="mt-2 flex flex-wrap gap-2">
-        ${sessao.conceitos.map(c => `<span class="chip">${c}</span>`).join('')}
-      </div>
-    `;
-    els.plano.appendChild(div);
-  });
-}
 // ==========================================================
-// 📊 Gráfico de Densidade Cognitiva — Resumo do plano
-// ==========================================================
-function renderGraficoDensidade(plano) {
-  const container = document.createElement('div');
-  container.id = 'grafico-densidade';
-  container.style.marginTop = '1.5rem';
-  container.style.padding = '1rem';
-  container.style.background = 'var(--card)';
-  container.style.borderRadius = '1rem';
-  container.style.boxShadow = 'var(--shadow)';
-  container.innerHTML = `<h4 style="margin-bottom:0.5rem;">⚖️ Densidade Cognitiva Geral</h4>`;
-
-  const contagens = { leve: 0, media: 0, densa: 0 };
-  plano.forEach(s => {
-    if (s.densidade.includes('leve')) contagens.leve++;
-    else if (s.densidade.includes('média')) contagens.media++;
-    else if (s.densidade.includes('densa')) contagens.densa++;
-  });
-
-  const total = plano.length || 1;
-  const pctLeve = (contagens.leve / total) * 100;
-  const pctMedia = (contagens.media / total) * 100;
-  const pctDensa = (contagens.densa / total) * 100;
-
-  container.innerHTML += `
-    <div style="display:flex;height:20px;border-radius:10px;overflow:hidden;margin-bottom:0.8rem;">
-      <div style="background:#48bb78;width:${pctLeve}%;"></div>
-      <div style="background:#4299e1;width:${pctMedia}%;"></div>
-      <div style="background:#c44b04;width:${pctDensa}%;"></div>
-    </div>
-    <div style="display:flex;justify-content:space-between;font-size:0.85rem;color:var(--muted);">
-      <span>📗 Leve (${contagens.leve})</span>
-      <span>📘 Média (${contagens.media})</span>
-      <span>📙 Densa (${contagens.densa})</span>
-    </div>
-  `;
-  return container;
-}
-
-// ==========================================================
-// 📘 Renderização do plano + Painel recolhível de densidade cognitiva
+// 📊 Renderização do plano + painel recolhível de densidade + ícone flutuante ⚖️
 // ==========================================================
 function renderPlano() {
   els.plano.innerHTML = '';
@@ -450,7 +373,7 @@ function renderPlano() {
     return;
   }
 
-  // --- Renderiza sessões ---
+  // Sessões
   state.plano.forEach(sessao => {
     const div = document.createElement('div');
     div.className = 'session-card';
@@ -468,7 +391,7 @@ function renderPlano() {
     els.plano.appendChild(div);
   });
 
-  // --- Gráfico recolhível ---
+  // --- Painel de resumo cognitivo ---
   const graficoWrapper = document.createElement('div');
   graficoWrapper.id = 'grafico-densidade-wrapper';
   graficoWrapper.style.marginTop = '1.5rem';
@@ -476,6 +399,9 @@ function renderPlano() {
   graficoWrapper.style.borderRadius = '1rem';
   graficoWrapper.style.boxShadow = 'var(--shadow)';
   graficoWrapper.style.overflow = 'hidden';
+ ...continuação do arquivo `core.js`:  
+
+```js
   graficoWrapper.style.transition = 'max-height 0.4s ease';
   graficoWrapper.style.maxHeight = '3rem';
   graficoWrapper.style.position = 'relative';
@@ -500,9 +426,9 @@ function renderPlano() {
   // --- Dados de densidade ---
   const contagens = { leve: 0, media: 0, densa: 0 };
   state.plano.forEach(s => {
-    if (s.densidade.includes('leve')) contagens.leve++;
-    else if (s.densidade.includes('média')) contagens.media++;
-    else if (s.densidade.includes('densa')) contagens.densa++;
+    if (s.densidade.includes('📗')) contagens.leve++;
+    else if (s.densidade.includes('📘')) contagens.media++;
+    else if (s.densidade.includes('📙')) contagens.densa++;
   });
 
   const total = state.plano.length || 1;
@@ -534,12 +460,15 @@ function renderPlano() {
   graficoWrapper.appendChild(header);
   graficoWrapper.appendChild(content);
   els.plano.appendChild(graficoWrapper);
+
+  // Cria o ícone flutuante
+  criarIconeFlutuanteResumo();
 }
+
 // ==========================================================
-// ⚖️ Ícone flutuante para abrir o resumo cognitivo
+// ⚖️ Ícone flutuante para abrir/fechar o resumo cognitivo
 // ==========================================================
 function criarIconeFlutuanteResumo() {
-  // Remove qualquer ícone anterior
   document.getElementById('icone-resumo')?.remove();
 
   const icone = document.createElement('div');
@@ -572,7 +501,6 @@ function criarIconeFlutuanteResumo() {
     icone.style.boxShadow = '0 4px 16px rgba(0,0,0,0.4)';
   });
 
-  // Evento de clique — abre/fecha o painel de densidade
   icone.addEventListener('click', () => {
     const wrapper = document.getElementById('grafico-densidade-wrapper');
     if (!wrapper) return;
@@ -594,99 +522,3 @@ function criarIconeFlutuanteResumo() {
 
   document.body.appendChild(icone);
 }
-
-// Cria automaticamente o ícone após cada renderização de plano
-function renderPlano() {
-  els.plano.innerHTML = '';
-  if (!state.plano.length) {
-    els.plano.innerHTML = `<p class="text-sm text-[var(--muted)]">Nenhum plano de estudo gerado.</p>`;
-    return;
-  }
-
-  state.plano.forEach(sessao => {
-    const div = document.createElement('div');
-    div.className = 'session-card';
-    div.innerHTML = `
-      <div class="flex items-center justify-between mb-1">
-        <h3>${sessao.titulo}</h3>
-        <span class="text-xs opacity-70">${sessao.densidade}</span>
-      </div>
-      <p style="font-style:italic;font-size:0.85rem;color:var(--muted);margin-bottom:0.4rem;">${sessao.resumo}</p>
-      <p>${sessao.descricao.replace(/</g,'&lt;')}</p>
-      <div class="mt-2 flex flex-wrap gap-2">
-        ${sessao.conceitos.map(c => `<span class="chip">${c}</span>`).join('')}
-      </div>
-    `;
-    els.plano.appendChild(div);
-  });
-
-  // Cria o painel recolhível (mesmo código anterior)
-  const graficoWrapper = document.createElement('div');
-  graficoWrapper.id = 'grafico-densidade-wrapper';
-  graficoWrapper.style.marginTop = '1.5rem';
-  graficoWrapper.style.background = 'var(--card)';
-  graficoWrapper.style.borderRadius = '1rem';
-  graficoWrapper.style.boxShadow = 'var(--shadow)';
-  graficoWrapper.style.overflow = 'hidden';
-  graficoWrapper.style.transition = 'max-height 0.4s ease';
-  graficoWrapper.style.maxHeight = '3rem';
-  graficoWrapper.style.position = 'relative';
-
-  const header = document.createElement('div');
-  header.style.padding = '1rem';
-  header.style.cursor = 'pointer';
-  header.style.display = 'flex';
-  header.style.alignItems = 'center';
-  header.style.justifyContent = 'space-between';
-  header.innerHTML = `
-    <h4 style="margin:0;">⚖️ Resumo Cognitivo</h4>
-    <span id="toggle-arrow" style="transition:transform 0.3s;">▼</span>
-  `;
-
-  const content = document.createElement('div');
-  content.id = 'grafico-densidade';
-  content.style.padding = '0 1rem 1rem';
-  content.style.display = 'none';
-  content.style.borderTop = '1px solid var(--stroke)';
-
-  const contagens = { leve: 0, media: 0, densa: 0 };
-  state.plano.forEach(s => {
-    if (s.densidade.includes('leve')) contagens.leve++;
-    else if (s.densidade.includes('média')) contagens.media++;
-    else if (s.densidade.includes('densa')) contagens.densa++;
-  });
-
-  const total = state.plano.length || 1;
-  const pctLeve = (contagens.leve / total) * 100;
-  const pctMedia = (contagens.media / total) * 100;
-  const pctDensa = (contagens.densa / total) * 100;
-
-  content.innerHTML = `
-    <div style="display:flex;height:20px;border-radius:10px;overflow:hidden;margin-top:1rem;margin-bottom:0.8rem;">
-      <div style="background:#48bb78;width:${pctLeve}%;"></div>
-      <div style="background:#4299e1;width:${pctMedia}%;"></div>
-      <div style="background:#c44b04;width:${pctDensa}%;"></div>
-    </div>
-    <div style="display:flex;justify-content:space-between;font-size:0.85rem;color:var(--muted);padding:0 0.2rem;">
-      <span>📗 Leve (${contagens.leve})</span>
-      <span>📘 Média (${contagens.media})</span>
-      <span>📙 Densa (${contagens.densa})</span>
-    </div>
-  `;
-
-  header.addEventListener('click', () => {
-    const open = content.style.display === 'block';
-    content.style.display = open ? 'none' : 'block';
-    graficoWrapper.style.maxHeight = open ? '3rem' : '12rem';
-    document.getElementById('toggle-arrow').style.transform = open ? 'rotate(0deg)' : 'rotate(180deg)';
-  });
-
-  graficoWrapper.appendChild(header);
-  graficoWrapper.appendChild(content);
-  els.plano.appendChild(graficoWrapper);
-
-  // Cria o ícone flutuante após o plano ser renderizado
-  criarIconeFlutuanteResumo();
-}
-
-
