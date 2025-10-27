@@ -11,46 +11,36 @@ const state = {
 };
 
 // ==========================================================
-// 🌓 Tema claro/escuro — aplica no <html> e no <body>
+// 🌓 Tema claro/escuro — correção completa (desktop + mobile)
 // ==========================================================
 const themeBtn = document.getElementById('btn-theme');
 const body = document.body;
-const htmlEl = document.documentElement; // <html>
+const html = document.documentElement;
 
-function applyTheme(mode) {
+function setTheme(mode) {
   const isLight = mode === 'light';
 
-  // alterna 'light' no <html> e no <body>
-  htmlEl.classList.toggle('light', isLight);
+  html.classList.toggle('light', isLight);
+  html.classList.toggle('dark', !isLight);
   body.classList.toggle('light', isLight);
+  body.classList.toggle('dark', !isLight);
 
-  // persiste e atualiza ícone
-  try { localStorage.setItem('liora_theme', isLight ? 'light' : 'dark'); } catch {}
-  if (themeBtn) themeBtn.textContent = isLight ? '☀️' : '🌙';
+  localStorage.setItem('liora_theme', isLight ? 'light' : 'dark');
+  themeBtn.textContent = isLight ? '☀️' : '🌙';
 }
 
-function currentTheme() {
-  try { return localStorage.getItem('liora_theme') || 'dark'; }
-  catch { return 'dark'; }
+function toggleTheme() {
+  const current = localStorage.getItem('liora_theme') || 'dark';
+  setTheme(current === 'light' ? 'dark' : 'light');
 }
 
-function toggleTheme(e) {
-  if (e?.preventDefault) e.preventDefault();
-  const next = currentTheme() === 'light' ? 'dark' : 'light';
-  applyTheme(next);
-}
+themeBtn.addEventListener('click', toggleTheme);
+themeBtn.addEventListener('touchend', e => {
+  e.preventDefault();
+  toggleTheme();
+}, { passive: false });
 
-// aplica imediatamente o tema salvo (padrão: dark)
-applyTheme(currentTheme());
-
-// eventos universais (desktop + mobile + teclado)
-if (themeBtn) {
-  themeBtn.addEventListener('click', toggleTheme);
-  themeBtn.addEventListener('touchend', toggleTheme, { passive: false });
-  themeBtn.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' || e.key === ' ') toggleTheme(e);
-  });
-}
+setTheme(localStorage.getItem('liora_theme') || 'dark');
 
 
 // ==========================================================
