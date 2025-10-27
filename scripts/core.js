@@ -1,6 +1,6 @@
 // ==========================================================
 // 🧠 Liora — Núcleo principal (core.js)
-// Versão com Processamento Semântico Integrado
+// Versão com Painel Flutuante + Processamento Semântico + Densidade Cognitiva
 // ==========================================================
 
 const state = {
@@ -125,7 +125,7 @@ function medirSinais(textoNormalizado) {
   const total = linhas.length || 1;
 
   const marcadoresRegex = /^((\d+(\.\d+){0,3}[\.\)])|([IVXLCDM]+\.)|([A-Z]\))|([a-z]\))|[•\-–])/;
-  const verboRegex = /\b(é|s|representa|define|explica|trata|apresenta|demonstra|envolve|caracteriza|consiste|mostra)\b/i;
+  const verboRegex = /\b(é|são|representa|define|explica|trata|apresenta|demonstra|envolve|caracteriza|consiste|mostra)\b/i;
   const fimParagrafoRegex = /[.!?]\s*$/;
 
   let bullets = 0, longas = 0, verbais = 0, fimPar = 0, capsLike = 0;
@@ -169,7 +169,7 @@ function detectarTipoMaterial(texto) {
 }
 
 // ==========================================================
-// 🧠 Processamento semântico — tópicos, resumo e conceitos
+// 🧠 Processamento semântico (resumo, conceitos e densidade)
 // ==========================================================
 function analisarSemantica(texto) {
   const palavras = texto.split(/\s+/).filter(w => w.length > 3);
@@ -190,52 +190,33 @@ function analisarSemantica(texto) {
     .join('. ') + '.';
 
   const titulo = chaves[0] ? chaves[0][0].toUpperCase() + chaves[0].slice(1) : "Conteúdo";
-  return { titulo, resumo, conceitos: chaves };
+
+  const mediaPalavras = palavras.length / (texto.split(/[.!?]/).length || 1);
+  let densidade = "📗 leve";
+  if (mediaPalavras > 18 && chaves.length > 7) densidade = "📙 densa";
+  else if (mediaPalavras > 12) densidade = "📘 média";
+
+  return { titulo, resumo, conceitos: chaves, densidade };
 }
 
 // ==========================================================
-// 📁 Upload e leitura de arquivo
+// 📁 Upload e leitura + painel flutuante
 // ==========================================================
-const zone = document.getElementById('upload-zone');
 const inputFile = document.getElementById('inp-file');
 const fileName = document.getElementById('file-name');
 const fileType = document.getElementById('file-type');
 
-['dragenter', 'dragover', 'dragleave', 'drop'].forEach(evt =>
-  document.addEventListener(evt, e => e.preventDefault(), true)
-);
-
-if (zone && inputFile) {
-  zone.addEventListener('dragover', () => zone.classList.add('dragover'));
-  zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
-  zone.addEventListener('drop', e => {
-    e.preventDefault();
-    zone.classList.remove('dragover');
-    const file = e.dataTransfer.files?.[0];
-    if (file) {
-      inputFile.files = e.dataTransfer.files;
-      handleFileSelection(file);
-    }
-  });
-
-  inputFile.addEventListener('change', e => {
-    const file = e.target.files[0];
-    if (file) handleFileSelection(file);
-  });
-}
-
-async function handleFileSelection(file) {
-  const spinner = document.getElementById('upload-spinner');
-  spinner.style.display = 'block';
+inputFile?.addEventListener('change', async e => {
+  const file = e.target.files[0];
+  if (!file) return;
   fileName.textContent = `Carregando ${file.name}...`;
-  fileType.textContent = '';
 
   try {
     const ext = (file.name.split('.').pop() || '').toLowerCase();
     let text = '';
     if (ext === 'txt') text = await file.text();
     else if (ext === 'pdf') text = await extractTextPDFSmart(await file.arrayBuffer());
-    else { alert('Formato não suportado. Use .txt ou .pdf'); spinner.style.display = 'none'; return; }
+    else { alert('Formato não suportado. Use .txt ou .pdf'); return; }
 
     state.materialTexto = text;
     state.tipoMaterial = detectarTipoMaterial(text);
@@ -243,20 +224,76 @@ async function handleFileSelection(file) {
     fileName.textContent = `✅ ${file.name} carregado`;
     fileType.textContent =
       state.tipoMaterial === 'programa'
-        ? '🗂️ Detectado: programa de conteúdo (estrutura de tópicos)'
+        ? '🗂️ Programa de conteúdo detectado.'
         : state.tipoMaterial === 'hibrido'
-        ? '📘 Detectado: conteúdo híbrido (mistura de tópicos e texto)'
-        : '📖 Detectado: conteúdo explicativo (texto narrativo)';
-  } catch (err) {
-    console.error(err);
+        ? '📘 Conteúdo híbrido detectado.'
+        : '📖 Conteúdo narrativo detectado.';
+
+    const btn = document.createElement('button');
+    btn.id = 'btn-estrutura';
+    btn.className = 'btn w-full mt-3';
+    btn.textContent = '📋 Ver estrutura detectada';
+    btn.onclick = () => abrirEstruturaModal(text);
+    fileType.insertAdjacentElement('afterend', btn);
+
+  } catch {
     fileName.textContent = '⚠️ Erro ao processar o arquivo.';
-  } finally {
-    spinner.style.display = 'none';
   }
+});
+
+// ==========================================================
+// 🪟 Painel flutuante — Estrutura detectada
+// ==========================================================
+function abrirEstruturaModal(texto) {
+  document.querySelector('#estrutura-modal')?.remove();
+  const normal = normalizarTextoParaPrograma(texto);
+  const linhas = normal.split(/\n+/).map(l => l.trim()).filter(Boolean);
+  const amostra = linhas.slice(0, 10);
+
+  const modal = document.createElement('div');
+  modal.id = 'estrutura-modal';
+  modal.style.position = 'fixed';
+  modal.style.inset = '0';
+  modal.style.background = 'rgba(0,0,0,0.75)';
+  modal.style.display = 'flex';
+  modal.style.alignItems = 'center';
+  modal.style.justifyContent = 'center';
+  modal.style.zIndex = '1000';
+  modal.innerHTML = `
+    <div style="
+      background:var(--card);
+      color:var(--fg);
+      padding:1.5rem;
+      border-radius:1rem;
+      box-shadow:var(--shadow);
+      width:90%;
+      max-width:640px;
+      max-height:80%;
+      overflow-y:auto;
+    ">
+      <h3 style="font-weight:600;margin-bottom:0.5rem;">
+        ${state.tipoMaterial === 'programa' ? '🗂️ Estrutura de conteúdo programático' :
+          state.tipoMaterial === 'hibrido' ? '📘 Estrutura híbrida detectada' :
+          '📖 Estrutura narrativa (blocos de leitura)'}
+      </h3>
+      <p style="font-size:0.85rem;color:var(--muted);margin-bottom:0.8rem;">
+        Exibindo os primeiros ${amostra.length} tópicos detectados (de ${linhas.length} blocos totais).
+      </p>
+      <ul style="font-size:0.9rem;line-height:1.5;margin-left:1rem;">
+        ${amostra.map(l => `<li>${l.replace(/</g,'&lt;')}</li>`).join('')}
+      </ul>
+      <div style="text-align:right;margin-top:1rem;">
+        <button id="fechar-modal" class="chip">Fechar</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  document.getElementById('fechar-modal').onclick = () => modal.remove();
+  modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
 }
 
 // ==========================================================
-// 📘 Construção e renderização do plano com semântica
+// 📘 Construção e renderização do plano (com semântica)
 // ==========================================================
 function dividirEmBlocos(texto, maxTamanho = 700) {
   const frases = texto.split(/(?<=[.!?])\s+/);
@@ -277,19 +314,24 @@ function construirPlanoInteligente(texto, tipo, dias, tema) {
   const plano = [];
   const linhas = normalizarTextoParaPrograma(texto).split(/\n+/).map(l => l.trim()).filter(Boolean);
 
+  const gerarSessao = (grupo, i) => {
+    const sem = analisarSemantica(grupo.join(" "));
+    return {
+      dia: i + 1,
+      titulo: `Sessão ${i + 1} — ${sem.titulo}`,
+      resumo: sem.resumo,
+      conceitos: sem.conceitos,
+      densidade: sem.densidade,
+      descricao: grupo.map(t => "• " + t).join("\n")
+    };
+  };
+
   if (tipo === "programa") {
     const blocos = Math.ceil(linhas.length / dias);
     for (let i = 0; i < dias; i++) {
       const grupo = linhas.slice(i * blocos, (i + 1) * blocos);
       if (!grupo.length) break;
-      const sem = analisarSemantica(grupo.join(" "));
-      plano.push({
-        dia: i + 1,
-        titulo: `Sessão ${i + 1} — ${sem.titulo}`,
-        resumo: sem.resumo,
-        conceitos: sem.conceitos,
-        descricao: grupo.map(t => "• " + t).join("\n")
-      });
+      plano.push(gerarSessao(grupo, i));
     }
   } else {
     const blocos = dividirEmBlocos(texto, 800);
@@ -297,14 +339,7 @@ function construirPlanoInteligente(texto, tipo, dias, tema) {
     for (let i = 0; i < dias; i++) {
       const grupo = blocos.slice(i * blocosPorDia, (i + 1) * blocosPorDia);
       if (!grupo.length) break;
-      const sem = analisarSemantica(grupo.join(" "));
-      plano.push({
-        dia: i + 1,
-        titulo: `Sessão ${i + 1} — ${sem.titulo}`,
-        resumo: sem.resumo,
-        conceitos: sem.conceitos,
-        descricao: grupo.join("\n\n")
-      });
+      plano.push(gerarSessao(grupo, i));
     }
   }
   return plano;
@@ -327,20 +362,17 @@ function updateCtx() {
 els.btnGerar?.addEventListener("click", () => {
   state.tema = els.inpTema.value.trim();
   state.dias = parseInt(els.selDias.value || "5", 10);
-
-  if (!state.tema && !state.materialTexto) {
-    alert("Defina um tema ou envie um material.");
-    return;
-  }
+  if (!state.tema && !state.materialTexto) return alert("Defina um tema ou envie um material.");
 
   const tipo = state.tipoMaterial || detectarTipoMaterial(state.materialTexto || "");
-  const plano = construirPlanoInteligente(state.materialTexto, tipo, state.dias, state.tema || "Tema");
-  state.plano = plano;
+  state.plano = construirPlanoInteligente(state.materialTexto, tipo, state.dias, state.tema || "Tema");
+
   setStatus(tipo === "programa"
-    ? "🗂️ Material identificado como programa de conteúdo."
+    ? "🗂️ Programa de conteúdo identificado."
     : tipo === "hibrido"
     ? "📘 Material híbrido detectado."
-    : "📖 Material identificado como conteúdo explicativo.");
+    : "📖 Texto narrativo identificado.");
+
   updateCtx();
   renderPlano();
 });
@@ -355,7 +387,10 @@ function renderPlano() {
     const div = document.createElement('div');
     div.className = 'session-card';
     div.innerHTML = `
-      <h3>${sessao.titulo}</h3>
+      <div class="flex items-center justify-between mb-1">
+        <h3>${sessao.titulo}</h3>
+        <span class="text-xs opacity-70">${sessao.densidade}</span>
+      </div>
       <p style="font-style:italic;font-size:0.85rem;color:var(--muted);margin-bottom:0.4rem;">${sessao.resumo}</p>
       <p>${sessao.descricao.replace(/</g,'&lt;')}</p>
       <div class="mt-2 flex flex-wrap gap-2">
