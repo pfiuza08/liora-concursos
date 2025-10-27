@@ -11,34 +11,48 @@ const state = {
 };
 
 // ==========================================================
-// 🎨 Tema claro/escuro
+// 🌓 Tema claro/escuro — robusto (desktop + mobile)
 // ==========================================================
 const themeBtn = document.getElementById('btn-theme');
 const body = document.body;
 
-function setTheme(mode) {
-  body.classList.add('fading');
-  setTimeout(() => {
-    if (mode === 'light') {
-      body.classList.add('light');
-      localStorage.setItem('liora_theme', 'light');
-      themeBtn.textContent = '☀️';
-    } else {
-      body.classList.remove('light');
-      localStorage.setItem('liora_theme', 'dark');
-      themeBtn.textContent = '🌙';
-    }
-    setTimeout(() => body.classList.remove('fading'), 150);
-  }, 100);
+function applyTheme(mode) {
+  // Aplica/remover classe 'light' de forma idempotente
+  body.classList.toggle('light', mode === 'light');
+  // Persiste escolha
+  try { localStorage.setItem('liora_theme', mode); } catch {}
+  // Atualiza ícone do botão
+  if (themeBtn) themeBtn.textContent = mode === 'light' ? '☀️' : '🌙';
 }
 
-themeBtn?.addEventListener('click', () => {
-  const current = body.classList.contains('light') ? 'light' : 'dark';
-  setTheme(current === 'light' ? 'dark' : 'light');
-});
+function getSavedTheme() {
+  try {
+    return localStorage.getItem('liora_theme') || 'dark';
+  } catch {
+    return 'dark';
+  }
+}
 
-const savedTheme = localStorage.getItem('liora_theme');
-setTheme(savedTheme || 'dark');
+function toggleTheme() {
+  const next = getSavedTheme() === 'light' ? 'dark' : 'light';
+  applyTheme(next);
+}
+
+// Inicializa imediatamente com o valor salvo (padrão: dark)
+applyTheme(getSavedTheme());
+
+// Listeners universais (mouse, toque e teclado)
+if (themeBtn) {
+  themeBtn.addEventListener('click', toggleTheme);
+  themeBtn.addEventListener('touchend', toggleTheme, { passive: true });
+  themeBtn.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      toggleTheme();
+    }
+  });
+}
+
 
 // ==========================================================
 // 🧩 Normalização e detecção semântica
