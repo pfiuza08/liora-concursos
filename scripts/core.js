@@ -11,25 +11,22 @@ const state = {
 };
 
 // ==========================================================
-// 🌓 Tema claro/escuro — fix universal (desktop + mobile)
+// 🌓 Tema claro/escuro — aplica no <html> e no <body>
 // ==========================================================
 const themeBtn = document.getElementById('btn-theme');
 const body = document.body;
-
-// 1) Garante que a classe 'dark' exista SEMPRE (padrão)
-body.classList.add('dark');
+const htmlEl = document.documentElement; // <html>
 
 function applyTheme(mode) {
-  // 2) Alterna a classe 'light' explicitamente
-  if (mode === 'light') {
-    body.classList.add('light');
-    localStorage.setItem('liora_theme', 'light');
-    if (themeBtn) themeBtn.textContent = '☀️';
-  } else {
-    body.classList.remove('light');
-    localStorage.setItem('liora_theme', 'dark');
-    if (themeBtn) themeBtn.textContent = '🌙';
-  }
+  const isLight = mode === 'light';
+
+  // alterna 'light' no <html> e no <body>
+  htmlEl.classList.toggle('light', isLight);
+  body.classList.toggle('light', isLight);
+
+  // persiste e atualiza ícone
+  try { localStorage.setItem('liora_theme', isLight ? 'light' : 'dark'); } catch {}
+  if (themeBtn) themeBtn.textContent = isLight ? '☀️' : '🌙';
 }
 
 function currentTheme() {
@@ -38,16 +35,15 @@ function currentTheme() {
 }
 
 function toggleTheme(e) {
-  // Evita cliques "fantasmas" em mobile
-  if (e && typeof e.preventDefault === 'function') e.preventDefault();
+  if (e?.preventDefault) e.preventDefault();
   const next = currentTheme() === 'light' ? 'dark' : 'light';
   applyTheme(next);
 }
 
-// 3) Aplica imediatamente o tema salvo (sem timeouts)
+// aplica imediatamente o tema salvo (padrão: dark)
 applyTheme(currentTheme());
 
-// 4) Eventos universais: click, touch, teclado
+// eventos universais (desktop + mobile + teclado)
 if (themeBtn) {
   themeBtn.addEventListener('click', toggleTheme);
   themeBtn.addEventListener('touchend', toggleTheme, { passive: false });
