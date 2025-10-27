@@ -11,43 +11,48 @@ const state = {
 };
 
 // ==========================================================
-// 🌓 Tema claro/escuro — versão universal (desktop + mobile)
+// 🌓 Tema claro/escuro — fix universal (desktop + mobile)
 // ==========================================================
 const themeBtn = document.getElementById('btn-theme');
 const body = document.body;
 
-// Aplica tema imediatamente sem delays
+// 1) Garante que a classe 'dark' exista SEMPRE (padrão)
+body.classList.add('dark');
+
 function applyTheme(mode) {
+  // 2) Alterna a classe 'light' explicitamente
   if (mode === 'light') {
     body.classList.add('light');
     localStorage.setItem('liora_theme', 'light');
-    themeBtn.textContent = '☀️';
+    if (themeBtn) themeBtn.textContent = '☀️';
   } else {
     body.classList.remove('light');
     localStorage.setItem('liora_theme', 'dark');
-    themeBtn.textContent = '🌙';
+    if (themeBtn) themeBtn.textContent = '🌙';
   }
 }
 
-// Alterna tema e aplica imediatamente
-function toggleTheme() {
-  const current = localStorage.getItem('liora_theme') || 'dark';
-  const next = current === 'light' ? 'dark' : 'light';
+function currentTheme() {
+  try { return localStorage.getItem('liora_theme') || 'dark'; }
+  catch { return 'dark'; }
+}
+
+function toggleTheme(e) {
+  // Evita cliques "fantasmas" em mobile
+  if (e && typeof e.preventDefault === 'function') e.preventDefault();
+  const next = currentTheme() === 'light' ? 'dark' : 'light';
   applyTheme(next);
 }
 
-// Inicializa tema logo ao carregar (sem timeout)
-applyTheme(localStorage.getItem('liora_theme') || 'dark');
+// 3) Aplica imediatamente o tema salvo (sem timeouts)
+applyTheme(currentTheme());
 
-// Eventos universais (click, touch e teclado)
+// 4) Eventos universais: click, touch, teclado
 if (themeBtn) {
   themeBtn.addEventListener('click', toggleTheme);
-  themeBtn.addEventListener('touchend', toggleTheme, { passive: true });
+  themeBtn.addEventListener('touchend', toggleTheme, { passive: false });
   themeBtn.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault();
-      toggleTheme();
-    }
+    if (e.key === 'Enter' || e.key === ' ') toggleTheme(e);
   });
 }
 
