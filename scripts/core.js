@@ -310,21 +310,109 @@ function dividirEmBlocos(texto, maxTamanho = 700) {
   return blocos;
 }
 
+// ==========================================================
+// 🧠 Análise Semântica — Agrupamento e resumos automáticos
+// ==========================================================
+function extrairPalavrasChave(texto) {
+  // remove pontuação e palavras comuns
+  return texto
+    .toLowerCase()
+    .replace(/[.,;:!?()\-–—"']/g, ' ')
+    .split(/\s+/)
+    .filter(w => w.length > 3 && !['para','como','onde','quando','porque','isso','esta','esse','essa','qual','com','sem','dos','das','nos','nas','uma','pela','pela','entre','sobre','após','cada','pode','ser','estão','tem','mais','menos','ainda','assim'].includes(w));
+}
+
+function similaridadeSemantica(a, b) {
+  const setA = new Set(a);
+  const setB = new Set(b);
+  const inter = [...setA].filter(x => setB.has(x)).length;
+  const union = new Set([...setA, ...setB]).size;
+  return inter / union;
+}
+
+function agruparTopicosSemelhantes(linhas) {
+  const grupos = [];
+  const usado = new Set();
+
+  for (let i = 0; i < linhas.length; i++) {
+    if (usado.has(i)) continue;
+    const base = extrairPalavrasChave(linhas[i]);
+    const grupo = [linhas[i]];
+    usado.add(i);
+
+    for (let j = i + 1; j < linhas.length; j++) {
+      if (usado.has(j)) continue;
+      const cand = extrairPalavrasChave(linhas[j]);
+      const sim = similaridadeSemantica(base, cand);
+      if (sim > 0.35) {
+        grupo.push(linhas[j]);
+        usado.add(j);
+      }
+    }
+    grupos.push(grupo);
+  }
+
+  return grupos.map(g => ({
+    topicoPrincipal: g[0],
+    subitens: g.slice(1),
+    resumo: gerarResumoSintetico(g)
+  }));
+}
+
+function gerarResumoSintetico(grupo) {
+  const texto = grupo.join(' ');
+  const palavras = extrairPalavrasChave(texto);
+  const freq = {};
+  palavras.forEach(p => freq[p] = (freq[p] || 0) + 1);
+  const top = Object.entries(freq).sort((a,b) => b[1]-a[1]).slice(0,5).map(([p])=>p);
+  return `Foco: ${top.join(', ')}`;
+}
+
 function construirPlanoInteligente(texto, tipo, dias, tema) {
   const plano = [];
   const linhas = normalizarTextoParaPrograma(texto).split(/\n+/).map(l => l.trim()).filter(Boolean);
 
-  const gerarSessao = (grupo, i) => {
-    const sem = analisarSemantica(grupo.join(" "));
-    return {
-      dia: i + 1,
-      titulo: `Sessão ${i + 1} — ${sem.titulo}`,
-      resumo: sem.resumo,
-      conceitos: sem.conceitos,
-      densidade: sem.densidade,
-      descricao: grupo.map(t => "• " + t).join("\n")
-    };
-  };
+  if (tipo === "programa") {
+    // 🧠 Análise semântica — agrupa tópicos relacionados
+    const grupos = agruparTopicosSemelhantes(linhas);
+    const blocos = Math.ceil(grupos.length / dias);
+
+    for (let i = 0; i < dias; i++) {
+      const grupo = grupos.slice(i * blocos, (i + 1) * blocos);
+      if (!grupo.length) break;
+      const topico = grupo[0].topicoPrincipal.replace(/^[\d•\-–\s]+/, "");
+      const descricao = grupo.map(g => "• " + g.topicoPrincipal + (g.subitens.length ? "\n   " + g.subitens.join("\n   ") : "")).join("\n");
+
+      plano.push({
+        dia: i + 1,
+        titulo: `Sessão ${i + 1}`,
+        topico,
+        descricao,
+        resumo: grupo.map(g => g.resumo).join('; '),
+        densidade: grupo.length > 5 ? "alta (📙 densa)" : grupo.length > 2 ? "média (📘 moderada)" : "leve (📗 leve)",
+        conceitos: extrairPalavrasChave(descricao).slice(0,4)
+      });
+    }
+  } else {
+    // texto narrativo — mantém divisão por blocos
+    const blocos = dividirEmBlocos(texto, 800);
+    const blocosPorDia = Math.ceil(blocos.length / dias);
+    for (let i = 0; i < dias; i++) {
+      const grupo = blocos.slice(i * blocosPorDia, (i + 1) * blocosPorDia);
+      if (!grupo.length) break;
+      plano.push({
+        dia: i + 1,
+        titulo: `Sessão ${i + 1}`,
+        topico: `Leitura guiada ${i + 1}`,
+        descricao: grupo.join("\n\n"),
+        resumo: gerarResumoSintetico(grupo),
+        densidade: grupo.join(' ').length > 1200 ? "alta (📙 densa)" : "média (📘 moderada)",
+        conceitos: extrairPalavrasChave(grupo.join(' ')).slice(0,4)
+      });
+    }
+  }
+  return plano;
+}
 
   if (tipo === "programa") {
     const blocos = Math.ceil(linhas.length / dias);
