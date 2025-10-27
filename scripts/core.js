@@ -48,58 +48,103 @@ themeBtn.addEventListener('touchend', e => {
 setTheme(localStorage.getItem('liora_theme') || 'dark');
 
 // ==========================================================
-// 🧩 Normalização e detecção semântica — versão aprimorada
+// 🧩 Normalização (robusta para PDF/TOC/listas)
 // ==========================================================
-
 function normalizarTextoParaPrograma(texto) {
   return texto
     .replace(/\r/g, "")
-    .replace(/\t/g, " ")
-    .replace(/\s{2,}/g, " ")
-    .replace(/(\d+\.)\s*/g, "\n$1 ")
-    .replace(/([A-ZÁÉÍÓÚÂÊÔÃÕÇ]{2,})(?=\s*[A-ZÁÉÍÓÚÂÊÔÃÕÇ])/g, "\n$1")
-    .replace(/([•\-–])\s*/g, "\n$1 ")
+    .replace(/\t+/g, " ")
+    .replace(/[ ]{2,}/g, " ")
+    // Quebra antes de padrões de tópicos: 1., 1.1, I., A), •, -, –
+    .replace(/(\s|^)((\d+(\.\d+){0,3}[\.\)])|([IVXLCDM]+\.)|([A-Z]\))|([a-z]\))|[•\-–])\s+/g, "\n$2 ")
+    // Quebra após ponto final seguido de letra maiúscula (parágrafos longos)
+    .replace(/([.!?])\s+(?=[A-ZÁÉÍÓÚÂÊÔÃÕÇ])/g, "$1\n")
     .replace(/\n{2,}/g, "\n")
     .trim();
 }
 
-function detectarTipoMaterial(texto) {
-  if (!texto || texto.length < 80) return "conteudo";
 
-  const normalizado = normalizarTextoParaPrograma(texto);
-  const linhas = normalizado.split(/\n+/).map(l => l.trim()).filter(Boolean);
-  if (!linhas.length) return "conteudo";
+// ==========================================================
+// 🧪 Sinais e decisão — programa, conteúdo ou híbrido
+// ==========================================================
+function medirSinais(textoNormalizado) {
+  const linhas = textoNormalizado.split(/\n+/).map(l => l.trim()).filter(Boolean);
+  const total = linhas.length || 1;
 
-  let curtas = 0, marcadas = 0, verbais = 0, paragrafos = 0, longas = 0;
+  const marcadoresRegex = /^((\d+(\.\d+){0,3}[\.\)])|([IVXLCDM]+\.)|([A-Z]\))|([a-z]\))|[•\-–])/;
+  const verboRegex = /\b(é|são|está|estão|representa|consiste|define|explica|indica|utiliza|refere|aplica|envolve|caracteriza|permite|demonstra|revela|trata|apresenta|mostra|describe|analisa|discorre)\b/i;
+  const fimParagrafoRegex = /[.!?]\s*$/;
 
-  const verboRegex = /\b(é|são|está|estão|representa|consiste|define|explica|indica|utiliza|refere|aplica|envolve|caracteriza|permite|demonstra|revela|trata|apresenta)\b/i;
-  const marcadoresRegex = /^(\d+\.|[A-Z]\.|[a-z]\)|•|\-|\–)/;
-  const fimDeParagrafoRegex = /[.!?]\s*$/;
+  let bullets = 0, longas = 0, verbais = 0, fimPar = 0, capsLike = 0;
+  let maxRunBullets = 0, run = 0;
 
   for (const l of linhas) {
     const palavras = l.split(/\s+/);
-    if (palavras.length <= 8) curtas++;
-    else longas++;
+    const isBullet = marcadoresRegex.test(l);
+    const isLonga = palavras.length >= 12;
+    const isVerbal = verboRegex.test(l);
+    const isParagrafo = fimParagrafoRegex.test(l);
+    const isCapsLike = /^[A-ZÁÉÍÓÚÂÊÔÃÕÇ0-9 ]{6,}$/.test(l) && !/[.!?]$/.test(l); // títulos/TOC
 
-    if (marcadoresRegex.test(l)) marcadas++;
-    if (verboRegex.test(l)) verbais++;
-    if (fimDeParagrafoRegex.test(l)) paragrafos++;
+    if (isBullet) bullets++;
+    if (isLonga) longas++;
+    if (isVerbal) verbais++;
+    if (isParagrafo) fimPar++;
+    if (isCapsLike) capsLike++;
+
+    run = isBullet ? run + 1 : 0;
+    if (run > maxRunBullets) maxRunBullets = run;
   }
 
-  const total = linhas.length;
-  const pCurtas = curtas / total;
-  const pMarcadas = marcadas / total;
-  const pVerbais = verbais / total;
+  const pBullets = bullets / total;
   const pLongas = longas / total;
-  const pParagrafos = paragrafos / total;
+  const pVerbais = verbais / total;
+  const pFimPar = fimPar / total;
+  const pCaps = capsLike / total;
 
-  const scorePrograma = (pCurtas * 0.5 + pMarcadas * 0.6) - (pVerbais * 0.3 + pLongas * 0.4);
-  const scoreConteudo = (pLongas * 0.6 + pVerbais * 0.4) - (pMarcadas * 0.5);
-
-  if (scorePrograma > 0.25 && pMarcadas > 0.2) return "programa";
-  if (scoreConteudo > 0.25 && pLongas > 0.4) return "conteudo";
-  return "hibrido";
+  return { total, pBullets, pLongas, pVerbais, pFimPar, pCaps, maxRunBullets };
 }
+
+function decidirTipo(s) {
+  // Regras “anti-falso-positivo” para e-books com sumário curto:
+  // se bullets existem mas são poucos e há muito parágrafo longo → conteúdo
+  if (s.pBullets < 0.18 && s.pLongas >= 0.55 && s.pFimPar >= 0.45) {
+    return { tipo: "conteudo", conf: 0.8 };
+  }
+
+  // Programa forte: muitas linhas com marcadores + sequências longas de bullets + pouco parágrafo
+  if (s.pBullets >= 0.35 && s.maxRunBullets >= 3 && s.pLongas < 0.55 && s.pFimPar < 0.5) {
+    return { tipo: "programa", conf: 0.85 };
+  }
+
+  // Conteúdo claro: maioria de linhas longas e terminadas em pontuação
+  if (s.pLongas >= 0.6 && s.pFimPar >= 0.5 && s.pBullets < 0.25) {
+    return { tipo: "conteudo", conf: 0.75 };
+  }
+
+  // TOC muito forte (muitos títulos/caixa alta) + bullets medianos → tende a programa
+  if (s.pCaps >= 0.15 && s.pBullets >= 0.25) {
+    return { tipo: "programa", conf: 0.6 };
+  }
+
+  // Curto demais para afirmar: privilegia conteúdo para não superestimar
+  if (s.total < 20 && s.pLongas >= 0.4) {
+    return { tipo: "conteudo", conf: 0.6 };
+  }
+
+  // Caso misto
+  return { tipo: "hibrido", conf: 0.55 };
+}
+
+function detectarTipoMaterial(texto) {
+  if (!texto || texto.trim().length < 80) return "conteudo";
+  const normalizado = normalizarTextoParaPrograma(texto);
+  const sinais = medirSinais(normalizado);
+  const { tipo } = decidirTipo(sinais);
+  // (Opcional) debug: console.log("SINAIS:", sinais, "→", tipo);
+  return tipo;
+}
+
 
 // ==========================================================
 // 📁 Upload e leitura de arquivo
