@@ -400,3 +400,293 @@ function renderPlano() {
     els.plano.appendChild(div);
   });
 }
+// ==========================================================
+// 📊 Gráfico de Densidade Cognitiva — Resumo do plano
+// ==========================================================
+function renderGraficoDensidade(plano) {
+  const container = document.createElement('div');
+  container.id = 'grafico-densidade';
+  container.style.marginTop = '1.5rem';
+  container.style.padding = '1rem';
+  container.style.background = 'var(--card)';
+  container.style.borderRadius = '1rem';
+  container.style.boxShadow = 'var(--shadow)';
+  container.innerHTML = `<h4 style="margin-bottom:0.5rem;">⚖️ Densidade Cognitiva Geral</h4>`;
+
+  const contagens = { leve: 0, media: 0, densa: 0 };
+  plano.forEach(s => {
+    if (s.densidade.includes('leve')) contagens.leve++;
+    else if (s.densidade.includes('média')) contagens.media++;
+    else if (s.densidade.includes('densa')) contagens.densa++;
+  });
+
+  const total = plano.length || 1;
+  const pctLeve = (contagens.leve / total) * 100;
+  const pctMedia = (contagens.media / total) * 100;
+  const pctDensa = (contagens.densa / total) * 100;
+
+  container.innerHTML += `
+    <div style="display:flex;height:20px;border-radius:10px;overflow:hidden;margin-bottom:0.8rem;">
+      <div style="background:#48bb78;width:${pctLeve}%;"></div>
+      <div style="background:#4299e1;width:${pctMedia}%;"></div>
+      <div style="background:#c44b04;width:${pctDensa}%;"></div>
+    </div>
+    <div style="display:flex;justify-content:space-between;font-size:0.85rem;color:var(--muted);">
+      <span>📗 Leve (${contagens.leve})</span>
+      <span>📘 Média (${contagens.media})</span>
+      <span>📙 Densa (${contagens.densa})</span>
+    </div>
+  `;
+  return container;
+}
+
+// ==========================================================
+// 📘 Renderização do plano + Painel recolhível de densidade cognitiva
+// ==========================================================
+function renderPlano() {
+  els.plano.innerHTML = '';
+  if (!state.plano.length) {
+    els.plano.innerHTML = `<p class="text-sm text-[var(--muted)]">Nenhum plano de estudo gerado.</p>`;
+    return;
+  }
+
+  // --- Renderiza sessões ---
+  state.plano.forEach(sessao => {
+    const div = document.createElement('div');
+    div.className = 'session-card';
+    div.innerHTML = `
+      <div class="flex items-center justify-between mb-1">
+        <h3>${sessao.titulo}</h3>
+        <span class="text-xs opacity-70">${sessao.densidade}</span>
+      </div>
+      <p style="font-style:italic;font-size:0.85rem;color:var(--muted);margin-bottom:0.4rem;">${sessao.resumo}</p>
+      <p>${sessao.descricao.replace(/</g,'&lt;')}</p>
+      <div class="mt-2 flex flex-wrap gap-2">
+        ${sessao.conceitos.map(c => `<span class="chip">${c}</span>`).join('')}
+      </div>
+    `;
+    els.plano.appendChild(div);
+  });
+
+  // --- Gráfico recolhível ---
+  const graficoWrapper = document.createElement('div');
+  graficoWrapper.id = 'grafico-densidade-wrapper';
+  graficoWrapper.style.marginTop = '1.5rem';
+  graficoWrapper.style.background = 'var(--card)';
+  graficoWrapper.style.borderRadius = '1rem';
+  graficoWrapper.style.boxShadow = 'var(--shadow)';
+  graficoWrapper.style.overflow = 'hidden';
+  graficoWrapper.style.transition = 'max-height 0.4s ease';
+  graficoWrapper.style.maxHeight = '3rem';
+  graficoWrapper.style.position = 'relative';
+
+  const header = document.createElement('div');
+  header.style.padding = '1rem';
+  header.style.cursor = 'pointer';
+  header.style.display = 'flex';
+  header.style.alignItems = 'center';
+  header.style.justifyContent = 'space-between';
+  header.innerHTML = `
+    <h4 style="margin:0;">⚖️ Resumo Cognitivo</h4>
+    <span id="toggle-arrow" style="transition:transform 0.3s;">▼</span>
+  `;
+
+  const content = document.createElement('div');
+  content.id = 'grafico-densidade';
+  content.style.padding = '0 1rem 1rem';
+  content.style.display = 'none';
+  content.style.borderTop = '1px solid var(--stroke)';
+
+  // --- Dados de densidade ---
+  const contagens = { leve: 0, media: 0, densa: 0 };
+  state.plano.forEach(s => {
+    if (s.densidade.includes('leve')) contagens.leve++;
+    else if (s.densidade.includes('média')) contagens.media++;
+    else if (s.densidade.includes('densa')) contagens.densa++;
+  });
+
+  const total = state.plano.length || 1;
+  const pctLeve = (contagens.leve / total) * 100;
+  const pctMedia = (contagens.media / total) * 100;
+  const pctDensa = (contagens.densa / total) * 100;
+
+  content.innerHTML = `
+    <div style="display:flex;height:20px;border-radius:10px;overflow:hidden;margin-top:1rem;margin-bottom:0.8rem;">
+      <div style="background:#48bb78;width:${pctLeve}%;"></div>
+      <div style="background:#4299e1;width:${pctMedia}%;"></div>
+      <div style="background:#c44b04;width:${pctDensa}%;"></div>
+    </div>
+    <div style="display:flex;justify-content:space-between;font-size:0.85rem;color:var(--muted);padding:0 0.2rem;">
+      <span>📗 Leve (${contagens.leve})</span>
+      <span>📘 Média (${contagens.media})</span>
+      <span>📙 Densa (${contagens.densa})</span>
+    </div>
+  `;
+
+  // --- Evento de expansão ---
+  header.addEventListener('click', () => {
+    const open = content.style.display === 'block';
+    content.style.display = open ? 'none' : 'block';
+    graficoWrapper.style.maxHeight = open ? '3rem' : '12rem';
+    document.getElementById('toggle-arrow').style.transform = open ? 'rotate(0deg)' : 'rotate(180deg)';
+  });
+
+  graficoWrapper.appendChild(header);
+  graficoWrapper.appendChild(content);
+  els.plano.appendChild(graficoWrapper);
+}
+// ==========================================================
+// ⚖️ Ícone flutuante para abrir o resumo cognitivo
+// ==========================================================
+function criarIconeFlutuanteResumo() {
+  // Remove qualquer ícone anterior
+  document.getElementById('icone-resumo')?.remove();
+
+  const icone = document.createElement('div');
+  icone.id = 'icone-resumo';
+  icone.innerHTML = '⚖️';
+  icone.title = 'Ver resumo cognitivo';
+  icone.style.position = 'fixed';
+  icone.style.bottom = '24px';
+  icone.style.right = '24px';
+  icone.style.background = 'var(--brand)';
+  icone.style.color = '#fff';
+  icone.style.fontSize = '1.4rem';
+  icone.style.borderRadius = '50%';
+  icone.style.width = '52px';
+  icone.style.height = '52px';
+  icone.style.display = 'flex';
+  icone.style.alignItems = 'center';
+  icone.style.justifyContent = 'center';
+  icone.style.boxShadow = '0 4px 16px rgba(0,0,0,0.4)';
+  icone.style.cursor = 'pointer';
+  icone.style.transition = 'transform 0.2s ease, box-shadow 0.3s ease';
+  icone.style.zIndex = '2000';
+
+  icone.addEventListener('mouseenter', () => {
+    icone.style.transform = 'scale(1.08)';
+    icone.style.boxShadow = '0 6px 20px rgba(0,0,0,0.5)';
+  });
+  icone.addEventListener('mouseleave', () => {
+    icone.style.transform = 'scale(1)';
+    icone.style.boxShadow = '0 4px 16px rgba(0,0,0,0.4)';
+  });
+
+  // Evento de clique — abre/fecha o painel de densidade
+  icone.addEventListener('click', () => {
+    const wrapper = document.getElementById('grafico-densidade-wrapper');
+    if (!wrapper) return;
+    const content = wrapper.querySelector('#grafico-densidade');
+    const arrow = wrapper.querySelector('#toggle-arrow');
+    const isOpen = content && content.style.display === 'block';
+
+    if (isOpen) {
+      content.style.display = 'none';
+      wrapper.style.maxHeight = '3rem';
+      if (arrow) arrow.style.transform = 'rotate(0deg)';
+    } else {
+      content.style.display = 'block';
+      wrapper.style.maxHeight = '12rem';
+      if (arrow) arrow.style.transform = 'rotate(180deg)';
+      wrapper.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  });
+
+  document.body.appendChild(icone);
+}
+
+// Cria automaticamente o ícone após cada renderização de plano
+function renderPlano() {
+  els.plano.innerHTML = '';
+  if (!state.plano.length) {
+    els.plano.innerHTML = `<p class="text-sm text-[var(--muted)]">Nenhum plano de estudo gerado.</p>`;
+    return;
+  }
+
+  state.plano.forEach(sessao => {
+    const div = document.createElement('div');
+    div.className = 'session-card';
+    div.innerHTML = `
+      <div class="flex items-center justify-between mb-1">
+        <h3>${sessao.titulo}</h3>
+        <span class="text-xs opacity-70">${sessao.densidade}</span>
+      </div>
+      <p style="font-style:italic;font-size:0.85rem;color:var(--muted);margin-bottom:0.4rem;">${sessao.resumo}</p>
+      <p>${sessao.descricao.replace(/</g,'&lt;')}</p>
+      <div class="mt-2 flex flex-wrap gap-2">
+        ${sessao.conceitos.map(c => `<span class="chip">${c}</span>`).join('')}
+      </div>
+    `;
+    els.plano.appendChild(div);
+  });
+
+  // Cria o painel recolhível (mesmo código anterior)
+  const graficoWrapper = document.createElement('div');
+  graficoWrapper.id = 'grafico-densidade-wrapper';
+  graficoWrapper.style.marginTop = '1.5rem';
+  graficoWrapper.style.background = 'var(--card)';
+  graficoWrapper.style.borderRadius = '1rem';
+  graficoWrapper.style.boxShadow = 'var(--shadow)';
+  graficoWrapper.style.overflow = 'hidden';
+  graficoWrapper.style.transition = 'max-height 0.4s ease';
+  graficoWrapper.style.maxHeight = '3rem';
+  graficoWrapper.style.position = 'relative';
+
+  const header = document.createElement('div');
+  header.style.padding = '1rem';
+  header.style.cursor = 'pointer';
+  header.style.display = 'flex';
+  header.style.alignItems = 'center';
+  header.style.justifyContent = 'space-between';
+  header.innerHTML = `
+    <h4 style="margin:0;">⚖️ Resumo Cognitivo</h4>
+    <span id="toggle-arrow" style="transition:transform 0.3s;">▼</span>
+  `;
+
+  const content = document.createElement('div');
+  content.id = 'grafico-densidade';
+  content.style.padding = '0 1rem 1rem';
+  content.style.display = 'none';
+  content.style.borderTop = '1px solid var(--stroke)';
+
+  const contagens = { leve: 0, media: 0, densa: 0 };
+  state.plano.forEach(s => {
+    if (s.densidade.includes('leve')) contagens.leve++;
+    else if (s.densidade.includes('média')) contagens.media++;
+    else if (s.densidade.includes('densa')) contagens.densa++;
+  });
+
+  const total = state.plano.length || 1;
+  const pctLeve = (contagens.leve / total) * 100;
+  const pctMedia = (contagens.media / total) * 100;
+  const pctDensa = (contagens.densa / total) * 100;
+
+  content.innerHTML = `
+    <div style="display:flex;height:20px;border-radius:10px;overflow:hidden;margin-top:1rem;margin-bottom:0.8rem;">
+      <div style="background:#48bb78;width:${pctLeve}%;"></div>
+      <div style="background:#4299e1;width:${pctMedia}%;"></div>
+      <div style="background:#c44b04;width:${pctDensa}%;"></div>
+    </div>
+    <div style="display:flex;justify-content:space-between;font-size:0.85rem;color:var(--muted);padding:0 0.2rem;">
+      <span>📗 Leve (${contagens.leve})</span>
+      <span>📘 Média (${contagens.media})</span>
+      <span>📙 Densa (${contagens.densa})</span>
+    </div>
+  `;
+
+  header.addEventListener('click', () => {
+    const open = content.style.display === 'block';
+    content.style.display = open ? 'none' : 'block';
+    graficoWrapper.style.maxHeight = open ? '3rem' : '12rem';
+    document.getElementById('toggle-arrow').style.transform = open ? 'rotate(0deg)' : 'rotate(180deg)';
+  });
+
+  graficoWrapper.appendChild(header);
+  graficoWrapper.appendChild(content);
+  els.plano.appendChild(graficoWrapper);
+
+  // Cria o ícone flutuante após o plano ser renderizado
+  criarIconeFlutuanteResumo();
+}
+
+
