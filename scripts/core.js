@@ -1,5 +1,5 @@
 // ==========================================================
-// 🧠 Liora Concursos — Núcleo principal (core.js)
+// 🧠 Liora — Núcleo principal (core.js) — versão completa e aprimorada
 // ==========================================================
 
 const state = {
@@ -13,7 +13,6 @@ const state = {
 // ==========================================================
 // 🌓 Tema claro/escuro — versão final (desktop + mobile + padrão escuro)
 // ==========================================================
-
 const themeBtn = document.getElementById('btn-theme');
 const body = document.body;
 const html = document.documentElement;
@@ -40,60 +39,66 @@ function toggleTheme() {
   setTheme(current === 'light' ? 'dark' : 'light');
 }
 
-// 💻 Clique (desktop)
 themeBtn.addEventListener('click', toggleTheme);
-
-// 📱 Toque (mobile)
 themeBtn.addEventListener('touchend', e => {
   e.preventDefault();
   toggleTheme();
 }, { passive: false });
 
-// 🚀 Inicializa com o tema salvo (ou escuro por padrão)
 setTheme(localStorage.getItem('liora_theme') || 'dark');
 
+// ==========================================================
+// 🧩 Normalização e detecção semântica — versão aprimorada
+// ==========================================================
 
-// ==========================================================
-// 🧩 Normalização e detecção semântica
-// ==========================================================
 function normalizarTextoParaPrograma(texto) {
   return texto
-    .replace(/(\d+)\s+(?=[A-ZÁÉÍÓÚÂÊÔÃÕ])/g, '\n$1 ')
-    .replace(/\. (?=\d|\b[A-ZÁÉÍÓÚÂÊÔÃÕ])/g, '.\n')
-    .replace(/:\s+(?=[A-ZÁÉÍÓÚÂÊÔÃÕ])/g, ':\n')
-    .replace(/;\s+(?=[A-ZÁÉÍÓÚÂÊÔÃÕ])/g, ';\n')
-    .replace(/\n{2,}/g, '\n')
+    .replace(/\r/g, "")
+    .replace(/\t/g, " ")
+    .replace(/\s{2,}/g, " ")
+    .replace(/(\d+\.)\s*/g, "\n$1 ")
+    .replace(/([A-ZÁÉÍÓÚÂÊÔÃÕÇ]{2,})(?=\s*[A-ZÁÉÍÓÚÂÊÔÃÕÇ])/g, "\n$1")
+    .replace(/([•\-–])\s*/g, "\n$1 ")
+    .replace(/\n{2,}/g, "\n")
     .trim();
 }
 
 function detectarTipoMaterial(texto) {
-  if (!texto || texto.length < 80) return 'conteudo';
+  if (!texto || texto.length < 80) return "conteudo";
+
   const normalizado = normalizarTextoParaPrograma(texto);
   const linhas = normalizado.split(/\n+/).map(l => l.trim()).filter(Boolean);
-  if (!linhas.length) return 'conteudo';
+  if (!linhas.length) return "conteudo";
 
-  let curtas = 0, marcadas = 0, comPonto = 0, verbais = 0, conectivos = 0;
-  const verboRegex = /\b(é|são|está|estão|representa|consiste|permite|define|explica|indica|utiliza|refere|aplica|envolve|caracteriza)\b/i;
-  const conectivosRegex = /\b(porque|além|entretanto|porém|como|assim|logo|também|portanto|quando|enquanto|ou seja|por isso)\b/i;
+  let curtas = 0, marcadas = 0, verbais = 0, paragrafos = 0, longas = 0;
+
+  const verboRegex = /\b(é|são|está|estão|representa|consiste|define|explica|indica|utiliza|refere|aplica|envolve|caracteriza|permite|demonstra|revela|trata|apresenta)\b/i;
+  const marcadoresRegex = /^(\d+\.|[A-Z]\.|[a-z]\)|•|\-|\–)/;
+  const fimDeParagrafoRegex = /[.!?]\s*$/;
 
   for (const l of linhas) {
     const palavras = l.split(/\s+/);
     if (palavras.length <= 8) curtas++;
-    if (/^[\d•\-–]/.test(l)) marcadas++;
-    if (/[.!?]$/.test(l)) comPonto++;
+    else longas++;
+
+    if (marcadoresRegex.test(l)) marcadas++;
     if (verboRegex.test(l)) verbais++;
-    if (conectivosRegex.test(l)) conectivos++;
+    if (fimDeParagrafoRegex.test(l)) paragrafos++;
   }
 
   const total = linhas.length;
   const pCurtas = curtas / total;
   const pMarcadas = marcadas / total;
-  const pComPonto = comPonto / total;
   const pVerbais = verbais / total;
-  const pConectivos = conectivos / total;
+  const pLongas = longas / total;
+  const pParagrafos = paragrafos / total;
 
-  const scorePrograma = (pCurtas * 0.5 + pMarcadas * 0.4) - (pVerbais * 0.5 + pConectivos * 0.3 + pComPonto * 0.2);
-  return scorePrograma > 0.18 ? 'programa' : 'conteudo';
+  const scorePrograma = (pCurtas * 0.5 + pMarcadas * 0.6) - (pVerbais * 0.3 + pLongas * 0.4);
+  const scoreConteudo = (pLongas * 0.6 + pVerbais * 0.4) - (pMarcadas * 0.5);
+
+  if (scorePrograma > 0.25 && pMarcadas > 0.2) return "programa";
+  if (scoreConteudo > 0.25 && pLongas > 0.4) return "conteudo";
+  return "hibrido";
 }
 
 // ==========================================================
@@ -132,8 +137,6 @@ async function handleFileSelection(file) {
   spinner.style.display = 'block';
   fileName.textContent = `Carregando ${file.name}...`;
   fileType.textContent = '';
-  const antiga = document.getElementById('sugestao-sessoes');
-  if (antiga) antiga.remove();
 
   try {
     const ext = file.name.split('.').pop().toLowerCase();
@@ -162,57 +165,9 @@ async function handleFileSelection(file) {
     fileType.textContent =
       state.tipoMaterial === 'programa'
         ? '🗂️ Detectado: programa de conteúdo (estrutura de tópicos)'
-        : '📘 Detectado: conteúdo explicativo (texto narrativo)';
-
-    // ======================================================
-    // 📅 Sugestão automática + interação com o usuário
-    // ======================================================
-    const linhas = text.split(/\n+/).map(l => l.trim()).filter(Boolean);
-    if (state.tipoMaterial === 'programa' && linhas.length > 5) {
-      let sugestao = 5;
-      if (linhas.length <= 10) sugestao = 3;
-      else if (linhas.length <= 30) sugestao = 5;
-      else if (linhas.length <= 60) sugestao = 7;
-      else if (linhas.length <= 100) sugestao = 10;
-      else if (linhas.length <= 200) sugestao = 14;
-      else if (linhas.length <= 400) sugestao = 20;
-      else sugestao = 30;
-
-      const selDias = document.getElementById('sel-dias');
-      selDias.value = sugestao;
-
-      // Remove sugestão anterior
-      const antiga = document.getElementById('sugestao-sessoes');
-      if (antiga) antiga.remove();
-
-      const box = document.createElement('div');
-      box.id = 'sugestao-sessoes';
-      box.className = 'mt-2 p-3 rounded-lg border border-[var(--stroke)] bg-[var(--card)] text-[13px] shadow-sm animate-fadeIn';
-      box.innerHTML = `
-        <p>📅 Sugerido: <strong>${sugestao}</strong> sessões (com base em ${linhas.length} tópicos detectados).</p>
-        <p class="mt-1 text-[var(--muted)]">💬 Deseja manter essa sugestão?</p>
-        <div class="mt-2 flex gap-2">
-          <button id="btn-aceitar" class="btn text-[12px] py-1 px-2">✅ Aceitar</button>
-          <button id="btn-ajustar" class="chip text-[12px] py-1 px-2">✏️ Ajustar manualmente</button>
-        </div>
-      `;
-      fileType.insertAdjacentElement('afterend', box);
-
-      const btnAceitar = document.getElementById('btn-aceitar');
-      const btnAjustar = document.getElementById('btn-ajustar');
-
-      btnAceitar.addEventListener('click', () => {
-        box.innerHTML = `<p>📘 Sessões confirmadas: ${sugestao}.</p>`;
-        setTimeout(() => box.remove(), 1500);
-      });
-
-      btnAjustar.addEventListener('click', () => {
-        box.innerHTML = `<p>✏️ Ajuste o número de sessões manualmente no seletor abaixo.</p>`;
-        selDias.focus();
-        selDias.classList.add('border-[var(--brand)]', 'shadow-[0_0_8px_rgba(196,75,4,0.4)]');
-        setTimeout(() => box.remove(), 2500);
-      });
-    }
+        : state.tipoMaterial === 'hibrido'
+        ? '📘 Detectado: conteúdo híbrido (mistura de tópicos e texto)'
+        : '📖 Detectado: conteúdo explicativo (texto narrativo)';
 
   } catch (err) {
     console.error(err);
@@ -223,7 +178,87 @@ async function handleFileSelection(file) {
 }
 
 // ==========================================================
-// 📘 Geração de plano de estudo
+// 📘 Geração de plano de estudo — aprimorada
+// ==========================================================
+
+function dividirEmBlocos(texto, maxTamanho = 600) {
+  const frases = texto.split(/(?<=[.!?])\s+/);
+  const blocos = [];
+  let bloco = "";
+
+  for (const f of frases) {
+    if ((bloco + f).length > maxTamanho) {
+      blocos.push(bloco.trim());
+      bloco = "";
+    }
+    bloco += f + " ";
+  }
+  if (bloco.trim()) blocos.push(bloco.trim());
+  return blocos;
+}
+
+function construirPlanoInteligente(texto, tipo, dias, tema) {
+  const plano = [];
+  const linhas = texto.split(/\n+/).map(l => l.trim()).filter(Boolean);
+
+  if (tipo === "programa") {
+    const blocos = Math.ceil(linhas.length / dias);
+    for (let i = 0; i < dias; i++) {
+      const grupo = linhas.slice(i * blocos, (i + 1) * blocos);
+      if (!grupo.length) break;
+      plano.push({
+        dia: i + 1,
+        titulo: `Sessão ${i + 1}`,
+        topico: grupo[0].replace(/^[\d•\-–\s]+/, ""),
+        descricao: grupo.map(t => "• " + t).join("\n")
+      });
+    }
+  }
+
+  else if (tipo === "conteudo") {
+    const blocos = dividirEmBlocos(texto, 800);
+    const blocosPorDia = Math.ceil(blocos.length / dias);
+    for (let i = 0; i < dias; i++) {
+      const grupo = blocos.slice(i * blocosPorDia, (i + 1) * blocosPorDia);
+      if (!grupo.length) break;
+      plano.push({
+        dia: i + 1,
+        titulo: `Sessão ${i + 1}`,
+        topico: `Leitura guiada`,
+        descricao: grupo.join("\n\n")
+      });
+    }
+  }
+
+  else { // híbrido
+    const linhasPrograma = linhas.filter(l => /^[\d•\-–A-Za-z]/.test(l));
+    const blocosConteudo = dividirEmBlocos(texto, 700);
+    const qtdProg = Math.min(dias - 2, Math.ceil(linhasPrograma.length / 10));
+    const qtdCont = dias - qtdProg;
+
+    for (let i = 0; i < qtdCont; i++) {
+      plano.push({
+        dia: i + 1,
+        titulo: `Sessão ${i + 1}`,
+        topico: `Fundamentos`,
+        descricao: blocosConteudo[i] || ""
+      });
+    }
+    for (let j = 0; j < qtdProg; j++) {
+      plano.push({
+        dia: qtdCont + j + 1,
+        titulo: `Sessão ${qtdCont + j + 1}`,
+        topico: linhasPrograma[j] || `Tópico ${j + 1}`,
+        descricao: linhasPrograma.slice(j * 5, j * 5 + 5).join("\n")
+      });
+    }
+  }
+
+  return plano;
+}
+
+// ==========================================================
+// 🚀 Geração do plano de estudo (listener principal)
 // ==========================================================
 const els = {
   inpTema: document.getElementById('inp-tema'),
@@ -239,66 +274,26 @@ function updateCtx() {
   els.ctx.textContent = `${state.tema ? 'Tema: ' + state.tema + ' · ' : ''}${state.plano.length} sessões geradas`;
 }
 
-function extrairTopicos(texto, tema, maxTopicos = 7) {
-  const palavras = texto.toLowerCase().match(/[a-záéíóúâêîôûãõç]+/gi) || [];
-  const freq = {};
-  for (const p of palavras) freq[p] = (freq[p] || 0) + 1;
-  return Object.entries(freq)
-    .filter(([w]) => w.length > 4)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, maxTopicos)
-    .map(([w]) => w);
-}
-
-function construirPlano(topicos, dias, tema) {
-  const plano = [];
-  for (let i = 0; i < dias; i++) {
-    const t = topicos[i % topicos.length];
-    plano.push({
-      dia: i + 1,
-      titulo: `Sessão ${i + 1}`,
-      topico: t,
-      descricao: `Estudo sobre "${t}" no contexto de ${tema}. Explore definições, aplicações e exemplos práticos.`
-    });
-  }
-  return plano;
-}
-
-els.btnGerar?.addEventListener('click', () => {
+els.btnGerar?.addEventListener("click", () => {
   state.tema = els.inpTema.value.trim();
-  state.dias = parseInt(els.selDias.value || '5', 10);
+  state.dias = parseInt(els.selDias.value || "5", 10);
 
   if (!state.tema && !state.materialTexto) {
-    alert('Defina um tema ou envie um material.');
+    alert("Defina um tema ou envie um material.");
     return;
   }
 
-  const tipo = state.tipoMaterial || detectarTipoMaterial(state.materialTexto || '');
-  let plano = [];
-
-  if (tipo === 'programa') {
-    const linhas = state.materialTexto.split(/\n+/).map(l => l.trim()).filter(Boolean);
-    const blocos = Math.ceil(linhas.length / state.dias);
-    for (let i = 0; i < state.dias; i++) {
-      const inicio = i * blocos;
-      const fim = inicio + blocos;
-      const grupo = linhas.slice(inicio, fim);
-      if (!grupo.length) break;
-      plano.push({
-        dia: i + 1,
-        titulo: `Sessão ${i + 1}`,
-        topico: grupo[0].replace(/^[\d•\-–\s]+/, '').split(':')[0] || `Tópico ${i + 1}`,
-        descricao: grupo.map(t => '• ' + t).join('\n')
-      });
-    }
-    setStatus('🗂️ Material identificado como programa de conteúdo.');
-  } else {
-    const topicos = extrairTopicos(state.materialTexto, state.tema || 'Tema', state.dias);
-    plano = construirPlano(topicos, state.dias, state.tema || 'Tema');
-    setStatus('📘 Material identificado como conteúdo explicativo.');
-  }
+  const tipo = state.tipoMaterial || detectarTipoMaterial(state.materialTexto || "");
+  const plano = construirPlanoInteligente(state.materialTexto, tipo, state.dias, state.tema || "Tema");
 
   state.plano = plano;
+  setStatus(
+    tipo === "programa"
+      ? "🗂️ Material identificado como programa de conteúdo estruturado."
+      : tipo === "hibrido"
+      ? "📘 Material híbrido detectado (combinação de conteúdo explicativo e estrutura de tópicos)."
+      : "📖 Material identificado como conteúdo explicativo."
+  );
   updateCtx();
   renderPlano();
 });
