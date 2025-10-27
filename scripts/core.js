@@ -1,5 +1,5 @@
 // ==========================================================
-// 🧠 Liora — Núcleo principal (core.js)
+// 🧠 Liora Concursos — Núcleo principal (core.js)
 // ==========================================================
 
 const state = {
@@ -11,34 +11,34 @@ const state = {
 };
 
 // ==========================================================
-// 🌓 Tema claro/escuro — correção total (desktop + mobile)
+// 🎨 Tema claro/escuro
 // ==========================================================
 const themeBtn = document.getElementById('btn-theme');
 const body = document.body;
 
-function applyTheme(mode) {
-  if (mode === 'light') {
-    body.classList.add('light');
-    localStorage.setItem('liora_theme', 'light');
-    themeBtn.textContent = '☀️';
-  } else {
-    body.classList.remove('light');
-    localStorage.setItem('liora_theme', 'dark');
-    themeBtn.textContent = '🌙';
-  }
+function setTheme(mode) {
+  body.classList.add('fading');
+  setTimeout(() => {
+    if (mode === 'light') {
+      body.classList.add('light');
+      localStorage.setItem('liora_theme', 'light');
+      themeBtn.textContent = '☀️';
+    } else {
+      body.classList.remove('light');
+      localStorage.setItem('liora_theme', 'dark');
+      themeBtn.textContent = '🌙';
+    }
+    setTimeout(() => body.classList.remove('fading'), 150);
+  }, 100);
 }
 
-function toggleTheme() {
-  const current = localStorage.getItem('liora_theme') || 'dark';
-  applyTheme(current === 'light' ? 'dark' : 'light');
-}
+themeBtn?.addEventListener('click', () => {
+  const current = body.classList.contains('light') ? 'light' : 'dark';
+  setTheme(current === 'light' ? 'dark' : 'light');
+});
 
-themeBtn?.addEventListener('click', toggleTheme);
-themeBtn?.addEventListener('touchend', toggleTheme, { passive: true });
-
-// Aplica imediatamente o tema salvo
-applyTheme(localStorage.getItem('liora_theme') || 'dark');
-
+const savedTheme = localStorage.getItem('liora_theme');
+setTheme(savedTheme || 'dark');
 
 // ==========================================================
 // 🧩 Normalização e detecção semântica
@@ -84,7 +84,7 @@ function detectarTipoMaterial(texto) {
 }
 
 // ==========================================================
-// 📁 Upload e leitura do material
+// 📁 Upload e leitura de arquivo
 // ==========================================================
 const zone = document.getElementById('upload-zone');
 const inputFile = document.getElementById('inp-file');
@@ -114,15 +114,13 @@ if (zone && inputFile) {
   });
 }
 
-// ==========================================================
-// ⚙️ Função principal de leitura e sugestão
-// ==========================================================
 async function handleFileSelection(file) {
   const spinner = document.getElementById('upload-spinner');
   spinner.style.display = 'block';
   fileName.textContent = `Carregando ${file.name}...`;
   fileType.textContent = '';
-  document.getElementById('sugestao-sessoes')?.remove();
+  const antiga = document.getElementById('sugestao-sessoes');
+  if (antiga) antiga.remove();
 
   try {
     const ext = file.name.split('.').pop().toLowerCase();
@@ -145,42 +143,7 @@ async function handleFileSelection(file) {
     }
 
     state.materialTexto = text;
-   fileName.textContent = `✅ ${file.name} carregado`;
-fileType.textContent =
-  state.tipoMaterial === 'programa'
-    ? '🗂️ Detectado: programa de conteúdo (estrutura de tópicos)'
-    : '📘 Detectado: conteúdo explicativo (texto narrativo)';
-
-// =============================
-// 📅 Sugestão automática + aviso para grandes
-// =============================
-if (state.tipoMaterial === 'programa') {
-  const linhas = text.split(/\n+/).map(l => l.trim()).filter(Boolean);
-  const total = linhas.length;
-
-  if (total > 800) {
-    const aviso = document.createElement('p');
-    aviso.textContent = '⚠️ Arquivo grande detectado: analisando apenas as 800 primeiras linhas.';
-    aviso.style.color = 'var(--brand)';
-    aviso.style.fontSize = '0.85rem';
-    aviso.style.marginTop = '0.5rem';
-    fileType.insertAdjacentElement('afterend', aviso);
-  }
-
-  const analisadas = Math.min(total, 800);
-  await new Promise(r => setTimeout(r, 150)); // pausa leve
-
-  let sugestao;
-  if (analisadas <= 10) sugestao = 3;
-  else if (analisadas <= 30) sugestao = 5;
-  else if (analisadas <= 60) sugestao = 7;
-  else if (analisadas <= 100) sugestao = 10;
-  else if (analisadas <= 200) sugestao = 14;
-  else if (analisadas <= 400) sugestao = 20;
-  else sugestao = 30;
-
-  setTimeout(() => criarCaixaSugestao(sugestao, analisadas), 300);
-}
+    state.tipoMaterial = detectarTipoMaterial(text);
 
     fileName.textContent = `✅ ${file.name} carregado`;
     fileType.textContent =
@@ -188,27 +151,58 @@ if (state.tipoMaterial === 'programa') {
         ? '🗂️ Detectado: programa de conteúdo (estrutura de tópicos)'
         : '📘 Detectado: conteúdo explicativo (texto narrativo)';
 
-    if (state.tipoMaterial === 'programa') {
-      const linhas = text.split(/\n+/).map(l => l.trim()).filter(Boolean);
-      const total = Math.min(linhas.length, 800);
-      console.log(`📄 ${linhas.length} tópicos detectados (analisando ${total})`);
+    // ======================================================
+    // 📅 Sugestão automática + interação com o usuário
+    // ======================================================
+    const linhas = text.split(/\n+/).map(l => l.trim()).filter(Boolean);
+    if (state.tipoMaterial === 'programa' && linhas.length > 5) {
+      let sugestao = 5;
+      if (linhas.length <= 10) sugestao = 3;
+      else if (linhas.length <= 30) sugestao = 5;
+      else if (linhas.length <= 60) sugestao = 7;
+      else if (linhas.length <= 100) sugestao = 10;
+      else if (linhas.length <= 200) sugestao = 14;
+      else if (linhas.length <= 400) sugestao = 20;
+      else sugestao = 30;
 
-      if (total > 5) {
-        let sugestao;
-        if (total <= 10) sugestao = 3;
-        else if (total <= 30) sugestao = 5;
-        else if (total <= 60) sugestao = 7;
-        else if (total <= 100) sugestao = 10;
-        else if (total <= 200) sugestao = 14;
-        else if (total <= 400) sugestao = 20;
-        else sugestao = 30;
+      const selDias = document.getElementById('sel-dias');
+      selDias.value = sugestao;
 
-        // Gera a caixa de sugestão com atraso leve (garante render)
-        setTimeout(() => criarCaixaSugestao(sugestao, total), 300);
-      }
+      // Remove sugestão anterior
+      const antiga = document.getElementById('sugestao-sessoes');
+      if (antiga) antiga.remove();
+
+      const box = document.createElement('div');
+      box.id = 'sugestao-sessoes';
+      box.className = 'mt-2 p-3 rounded-lg border border-[var(--stroke)] bg-[var(--card)] text-[13px] shadow-sm animate-fadeIn';
+      box.innerHTML = `
+        <p>📅 Sugerido: <strong>${sugestao}</strong> sessões (com base em ${linhas.length} tópicos detectados).</p>
+        <p class="mt-1 text-[var(--muted)]">💬 Deseja manter essa sugestão?</p>
+        <div class="mt-2 flex gap-2">
+          <button id="btn-aceitar" class="btn text-[12px] py-1 px-2">✅ Aceitar</button>
+          <button id="btn-ajustar" class="chip text-[12px] py-1 px-2">✏️ Ajustar manualmente</button>
+        </div>
+      `;
+      fileType.insertAdjacentElement('afterend', box);
+
+      const btnAceitar = document.getElementById('btn-aceitar');
+      const btnAjustar = document.getElementById('btn-ajustar');
+
+      btnAceitar.addEventListener('click', () => {
+        box.innerHTML = `<p>📘 Sessões confirmadas: ${sugestao}.</p>`;
+        setTimeout(() => box.remove(), 1500);
+      });
+
+      btnAjustar.addEventListener('click', () => {
+        box.innerHTML = `<p>✏️ Ajuste o número de sessões manualmente no seletor abaixo.</p>`;
+        selDias.focus();
+        selDias.classList.add('border-[var(--brand)]', 'shadow-[0_0_8px_rgba(196,75,4,0.4)]');
+        setTimeout(() => box.remove(), 2500);
+      });
     }
+
   } catch (err) {
-    console.error('❌ Erro ao processar o arquivo:', err);
+    console.error(err);
     fileName.textContent = '⚠️ Erro ao processar o arquivo.';
   } finally {
     spinner.style.display = 'none';
@@ -216,48 +210,7 @@ if (state.tipoMaterial === 'programa') {
 }
 
 // ==========================================================
-// 💬 Função auxiliar: cria a caixa de sugestão
-// ==========================================================
-function criarCaixaSugestao(sugestao, total) {
-  const selDias = document.getElementById('sel-dias');
-  selDias.value = sugestao;
-
-  const box = document.createElement('div');
-  box.id = 'sugestao-sessoes';
-  box.className =
-    'mt-2 p-3 rounded-lg border border-[var(--stroke)] bg-[var(--card)] text-[13px] shadow-sm animate-fadeIn';
-  box.innerHTML = `
-    <p>📅 Sugerido: <strong>${sugestao}</strong> sessões (com base em ${total} tópicos detectados).</p>
-    <p class="mt-1 text-[var(--muted)]">💬 Deseja manter essa sugestão?</p>
-    <div class="mt-2 flex gap-2">
-      <button id="btn-aceitar" class="btn text-[12px] py-1 px-2">✅ Aceitar</button>
-      <button id="btn-ajustar" class="chip text-[12px] py-1 px-2">✏️ Ajustar manualmente</button>
-    </div>
-  `;
-
-  const ref = document.getElementById('file-type') || document.getElementById('file-name');
-  (ref || document.querySelector('.card')).insertAdjacentElement('afterend', box);
-
-  const btnAceitar = box.querySelector('#btn-aceitar');
-  const btnAjustar = box.querySelector('#btn-ajustar');
-
-  btnAceitar.addEventListener('click', () => {
-    box.innerHTML = `<p>📘 Sessões confirmadas: ${sugestao}.</p>`;
-    setTimeout(() => box.remove(), 1500);
-  });
-
-  btnAjustar.addEventListener('click', () => {
-    box.innerHTML = `<p>✏️ Ajuste o número de sessões manualmente no seletor abaixo.</p>`;
-    selDias.focus();
-    selDias.classList.add('border-[var(--brand)]', 'shadow-[0_0_8px_rgba(196,75,4,0.4)]');
-    setTimeout(() => box.remove(), 2500);
-  });
-
-  console.log(`📦 Sugestão criada: ${sugestao} sessões`);
-}
-
-// ==========================================================
-// 📘 Geração de plano
+// 📘 Geração de plano de estudo
 // ==========================================================
 const els = {
   inpTema: document.getElementById('inp-tema'),
