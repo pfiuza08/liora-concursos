@@ -1,5 +1,5 @@
 // ==========================================================
-// 🧠 Liora — Núcleo principal (core.js) — versão completa e aprimorada
+// 🧠 Liora — Núcleo principal (core.js) — versão aprimorada
 // ==========================================================
 
 const state = {
@@ -11,25 +11,23 @@ const state = {
 };
 
 // ==========================================================
-// 🌓 Tema claro/escuro — versão final (desktop + mobile + padrão escuro)
+// 🌓 Tema claro/escuro — versão estável (desktop + mobile)
 // ==========================================================
 const themeBtn = document.getElementById('btn-theme');
 const body = document.body;
 const html = document.documentElement;
 
-// 🔧 Garante que o tema padrão seja sempre escuro na primeira carga
+// 🔧 Garante que o padrão inicial seja sempre o tema escuro
 if (!localStorage.getItem('liora_theme')) {
   localStorage.setItem('liora_theme', 'dark');
 }
 
 function setTheme(mode) {
   const isLight = mode === 'light';
-
   html.classList.toggle('light', isLight);
   html.classList.toggle('dark', !isLight);
   body.classList.toggle('light', isLight);
   body.classList.toggle('dark', !isLight);
-
   localStorage.setItem('liora_theme', isLight ? 'light' : 'dark');
   themeBtn.textContent = isLight ? '☀️' : '🌙';
 }
@@ -55,14 +53,13 @@ function normalizarTextoParaPrograma(texto) {
     .replace(/\r/g, "")
     .replace(/\t+/g, " ")
     .replace(/[ ]{2,}/g, " ")
-    // Quebra antes de padrões de tópicos: 1., 1.1, I., A), •, -, –
+    // Quebra antes de padrões de tópicos
     .replace(/(\s|^)((\d+(\.\d+){0,3}[\.\)])|([IVXLCDM]+\.)|([A-Z]\))|([a-z]\))|[•\-–])\s+/g, "\n$2 ")
     // Quebra após ponto final seguido de letra maiúscula (parágrafos longos)
     .replace(/([.!?])\s+(?=[A-ZÁÉÍÓÚÂÊÔÃÕÇ])/g, "$1\n")
     .replace(/\n{2,}/g, "\n")
     .trim();
 }
-
 
 // ==========================================================
 // 🧪 Sinais e decisão — programa, conteúdo ou híbrido
@@ -84,7 +81,7 @@ function medirSinais(textoNormalizado) {
     const isLonga = palavras.length >= 12;
     const isVerbal = verboRegex.test(l);
     const isParagrafo = fimParagrafoRegex.test(l);
-    const isCapsLike = /^[A-ZÁÉÍÓÚÂÊÔÃÕÇ0-9 ]{6,}$/.test(l) && !/[.!?]$/.test(l); // títulos/TOC
+    const isCapsLike = /^[A-ZÁÉÍÓÚÂÊÔÃÕÇ0-9 ]{6,}$/.test(l) && !/[.!?]$/.test(l);
 
     if (isBullet) bullets++;
     if (isLonga) longas++;
@@ -106,33 +103,21 @@ function medirSinais(textoNormalizado) {
 }
 
 function decidirTipo(s) {
-  // Regras “anti-falso-positivo” para e-books com sumário curto:
-  // se bullets existem mas são poucos e há muito parágrafo longo → conteúdo
   if (s.pBullets < 0.18 && s.pLongas >= 0.55 && s.pFimPar >= 0.45) {
     return { tipo: "conteudo", conf: 0.8 };
   }
-
-  // Programa forte: muitas linhas com marcadores + sequências longas de bullets + pouco parágrafo
   if (s.pBullets >= 0.35 && s.maxRunBullets >= 3 && s.pLongas < 0.55 && s.pFimPar < 0.5) {
     return { tipo: "programa", conf: 0.85 };
   }
-
-  // Conteúdo claro: maioria de linhas longas e terminadas em pontuação
   if (s.pLongas >= 0.6 && s.pFimPar >= 0.5 && s.pBullets < 0.25) {
     return { tipo: "conteudo", conf: 0.75 };
   }
-
-  // TOC muito forte (muitos títulos/caixa alta) + bullets medianos → tende a programa
   if (s.pCaps >= 0.15 && s.pBullets >= 0.25) {
     return { tipo: "programa", conf: 0.6 };
   }
-
-  // Curto demais para afirmar: privilegia conteúdo para não superestimar
   if (s.total < 20 && s.pLongas >= 0.4) {
     return { tipo: "conteudo", conf: 0.6 };
   }
-
-  // Caso misto
   return { tipo: "hibrido", conf: 0.55 };
 }
 
@@ -141,10 +126,8 @@ function detectarTipoMaterial(texto) {
   const normalizado = normalizarTextoParaPrograma(texto);
   const sinais = medirSinais(normalizado);
   const { tipo } = decidirTipo(sinais);
-  // (Opcional) debug: console.log("SINAIS:", sinais, "→", tipo);
   return tipo;
 }
-
 
 // ==========================================================
 // 📁 Upload e leitura de arquivo
@@ -223,9 +206,8 @@ async function handleFileSelection(file) {
 }
 
 // ==========================================================
-// 📘 Geração de plano de estudo — aprimorada
+// 📘 Construção do plano de estudo
 // ==========================================================
-
 function dividirEmBlocos(texto, maxTamanho = 600) {
   const frases = texto.split(/(?<=[.!?])\s+/);
   const blocos = [];
@@ -258,9 +240,7 @@ function construirPlanoInteligente(texto, tipo, dias, tema) {
         descricao: grupo.map(t => "• " + t).join("\n")
       });
     }
-  }
-
-  else if (tipo === "conteudo") {
+  } else if (tipo === "conteudo") {
     const blocos = dividirEmBlocos(texto, 800);
     const blocosPorDia = Math.ceil(blocos.length / dias);
     for (let i = 0; i < dias; i++) {
@@ -273,9 +253,8 @@ function construirPlanoInteligente(texto, tipo, dias, tema) {
         descricao: grupo.join("\n\n")
       });
     }
-  }
-
-  else { // híbrido
+  } else {
+    // híbrido
     const linhasPrograma = linhas.filter(l => /^[\d•\-–A-Za-z]/.test(l));
     const blocosConteudo = dividirEmBlocos(texto, 700);
     const qtdProg = Math.min(dias - 2, Math.ceil(linhasPrograma.length / 10));
@@ -303,7 +282,7 @@ function construirPlanoInteligente(texto, tipo, dias, tema) {
 }
 
 // ==========================================================
-// 🚀 Geração do plano de estudo (listener principal)
+// 🚀 Geração e renderização do plano de estudo
 // ==========================================================
 const els = {
   inpTema: document.getElementById('inp-tema'),
@@ -336,7 +315,7 @@ els.btnGerar?.addEventListener("click", () => {
     tipo === "programa"
       ? "🗂️ Material identificado como programa de conteúdo estruturado."
       : tipo === "hibrido"
-      ? "📘 Material híbrido detectado (combinação de conteúdo explicativo e estrutura de tópicos)."
+      ? "📘 Material híbrido detectado (combinação de tópicos e texto explicativo)."
       : "📖 Material identificado como conteúdo explicativo."
   );
   updateCtx();
