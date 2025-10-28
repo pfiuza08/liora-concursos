@@ -1,5 +1,5 @@
 // ==========================================================
-// 🎓 Liora — Geração dinâmica de planos por tema e nível
+// 🎓 Liora — Geração dinâmica de planos por tema e nível + Voz
 // ==========================================================
 
 function gerarPlanoPorPrompt(tema, nivel, dias, intensidade) {
@@ -54,10 +54,35 @@ function gerarPlanoPorPrompt(tema, nivel, dias, intensidade) {
 }
 
 // ==========================================================
+// 🔊 Fala suave da Liora
+// ==========================================================
+function falar(texto) {
+  try {
+    const synth = window.speechSynthesis;
+    if (!synth) return;
+
+    const utter = new SpeechSynthesisUtterance(texto);
+    utter.lang = "pt-BR";
+    utter.rate = 1.05;
+    utter.pitch = 1.1;
+    utter.volume = 0.9;
+
+    // tenta usar uma voz feminina natural
+    const vozes = synth.getVoices();
+    const vozLiora = vozes.find(v => v.lang === "pt-BR" && /female|mulher/i.test(v.name));
+    if (vozLiora) utter.voice = vozLiora;
+
+    synth.cancel(); // evita sobreposição
+    synth.speak(utter);
+  } catch (e) {
+    console.warn("Falha ao usar SpeechSynthesis:", e);
+  }
+}
+
+// ==========================================================
 // 💬 Modal Interativo da Liora
 // ==========================================================
 function perguntarNivelEIntensidade(tema, callback) {
-  // remove modal anterior, se existir
   document.getElementById("liora-dialogo")?.remove();
 
   const modal = document.createElement("div");
@@ -90,7 +115,7 @@ function perguntarNivelEIntensidade(tema, callback) {
   `;
   document.body.appendChild(modal);
 
-  // --- estilização via JS (adiciona ao documento)
+  // --- estilo
   const style = document.createElement("style");
   style.textContent = `
     .liora-backdrop {
@@ -158,6 +183,11 @@ function perguntarNivelEIntensidade(tema, callback) {
   `;
   document.head.appendChild(style);
 
+  // --- fala da Liora
+  setTimeout(() => {
+    falar("Olá! Eu sou a Liora. Vamos personalizar seu plano de estudos?");
+  }, 500);
+
   let nivelEscolhido = null;
 
   modal.querySelectorAll("[data-nivel]").forEach(btn => {
@@ -165,6 +195,7 @@ function perguntarNivelEIntensidade(tema, callback) {
       nivelEscolhido = e.target.dataset.nivel;
       modal.querySelector("#step-1").style.display = "none";
       modal.querySelector("#step-2").style.display = "block";
+      falar("Certo! Agora me diga qual ritmo você prefere: leve, equilibrado ou intensivo?");
     });
   });
 
@@ -172,27 +203,27 @@ function perguntarNivelEIntensidade(tema, callback) {
     btn.addEventListener("click", e => {
       const intensidade = e.target.dataset.int;
       modal.remove();
+      falar("Perfeito! Estou montando seu plano de estudos agora.");
       callback(nivelEscolhido, intensidade);
     });
   });
 
-  // permitir fechar clicando fora
   modal.addEventListener("click", e => {
     if (e.target.classList.contains("liora-backdrop")) modal.remove();
   });
 }
 
 // ==========================================================
-// 🔗 Integração com o botão “Gerar plano” do core.js
+// 🔗 Integração com o botão “Gerar plano”
 // ==========================================================
 window.addEventListener("DOMContentLoaded", () => {
   const btn = document.getElementById("btn-gerar");
   if (!btn) return;
 
-  btn.addEventListener("click", e => {
+  btn.addEventListener("click", () => {
     const s = window.state;
     s.tema = document.getElementById("inp-tema").value.trim();
-    if (!s.tema || s.materialTexto) return; // só ativa se não há arquivo
+    if (!s.tema || s.materialTexto) return;
 
     perguntarNivelEIntensidade(s.tema, (nivel, intensidade) => {
       s.nivel = nivel;
