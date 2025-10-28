@@ -7,13 +7,17 @@
   <meta name="description" content="Liora é um espaço inteligente e tranquilo de estudo guiado, com temas personalizáveis e simulados interativos." />
 
   <!-- Tailwind -->
-  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://cdn.tailwindcss.com"></script>
 
-  <!-- PDF.js + Worker configurado -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.14.305/pdf.min.js"></script>
+  <!-- PDF.js -->
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.14.305/pdf.min.js"></script>
   <script>
-    pdfjsLib.GlobalWorkerOptions.workerSrc =
-      "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.14.305/pdf.worker.min.js";
+    window.addEventListener('DOMContentLoaded', () => {
+      if (window.pdfjsLib) {
+        pdfjsLib.GlobalWorkerOptions.workerSrc =
+          "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.14.305/pdf.worker.min.js";
+      }
+    });
   </script>
 
   <!-- Estilos principais -->
@@ -41,7 +45,9 @@
     <!-- Painel esquerdo -->
     <section class="lg:col-span-1 card p-5">
       <h2 class="section-title mb-1">Configurar estudo</h2>
-      <p class="text-sm text-[var(--muted)] mb-4">Escolha um tema ou envie seu material para criar um plano personalizado com sessões e desafios.</p>
+      <p class="text-sm text-[var(--muted)] mb-4">
+        Escolha um tema ou envie seu material para criar um plano personalizado com sessões e desafios.
+      </p>
 
       <label class="block text-sm font-medium mb-1">Tema</label>
       <input id="inp-tema" type="text" placeholder="Ex.: IA Generativa, História, Biologia" class="mb-3" />
@@ -57,7 +63,9 @@
       </label>
       <p id="file-name" class="text-[11px] text-[var(--muted)] mt-2"></p>
       <p id="file-type" class="text-[12px] text-[var(--muted)] mt-1 italic"></p>
-      <p class="text-[11px] text-[var(--muted)] mt-1">Arquivos TXT e PDF são suportados neste protótipo.</p>
+      <p class="text-[11px] text-[var(--muted)] mt-1">
+        Arquivos TXT e PDF são suportados neste protótipo.
+      </p>
 
       <div class="mt-4 grid grid-cols-2 gap-3">
         <div>
@@ -88,10 +96,9 @@
     <p>Liora — um ambiente de estudo guiado e inspirador. © Intellih</p>
   </footer>
 
-  <!-- Scripts principais -->
-
-<script src="/scripts/core.js" defer></script>
-<script src="/scripts/semantic.js" defer></script>
- 
+  <!-- Scripts principais (ordem e caminhos absolutos corrigidos) -->
+  <script defer src="/scripts/semantic.js?v=2"></script>
+  <script defer src="/scripts/core.js?v=2"></script>
+  <script defer src="/scripts/concursos.js?v=2"></script>
 </body>
 </html>
