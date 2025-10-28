@@ -6,28 +6,51 @@
   <title>Liora — Espaço de Estudo</title>
   <meta name="description" content="Liora é um espaço inteligente e tranquilo de estudo guiado, com temas personalizáveis e simulados interativos." />
 
-  <!-- Tailwind -->
-  <script defer src="https://cdn.tailwindcss.com"></script>
+  <!-- ===================================================== -->
+  <!-- 🎨 Estilos e Tailwind -->
+  <!-- ===================================================== -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/style.css" />
 
-  <!-- PDF.js -->
-  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.14.305/pdf.min.js"></script>
+  <!-- ===================================================== -->
+  <!-- 📄 PDF.js — leitura inteligente de arquivos -->
+  <!-- ===================================================== -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.14.305/pdf.min.js"></script>
   <script>
-    window.addEventListener('DOMContentLoaded', () => {
-      if (window.pdfjsLib) {
-        pdfjsLib.GlobalWorkerOptions.workerSrc =
-          "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.14.305/pdf.worker.min.js";
-      }
-    });
+    pdfjsLib.GlobalWorkerOptions.workerSrc =
+      "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.14.305/pdf.worker.min.js";
   </script>
 
-  <!-- Estilos principais -->
-  <link rel="stylesheet" href="/style.css" />
+  <!-- ===================================================== -->
+  <!-- 🧩 SEO e Favicon -->
+  <!-- ===================================================== -->
+  <link rel="icon" type="image/png" href="/favicon.png" />
+  <meta name="theme-color" content="#0a0a0a" />
+  <meta name="author" content="Intellih Tecnologia" />
+  <meta name="keywords" content="Liora, Intellih, estudo guiado, plano de estudos, concursos, IA educacional, agente de aprendizado" />
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="Liora — Espaço Inteligente de Estudo" />
+  <meta property="og:description" content="Crie planos de estudo personalizados com IA. Liora organiza seus estudos com base no tema, nível e ritmo de aprendizado." />
+  <meta property="og:image" content="https://www.intellih.com.br/assets/liora-cover.jpg" />
+  <meta property="og:url" content="https://liora.intellih.com.br/" />
+  <meta property="og:type" content="website" />
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Liora — Inteligência aplicada ao aprendizado" />
+  <meta name="twitter:description" content="Liora cria planos de estudo sob medida com IA, voz natural e análise de conteúdo." />
+  <meta name="twitter:image" content="https://www.intellih.com.br/assets/liora-cover.jpg" />
 </head>
+
 <body class="dark">
+  <!-- ===================================================== -->
+  <!-- 🏷️ Cabeçalho -->
+  <!-- ===================================================== -->
   <header class="max-w-5xl mx-auto px-4 pt-8">
     <div class="flex items-center justify-between">
       <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-2xl flex items-center justify-center text-white font-black" style="background:var(--brand)">Li</div>
+        <div class="w-10 h-10 rounded-2xl flex items-center justify-center text-white font-black" style="background:#c44b04">Li</div>
         <div>
           <h1 class="text-xl font-bold">Liora — Espaço de Estudo <span class="dot" title="online"></span></h1>
           <p class="text-sm text-[var(--muted)]">Ambiente inteligente para aprender com foco.</p>
@@ -41,6 +64,9 @@
     </div>
   </header>
 
+  <!-- ===================================================== -->
+  <!-- 🧱 Estrutura principal -->
+  <!-- ===================================================== -->
   <main class="max-w-5xl mx-auto px-4 py-8 grid lg:grid-cols-3 gap-6">
     <!-- Painel esquerdo -->
     <section class="lg:col-span-1 card p-5">
@@ -61,11 +87,10 @@
         <div id="upload-spinner"></div>
         <input id="inp-file" type="file" accept=".pdf,.txt" />
       </label>
+
       <p id="file-name" class="text-[11px] text-[var(--muted)] mt-2"></p>
       <p id="file-type" class="text-[12px] text-[var(--muted)] mt-1 italic"></p>
-      <p class="text-[11px] text-[var(--muted)] mt-1">
-        Arquivos TXT e PDF são suportados neste protótipo.
-      </p>
+      <p class="text-[11px] text-[var(--muted)] mt-1">Arquivos TXT e PDF são suportados neste protótipo.</p>
 
       <div class="mt-4 grid grid-cols-2 gap-3">
         <div>
@@ -92,16 +117,37 @@
     </section>
   </main>
 
+  <!-- ===================================================== -->
+  <!-- ⚙️ Rodapé -->
+  <!-- ===================================================== -->
   <footer class="max-w-5xl mx-auto px-4 pb-10 text-xs text-[var(--muted)] text-center">
     <p>Liora — um ambiente de estudo guiado e inspirador. © Intellih</p>
   </footer>
 
-  <!-- Scripts principais (ordem e caminhos absolutos corrigidos) -->
+  <!-- ===================================================== -->
+  <!-- 🔚 Scripts principais (ordem ideal) -->
+  <!-- ===================================================== -->
   <script src="/scripts/core.js?v=3" defer></script>
+  <script src="/scripts/semantic.js?v=3" defer></script>
   <script src="/scripts/temas.js" defer></script>
   <script src="/scripts/plano-simulador.js" defer></script>
-  <script src="/scripts/semantic.js?v=3" defer></script>
-  <script src="/scripts/concursos-plano.js" defer></script>
-  
+
+  <!-- ===================================================== -->
+  <!-- 🧩 Diagnóstico de carregamento -->
+  <!-- ===================================================== -->
+  <script>
+    window.addEventListener("load", () => {
+      console.log("✅ Liora carregada com sucesso.");
+      const checks = [
+        { name: "core.js", ok: !!window.state },
+        { name: "semantic.js", ok: typeof analisarSemantica === "function" },
+        { name: "temas.js", ok: typeof falar === "function" },
+        { name: "plano-simulador.js", ok: typeof gerarPlanoEstudo === "function" },
+      ];
+      checks.forEach(c => {
+        console.log(c.ok ? `🟢 ${c.name} ativo` : `🔴 ${c.name} não carregado`);
+      });
+    });
+  </script>
 </body>
 </html>
