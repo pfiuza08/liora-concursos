@@ -1,5 +1,5 @@
 // ==========================================================
-// 🎓 Liora — Diálogo Inicial + Geração Dinâmica de Plano
+// 🎓 Liora — Geração dinâmica de planos por tema e nível
 // ==========================================================
 
 function gerarPlanoPorPrompt(tema, nivel, dias, intensidade) {
@@ -54,7 +54,7 @@ function gerarPlanoPorPrompt(tema, nivel, dias, intensidade) {
 }
 
 // ==========================================================
-// 💬 Etapa interativa — Perguntas da Liora
+// 💬 Janela interativa da Liora
 // ==========================================================
 
 function perguntarNivelEIntensidade(tema, callback) {
@@ -77,8 +77,7 @@ function perguntarNivelEIntensidade(tema, callback) {
       width: 90%;
       max-width: 480px;
       box-shadow: var(--shadow);
-      text-align: center;
-      animation: fadeIn 0.3s ease;">
+      text-align: center;">
       <h2 style="margin-bottom: 0.6rem;">👋 Oi! Eu sou a Liora.</h2>
       <p style="font-size: 0.9rem; margin-bottom: 1rem;">
         Antes de montar seu plano sobre <b>${tema}</b>, me diga:
@@ -128,8 +127,9 @@ function perguntarNivelEIntensidade(tema, callback) {
 }
 
 // ==========================================================
-// 🔗 Integração com o Core (após clique em “Gerar plano”)
+// 🔗 Integração com o core.js (botão "Gerar plano")
 // ==========================================================
+
 window.addEventListener("load", () => {
   const btn = document.getElementById("btn-gerar");
   if (!btn) return;
@@ -168,4 +168,3 @@ window.addEventListener("load", () => {
     });
   });
 });
-
