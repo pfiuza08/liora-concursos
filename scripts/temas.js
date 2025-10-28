@@ -1,5 +1,5 @@
 // ==========================================================
-// 🎓 Liora — Geração dinâmica de planos por tema e nível + Voz
+// 🎓 Liora — Planos de estudo por tema, nível e ritmo
 // ==========================================================
 
 function gerarPlanoPorPrompt(tema, nivel, dias, intensidade) {
@@ -54,33 +54,53 @@ function gerarPlanoPorPrompt(tema, nivel, dias, intensidade) {
 }
 
 // ==========================================================
-// 🔊 Fala suave da Liora
+// 🔊 Fala da Liora (voz feminina motivacional)
 // ==========================================================
 function falar(texto) {
   try {
     const synth = window.speechSynthesis;
     if (!synth) return;
 
-    const utter = new SpeechSynthesisUtterance(texto);
-    utter.lang = "pt-BR";
-    utter.rate = 1.05;
-    utter.pitch = 1.1;
-    utter.volume = 0.9;
+    const speakNow = () => {
+      const utter = new SpeechSynthesisUtterance(texto);
+      utter.lang = "pt-BR";
+      utter.rate = 1.15;
+      utter.pitch = 1.2;
+      utter.volume = 1.0;
 
-    // tenta usar uma voz feminina natural
-    const vozes = synth.getVoices();
-    const vozLiora = vozes.find(v => v.lang === "pt-BR" && /female|mulher/i.test(v.name));
-    if (vozLiora) utter.voice = vozLiora;
+      const vozes = synth.getVoices();
+      const preferidas = [
+        "Google português do Brasil",
+        "Microsoft Maria - Portuguese (Brazil)",
+        "Microsoft Francisca - Portuguese (Brazil)",
+        "Luciana",
+        "Camila"
+      ];
 
-    synth.cancel(); // evita sobreposição
-    synth.speak(utter);
+      const vozFeminina = vozes.find(v =>
+        v.lang === "pt-BR" &&
+        preferidas.some(nome => v.name.includes(nome))
+      );
+
+      if (vozFeminina) utter.voice = vozFeminina;
+      else {
+        const vozPadrao = vozes.find(v => v.lang === "pt-BR");
+        if (vozPadrao) utter.voice = vozPadrao;
+      }
+
+      synth.cancel();
+      synth.speak(utter);
+    };
+
+    if (synth.getVoices().length === 0) synth.onvoiceschanged = speakNow;
+    else speakNow();
   } catch (e) {
     console.warn("Falha ao usar SpeechSynthesis:", e);
   }
 }
 
 // ==========================================================
-// 💬 Modal Interativo da Liora
+// 💬 Modal Interativo da Liora com voz motivacional
 // ==========================================================
 function perguntarNivelEIntensidade(tema, callback) {
   document.getElementById("liora-dialogo")?.remove();
@@ -90,7 +110,7 @@ function perguntarNivelEIntensidade(tema, callback) {
   modal.innerHTML = `
     <div class="liora-backdrop">
       <div class="liora-modal">
-        <h2>👋 Oi! Eu sou a Liora.</h2>
+        <h2>💪 Olá! Eu sou a Liora.</h2>
         <p>Antes de montar seu plano sobre <b>${tema}</b>, me diga:</p>
 
         <div id="step-1">
@@ -115,7 +135,7 @@ function perguntarNivelEIntensidade(tema, callback) {
   `;
   document.body.appendChild(modal);
 
-  // --- estilo
+  // === estilo modal
   const style = document.createElement("style");
   style.textContent = `
     .liora-backdrop {
@@ -183,9 +203,12 @@ function perguntarNivelEIntensidade(tema, callback) {
   `;
   document.head.appendChild(style);
 
-  // --- fala da Liora
+  // === falas da Liora
   setTimeout(() => {
-    falar("Olá! Eu sou a Liora. Vamos personalizar seu plano de estudos?");
+    falar("Olá! Eu sou a Liora, sua mentora de estudos. Vamos definir o seu plano!");
+    setTimeout(() => {
+      falar(`Qual é o seu nível de conhecimento sobre ${tema}? Iniciante, intermediário ou avançado?`);
+    }, 2500);
   }, 500);
 
   let nivelEscolhido = null;
@@ -195,7 +218,7 @@ function perguntarNivelEIntensidade(tema, callback) {
       nivelEscolhido = e.target.dataset.nivel;
       modal.querySelector("#step-1").style.display = "none";
       modal.querySelector("#step-2").style.display = "block";
-      falar("Certo! Agora me diga qual ritmo você prefere: leve, equilibrado ou intensivo?");
+      falar("Excelente! Agora me diga qual ritmo prefere: leve, equilibrado ou intensivo?");
     });
   });
 
@@ -203,7 +226,7 @@ function perguntarNivelEIntensidade(tema, callback) {
     btn.addEventListener("click", e => {
       const intensidade = e.target.dataset.int;
       modal.remove();
-      falar("Perfeito! Estou montando seu plano de estudos agora.");
+      falar("Show! Estou montando seu plano de estudos agora. Prepare-se para evoluir!");
       callback(nivelEscolhido, intensidade);
     });
   });
