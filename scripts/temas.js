@@ -54,64 +54,117 @@ function gerarPlanoPorPrompt(tema, nivel, dias, intensidade) {
 }
 
 // ==========================================================
-// 💬 Janela interativa da Liora
+// 💬 Modal Interativo da Liora
 // ==========================================================
-
 function perguntarNivelEIntensidade(tema, callback) {
+  // remove modal anterior, se existir
+  document.getElementById("liora-dialogo")?.remove();
+
   const modal = document.createElement("div");
   modal.id = "liora-dialogo";
-  modal.style.position = "fixed";
-  modal.style.inset = "0";
-  modal.style.background = "rgba(0,0,0,0.75)";
-  modal.style.display = "flex";
-  modal.style.alignItems = "center";
-  modal.style.justifyContent = "center";
-  modal.style.zIndex = "2000";
-
   modal.innerHTML = `
-    <div style="
-      background: var(--card);
-      color: var(--fg);
-      padding: 1.8rem;
-      border-radius: 1rem;
-      width: 90%;
-      max-width: 480px;
-      box-shadow: var(--shadow);
-      text-align: center;">
-      <h2 style="margin-bottom: 0.6rem;">👋 Oi! Eu sou a Liora.</h2>
-      <p style="font-size: 0.9rem; margin-bottom: 1rem;">
-        Antes de montar seu plano sobre <b>${tema}</b>, me diga:
-      </p>
+    <div class="liora-backdrop">
+      <div class="liora-modal">
+        <h2>👋 Oi! Eu sou a Liora.</h2>
+        <p>Antes de montar seu plano sobre <b>${tema}</b>, me diga:</p>
 
-      <div id="step-1">
-        <p><b>Qual o seu nível de conhecimento?</b></p>
-        <div class="flex justify-center gap-2 my-3">
-          <button class="chip" data-nivel="iniciante">🟢 Iniciante</button>
-          <button class="chip" data-nivel="intermediario">🔵 Intermediário</button>
-          <button class="chip" data-nivel="avancado">🟣 Avançado</button>
+        <div id="step-1">
+          <p class="pergunta">Qual o seu nível de conhecimento?</p>
+          <div class="opcoes">
+            <button class="chip" data-nivel="iniciante">🟢 Iniciante</button>
+            <button class="chip" data-nivel="intermediario">🔵 Intermediário</button>
+            <button class="chip" data-nivel="avancado">🟣 Avançado</button>
+          </div>
         </div>
-      </div>
 
-      <div id="step-2" style="display:none;">
-        <p><b>Como quer o ritmo do plano?</b></p>
-        <div class="flex justify-center gap-2 my-3">
-          <button class="chip" data-int="leve">🌿 Leve</button>
-          <button class="chip" data-int="equilibrado">⚖️ Equilibrado</button>
-          <button class="chip" data-int="intensivo">🔥 Intensivo</button>
+        <div id="step-2" style="display:none;">
+          <p class="pergunta">Como quer o ritmo do plano?</p>
+          <div class="opcoes">
+            <button class="chip" data-int="leve">🌿 Leve</button>
+            <button class="chip" data-int="equilibrado">⚖️ Equilibrado</button>
+            <button class="chip" data-int="intensivo">🔥 Intensivo</button>
+          </div>
         </div>
       </div>
     </div>
   `;
-
   document.body.appendChild(modal);
+
+  // --- estilização via JS (adiciona ao documento)
+  const style = document.createElement("style");
+  style.textContent = `
+    .liora-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.75);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+      animation: fadeIn 0.3s ease;
+    }
+    .liora-modal {
+      background: var(--card);
+      color: var(--fg);
+      padding: 2rem;
+      border-radius: 1rem;
+      width: 90%;
+      max-width: 480px;
+      box-shadow: 0 0 25px rgba(0,0,0,0.4);
+      text-align: center;
+      transform: scale(0.95);
+      opacity: 0;
+      animation: modalIn 0.35s ease forwards;
+    }
+    @keyframes modalIn {
+      to { transform: scale(1); opacity: 1; }
+    }
+    .liora-modal h2 {
+      font-weight: 700;
+      font-size: 1.3rem;
+      margin-bottom: 0.3rem;
+      color: var(--brand, #c44b04);
+    }
+    .liora-modal p {
+      font-size: 0.9rem;
+      color: var(--muted);
+      margin-bottom: 1rem;
+    }
+    .pergunta {
+      font-weight: 500;
+      color: var(--fg);
+      margin-bottom: 0.5rem;
+    }
+    .opcoes {
+      display: flex;
+      justify-content: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+    .chip {
+      background: var(--brand, #c44b04);
+      color: white;
+      border: none;
+      border-radius: 9999px;
+      padding: 0.4rem 0.9rem;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .chip:hover {
+      background: #e05700;
+      transform: scale(1.05);
+    }
+  `;
+  document.head.appendChild(style);
 
   let nivelEscolhido = null;
 
   modal.querySelectorAll("[data-nivel]").forEach(btn => {
     btn.addEventListener("click", e => {
       nivelEscolhido = e.target.dataset.nivel;
-      document.getElementById("step-1").style.display = "none";
-      document.getElementById("step-2").style.display = "block";
+      modal.querySelector("#step-1").style.display = "none";
+      modal.querySelector("#step-2").style.display = "block";
     });
   });
 
@@ -123,19 +176,22 @@ function perguntarNivelEIntensidade(tema, callback) {
     });
   });
 
-  modal.addEventListener("click", e => { if (e.target === modal) modal.remove(); });
+  // permitir fechar clicando fora
+  modal.addEventListener("click", e => {
+    if (e.target.classList.contains("liora-backdrop")) modal.remove();
+  });
 }
 
 // ==========================================================
-// 🔗 Integração com o core.js (botão "Gerar plano")
+// 🔗 Integração com o botão “Gerar plano” do core.js
 // ==========================================================
-
-window.addEventListener("load", () => {
+window.addEventListener("DOMContentLoaded", () => {
   const btn = document.getElementById("btn-gerar");
   if (!btn) return;
 
-  btn.addEventListener("click", () => {
+  btn.addEventListener("click", e => {
     const s = window.state;
+    s.tema = document.getElementById("inp-tema").value.trim();
     if (!s.tema || s.materialTexto) return; // só ativa se não há arquivo
 
     perguntarNivelEIntensidade(s.tema, (nivel, intensidade) => {
