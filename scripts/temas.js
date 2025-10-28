@@ -54,18 +54,41 @@ function gerarPlanoPorPrompt(tema, nivel, dias, intensidade) {
 }
 
 // ==========================================================
-// 🔊 Fala da Liora (voz feminina motivacional)
+// 🔊 Fala da Liora — emocional + voz feminina + chime
 // ==========================================================
-function falar(texto) {
+function falar(texto, tipo = "neutro") {
   try {
     const synth = window.speechSynthesis;
     if (!synth) return;
 
-    const speakNow = () => {
+    // 🎵 som de sininho leve
+    const tocarChime = (freq = 880, dur = 0.25) => {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(freq, ctx.currentTime);
+      gain.gain.setValueAtTime(0.1, ctx.currentTime);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + dur);
+    };
+
+    // 🧠 configurações emocionais por tipo
+    const tons = {
+      saudacao: { rate: 1.3, pitch: 1.45, freq: 950 },
+      instrucao: { rate: 1.2, pitch: 1.25, freq: 820 },
+      encerramento: { rate: 1.1, pitch: 1.15, freq: 700 },
+      neutro: { rate: 1.15, pitch: 1.25, freq: 850 }
+    };
+    const tom = tons[tipo] || tons.neutro;
+
+    const falarAgora = () => {
       const utter = new SpeechSynthesisUtterance(texto);
       utter.lang = "pt-BR";
-      utter.rate = 1.15;
-      utter.pitch = 1.2;
+      utter.rate = tom.rate;
+      utter.pitch = tom.pitch;
       utter.volume = 1.0;
 
       const vozes = synth.getVoices();
@@ -77,23 +100,22 @@ function falar(texto) {
         "Camila"
       ];
 
-      const vozFeminina = vozes.find(v =>
+      const voz = vozes.find(v =>
         v.lang === "pt-BR" &&
-        preferidas.some(nome => v.name.includes(nome))
-      );
+        preferidas.some(n => v.name.includes(n))
+      ) || vozes.find(v => v.lang === "pt-BR");
 
-      if (vozFeminina) utter.voice = vozFeminina;
-      else {
-        const vozPadrao = vozes.find(v => v.lang === "pt-BR");
-        if (vozPadrao) utter.voice = vozPadrao;
-      }
+      if (voz) utter.voice = voz;
+
+      tocarChime(tom.freq);
+      utter.onend = () => tocarChime(tom.freq * 0.8);
 
       synth.cancel();
       synth.speak(utter);
     };
 
-    if (synth.getVoices().length === 0) synth.onvoiceschanged = speakNow;
-    else speakNow();
+    if (synth.getVoices().length === 0) synth.onvoiceschanged = falarAgora;
+    else falarAgora();
   } catch (e) {
     console.warn("Falha ao usar SpeechSynthesis:", e);
   }
@@ -203,11 +225,11 @@ function perguntarNivelEIntensidade(tema, callback) {
   `;
   document.head.appendChild(style);
 
-  // === falas da Liora
+  // === fala guiada ===
   setTimeout(() => {
-    falar("Olá! Eu sou a Liora, sua mentora de estudos. Vamos definir o seu plano!");
+    falar("Olá! Eu sou a Liora, sua mentora de estudos. Vamos definir o seu plano!", "saudacao");
     setTimeout(() => {
-      falar(`Qual é o seu nível de conhecimento sobre ${tema}? Iniciante, intermediário ou avançado?`);
+      falar(`Qual é o seu nível de conhecimento sobre ${tema}? Iniciante, intermediário ou avançado?`, "instrucao");
     }, 2500);
   }, 500);
 
@@ -218,7 +240,7 @@ function perguntarNivelEIntensidade(tema, callback) {
       nivelEscolhido = e.target.dataset.nivel;
       modal.querySelector("#step-1").style.display = "none";
       modal.querySelector("#step-2").style.display = "block";
-      falar("Excelente! Agora me diga qual ritmo prefere: leve, equilibrado ou intensivo?");
+      falar("Excelente! Agora me diga qual ritmo prefere: leve, equilibrado ou intensivo?", "instrucao");
     });
   });
 
@@ -226,7 +248,7 @@ function perguntarNivelEIntensidade(tema, callback) {
     btn.addEventListener("click", e => {
       const intensidade = e.target.dataset.int;
       modal.remove();
-      falar("Show! Estou montando seu plano de estudos agora. Prepare-se para evoluir!");
+      falar("Show! Estou montando seu plano de estudos agora. Prepare-se para evoluir!", "encerramento");
       callback(nivelEscolhido, intensidade);
     });
   });
