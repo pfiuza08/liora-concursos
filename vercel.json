@@ -10,14 +10,22 @@
   ],
   "routes": [
     {
-      "src": "/(.*)\\.(css|js|png|jpg|jpeg|svg|ico|json|pdf|webp|woff2?)$",
+      "src": "/scripts/(.*)\\.js",
+      "headers": {
+        "Content-Type": "application/javascript; charset=utf-8",
+        "Cache-Control": "public, max-age=31536000, immutable"
+      },
+      "dest": "/scripts/$1.js"
+    },
+    {
+      "src": "/(.*)\\.(css|png|jpg|jpeg|svg|ico|json|pdf|webp|woff2?)$",
       "headers": {
         "Cache-Control": "public, max-age=31536000, immutable"
       },
       "dest": "/$1.$2"
     },
     {
-      "src": "/(.*)",
+      "src": "/",
       "dest": "/index.html",
       "headers": {
         "Cache-Control": "no-cache"
