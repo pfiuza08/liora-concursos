@@ -4,8 +4,9 @@
   "builds": [
     { "src": "index.html", "use": "@vercel/static" },
     { "src": "style.css", "use": "@vercel/static" },
-    { "src": "scripts/(.*)", "use": "@vercel/static" },
-    { "src": "assets/(.*)", "use": "@vercel/static" }
+    { "src": "scripts/core.js", "use": "@vercel/static" },
+    { "src": "scripts/semantic.js", "use": "@vercel/static" },
+    { "src": "scripts/concursos.js", "use": "@vercel/static" }
   ],
   "routes": [
     {
