@@ -2,14 +2,22 @@
   "version": 2,
   "public": true,
   "builds": [
-    { "src": "index.html", "use": "@vercel/static" },
-    { "src": "style.css", "use": "@vercel/static" },
-    { "src": "scripts/core.js", "use": "@vercel/static" },
-    { "src": "scripts/semantic.js", "use": "@vercel/static" },
-    { "src": "scripts/concursos.js", "use": "@vercel/static" }
+    { "src": "index.html", "use": "@vercel/static" }
   ],
   "routes": [
-    { "src": "/(.*)\\.(css|js|png|jpg|svg|json|ico|pdf)", "dest": "/$1.$2" },
-    { "src": "/", "dest": "/index.html" }
+    {
+      "src": "/(.*)\\.(css|js|png|jpg|jpeg|svg|ico|json|pdf|webp|woff2?)$",
+      "headers": {
+        "Cache-Control": "public, max-age=31536000, immutable"
+      },
+      "dest": "/$1.$2"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html",
+      "headers": {
+        "Cache-Control": "no-cache"
+      }
+    }
   ]
 }
