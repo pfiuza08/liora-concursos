@@ -6,51 +6,28 @@
   <title>Liora — Espaço de Estudo</title>
   <meta name="description" content="Liora é um espaço inteligente e tranquilo de estudo guiado, com temas personalizáveis e simulados interativos." />
 
-  <!-- ===================================================== -->
-  <!-- 🎨 Estilos e Tailwind -->
-  <!-- ===================================================== -->
+  <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="/style.css" />
 
-  <!-- ===================================================== -->
-  <!-- 📄 PDF.js — leitura inteligente de arquivos -->
-  <!-- ===================================================== -->
+  <!-- PDF.js + Worker -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.14.305/pdf.min.js"></script>
   <script>
     pdfjsLib.GlobalWorkerOptions.workerSrc =
       "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.14.305/pdf.worker.min.js";
   </script>
 
-  <!-- ===================================================== -->
-  <!-- 🧩 SEO e Favicon -->
-  <!-- ===================================================== -->
-  <link rel="icon" type="image/png" href="/favicon.png" />
-  <meta name="theme-color" content="#0a0a0a" />
-  <meta name="author" content="Intellih Tecnologia" />
-  <meta name="keywords" content="Liora, Intellih, estudo guiado, plano de estudos, concursos, IA educacional, agente de aprendizado" />
-
-  <!-- Open Graph -->
-  <meta property="og:title" content="Liora — Espaço Inteligente de Estudo" />
-  <meta property="og:description" content="Crie planos de estudo personalizados com IA. Liora organiza seus estudos com base no tema, nível e ritmo de aprendizado." />
-  <meta property="og:image" content="https://www.intellih.com.br/assets/liora-cover.jpg" />
-  <meta property="og:url" content="https://liora.intellih.com.br/" />
-  <meta property="og:type" content="website" />
-
-  <!-- Twitter -->
-  <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="Liora — Inteligência aplicada ao aprendizado" />
-  <meta name="twitter:description" content="Liora cria planos de estudo sob medida com IA, voz natural e análise de conteúdo." />
-  <meta name="twitter:image" content="https://www.intellih.com.br/assets/liora-cover.jpg" />
+  <!-- Estilos -->
+  <link rel="stylesheet" href="/style.css?v=5" />
 </head>
 
 <body class="dark">
   <!-- ===================================================== -->
-  <!-- 🏷️ Cabeçalho -->
+  <!-- 🔝 Cabeçalho -->
   <!-- ===================================================== -->
   <header class="max-w-5xl mx-auto px-4 pt-8">
     <div class="flex items-center justify-between">
       <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-2xl flex items-center justify-center text-white font-black" style="background:#c44b04">Li</div>
+        <div class="w-10 h-10 rounded-2xl flex items-center justify-center text-white font-black" style="background:var(--brand)">Li</div>
         <div>
           <h1 class="text-xl font-bold">Liora — Espaço de Estudo <span class="dot" title="online"></span></h1>
           <p class="text-sm text-[var(--muted)]">Ambiente inteligente para aprender com foco.</p>
@@ -65,10 +42,10 @@
   </header>
 
   <!-- ===================================================== -->
-  <!-- 🧱 Estrutura principal -->
+  <!-- 💡 Área principal -->
   <!-- ===================================================== -->
   <main class="max-w-5xl mx-auto px-4 py-8 grid lg:grid-cols-3 gap-6">
-    <!-- Painel esquerdo -->
+    <!-- 🧩 Painel esquerdo -->
     <section class="lg:col-span-1 card p-5">
       <h2 class="section-title mb-1">Configurar estudo</h2>
       <p class="text-sm text-[var(--muted)] mb-4">
@@ -76,7 +53,7 @@
       </p>
 
       <label class="block text-sm font-medium mb-1">Tema</label>
-      <input id="inp-tema" type="text" placeholder="Ex.: IA Generativa, História, Biologia" class="mb-3" />
+      <input id="inp-tema" type="text" placeholder="Ex.: Direito Constitucional, Matemática, IA Generativa" class="mb-3" />
 
       <div class="text-center my-2 text-xs text-[var(--muted)]">ou</div>
 
@@ -87,7 +64,6 @@
         <div id="upload-spinner"></div>
         <input id="inp-file" type="file" accept=".pdf,.txt" />
       </label>
-
       <p id="file-name" class="text-[11px] text-[var(--muted)] mt-2"></p>
       <p id="file-type" class="text-[12px] text-[var(--muted)] mt-1 italic"></p>
       <p class="text-[11px] text-[var(--muted)] mt-1">Arquivos TXT e PDF são suportados neste protótipo.</p>
@@ -107,7 +83,7 @@
       <p id="status" class="text-xs text-[var(--muted)] mt-2"></p>
     </section>
 
-    <!-- Painel direito -->
+    <!-- 📘 Painel direito -->
     <section class="lg:col-span-2 card p-5">
       <div class="flex items-center justify-between mb-3">
         <h2 class="section-title">Seu plano de estudo</h2>
@@ -118,36 +94,35 @@
   </main>
 
   <!-- ===================================================== -->
-  <!-- ⚙️ Rodapé -->
+  <!-- 📘 Rodapé -->
   <!-- ===================================================== -->
   <footer class="max-w-5xl mx-auto px-4 pb-10 text-xs text-[var(--muted)] text-center">
     <p>Liora — um ambiente de estudo guiado e inspirador. © Intellih</p>
   </footer>
 
   <!-- ===================================================== -->
-  <!-- 🔚 Scripts principais (ordem ideal + correção de escopo) -->
+  <!-- ⚙️ Scripts principais (ordem corrigida e com logs) -->
   <!-- ===================================================== -->
-   <script src="/scripts/core.js?v=3" defer></script>
-   <script src="/scripts/semantic.js?v=3"></script>
-   <script src="/scripts/temas.js"></script>
-   <script src="/scripts/plano-simulador.js"></script>
+  <script src="/scripts/core.js?v=5" defer></script>
+  <script src="/scripts/semantic.js?v=5"></script>
+  <script src="/scripts/temas.js?v=5"></script>
+  <script src="/scripts/plano-simulador.js?v=5"></script>
 
   <!-- ===================================================== -->
-  <!-- 🧩 Diagnóstico de carregamento -->
+  <!-- 🔍 Diagnóstico de carregamento -->
   <!-- ===================================================== -->
   <script>
-    window.addEventListener("load", () => {
-      console.log("✅ Liora carregada com sucesso.");
-      const checks = [
-        { name: "core.js", ok: !!window.state },
-        { name: "semantic.js", ok: typeof analisarSemantica === "function" },
-        { name: "temas.js", ok: typeof falar === "function" },
-        { name: "plano-simulador.js", ok: typeof gerarPlanoEstudo === "function" },
-      ];
-      checks.forEach(c => {
-        console.log(c.ok ? `🟢 ${c.name} ativo` : `🔴 ${c.name} não carregado`);
-      });
-    });
+    console.log("✅ Liora carregada com sucesso.");
+
+    function checkModule(name, testVar) {
+      const active = typeof window[testVar] !== "undefined";
+      console.log(`${active ? "🟢" : "🔴"} ${name} ${active ? "ativo" : "não carregado"}`);
+    }
+
+    checkModule("core.js", "state");
+    checkModule("semantic.js", "analisarSemantica");
+    checkModule("temas.js", "LioraTemas");
+    checkModule("plano-simulador.js", "LioraGerarPlano");
   </script>
 </body>
 </html>
