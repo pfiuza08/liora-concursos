@@ -1,142 +1,158 @@
 // ==========================================================
-// 🎯 Liora Concursos — Plano de Estudos Inteligente
+// 🎯 Liora Concursos — Módulo de plano de estudos inteligente
+// Gera sessões com objetivos, tarefas e revisões automáticas
 // ==========================================================
 
-window.LioraConcursos = {
-  // ----------------------------------------------------------
-  // 🧠 Classifica os tópicos por nível de profundidade semântica
-  // ----------------------------------------------------------
-  classificarTopicos(linhas) {
-    const grupos = { basicos: [], intermediarios: [], avancados: [] };
-    linhas.forEach(l => {
-      const lower = l.toLowerCase();
-      if (lower.match(/introdu|conceito|defini|fundamento|princ[ií]pio|no[cç][aã]o/))
-        grupos.basicos.push(l);
-      else if (lower.match(/aplic|exemplo|crit[eé]rio|regra|classifica|propriedade|procedimento/))
-        grupos.intermediarios.push(l);
-      else
-        grupos.avancados.push(l);
-    });
-    return grupos;
-  },
+// --- Namespace global ---
+window.LioraConcursos = {};
 
-  // ----------------------------------------------------------
-  // 📊 Organiza sessões de forma progressiva
-  // ----------------------------------------------------------
-  organizarSessões(topicos, dias) {
-    const grupos = this.classificarTopicos(topicos);
-    const todos = [...grupos.basicos, ...grupos.intermediarios, ...grupos.avancados];
-    const blocos = Math.ceil(todos.length / dias);
+// ==========================================================
+// 🧩 Funções utilitárias
+// ==========================================================
+LioraConcursos.normalizar = (texto) =>
+  texto.replace(/\s+/g, ' ').replace(/\r/g, '').trim();
 
-    return Array.from({ length: dias }, (_, i) => {
-      const subset = todos.slice(i * blocos, (i + 1) * blocos);
-      const dificuldade =
-        i < dias / 3 ? "leve" :
-        i < (2 * dias) / 3 ? "média" : "densa";
-      return { subset, dificuldade };
-    });
-  },
+LioraConcursos.dividirTopicos = (texto) => {
+  const linhas = texto.split(/\n+/).map(l => l.trim()).filter(Boolean);
+  return linhas.filter(l => l.length > 3 && !l.match(/^(\d+)?$/));
+};
 
-  // ----------------------------------------------------------
-  // 🧩 Gera o plano de estudos completo para concursos
-  // ----------------------------------------------------------
-  gerarPlanoConcursos(planoBase, dias) {
-    const novoPlano = [];
-    const topicos = planoBase.flatMap(s => s.descricao.split("\n").filter(Boolean));
-    const organizadas = this.organizarSessões(topicos, dias);
-
-    organizadas.forEach((sessao, i) => {
-      const textoSessao = sessao.subset.join(" ");
-      const sem = window.analisarSemantica(textoSessao);
-
-      const foco = sem.conceitos.slice(0, 3).join(", ") || "tópico principal";
-      const revisao =
-        sessao.dificuldade === "densa" ? "Revisar em 2 dias" :
-        sessao.dificuldade === "média" ? "Revisar em 3 dias" :
-        "Revisar em 5 dias";
-      const tempo =
-        sessao.dificuldade === "densa" ? "60 min" :
-        sessao.dificuldade === "média" ? "45 min" : "30 min";
-
-      const tarefa =
-        sessao.dificuldade === "densa"
-          ? "Elabore 5 flashcards e resolva questões da banca correspondente."
-          : sessao.dificuldade === "média"
-          ? "Crie um mapa mental e destaque palavras-chave."
-          : "Releia o material e explique com suas próprias palavras.";
-
-      novoPlano.push({
-        dia: i + 1,
-        titulo: `Sessão ${i + 1} — ${sem.titulo}`,
-        resumo: sem.resumo,
-        conceitos: sem.conceitos,
-        densidade: `📘 ${sessao.dificuldade}`,
-        descricao: sessao.subset.map(t => "• " + t).join("\n"),
-        objetivo: `Dominar os conceitos de ${foco}.`,
-        tarefaPratica: tarefa,
-        tempoSugerido: tempo,
-        revisaoSugerida: revisao
-      });
-    });
-
-    return novoPlano;
-  },
-
-  // ----------------------------------------------------------
-  // 🎨 Renderiza o plano especializado (substitui o padrão)
-  // ----------------------------------------------------------
-  renderizarPlanoConcursos(plano) {
-    const container = document.getElementById("plano");
-    container.innerHTML = "";
-
-    if (!plano || !plano.length) {
-      container.innerHTML = `<p class="text-sm text-[var(--muted)]">Nenhum plano de estudo disponível.</p>`;
-      return;
-    }
-
-    plano.forEach(sessao => {
-      const div = document.createElement("div");
-      div.className = "session-card";
-      div.innerHTML = `
-        <div class="flex items-center justify-between mb-1">
-          <h3>${sessao.titulo}</h3>
-          <span class="text-xs opacity-70">${sessao.densidade}</span>
-        </div>
-        <p class="text-sm text-[var(--muted)] italic mb-1">${sessao.objetivo}</p>
-        <p style="font-style:italic;font-size:0.85rem;color:var(--muted);margin-bottom:0.4rem;">
-          ${sessao.resumo}
-        </p>
-        <p>${sessao.descricao.replace(/</g,'&lt;')}</p>
-        <div class="mt-2 flex flex-wrap gap-2">
-          ${sessao.conceitos.map(c => `<span class="chip">${c}</span>`).join("")}
-        </div>
-        <div class="mt-3 text-xs text-[var(--muted)] grid grid-cols-2 gap-2">
-          <div>🕐 ${sessao.tempoSugerido}</div>
-          <div>🔁 ${sessao.revisaoSugerida}</div>
-        </div>
-        <div class="mt-2 text-sm">📚 <b>Tarefa:</b> ${sessao.tarefaPratica}</div>
-      `;
-      container.appendChild(div);
-    });
-  }
+LioraConcursos.definirDensidade = (texto) => {
+  const palavras = texto.split(/\s+/).length;
+  if (palavras < 80) return '📗 leve';
+  if (palavras < 160) return '📘 média';
+  return '📙 densa';
 };
 
 // ==========================================================
-// 🔗 Integração automática com o núcleo Liora
+// 🎓 Geração de plano pedagógico (Concursos)
 // ==========================================================
-document.addEventListener("DOMContentLoaded", () => {
+LioraConcursos.gerarPlanoConcursos = (planoBase, totalDias) => {
+  const novoPlano = [];
+  const temasConcursos = [
+    'compreensão de conceitos', 'interpretação de textos legais', 'resolução de questões',
+    'análise de casos práticos', 'revisão e fixação de conteúdo'
+  ];
+
+  planoBase.forEach((sessao, i) => {
+    const densidade = LioraConcursos.definirDensidade(sessao.descricao);
+    const foco = temasConcursos[i % temasConcursos.length];
+    const resumo = sessao.resumo || (sessao.descricao.split(/[.!?]/)[0] || '').trim();
+
+    // gera tarefa conforme tipo de conteúdo
+    let tarefa = '';
+    if (densidade.includes('leve')) tarefa = 'Leia atentamente e destaque palavras-chave.';
+    else if (densidade.includes('média')) tarefa = 'Monte um mapa mental com os conceitos principais.';
+    else tarefa = 'Resolva 3 questões anteriores sobre este tema.';
+
+    novoPlano.push({
+      ...sessao,
+      titulo: `Sessão ${i + 1} — ${sessao.topico || 'Estudo dirigido'}`,
+      objetivo: `Aprofundar a ${foco}.`,
+      resumo,
+      tarefa,
+      tempo: densidade.includes('leve') ? '30 min' : densidade.includes('média') ? '45 min' : '60 min',
+      revisao: `${2 + (i % 3)} dias`,
+      densidade
+    });
+  });
+
+  return novoPlano;
+};
+
+// ==========================================================
+// 🧱 Renderização aprimorada (cartões didáticos)
+// ==========================================================
+LioraConcursos.renderizarPlanoConcursos = (plano) => {
+  const container = document.getElementById('plano');
+  container.innerHTML = '';
+
+  if (!plano?.length) {
+    container.innerHTML = `<p class="text-sm text-[var(--muted)]">Nenhum plano gerado.</p>`;
+    return;
+  }
+
+  plano.forEach(sessao => {
+    const div = document.createElement('div');
+    div.className = 'session-card';
+    div.innerHTML = `
+      <div class="flex items-center justify-between mb-1">
+        <h3>${sessao.titulo}</h3>
+        <span class="text-xs opacity-70">${sessao.densidade}</span>
+      </div>
+
+      <p class="text-sm text-[var(--muted)] italic mb-2">🎯 ${sessao.objetivo}</p>
+      <p style="margin-bottom:0.5rem;">${sessao.resumo}</p>
+
+      <div class="border-l-2 pl-3 border-[var(--brand)] mb-2">
+        ${sessao.descricao.replace(/\n/g, '<br>')}
+      </div>
+
+      <p class="text-sm mt-2">💬 <b>Tarefa:</b> ${sessao.tarefa}</p>
+      <p class="text-xs text-[var(--muted)] mt-1">🕐 Tempo sugerido: ${sessao.tempo} · 🔁 Revisar em ${sessao.revisao}</p>
+    `;
+    container.appendChild(div);
+  });
+
+  // Painel de densidade cognitiva
+  LioraConcursos.renderizarDensidade(plano);
+};
+
+// ==========================================================
+// ⚖️ Gráfico de Densidade Cognitiva — Reaproveita o padrão
+// ==========================================================
+LioraConcursos.renderizarDensidade = (plano) => {
+  const contagens = { leve: 0, media: 0, densa: 0 };
+  plano.forEach(s => {
+    if (s.densidade.includes('leve')) contagens.leve++;
+    else if (s.densidade.includes('média')) contagens.media++;
+    else contagens.densa++;
+  });
+
+  const total = plano.length || 1;
+  const pctLeve = (contagens.leve / total) * 100;
+  const pctMedia = (contagens.media / total) * 100;
+  const pctDensa = (contagens.densa / total) * 100;
+
+  const grafico = document.createElement('div');
+  grafico.id = 'grafico-densidade';
+  grafico.style.marginTop = '1.5rem';
+  grafico.style.background = 'var(--card)';
+  grafico.style.padding = '1rem';
+  grafico.style.borderRadius = '1rem';
+  grafico.innerHTML = `
+    <h4 class="font-semibold mb-2">⚖️ Densidade Cognitiva</h4>
+    <div style="display:flex;height:20px;border-radius:10px;overflow:hidden;margin-bottom:0.8rem;">
+      <div style="background:#48bb78;width:${pctLeve}%;"></div>
+      <div style="background:#4299e1;width:${pctMedia}%;"></div>
+      <div style="background:#c44b04;width:${pctDensa}%;"></div>
+    </div>
+    <div style="display:flex;justify-content:space-between;font-size:0.85rem;color:var(--muted);">
+      <span>📗 Leve (${contagens.leve})</span>
+      <span>📘 Média (${contagens.media})</span>
+      <span>📙 Densa (${contagens.densa})</span>
+    </div>
+  `;
+
+  document.getElementById('plano').appendChild(grafico);
+};
+
+// ==========================================================
+// 🔗 Integração automática com o núcleo (core.js)
+// ==========================================================
+window.addEventListener("load", () => {
   const btn = document.getElementById("btn-gerar");
   if (!btn) return;
 
   btn.addEventListener("click", () => {
     const s = window.state;
-    if (!s.plano || !s.plano.length) return;
+    if (!s || !s.plano || !s.plano.length) return;
 
-    // Gera o plano otimizado
-    const planoConcursos = window.LioraConcursos.gerarPlanoConcursos(s.plano, s.dias);
+    console.log("🔁 Reformatando plano com Liora Concursos...");
 
-    // Atualiza o estado global e re-renderiza
+    // Gera o plano especializado e renderiza
+    const planoConcursos = LioraConcursos.gerarPlanoConcursos(s.plano, s.dias);
     s.plano = planoConcursos;
-    window.LioraConcursos.renderizarPlanoConcursos(s.plano);
+    LioraConcursos.renderizarPlanoConcursos(s.plano);
   });
 });
