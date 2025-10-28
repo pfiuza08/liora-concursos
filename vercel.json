@@ -2,50 +2,49 @@
   "version": 2,
   "public": true,
   "builds": [
-    { "src": "index.html", "use": "@vercel/static" },
-    { "src": "style.css", "use": "@vercel/static" },
-    { "src": "scripts/core.js", "use": "@vercel/static" },
-    { "src": "scripts/semantic.js", "use": "@vercel/static" },
-    { "src": "scripts/concursos.js", "use": "@vercel/static" }
+    {
+      "src": "index.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "style.css",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "scripts/(.*)",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "assets/(.*)",
+      "use": "@vercel/static"
+    }
   ],
   "routes": [
     {
-      "src": "/scripts/core.js",
-      "dest": "/scripts/core.js",
+      "src": "/scripts/(.*)\\.js",
+      "dest": "/scripts/$1.js",
       "headers": {
-        "Content-Type": "application/javascript; charset=utf-8"
+        "Content-Type": "application/javascript; charset=utf-8",
+        "Cache-Control": "public, max-age=31536000, immutable"
       }
     },
     {
-      "src": "/scripts/semantic.js",
-      "dest": "/scripts/semantic.js",
-      "headers": {
-        "Content-Type": "application/javascript; charset=utf-8"
-      }
-    },
-    {
-      "src": "/scripts/concursos.js",
-      "dest": "/scripts/concursos.js",
-      "headers": {
-        "Content-Type": "application/javascript; charset=utf-8"
-      }
-    },
-    {
-      "src": "/style.css",
+      "src": "/style\\.css",
       "dest": "/style.css",
       "headers": {
-        "Content-Type": "text/css; charset=utf-8"
+        "Content-Type": "text/css; charset=utf-8",
+        "Cache-Control": "public, max-age=31536000, immutable"
       }
     },
     {
-      "src": "/(.*)\\.(png|jpg|jpeg|svg|ico|json|pdf|webp|woff2?)$",
-      "dest": "/$1.$2",
+      "src": "/assets/(.*)\\.(png|jpg|jpeg|svg|ico|webp|pdf|json|woff2?)",
+      "dest": "/assets/$1.$2",
       "headers": {
         "Cache-Control": "public, max-age=31536000, immutable"
       }
     },
     {
-      "src": "/",
+      "src": "/(.*)",
       "dest": "/index.html",
       "headers": {
         "Cache-Control": "no-cache"
