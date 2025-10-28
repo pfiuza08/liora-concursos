@@ -3,6 +3,12 @@
 // Versão com Painel Flutuante + Processamento Semântico + Densidade Cognitiva
 // ==========================================================
 
+import {
+  normalizarTextoParaPrograma,
+  detectarTipoMaterial,
+  analisarSemantica
+} from './semantic.js';
+
 const state = {
   tema: '',
   dias: 5,
