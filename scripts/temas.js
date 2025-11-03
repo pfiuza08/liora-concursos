@@ -1,302 +1,154 @@
 // ==========================================================
-// 🎓 Liora — Planos de estudo por tema, nível e ritmo
+// 🎯 Liora — Módulo de Temas com Diagnóstico Integrado
 // ==========================================================
 
-function gerarPlanoPorPrompt(tema, nivel, dias, intensidade) {
-  const descricoesNivel = {
-    iniciante: {
-      foco: "Compreensão dos conceitos básicos",
-      carga: intensidade === "intensivo" ? "40 min" : intensidade === "equilibrado" ? "30 min" : "20 min",
-      densidade: intensidade === "intensivo" ? "📘 média" : "📗 leve",
-      verbo: "Introduzir",
-      tarefas: ["leitura guiada", "anotações", "questões simples"]
-    },
-    intermediario: {
-      foco: "Aprofundamento e prática aplicada",
-      carga: intensidade === "intensivo" ? "60 min" : intensidade === "equilibrado" ? "45 min" : "30 min",
-      densidade: intensidade === "intensivo" ? "📙 densa" : "📘 média",
-      verbo: "Explorar",
-      tarefas: ["resumo crítico", "mapa mental", "questões de bancas"]
-    },
-    avancado: {
-      foco: "Domínio conceitual e prática avançada",
-      carga: intensidade === "intensivo" ? "90 min" : intensidade === "equilibrado" ? "60 min" : "45 min",
-      densidade: intensidade === "intensivo" ? "📙 densa" : "📘 média",
-      verbo: "Aprofundar",
-      tarefas: ["simulados complexos", "revisão teórica", "redação discursiva"]
-    }
-  };
+console.log("🧩 Iniciando carregamento de temas.js...");
 
-  const base = descricoesNivel[nivel] || descricoesNivel.iniciante;
-  const plano = [];
-
-  for (let i = 0; i < dias; i++) {
-    const sessao = i + 1;
-    const focoDoDia = `${base.verbo} aspectos de ${tema} (parte ${sessao})`;
-    const tarefas = base.tarefas
-      .slice(0, 2 + (i % base.tarefas.length))
-      .map(t => `• ${t}`)
-      .join("\n");
-
-    plano.push({
-      dia: sessao,
-      titulo: `Sessão ${sessao} — ${tema}`,
-      objetivo: `${base.foco}.`,
-      tarefa: tarefas,
-      tempo: base.carga,
-      revisao: `${2 + (i % 3)} dias`,
-      densidade: base.densidade,
-      descricao: `${focoDoDia}. Nesta sessão, ${base.verbo.toLowerCase()} os pontos-chave e desenvolva autonomia no tema.`
-    });
-  }
-
-  return plano;
-}
-
-// ==========================================================
-// 🔊 Fala da Liora — emocional + voz feminina + chime
-// ==========================================================
-function falar(texto, tipo = "neutro") {
+(function () {
   try {
-    const synth = window.speechSynthesis;
-    if (!synth) return;
+    // ==============================
+    // 🔍 Diagnóstico inicial
+    // ==============================
+    const coreAtivo = typeof window.state !== "undefined";
+    const semanticAtivo = typeof window.analisarSemantica !== "undefined";
+    const planoAtivo = typeof window.LioraSimulador !== "undefined";
 
-    // 🎵 som de sininho leve
-    const tocarChime = (freq = 880, dur = 0.25) => {
-      const ctx = new (window.AudioContext || window.webkitAudioContext)();
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = "sine";
-      osc.frequency.setValueAtTime(freq, ctx.currentTime);
-      gain.gain.setValueAtTime(0.1, ctx.currentTime);
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start();
-      osc.stop(ctx.currentTime + dur);
-    };
+    console.log(`🧠 core: ${coreAtivo ? "🟢 ativo" : "🔴 ausente"}`);
+    console.log(`🧩 semantic: ${semanticAtivo ? "🟢 ativo" : "🔴 ausente"}`);
+    console.log(`📘 simulador: ${planoAtivo ? "🟢 ativo" : "🔴 ausente"}`);
 
-    // 🧠 configurações emocionais por tipo
-    const tons = {
-      saudacao: { rate: 1.3, pitch: 1.45, freq: 950 },
-      instrucao: { rate: 1.2, pitch: 1.25, freq: 820 },
-      encerramento: { rate: 1.1, pitch: 1.15, freq: 700 },
-      neutro: { rate: 1.15, pitch: 1.25, freq: 850 }
-    };
-    const tom = tons[tipo] || tons.neutro;
+    // ==============================
+    // 🧩 Interface de temas
+    // ==============================
+    window.LioraTemas = {
+      iniciar() {
+        console.log("🚀 LioraTemas.iniciar() chamado");
+        this.criarBotao();
+      },
 
-    const falarAgora = () => {
-      const utter = new SpeechSynthesisUtterance(texto);
-      utter.lang = "pt-BR";
-      utter.rate = tom.rate;
-      utter.pitch = tom.pitch;
-      utter.volume = 1.0;
+      criarBotao() {
+        const btn = document.createElement("button");
+        btn.id = "btn-escolher-tema";
+        btn.textContent = "🎯 Escolher Tema";
+        btn.className = "btn fixed bottom-6 right-6 z-40";
+        btn.style.background = "var(--brand)";
+        btn.style.color = "#fff";
+        btn.style.borderRadius = "1rem";
+        btn.style.padding = "10px 16px";
+        btn.style.fontSize = "14px";
+        btn.style.boxShadow = "0 4px 10px rgba(0,0,0,0.25)";
+        btn.onclick = () => this.abrirModal();
+        document.body.appendChild(btn);
+        console.log("✅ Botão de tema criado");
+      },
 
-      const vozes = synth.getVoices();
-      const preferidas = [
-        "Google português do Brasil",
-        "Microsoft Maria - Portuguese (Brazil)",
-        "Microsoft Francisca - Portuguese (Brazil)",
-        "Luciana",
-        "Camila"
-      ];
+      abrirModal() {
+        console.log("📋 Abrindo modal de temas...");
+        const modal = document.createElement("div");
+        modal.id = "modal-temas";
+        modal.style.position = "fixed";
+        modal.style.inset = "0";
+        modal.style.background = "rgba(0,0,0,0.7)";
+        modal.style.display = "flex";
+        modal.style.alignItems = "center";
+        modal.style.justifyContent = "center";
+        modal.style.zIndex = "3000";
 
-      const voz = vozes.find(v =>
-        v.lang === "pt-BR" &&
-        preferidas.some(n => v.name.includes(n))
-      ) || vozes.find(v => v.lang === "pt-BR");
-
-      if (voz) utter.voice = voz;
-
-      tocarChime(tom.freq);
-      utter.onend = () => tocarChime(tom.freq * 0.8);
-
-      synth.cancel();
-      synth.speak(utter);
-    };
-
-    if (synth.getVoices().length === 0) synth.onvoiceschanged = falarAgora;
-    else falarAgora();
-  } catch (e) {
-    console.warn("Falha ao usar SpeechSynthesis:", e);
-  }
-}
-
-// ==========================================================
-// 💬 Modal Interativo da Liora com voz motivacional
-// ==========================================================
-function perguntarNivelEIntensidade(tema, callback) {
-  document.getElementById("liora-dialogo")?.remove();
-
-  const modal = document.createElement("div");
-  modal.id = "liora-dialogo";
-  modal.innerHTML = `
-    <div class="liora-backdrop">
-      <div class="liora-modal">
-        <h2>💪 Olá! Eu sou a Liora.</h2>
-        <p>Antes de montar seu plano sobre <b>${tema}</b>, me diga:</p>
-
-        <div id="step-1">
-          <p class="pergunta">Qual o seu nível de conhecimento?</p>
-          <div class="opcoes">
-            <button class="chip" data-nivel="iniciante">🟢 Iniciante</button>
-            <button class="chip" data-nivel="intermediario">🔵 Intermediário</button>
-            <button class="chip" data-nivel="avancado">🟣 Avançado</button>
+        modal.innerHTML = `
+          <div style="
+            background:var(--card);
+            color:var(--fg);
+            padding:1.5rem;
+            border-radius:1rem;
+            box-shadow:var(--shadow);
+            width:90%;
+            max-width:500px;
+            animation:fadeIn 0.3s ease;
+          ">
+            <h3 style="font-weight:600;margin-bottom:0.8rem;">🎯 Escolher Tema</h3>
+            <p style="font-size:0.85rem;color:var(--muted);margin-bottom:0.8rem;">
+              Digite o tema de estudo e escolha seu nível de dificuldade.
+            </p>
+            <input id="tema-nome" type="text" placeholder="Ex.: Inteligência Artificial" style="
+              width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;margin-bottom:10px;
+              background:var(--bg2);color:var(--fg);
+            "/>
+            <select id="tema-nivel" style="
+              width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;
+              background:var(--bg2);color:var(--fg);
+            ">
+              <option value="iniciante">Iniciante</option>
+              <option value="intermediario">Intermediário</option>
+              <option value="avancado">Avançado</option>
+            </select>
+            <div style="text-align:right;margin-top:1rem;">
+              <button id="btn-confirmar-tema" class="chip">Confirmar</button>
+              <button id="btn-cancelar-tema" class="chip">Cancelar</button>
+            </div>
           </div>
-        </div>
-
-        <div id="step-2" style="display:none;">
-          <p class="pergunta">Como quer o ritmo do plano?</p>
-          <div class="opcoes">
-            <button class="chip" data-int="leve">🌿 Leve</button>
-            <button class="chip" data-int="equilibrado">⚖️ Equilibrado</button>
-            <button class="chip" data-int="intensivo">🔥 Intensivo</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  `;
-  document.body.appendChild(modal);
-
-  // === estilo modal
-  const style = document.createElement("style");
-  style.textContent = `
-    .liora-backdrop {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.75);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 2000;
-      animation: fadeIn 0.3s ease;
-    }
-    .liora-modal {
-      background: var(--card);
-      color: var(--fg);
-      padding: 2rem;
-      border-radius: 1rem;
-      width: 90%;
-      max-width: 480px;
-      box-shadow: 0 0 25px rgba(0,0,0,0.4);
-      text-align: center;
-      transform: scale(0.95);
-      opacity: 0;
-      animation: modalIn 0.35s ease forwards;
-    }
-    @keyframes modalIn {
-      to { transform: scale(1); opacity: 1; }
-    }
-    .liora-modal h2 {
-      font-weight: 700;
-      font-size: 1.3rem;
-      margin-bottom: 0.3rem;
-      color: var(--brand, #c44b04);
-    }
-    .liora-modal p {
-      font-size: 0.9rem;
-      color: var(--muted);
-      margin-bottom: 1rem;
-    }
-    .pergunta {
-      font-weight: 500;
-      color: var(--fg);
-      margin-bottom: 0.5rem;
-    }
-    .opcoes {
-      display: flex;
-      justify-content: center;
-      gap: 0.5rem;
-      flex-wrap: wrap;
-    }
-    .chip {
-      background: var(--brand, #c44b04);
-      color: white;
-      border: none;
-      border-radius: 9999px;
-      padding: 0.4rem 0.9rem;
-      font-size: 0.85rem;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
-    .chip:hover {
-      background: #e05700;
-      transform: scale(1.05);
-    }
-  `;
-  document.head.appendChild(style);
-
-  // === fala guiada ===
-  setTimeout(() => {
-    falar("Olá! Eu sou a Liora, sua mentora de estudos. Vamos definir o seu plano!", "saudacao");
-    setTimeout(() => {
-      falar(`Qual é o seu nível de conhecimento sobre ${tema}? Iniciante, intermediário ou avançado?`, "instrucao");
-    }, 2500);
-  }, 500);
-
-  let nivelEscolhido = null;
-
-  modal.querySelectorAll("[data-nivel]").forEach(btn => {
-    btn.addEventListener("click", e => {
-      nivelEscolhido = e.target.dataset.nivel;
-      modal.querySelector("#step-1").style.display = "none";
-      modal.querySelector("#step-2").style.display = "block";
-      falar("Excelente! Agora me diga qual ritmo prefere: leve, equilibrado ou intensivo?", "instrucao");
-    });
-  });
-
-  modal.querySelectorAll("[data-int]").forEach(btn => {
-    btn.addEventListener("click", e => {
-      const intensidade = e.target.dataset.int;
-      modal.remove();
-      falar("Show! Estou montando seu plano de estudos agora. Prepare-se para evoluir!", "encerramento");
-      callback(nivelEscolhido, intensidade);
-    });
-  });
-
-  modal.addEventListener("click", e => {
-    if (e.target.classList.contains("liora-backdrop")) modal.remove();
-  });
-}
-
-// ==========================================================
-// 🔗 Integração com o botão “Gerar plano”
-// ==========================================================
-window.addEventListener("DOMContentLoaded", () => {
-  const btn = document.getElementById("btn-gerar");
-  if (!btn) return;
-
-  btn.addEventListener("click", () => {
-    const s = window.state;
-    s.tema = document.getElementById("inp-tema").value.trim();
-    if (!s.tema || s.materialTexto) return;
-
-    perguntarNivelEIntensidade(s.tema, (nivel, intensidade) => {
-      s.nivel = nivel;
-      s.intensidade = intensidade;
-      const plano = gerarPlanoPorPrompt(s.tema, nivel, s.dias, intensidade);
-      s.plano = plano;
-
-      const container = document.getElementById("plano");
-      container.innerHTML = "";
-
-      plano.forEach(sessao => {
-        const div = document.createElement("div");
-        div.className = "session-card";
-        div.innerHTML = `
-          <div class="flex items-center justify-between mb-1">
-            <h3>${sessao.titulo}</h3>
-            <span class="text-xs opacity-70">${sessao.densidade}</span>
-          </div>
-          <p class="text-sm text-[var(--muted)] italic mb-2">🎯 ${sessao.objetivo}</p>
-          <p>${sessao.descricao}</p>
-          <p class="text-sm mt-2">💬 <b>Tarefas:</b><br>${sessao.tarefa.replace(/\n/g, "<br>")}</p>
-          <p class="text-xs text-[var(--muted)] mt-1">🕐 Tempo: ${sessao.tempo} · 🔁 Revisar em ${sessao.revisao}</p>
         `;
-        container.appendChild(div);
-      });
 
-      document.getElementById("status").textContent =
-        `📚 Plano de estudo (${nivel}, ${intensidade}) gerado para “${s.tema}”.`;
+        document.body.appendChild(modal);
+
+        document.getElementById("btn-cancelar-tema").onclick = () => modal.remove();
+        document.getElementById("btn-confirmar-tema").onclick = () => {
+          const tema = document.getElementById("tema-nome").value.trim();
+          const nivel = document.getElementById("tema-nivel").value;
+          if (!tema) return alert("Digite um tema primeiro.");
+
+          console.log(`🎯 Tema selecionado: ${tema} (${nivel})`);
+          modal.remove();
+
+          // Atualiza o estado global, se o core estiver ativo
+          if (window.state) {
+            window.state.tema = tema;
+            window.state.nivel = nivel;
+            console.log("✅ Estado global atualizado:", window.state);
+          } else {
+            alert("⚠️ Core não detectado. Tema salvo localmente.");
+            localStorage.setItem("liora_tema", tema);
+            localStorage.setItem("liora_nivel", nivel);
+          }
+
+          // Feedback visual
+          const aviso = document.createElement("div");
+          aviso.textContent = `✅ Tema "${tema}" (${nivel}) salvo`;
+          aviso.style.position = "fixed";
+          aviso.style.bottom = "20px";
+          aviso.style.right = "20px";
+          aviso.style.background = "var(--brand)";
+          aviso.style.color = "#fff";
+          aviso.style.padding = "10px 16px";
+          aviso.style.borderRadius = "10px";
+          aviso.style.fontSize = "13px";
+          aviso.style.zIndex = "4000";
+          aviso.style.boxShadow = "0 4px 10px rgba(0,0,0,0.3)";
+          document.body.appendChild(aviso);
+          setTimeout(() => aviso.remove(), 2500);
+        };
+      },
+    };
+
+    // Inicia automaticamente após DOM carregado
+    document.addEventListener("DOMContentLoaded", () => {
+      console.log("✅ temas.js inicializado com sucesso");
+      window.LioraTemas.iniciar();
     });
-  });
-});
+
+  } catch (err) {
+    console.error("💥 Erro ao carregar temas.js:", err);
+
+    // Aviso visual de falha
+    const erroBox = document.createElement("div");
+    erroBox.textContent = "⚠️ Erro no carregamento de temas.js";
+    erroBox.style.position = "fixed";
+    erroBox.style.bottom = "20px";
+    erroBox.style.right = "20px";
+    erroBox.style.background = "#b91c1c";
+    erroBox.style.color = "white";
+    erroBox.style.padding = "8px 14px";
+    erroBox.style.borderRadius = "10px";
+    erroBox.style.zIndex = "4000";
+    document.body.appendChild(erroBox);
+  }
+})();
