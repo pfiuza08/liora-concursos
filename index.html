@@ -100,29 +100,57 @@
     <p>Liora — um ambiente de estudo guiado e inspirador. © Intellih</p>
   </footer>
 
-  <!-- ===================================================== -->
-  <!-- ⚙️ Scripts principais (ordem corrigida e com logs) -->
-  <!-- ===================================================== -->
-  <script src="/scripts/core.js?v=5"></script>
-  <script src="/scripts/temas.js?v=5 defer"></script>
-  <script src="/scripts/semantic.js?v=5 defer"></script>
-  <script src="/scripts/plano-simulador.js?v=5"></script>
+<!-- ==========================================================
+📜 Ordem ideal dos scripts — Liora Inteligente
+=========================================================== -->
 
-  <!-- ===================================================== -->
-  <!-- 🔍 Diagnóstico de carregamento -->
-  <!-- ===================================================== -->
-  <script>
-    console.log("✅ Liora carregada com sucesso.");
+<!-- 1️⃣ — Núcleo semântico: fornece a função analisarSemantica -->
+<script src="/scripts/semantic.js?v=7" defer></script>
 
-    function checkModule(name, testVar) {
-      const active = typeof window[testVar] !== "undefined";
-      console.log(`${active ? "🟢" : "🔴"} ${name} ${active ? "ativo" : "não carregado"}`);
-    }
+<!-- 2️⃣ — Núcleo lógico: depende do semantic.js para gerar planos -->
+<script src="/scripts/core.js?v=5" defer></script>
 
-    checkModule("core.js", "state");
-    checkModule("semantic.js", "analisarSemantica");
-    checkModule("temas.js", "LioraTemas");
-    checkModule("plano-simulador.js", "LioraGerarPlano");
-  </script>
+<!-- 3️⃣ — Interface de temas: usa o estado global do core -->
+<script src="/scripts/temas.js?v=7" defer></script>
+
+<!-- 4️⃣ — Plano simulador: depende de semantic + core -->
+<script src="/scripts/plano-simulador.js?v=7" defer></script>
+
+<!-- 5️⃣ — Diagnóstico: opcional, deve ficar por último -->
+<script src="/scripts/diagnostico.js?v=7" defer></script>
+
+<!-- ==========================================================
+🧩 Diagnóstico visual automático (para debug no console)
+=========================================================== -->
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const scripts = [
+    { name: "semantic.js", ok: typeof window.analisarSemantica === "function" },
+    { name: "core.js", ok: typeof window.state !== "undefined" },
+    { name: "temas.js", ok: typeof window.LioraTemas !== "undefined" },
+    { name: "plano-simulador.js", ok: typeof window.LioraSimulador !== "undefined" }
+  ];
+
+  console.groupCollapsed("🧩 Diagnóstico de carregamento — Liora");
+  scripts.forEach(s => console.log(`${s.ok ? "🟢" : "🔴"} ${s.name} ${s.ok ? "carregado" : "não detectado"}`));
+  console.groupEnd();
+
+  const aviso = document.createElement("div");
+  aviso.style.position = "fixed";
+  aviso.style.bottom = "14px";
+  aviso.style.left = "14px";
+  aviso.style.fontSize = "11px";
+  aviso.style.color = "#fff";
+  aviso.style.background = "rgba(0,0,0,0.5)";
+  aviso.style.padding = "6px 10px";
+  aviso.style.borderRadius = "8px";
+  aviso.style.zIndex = "4000";
+  aviso.style.fontFamily = "monospace";
+  aviso.textContent = "🧠 Liora carregada com verificação automática";
+  document.body.appendChild(aviso);
+  setTimeout(() => aviso.remove(), 3500);
+});
+</script>
+
 </body>
 </html>
