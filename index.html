@@ -3,154 +3,91 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Liora — Espaço de Estudo</title>
-  <meta name="description" content="Liora é um espaço inteligente e tranquilo de estudo guiado, com temas personalizáveis e simulados interativos." />
+  <title>Liora — Plano de Estudo Inteligente</title>
+  <meta name="description" content="Liora cria planos de estudo personalizados com base no tema, nível de conhecimento e ritmo." />
 
-  <!-- Tailwind CSS -->
+  <!-- Tailwind -->
   <script src="https://cdn.tailwindcss.com"></script>
 
-  <!-- PDF.js + Worker -->
+  <!-- PDF.js -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.14.305/pdf.min.js"></script>
   <script>
     pdfjsLib.GlobalWorkerOptions.workerSrc =
       "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.14.305/pdf.worker.min.js";
   </script>
 
-  <!-- Estilos -->
-  <link rel="stylesheet" href="/style.css?v=5" />
+  <link rel="stylesheet" href="/style.css" />
 </head>
 
 <body class="dark">
-  <!-- ===================================================== -->
-  <!-- 🔝 Cabeçalho -->
-  <!-- ===================================================== -->
-  <header class="max-w-5xl mx-auto px-4 pt-8">
-    <div class="flex items-center justify-between">
-      <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-2xl flex items-center justify-center text-white font-black" style="background:var(--brand)">Li</div>
-        <div>
-          <h1 class="text-xl font-bold">Liora — Espaço de Estudo <span class="dot" title="online"></span></h1>
-          <p class="text-sm text-[var(--muted)]">Ambiente inteligente para aprender com foco.</p>
-        </div>
-      </div>
-      <div class="flex items-center gap-2">
-        <button id="btn-theme" class="chip" role="button" tabindex="0" title="Alternar tema">🌙</button>
-        <span class="chip">Sessão salva</span>
-        <button id="btn-reset" class="chip" title="Limpar estado"><span class="kbd">Reset</span></button>
+<header class="max-w-5xl mx-auto px-4 pt-8">
+  <div class="flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-2xl flex items-center justify-center text-white font-black"
+           style="background:var(--brand)">Li</div>
+      <div>
+        <h1 class="text-xl font-bold">Liora — Plano de Estudo <span class="dot" title="online"></span></h1>
+        <p class="text-sm text-[var(--muted)]">Crie um plano de estudo inteligente para qualquer tema.</p>
       </div>
     </div>
-  </header>
+    <div class="flex items-center gap-2">
+      <button id="btn-theme" class="chip" title="Alternar tema">🌙</button>
+    </div>
+  </div>
+</header>
 
-  <!-- ===================================================== -->
-  <!-- 💡 Área principal -->
-  <!-- ===================================================== -->
-  <main class="max-w-5xl mx-auto px-4 py-8 grid lg:grid-cols-3 gap-6">
-    <!-- 🧩 Painel esquerdo -->
-    <section class="lg:col-span-1 card p-5">
-      <h2 class="section-title mb-1">Configurar estudo</h2>
-      <p class="text-sm text-[var(--muted)] mb-4">
-        Escolha um tema ou envie seu material para criar um plano personalizado com sessões e desafios.
-      </p>
+<main class="max-w-5xl mx-auto px-4 py-8 grid lg:grid-cols-3 gap-6">
 
-      <label class="block text-sm font-medium mb-1">Tema</label>
-      <input id="inp-tema" type="text" placeholder="Ex.: Direito Constitucional, Matemática, IA Generativa" class="mb-3" />
+  <!-- 🟦 Painel lateral -->
+  <section class="lg:col-span-1 card p-5">
+    <h2 class="section-title mb-1">Configurar estudo</h2>
+    <p class="text-sm text-[var(--muted)] mb-4">Digite o tema e selecione seu nível de conhecimento.</p>
 
-      <div class="text-center my-2 text-xs text-[var(--muted)]">ou</div>
+    <!-- Tema -->
+    <label class="block text-sm font-medium mb-1">Tema de estudo</label>
+    <input id="inp-tema" type="text" placeholder="Ex.: Direito Constitucional — Poder Legislativo" class="mb-3">
 
-      <label class="block text-sm font-medium mb-1">Upload de material</label>
-      <label id="upload-zone" class="upload-zone">
-        <div id="upload-icon">📁</div>
-        <p id="upload-text">Clique aqui ou arraste um arquivo (.txt, .pdf)</p>
-        <div id="upload-spinner"></div>
-        <input id="inp-file" type="file" accept=".pdf,.txt" />
-      </label>
-      <p id="file-name" class="text-[11px] text-[var(--muted)] mt-2"></p>
-      <p id="file-type" class="text-[12px] text-[var(--muted)] mt-1 italic"></p>
-      <p class="text-[11px] text-[var(--muted)] mt-1">Arquivos TXT e PDF são suportados neste protótipo.</p>
+    <!-- Nível -->
+    <label class="block text-sm font-medium mb-1">Nível de conhecimento</label>
+    <select id="sel-nivel" class="mb-3">
+      <option value="iniciante">Iniciante</option>
+      <option value="intermediario">Intermediário</option>
+      <option value="avancado">Avançado</option>
+    </select>
 
-      <div class="mt-4 grid grid-cols-2 gap-3">
-        <div>
-          <label class="block text-sm font-medium mb-1">Sessões</label>
-          <select id="sel-dias">
-            <option>5</option>
-            <option>7</option>
-            <option>10</option>
-          </select>
-        </div>
-      </div>
+    <!-- Número de sessões -->
+    <label class="block text-sm font-medium mb-1">Sessões</label>
+    <select id="sel-dias" class="mb-3">
+      <option>5</option>
+      <option>7</option>
+      <option>10</option>
+    </select>
 
-      <button id="btn-gerar" class="btn w-full mt-5">Gerar plano</button>
-      <p id="status" class="text-xs text-[var(--muted)] mt-2"></p>
-    </section>
+    <button id="btn-gerar" class="btn w-full mt-3">Gerar plano</button>
+    <p id="status" class="text-xs text-[var(--muted)] mt-2"></p>
+  </section>
 
-    <!-- 📘 Painel direito -->
-    <section class="lg:col-span-2 card p-5">
-      <div class="flex items-center justify-between mb-3">
-        <h2 class="section-title">Seu plano de estudo</h2>
-        <div class="text-sm text-[var(--muted)]" id="ctx"></div>
-      </div>
-      <div id="plano" class="space-y-3"></div>
-    </section>
-  </main>
+  <!-- 🟧 Painel direito -->
+  <section class="lg:col-span-2 card p-5">
+    <div class="flex items-center justify-between mb-3">
+      <h2 class="section-title">Seu plano gerado</h2>
+      <div class="text-sm text-[var(--muted)]" id="ctx"></div>
+    </div>
+    <div id="plano" class="space-y-3"></div>
+  </section>
 
-  <!-- ===================================================== -->
-  <!-- 📘 Rodapé -->
-  <!-- ===================================================== -->
-  <footer class="max-w-5xl mx-auto px-4 pb-10 text-xs text-[var(--muted)] text-center">
-    <p>Liora — um ambiente de estudo guiado e inspirador. © Intellih</p>
-  </footer>
+</main>
 
-<!-- ==========================================================
-📜 Ordem ideal dos scripts — Liora Inteligente
-=========================================================== -->
+<footer class="max-w-5xl mx-auto px-4 pb-10 text-xs text-[var(--muted)] text-center">
+  <p>Liora — IA para estudos. © Intellih</p>
+</footer>
 
-<!-- 1️⃣ — Núcleo semântico: fornece a função analisarSemantica -->
+<!-- Scripts (ordem correta) -->
+<script src="/scripts/core.js?v=7" defer></script>
 <script src="/scripts/semantic.js?v=7" defer></script>
-
-<!-- 2️⃣ — Núcleo lógico: depende do semantic.js para gerar planos -->
-<script src="/scripts/core.js?v=5" defer></script>
-
-<!-- 3️⃣ — Interface de temas: usa o estado global do core -->
 <script src="/scripts/temas.js?v=7" defer></script>
-
-<!-- 4️⃣ — Plano simulador: depende de semantic + core -->
 <script src="/scripts/plano-simulador.js?v=7" defer></script>
-
-<!-- 5️⃣ — Diagnóstico: opcional, deve ficar por último -->
-<script src="/scripts/diagnostico.js?v=7" defer></script>
-
-<!-- ==========================================================
-🧩 Diagnóstico visual automático (para debug no console)
-=========================================================== -->
-<script>
-document.addEventListener("DOMContentLoaded", () => {
-  const scripts = [
-    { name: "semantic.js", ok: typeof window.analisarSemantica === "function" },
-    { name: "core.js", ok: typeof window.state !== "undefined" },
-    { name: "temas.js", ok: typeof window.LioraTemas !== "undefined" },
-    { name: "plano-simulador.js", ok: typeof window.LioraSimulador !== "undefined" }
-  ];
-
-  console.groupCollapsed("🧩 Diagnóstico de carregamento — Liora");
-  scripts.forEach(s => console.log(`${s.ok ? "🟢" : "🔴"} ${s.name} ${s.ok ? "carregado" : "não detectado"}`));
-  console.groupEnd();
-
-  const aviso = document.createElement("div");
-  aviso.style.position = "fixed";
-  aviso.style.bottom = "14px";
-  aviso.style.left = "14px";
-  aviso.style.fontSize = "11px";
-  aviso.style.color = "#fff";
-  aviso.style.background = "rgba(0,0,0,0.5)";
-  aviso.style.padding = "6px 10px";
-  aviso.style.borderRadius = "8px";
-  aviso.style.zIndex = "4000";
-  aviso.style.fontFamily = "monospace";
-  aviso.textContent = "🧠 Liora carregada com verificação automática";
-  document.body.appendChild(aviso);
-  setTimeout(() => aviso.remove(), 3500);
-});
-</script>
+<script src="/scripts/concursos-plano.js?v=7" defer></script>
 
 </body>
 </html>
