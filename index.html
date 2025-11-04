@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Liora — Plano de Estudo Inteligente</title>
-  <meta name="description" content="Liora cria planos de estudo personalizados com base no tema, nível de conhecimento e ritmo." />
+  <meta name="description" content="Liora cria planos de estudo personalizados com base no tema OU no upload de um material.">
 
   <!-- Tailwind -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -20,57 +20,90 @@
 </head>
 
 <body class="dark">
+
 <header class="max-w-5xl mx-auto px-4 pt-8">
   <div class="flex items-center justify-between">
     <div class="flex items-center gap-3">
       <div class="w-10 h-10 rounded-2xl flex items-center justify-center text-white font-black"
            style="background:var(--brand)">Li</div>
       <div>
-        <h1 class="text-xl font-bold">Liora — Plano de Estudo <span class="dot" title="online"></span></h1>
-        <p class="text-sm text-[var(--muted)]">Crie um plano de estudo inteligente para qualquer tema.</p>
+        <h1 class="text-xl font-bold">Liora — Plano de Estudo Inteligente</h1>
+        <p class="text-sm text-[var(--muted)]">Crie um plano de estudo sob medida para qualquer assunto.</p>
       </div>
     </div>
-    <div class="flex items-center gap-2">
-      <button id="btn-theme" class="chip" title="Alternar tema">🌙</button>
-    </div>
+    <button id="btn-theme" class="chip" title="Alternar tema">🌙</button>
   </div>
 </header>
 
 <main class="max-w-5xl mx-auto px-4 py-8 grid lg:grid-cols-3 gap-6">
 
-  <!-- 🟦 Painel lateral -->
+  <!-- ===== PAINEL ESQUERDO ===== -->
   <section class="lg:col-span-1 card p-5">
-    <h2 class="section-title mb-1">Configurar estudo</h2>
-    <p class="text-sm text-[var(--muted)] mb-4">Digite o tema e selecione seu nível de conhecimento.</p>
 
-    <!-- Tema -->
-    <label class="block text-sm font-medium mb-1">Tema de estudo</label>
-    <input id="inp-tema" type="text" placeholder="Ex.: Direito Constitucional — Poder Legislativo" class="mb-3">
+    <h2 class="section-title mb-4">Como você deseja estudar?</h2>
 
-    <!-- Nível -->
-    <label class="block text-sm font-medium mb-1">Nível de conhecimento</label>
-    <select id="sel-nivel" class="mb-3">
-      <option value="iniciante">Iniciante</option>
-      <option value="intermediario">Intermediário</option>
-      <option value="avancado">Avançado</option>
-    </select>
+    <!-- Escolha de modo -->
+    <div class="grid grid-cols-2 gap-2 mb-6">
+      <button id="modo-tema" class="btn-secondary selected">Tema</button>
+      <button id="modo-upload" class="btn-secondary">Upload</button>
+    </div>
 
-    <!-- Número de sessões -->
-    <label class="block text-sm font-medium mb-1">Sessões</label>
-    <select id="sel-dias" class="mb-3">
-      <option>5</option>
-      <option>7</option>
-      <option>10</option>
-    </select>
+    <!-- ========== MODO TEMA / NÍVEL ========== -->
+    <div id="painel-tema">
 
-    <button id="btn-gerar" class="btn w-full mt-3">Gerar plano</button>
-    <p id="status" class="text-xs text-[var(--muted)] mt-2"></p>
+      <label class="block text-sm font-medium mb-1">Tema de estudo</label>
+      <input id="inp-tema" type="text" placeholder="Ex.: Direito Constitucional — Poder Legislativo" class="mb-3">
+
+      <label class="block text-sm font-medium mb-1">Nível de conhecimento</label>
+      <select id="sel-nivel" class="mb-3">
+        <option value="iniciante">Iniciante</option>
+        <option value="intermediario">Intermediário</option>
+        <option value="avancado">Avançado</option>
+      </select>
+
+      <label class="block text-sm font-medium mb-1">Sessões</label>
+      <select id="sel-dias" class="mb-3">
+        <option>5</option>
+        <option>7</option>
+        <option>10</option>
+      </select>
+
+      <button id="btn-gerar" class="btn w-full mt-3">Gerar plano</button>
+      <p id="status" class="text-xs text-[var(--muted)] mt-2"></p>
+    </div>
+
+    <!-- ========== MODO UPLOAD MATERIAL ========== -->
+    <div id="painel-upload" class="hidden">
+
+      <label class="block text-sm font-medium mb-1">Envie seu material</label>
+
+      <label id="upload-zone" class="upload-zone">
+        <div id="upload-icon">📁</div>
+        <p id="upload-text">Clique aqui ou arraste um arquivo (.txt, .pdf)</p>
+        <div id="upload-spinner"></div>
+        <input id="inp-file" type="file" accept=".pdf,.txt" />
+      </label>
+
+      <p id="file-name" class="text-[11px] text-[var(--muted)] mt-2"></p>
+      <p id="file-type" class="text-[12px] text-[var(--muted)] mt-1 italic"></p>
+
+      <label class="block text-sm font-medium mt-4 mb-1">Sessões</label>
+      <select id="sel-dias-upload" class="mb-4">
+        <option>5</option>
+        <option>7</option>
+        <option>10</option>
+      </select>
+
+      <button id="btn-gerar-upload" class="btn w-full">Gerar plano</button>
+      <p id="status-upload" class="text-xs text-[var(--muted)] mt-2"></p>
+    </div>
+
   </section>
 
-  <!-- 🟧 Painel direito -->
+  <!-- ===== PAINEL DIREITO ===== -->
   <section class="lg:col-span-2 card p-5">
     <div class="flex items-center justify-between mb-3">
-      <h2 class="section-title">Seu plano gerado</h2>
+      <h2 class="section-title">Seu plano de estudo</h2>
       <div class="text-sm text-[var(--muted)]" id="ctx"></div>
     </div>
     <div id="plano" class="space-y-3"></div>
@@ -79,15 +112,16 @@
 </main>
 
 <footer class="max-w-5xl mx-auto px-4 pb-10 text-xs text-[var(--muted)] text-center">
-  <p>Liora — IA para estudos. © Intellih</p>
+  <p>Liora — IA aplicada a estudos. © Intellih</p>
 </footer>
 
-<!-- Scripts (ordem correta) -->
-<script src="/scripts/core.js?v=7" defer></script>
-<script src="/scripts/semantic.js?v=7" defer></script>
-<script src="/scripts/temas.js?v=7" defer></script>
-<script src="/scripts/plano-simulador.js?v=7" defer></script>
-<script src="/scripts/concursos-plano.js?v=7" defer></script>
+
+<!-- ORDER DEFINITIVA DOS SCRIPTS -->
+<script src="/scripts/core.js?v=8" defer></script>
+<script src="/scripts/semantic.js?v=8" defer></script>
+<script src="/scripts/temas.js?v=8" defer></script>
+<script src="/scripts/plano-simulador.js?v=8" defer></script>
+<script src="/scripts/concursos-plano.js?v=8" defer></script>
 
 </body>
 </html>
