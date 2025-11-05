@@ -1,221 +1,251 @@
 /* ==========================================================
-   Liora — core.js (versão final)
-   Modo Tema / Modo Upload — sem temas.js
-   ========================================================== */
+ 🧠 Liora — CORE PRINCIPAL
+ Versão com:
+ - Upload corrigido (click + drag & drop)
+ - Barra de progresso
+ - Preview dos tópicos detectados
+ - Tema claro/escuro
+========================================================== */
 
-console.log("🟢 core.js carregado");
-
-// ======================================================================
-// ESTADO GLOBAL
-// ======================================================================
+// Estado global
 const state = {
   tema: "",
-  nivel: "iniciante",
+  nivel: "",
   dias: 5,
   materialTexto: "",
   tipoMaterial: "",
-  plano: []
+  plano: [],
 };
 
-// ======================================================================
-// TEMA ESCURO / CLARO
-// ======================================================================
+/* ==========================================================
+ 🌙 Alternância de tema (dark/light)
+========================================================== */
 const themeBtn = document.getElementById("btn-theme");
 const html = document.documentElement;
+const body = document.body;
 
-function setTheme(mode) {
-  html.classList.remove("light", "dark");
-  html.classList.add(mode);
+// define padrão dark
+if (!localStorage.getItem("liora_theme")) {
+  localStorage.setItem("liora_theme", "dark");
+}
+
+function aplicarTema(mode) {
+  const light = mode === "light";
+  html.classList.toggle("light", light);
+  html.classList.toggle("dark", !light);
+  body.classList.toggle("light", light);
+  body.classList.toggle("dark", !light);
+  themeBtn.textContent = light ? "☀️" : "🌙";
   localStorage.setItem("liora_theme", mode);
-  themeBtn.textContent = mode === "light" ? "☀️" : "🌙";
 }
 
-function toggleTheme() {
-  const atual = localStorage.getItem("liora_theme") || "dark";
-  setTheme(atual === "light" ? "dark" : "light");
+function alternarTema() {
+  const atual = localStorage.getItem("liora_theme") === "light" ? "dark" : "light";
+  aplicarTema(atual);
 }
 
-themeBtn.addEventListener("click", toggleTheme);
-setTheme(localStorage.getItem("liora_theme") || "dark");
+themeBtn.addEventListener("click", alternarTema);
+aplicarTema(localStorage.getItem("liora_theme"));
 
-// ======================================================================
-// UTILIDADES PARA LEITURA DO INDEX
-// ======================================================================
-function getTema() {
-  return (document.getElementById("inp-tema")?.value || "").trim();
-}
-function getNivel() {
-  return document.getElementById("sel-nivel")?.value || "iniciante";
-}
-function getDiasTema() {
-  return parseInt(document.getElementById("sel-dias")?.value || "5", 10);
-}
-function getDiasUpload() {
-  return parseInt(document.getElementById("sel-dias-upload")?.value || "5", 10);
-}
+/* ==========================================================
+ 📁 Upload de arquivos / drag & drop + barra de progresso
+========================================================== */
+const uploadZone = document.getElementById("upload-zone");
+const inpFile = document.getElementById("inp-file");
+const fileName = document.getElementById("file-name");
+const fileType = document.getElementById("file-type");
+const uploadSpinner = document.getElementById("upload-spinner");
 
-// ======================================================================
-// NORMALIZAÇÃO DE TEXTO + CLASSIFICAÇÃO MATERIAL
-// ======================================================================
-function normalizarTextoParaPrograma(texto) {
-  return texto
-    .replace(/\r/g, "")
-    .replace(/\t+/g, " ")
-    .replace(/[ ]{2,}/g, " ")
-    .replace(/(\s|^)((\d+(\.\d+){0,3}[\.\)])|([IVXLCDM]+\.)|([A-Z]\))|([a-z]\))|[•\-–])\s+/g, "\n$2 ")
-    .replace(/([.!?])\s+(?=[A-ZÁÉÍÓÚÂÊÔÃÕÇ])/g, "$1\n")
-    .replace(/\n{2,}/g, "\n")
-    .trim();
-}
+// eventos visuais drag/drop
+["dragenter", "dragover"].forEach(evt =>
+  uploadZone?.addEventListener(evt, e => {
+    e.preventDefault();
+    uploadZone.classList.add("dragover");
+  })
+);
 
-function medirSinais(textoNormalizado) {
-  const linhas = textoNormalizado.split(/\n+/).map(l => l.trim()).filter(Boolean);
-  const total = linhas.length || 1;
+["dragleave", "drop"].forEach(evt =>
+  uploadZone?.addEventListener(evt, e => {
+    e.preventDefault();
+    uploadZone.classList.remove("dragover");
+  })
+);
 
-  const bullets = linhas.filter(l => /^[\d•\-–]/.test(l)).length;
-  const longas = linhas.filter(l => l.split(" ").length >= 12).length;
-  const caps = linhas.filter(l => /^[A-ZÁÉÍÓÚÂÊÔÃÕÇ0-9 ]{6,}$/.test(l)).length;
+// click para abrir seletor
+uploadZone?.addEventListener("click", () => inpFile.click());
 
-  return {
-    pBullets: bullets / total,
-    pLongas: longas / total,
-    pCaps: caps / total,
-    total
-  };
-}
+// drop de arquivo
+uploadZone?.addEventListener("drop", e => {
+  const file = e.dataTransfer.files[0];
+  if (file) processFile(file);
+});
 
-function detectarTipoMaterial(texto) {
-  if (!texto || texto.trim().length < 80) return "conteudo";
-  const s = medirSinais(normalizarTextoParaPrograma(texto));
-  if (s.pBullets >= 0.25) return "programa";
-  if (s.pLongas >= 0.55) return "conteudo";
-  return "hibrido";
-}
+// seleção via input
+inpFile?.addEventListener("change", e => {
+  const file = e.target.files[0];
+  if (file) processFile(file);
+});
 
-// ======================================================================
-// FUNÇÃO — Construção do plano (upload)
-// ======================================================================
-function construirPlanoInteligente(texto, tipo, dias) {
-  const linhas = normalizarTextoParaPrograma(texto).split(/\n+/).filter(Boolean);
-  const plano = [];
+// processamento do arquivo
+async function processFile(file) {
+  fileName.textContent = `Carregando ${file.name}...`;
+  uploadSpinner.style.display = "block";
 
-  const blocos = tipo === "programa"
-    ? Math.ceil(linhas.length / dias)
-    : Math.ceil(texto.length / dias);
+  try {
+    const ext = file.name.split(".").pop().toLowerCase();
+    let text = "";
 
-  for (let i = 0; i < dias; i++) {
-    let bloco;
-
-    if (tipo === "programa") {
-      bloco = linhas.slice(i * blocos, (i + 1) * blocos);
+    if (ext === "txt") {
+      text = await file.text();
+    } else if (ext === "pdf") {
+      text = await extractTextPDFSmart(await file.arrayBuffer(), progress => {
+        uploadSpinner.style.setProperty("--progress", `${progress}%`);
+      });
     } else {
-      const start = i * blocos;
-      bloco = [texto.slice(start, start + blocos)];
+      alert("Formato não suportado. Envie PDF ou TXT.");
+      return;
     }
 
-    plano.push({
-      dia: i + 1,
-      titulo: `Sessão ${i + 1}`,
-      descricao: bloco.join("\n")
-    });
-  }
+    uploadSpinner.style.display = "none";
 
-  return plano;
+    state.materialTexto = text;
+    state.tipoMaterial = detectarTipoMaterial(text);
+
+    fileName.textContent = `✅ ${file.name}`;
+    fileType.textContent =
+      state.tipoMaterial === "programa"
+        ? "🗂️ Conteúdo programático detectado"
+        : state.tipoMaterial === "hibrido"
+        ? "📘 Material híbrido detectado"
+        : "📖 Material narrativo detectado";
+
+    abrirPreviewEstrutura(text);
+  } catch (err) {
+    uploadSpinner.style.display = "none";
+    fileName.textContent = "⚠️ Erro ao processar arquivo";
+  }
 }
 
-// ======================================================================
-// UPLOAD DE ARQUIVO (PDF/TXT)
-// ======================================================================
-async function extractTextPDF(arrayBuffer) {
+/* ==========================================================
+ 📄 Extração de texto preservando estrutura (PDF.js)
+========================================================== */
+async function extractTextPDFSmart(arrayBuffer, progressCallback = null) {
   const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-  let full = "";
+  let resultado = "";
 
-  for (let p = 1; p <= pdf.numPages; p++) {
-    const page = await pdf.getPage(p);
-    const content = await page.getTextContent();
-    full += content.items.map(i => i.str).join(" ") + "\n";
+  for (let page = 1; page <= pdf.numPages; page++) {
+    const p = await pdf.getPage(page);
+    const content = await p.getTextContent();
+
+    resultado += content.items.map(i => i.str).join("\n") + "\n";
+
+    if (progressCallback) {
+      progressCallback(Math.round((page / pdf.numPages) * 100));
+    }
   }
 
-  return full.trim();
+  return resultado.replace(/\n{2,}/g, "\n").trim();
 }
 
-document.getElementById("inp-file")?.addEventListener("change", async e => {
-  const file = e.target.files[0];
-  if (!file) return;
+/* ==========================================================
+ 🔍 Preview de tópicos detectados (janela modal)
+========================================================== */
+function abrirPreviewEstrutura(texto) {
+  document.getElementById("estrutura-modal")?.remove();
 
-  const ext = file.name.split(".").pop().toLowerCase();
-  let text = "";
+  const linhas = texto.split(/\n+/).slice(0, 12);
 
-  if (ext === "txt") text = await file.text();
-  else if (ext === "pdf") text = await extractTextPDF(await file.arrayBuffer());
-  else return alert("Formato não suportado");
+  const modal = document.createElement("div");
+  modal.id = "estrutura-modal";
+  modal.innerHTML = `
+    <div class="modal-overlay">
+      <div class="modal-card">
+        <h3>🔎 Tópicos detectados</h3>
+        <p class="text-sm text-[var(--muted)] mb-2">Primeiros blocos identificados:</p>
+        <ul class="modal-list">
+          ${linhas.map(l => `<li>• ${l}</li>`).join("")}
+        </ul>
+        <button class="btn w-full mt-4" id="close-modal">Fechar</button>
+      </div>
+    </div>
+  `;
 
-  document.getElementById("file-name").textContent = "✅ " + file.name;
+  document.body.appendChild(modal);
+  document.getElementById("close-modal").onclick = () => modal.remove();
+}
 
-  state.materialTexto = text;
-  state.tipoMaterial = detectarTipoMaterial(text);
-});
+/* ==========================================================
+ 🎯 GERAR PLANO (tema OU upload)
+========================================================== */
+const els = {
+  inpTema: document.getElementById("inp-tema"),
+  selNivel: document.getElementById("sel-nivel"),
+  selDias: document.getElementById("sel-dias"),
+  selDiasUpload: document.getElementById("sel-dias-upload"),
+  btnTema: document.getElementById("btn-gerar"),
+  btnUpload: document.getElementById("btn-gerar-upload"),
+  status: document.getElementById("status"),
+  statusUpload: document.getElementById("status-upload"),
+  plano: document.getElementById("plano"),
+  ctx: document.getElementById("ctx"),
+};
 
-// ======================================================================
-// BOTÃO GERAR PLANO — MODO TEMA (usa plano-simulador.js)
-// ======================================================================
-document.getElementById("btn-gerar")?.addEventListener("click", () => {
-  const tema = getTema();
-  const nivel = getNivel();
-  const dias = getDiasTema();
-
-  if (!tema) return alert("Digite um tema antes de gerar o plano.");
-
-  if (typeof window.gerarPlanoPorTema !== "function") {
-    console.error("❌ plano-simulador.js não carregado");
-    alert("Módulo de plano por tema não carregado.");
-    return;
-  }
-
-  const plano = window.gerarPlanoPorTema({ tema, nivel, dias });
-
-  state.tema = tema;
-  state.plano = plano;
-
-  renderPlano();
-  document.getElementById("status").textContent = "✅ Plano gerado por tema!";
-});
-
-// ======================================================================
-// BOTÃO GERAR PLANO — MODO UPLOAD (usa algoritmo antigo)
-// ======================================================================
-document.getElementById("btn-gerar-upload")?.addEventListener("click", () => {
-  if (!state.materialTexto) return alert("Envie um material primeiro");
-
-  const dias = getDiasUpload();
-  const tipo = state.tipoMaterial || "conteudo";
-  state.plano = construirPlanoInteligente(state.materialTexto, tipo, dias);
-
-  renderPlano();
-  document.getElementById("status-upload").textContent = "✅ Plano gerado via material!";
-});
-
-// ======================================================================
-// RENDERIZAÇÃO DO PLANO
-// ======================================================================
 function renderPlano() {
-  const container = document.getElementById("plano");
-  container.innerHTML = "";
+  els.plano.innerHTML = "";
 
   if (!state.plano.length) {
-    container.innerHTML = `<p class="text-sm text-[var(--muted)]">Nenhum plano de estudo gerado.</p>`;
+    els.plano.innerHTML = `<p class="text-sm text-[var(--muted)]">Nenhum plano gerado.</p>`;
     return;
   }
 
   state.plano.forEach(sessao => {
-    const div = document.createElement("div");
-    div.className = "session-card";
-    div.innerHTML = `
+    const card = document.createElement("div");
+    card.className = "session-card";
+    card.innerHTML = `
       <h3>${sessao.titulo}</h3>
-      <pre>${sessao.descricao.replace(/</g, "&lt;")}</pre>
+      <p class="text-xs opacity-70">${sessao.densidade}</p>
+      <p class="text-sm italic text-[var(--muted)] mb-2">${sessao.resumo}</p>
+      <pre>${sessao.descricao}</pre>
     `;
-    container.appendChild(div);
+    els.plano.appendChild(card);
   });
-
-  document.getElementById("ctx").textContent = `${state.plano.length} sessões geradas`;
 }
+
+// gerar plano por tema
+els.btnTema?.addEventListener("click", async () => {
+  if (!els.inpTema.value.trim()) {
+    alert("Digite um tema para estudo.");
+    return;
+  }
+
+  state.tema = els.inpTema.value.trim();
+  state.nivel = els.selNivel.value.trim();
+  state.dias = parseInt(els.selDias.value);
+
+  els.status.textContent = "Gerando plano...";
+
+  const plano = await gerarPlanoPorTema(state.tema, state.nivel, state.dias);
+  state.plano = plano;
+
+  els.status.textContent = "✅ Plano gerado!";
+  renderPlano();
+});
+
+// gerar plano via upload
+els.btnUpload?.addEventListener("click", () => {
+  if (!state.materialTexto) {
+    alert("Envie um arquivo primeiro.");
+    return;
+  }
+
+  state.dias = parseInt(els.selDiasUpload.value);
+  els.statusUpload.textContent = "Gerando plano...";
+
+  state.plano = construirPlanoInteligente(state.materialTexto, state.tipoMaterial, state.dias);
+
+  els.statusUpload.textContent = "✅ Plano gerado!";
+  renderPlano();
+});
+
+// debug
+console.log("✅ core.js ativo");
