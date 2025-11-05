@@ -1,85 +1,100 @@
-/* ==========================================================
-   📘 plano-simulador.js (versão 9)
-   Gera plano de estudos baseado em TEMA + NÍVEL.
-   Exposto para o core.js através de: window.gerarPlanoPorTema
-   ========================================================== */
+// ======================================================================
+// 🎯 plano-simulador.js
+// Gera plano de estudo baseado em TEMA + NÍVEL + RITMO (nº de sessões)
+// Integra com core.js via window.LioraCore.previewAndConfirmPlan()
+// ======================================================================
 
-console.log("🧩 plano-simulador.js carregado");
+console.log("🧩 plano-simulador.js carregado com sucesso");
+
+// ----------------------------------------------------------------------
+// 🧠 Base de geração do plano (sem IA por enquanto)
+// Posteriormente podemos substituir por chamada GPT via backend
+// ----------------------------------------------------------------------
 
 /**
- * Gera um plano de estudo baseado em:
- *  - tema digitado
- *  - nível de conhecimento (iniciante / intermediário / avançado)
- *  - número de sessões
+ * Fragmenta um conteúdo em sessões balanceadas.
+ * @param {Array<string>} topicos
+ * @param {number} sessoes
  */
-function gerarPlanoPorTema({ tema, nivel, dias }) {
+function distribuirPorSessoes(topicos, sessoes) {
+  const porDia = Math.ceil(topicos.length / sessoes);
+  const resultado = [];
 
-  if (!tema || tema.trim() === "") {
-    console.warn("⚠️ gerarPlanoPorTema chamado sem tema.");
-    return [];
-  }
+  for (let i = 0; i < sessoes; i++) {
+    const slice = topicos.slice(i * porDia, (i + 1) * porDia);
+    if (!slice.length) break;
 
-  console.log(`🚀 Gerando plano baseado no tema "${tema}" | nível: ${nivel} | sessões: ${dias}`);
-
-  // ✨ Prompt base para criação de plano
-  const estruturaBase = [
-    {
-      nivel: "iniciante",
-      descricao: "Foco em fundamentos, conceitos essenciais e visão geral.",
-      distribuicao: ["Introdução", "Visão geral", "Conceitos básicos", "Exemplos práticos", "Resumo final"]
-    },
-    {
-      nivel: "intermediario",
-      descricao: "Aprofundamento, exercícios e leitura interpretativa.",
-      distribuicao: ["Revisão rápida", "Conceitos médios", "Aplicação prática", "Exercícios dirigidos", "Autoavaliação"]
-    },
-    {
-      nivel: "avancado",
-      descricao: "Síntese, resolução de questões, mapas mentais, simulados.",
-      distribuicao: ["Síntese", "Estudo dirigido", "Questões comentadas", "Análise crítica", "Simulado + revisão"]
-    }
-  ];
-
-  const modelo = estruturaBase.find(x => x.nivel === nivel);
-
-  if (!modelo) {
-    console.error("❌ Nível não encontrado na estrutura.");
-    return [];
-  }
-
-  const etapas = modelo.distribuicao;
-  const sessoes = [];
-
-  for (let i = 0; i < dias; i++) {
-
-    const etapa = etapas[i % etapas.length];
-
-    sessoes.push({
-      dia: i + 1,
-      titulo: `Sessão ${i + 1} — ${etapa}`,
-      resumo: `${etapa} sobre o tema "${tema}".`,
-      conceitos: [tema, etapa],
-      densidade: i % 2 === 0 ? "📘 média" : "📗 leve",
-      descricao: `Atividades relacionadas à sessão: ${etapa}.`
+    resultado.push({
+      titulo: slice[0].length > 50 ? `Sessão ${i + 1}` : slice[0],
+      resumo: slice.join(". ").substring(0, 180) + "...",
+      descricao: slice.map(t => "• " + t).join("\n"),
+      conceitos: slice.slice(0, 4),
+      densidade: slice.length > 4 ? "📙 densa" : "📘 média"
     });
   }
 
-  console.log("📘 Plano por tema gerado:", sessoes);
-  return sessoes;
+  return resultado;
 }
 
-/* ==========================================================
-   🔁 EXPORTAÇÃO PARA O core.js
-   ========================================================== */
+/**
+ * Modelos por nível de conhecimento
+ */
+const MAPA_NIVEL = {
+  iniciante: (tema) => [
+    `Introdução ao tema: ${tema}`,
+    `Por que esse tema é importante`,
+    `Principais conceitos básicos`,
+    `Exemplos práticos do dia a dia`,
+    `Mini revisão dos conceitos`
+  ],
 
-window.gerarPlanoPorTema = gerarPlanoPorTema;
-console.log("✅ plano-simulador.js exposto ao core.js");
+  intermediario: (tema) => [
+    `Revisão dos fundamentos essenciais de ${tema}`,
+    `Subtemas importantes dentro de ${tema}`,
+    `Aplicações práticas com estudos de caso`,
+    `Identificação de padrões e erros comuns`,
+    `Exercícios práticos para fixação`
+  ],
 
+  avancado: (tema) => [
+    `Aspectos avançados e detalhes técnicos de ${tema}`,
+    `Solução de problemas complexos`,
+    `Análise crítica e comparação com outros temas`,
+    `Aplicação avançada e experimentação`,
+    `Preparação para prova ou apresentação`
+  ],
+};
 
-/* ==========================================================
-   🧪 LOG VISUAL PARA TESTE NO CONSOLE
-   ========================================================== */
-setTimeout(() => {
-  console.log("%c✅ plano-simulador.js pronto e conectado ao core.js",
-    "background:#00b894;color:white;padding:4px;border-radius:4px");
-}, 100);
+// ----------------------------------------------------------------------
+// 🚀 Função principal chamada pelo core.js
+// ----------------------------------------------------------------------
+
+function generatePlanTema({ tema, nivel, sessoes }) {
+  console.log("➡️ Gerando plano por tema:", { tema, nivel, sessoes });
+
+  if (!tema || !nivel) {
+    throw new Error("Tema e nível são obrigatórios para gerar plano.");
+  }
+
+  const topicosGerados =
+    typeof MAPA_NIVEL[nivel] === "function"
+      ? MAPA_NIVEL[nivel](tema)
+      : MAPA_NIVEL.iniciante(tema);
+
+  const sessoesGeradas = distribuirPorSessoes(topicosGerados, sessoes);
+
+  return {
+    origem: "tema",
+    sessoes: sessoesGeradas,
+    meta: { tema, nivel }
+  };
+}
+
+// ----------------------------------------------------------------------
+// 📡 Exporta para core.js
+// ----------------------------------------------------------------------
+window.LioraSim = {
+  generatePlan: generatePlanTema,
+};
+
+console.log("✅ plano-simulador.js pronto e conectado ao core.js");
