@@ -118,24 +118,25 @@ async function processarArquivoUpload(file) {
 }
 
 // ----------------------------------------------------------
-// 🧠 Geração do plano a partir do último upload processado
+// 🌐 Exportação para o escopo global (CORRIGIDO - sem recursão)
 // ----------------------------------------------------------
-async function gerarPlanoPorUpload(sessoes = 7) {
-  const dados = window.__ultimoUpload;
-  if (!dados || !Array.isArray(dados.topicos) || dados.topicos.length === 0) {
-    throw new Error("processarArquivoUpload deve ser chamado e concluir com sucesso antes de gerar o plano.");
-  }
 
-  const blocos = dados.topicos.slice(0, parseInt(sessoes) || 7);
+// 🔧 renomeia as funções internas antes de exportar
+const _processarUploadInterno = processarArquivoUpload;   // <-- agora usa função interna REAL
+const _gerarPlanoUploadInterno = gerarPlanoPorUpload;
 
-  return blocos.map((b, i) => ({
-    titulo: `Sessão ${i + 1} — ${b.titulo}`,
-    resumo: b.resumo || "Resumo não disponível.",
-    conteudo: (b.conceitos && b.conceitos.length)
-      ? `• ${b.conceitos.join("\n• ")}\n\nDensidade: ${b.densidade || "📗 leve"}`
-      : `• Conceitos principais\n• Leituras recomendadas\n• Exercícios\n\nDensidade: ${b.densidade || "📗 leve"}`
-  }));
-}
+// ✅ expõe corretamente para o core.js
+window.processarArquivoUpload = async (file) => {
+  const resultado = await _processarUploadInterno(file);
+  window.__ultimoUpload = resultado;   // guarda para uso posterior
+  return resultado;
+};
+
+window.gerarPlanoPorUpload = async (sessoes) => {
+  return await _gerarPlanoUploadInterno(sessoes);
+};
+
+console.log("✅ semantic.js pronto e integrado ao escopo global");
 
 // ----------------------------------------------------------
 // 🔧 Montagem de tópicos a partir do texto cru
