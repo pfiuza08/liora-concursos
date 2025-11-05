@@ -1,127 +1,126 @@
-// /scripts/plano-simulador.js  (v9)
+// /scripts/plano-simulador.js  (v10)
 (function () {
   const LOG = (...a) => console.log('[plano-simulador]', ...a);
 
- // ==========================================================
-// 📚 GERADOR DE PLANO POR TEMA (IA real)
-// ==========================================================
+  // ==========================================================
+  // 🌟 GERADOR DE PLANO POR TEMA (IA + fallback)
+  // ==========================================================
 
-window.generatePlanByTheme = async function (tema, nivel, sessoes) {
-  console.log("[plano-simulador] parâmetros recebidos:", { tema, nivel, sessoes });
+  window.generatePlanByTheme = async function (tema, nivel, sessoes) {
+    LOG("parâmetros recebidos:", { tema, nivel, sessoes });
 
-  // VALIDAR mas sem bloquear quando número vem como string
-  if (!tema || !nivel || !sessoes || isNaN(parseInt(sessoes))) {
-    throw new Error("Parâmetros inválidos (tema, nivel, sessoes)");
-  }
+    if (!tema || !nivel || !sessoes || isNaN(parseInt(sessoes))) {
+      throw new Error("Parâmetros inválidos (tema, nivel, sessoes)");
+    }
 
-  sessoes = parseInt(sessoes);
+    sessoes = parseInt(sessoes);
 
-  // MONTA O PROMPT PARA A IA
-  const prompt = `
-Você é uma especialista em ensino e microlearning.
+    // PROMPT para IA
+    const prompt = `
+Você é especialista em microlearning com base na metodologia da Barbara Oakley.
+
+Crie um PLANO DE ESTUDO dividido em ${sessoes} sessões.
 
 Tema: **${tema}**
 Nível do aluno: **${nivel}**
-Quantidade de sessões: **${sessoes}**
 
-➤ Gere um PLANO DE ESTUDO dividido em ${sessoes} sessões numeradas.
-➤ Para cada sessão, retorne exatamente nesta estrutura:
+PARA CADA SESSÃO, RETORNE ESTA ESTRUTURA (EM JSON VÁLIDO):
 
-Sessão X — Título curto
-Resumo: (1 parágrafo, objetivo da sessão)
-Conteúdo:
-• item 1
-• item 2
-• item 3
-
-Responda em JSON válido.
-
-EXEMPLO:
 [
-  { "titulo": "Sessão 1 — Fundamentos", "resumo": "...", "conteudo": "• ..." }
-]
-  `;
-
-  try {
-    console.log("[plano-simulador] solicitando IA...");
-
-    const res = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${window.OPENAI_API_KEY}`, // 🔑 API KEY
-      },
-      body: JSON.stringify({
-        model: "gpt-4.1-mini",  // pode trocar pelo modelo desejado
-        temperature: 0.4,
-        messages: [{ role: "user", content: prompt }],
-      }),
-    });
-
-    const data = await res.json();
-
-    console.log("[plano-simulador] retorno da IA:", data);
-
-    let json = data.choices?.[0]?.message?.content;
-
-    if (!json) throw new Error("Resposta da IA vazia");
-
-    json = json.replace(/```json|```/g, "").trim(); // remove markdown
-
-    const plano = JSON.parse(json);
-
-    if (!Array.isArray(plano)) throw new Error("Formato inválido da IA");
-
-    return plano; // ✅ garante lista
-  } catch (err) {
-    console.error("[plano-simulador] Exceção ao gerar plano:", err);
-    throw err;
+  {
+    "titulo": "Sessão X — título curto",
+    "resumo": "Objetivo da sessão — 1 parágrafo",
+    "conteudo": "• item 1\n• item 2\n• item 3"
   }
-};
+]
+    `.trim();
 
 
-      // Chamada ao endpoint
-      const resp = await fetch('/api/plan', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tema, nivel, sessoes })
+    // ======================================================
+    // 1) PRIMEIRA TENTATIVA → IA direto (se existir API KEY)
+    // ======================================================
+    if (window.OPENAI_API_KEY) {
+      try {
+        LOG("usando chamada direta à OpenAI");
+
+        const res = await fetch("https://api.openai.com/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${window.OPENAI_API_KEY}`,
+          },
+          body: JSON.stringify({
+            model: "gpt-4.1-mini",
+            temperature: 0.4,
+            messages: [{ role: "user", content: prompt }],
+          }),
+        });
+
+        const data = await res.json();
+        LOG("resposta da IA:", data);
+
+        let json = data.choices?.[0]?.message?.content;
+        if (!json) throw new Error("IA retornou vazio");
+
+        json = json.replace(/```json|```/g, "").trim();
+        const plano = JSON.parse(json);
+
+        if (Array.isArray(plano)) return plano;
+      } catch (err) {
+        LOG("Falha ao chamar OpenAI direto:", err.message);
+      }
+    }
+
+
+    // ======================================================
+    // 2) SEGUNDA TENTATIVA → /api/plan (backend opcional)
+    // ======================================================
+    try {
+      LOG("tentando backend /api/plan...");
+
+      const resp = await fetch("/api/plan", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tema, nivel, sessoes }),
       });
 
-      if (!resp.ok) {
-        const txt = await resp.text();
-        LOG('Falha API, code:', resp.status, txt);
-        return { origem: 'http-fail', plano: fallbackLocal(tema, nivel, sessoes) };
+      if (resp.ok) {
+        const result = await resp.json();
+
+        if (result?.plano && Array.isArray(result.plano)) {
+          LOG("Plano gerado pelo backend:", result.origem);
+          return result.plano;
+        }
       }
 
-      const data = await resp.json();
-      if (!data?.plano || !Array.isArray(data.plano)) {
-        LOG('Formato inválido da resposta. Data:', data);
-        return { origem: 'bad-format', plano: fallbackLocal(tema, nivel, sessoes) };
-      }
-
-      LOG('Plano gerado com sucesso. Origem:', data.origem);
-      return { origem: data.origem, plano: data.plano };
-
+      LOG("backend não retornou formato válido.");
     } catch (err) {
-      LOG('Exceção ao gerar plano:', err);
-      return { origem: 'exception', plano: fallbackLocal(tema, nivel, sessoes) };
+      LOG("Erro no backend /api/plan:", err.message);
     }
+
+
+    // ======================================================
+    // 🔄 FALLBACK → gera um plano local (sempre funciona)
+    // ======================================================
+    LOG("usando fallback local");
+
+    return fallbackLocal(tema, nivel, sessoes);
   };
 
+
+  // ======================================================
+  // FALLBACK PARA QUANDO NÃO CONSEGUE GERAR VIA IA
+  // ======================================================
   function fallbackLocal(tema, nivel, sessoes) {
-    const dens = nivel === 'avancado' ? '📙 densa' : (nivel === 'intermediario' ? '📘 média' : '📗 leve');
-    const out = [];
-    for (let i = 1; i <= Number(sessoes || 5); i++) {
-      out.push({
-        dia: i,
-        titulo: `Sessão ${i} — ${tema}`,
-        topico: `Tópico ${i} (${nivel})`,
-        resumo: `Panorama do tema para ${nivel} — bloco ${i}.`,
-        descricao: `• Conceitos do bloco ${i}\n• Leituras e exemplos\n• Exercícios\n• Revisão`,
-        conceitos: [tema, nivel, `topico_${i}`],
-        densidade: dens
-      });
-    }
-    return out;
+    const dens = nivel === "avancado" ? "📙" :
+                 nivel === "intermediario" ? "📘" : "📗";
+
+    return Array.from({ length: sessoes }, (_, i) => ({
+      titulo: `Sessão ${i + 1} — ${tema}`,
+      resumo: `Exploração do tema adaptado ao nível ${nivel}.`,
+      conteudo: `• Conceitos principais\n• Leituras recomendadas\n• Exercícios\n• Revisão — ${dens}`,
+    }));
   }
+
+  LOG("✅ plano-simulador.js carregado");
 })();
