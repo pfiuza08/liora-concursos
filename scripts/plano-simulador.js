@@ -69,25 +69,25 @@ const MAPA_NIVEL = {
 // 🚀 Função principal chamada pelo core.js
 // ----------------------------------------------------------------------
 
-function generatePlanTema({ tema, nivel, sessoes }) {
-  console.log("➡️ Gerando plano por tema:", { tema, nivel, sessoes });
+async function generatePlanTema({ tema, nivel, sessoes }) {
+  console.log("➡️ Enviando para IA:", { tema, nivel, sessoes });
 
-  if (!tema || !nivel) {
-    throw new Error("Tema e nível são obrigatórios para gerar plano.");
+  const resp = await fetch("/api/gerarPlano", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ tema, nivel, sessoes })
+  });
+
+  if (!resp.ok) {
+    throw new Error("Falha ao gerar plano via IA.");
   }
 
-  const topicosGerados =
-    typeof MAPA_NIVEL[nivel] === "function"
-      ? MAPA_NIVEL[nivel](tema)
-      : MAPA_NIVEL.iniciante(tema);
+  const json = await resp.json();
+  console.log("✅ IA respondeu:", json);
 
-  const sessoesGeradas = distribuirPorSessoes(topicosGerados, sessoes);
-
-  return {
-    origem: "tema",
-    sessoes: sessoesGeradas,
-    meta: { tema, nivel }
-  };
+  return json;
 }
 
 // ----------------------------------------------------------------------
