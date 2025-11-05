@@ -119,39 +119,38 @@ inputFile?.addEventListener("change", async (e) => {
 });
 
 
-// =============================================================
-// ▶️ Botão GERAR PLANO — MODO TEMA
-// =============================================================
-document.getElementById("btn-gerar")?.addEventListener("click", async () => {
+// ==========================
+// GERAR PLANO POR TEMA
+// ==========================
+els.btnGerar?.addEventListener("click", async () => {
   console.log("▶️ Botão Gerar (TEMA)");
 
-  const tema = document.getElementById("inp-tema")?.value.trim();
-  const nivel = document.getElementById("sel-nivel")?.value;
-  const sessoes = parseInt(document.getElementById("sel-dias")?.value || "5");
+  const tema = document.getElementById("inp-tema").value.trim();
+  const nivel = document.getElementById("sel-nivel").value.trim();
+  const sessoes = parseInt(document.getElementById("sel-dias").value, 10);
+
+  console.log("[core.js] Valores coletados -> ", { tema, nivel, sessoes });
 
   if (!tema) {
-    alert("Digite um tema antes de gerar o plano.");
+    alert("Digite um tema para continuar.");
     return;
   }
-
-  if (!window.generatePlanByTheme) {
-    console.error("❌ generatePlanByTheme NÃO está disponível.");
-    document.getElementById("status").textContent = "Módulo de plano por tema não carregado.";
-    return;
-  }
-
-  document.getElementById("status").textContent = "⏳ Gerando plano...";
 
   try {
-    const plano = await window.generatePlanByTheme(tema, nivel, sessoes);
-    window.state.plano = plano;
+    const planoGerado = await window.generatePlanByTheme({ tema, nivel, sessoes });
 
-    document.getElementById("ctx").textContent = `${plano.length} sessões geradas · origem: tema`;
+    if (!planoGerado || !Array.isArray(planoGerado)) {
+      throw new Error("Retorno do modelo inválido.");
+    }
+
+    state.tema = tema;
+    state.plano = planoGerado;
+    updateCtx();
     renderPlano();
 
   } catch (err) {
-    console.error("[plano-simulador] Falha ao gerar plano:", err);
-    document.getElementById("status").textContent = "❌ Falha ao gerar plano.";
+    console.error("[core.js] Falha ao gerar plano por tema:", err);
+    alert("Falha ao gerar plano por tema.");
   }
 });
 
