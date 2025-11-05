@@ -83,7 +83,6 @@
 
       els.statusUpload.textContent = "⏳ Processando arquivo...";
 
-      // ✅ valida semantic.js somente quando necessário
       if (!window.processarArquivoUpload) {
         alert("❌ O módulo de processamento do arquivo ainda não está pronto.");
         return;
@@ -92,7 +91,22 @@
       try {
         const resultado = await window.processarArquivoUpload(file);
         els.statusUpload.textContent = resultado.tipoMsg;
-        mostrarPreview(resultado.topicos?.slice(0, 12) || []);
+
+        // ✅ converte objetos de tópicos em linhas legíveis
+        const previewItems = (resultado.topicos || [])
+          .slice(0, 12)
+          .map((t) => {
+            if (typeof t === "string") return t;
+
+            const titulo = t?.titulo || "Tópico";
+            const conceitos = Array.isArray(t?.conceitos)
+              ? t.conceitos.slice(0, 3).join(", ")
+              : "";
+
+            return conceitos ? `${titulo} — ${conceitos}` : titulo;
+          });
+
+        mostrarPreview(previewItems);
       } catch (err) {
         console.error(err);
         els.statusUpload.textContent = "❌ Falha ao ler o arquivo.";
@@ -101,7 +115,7 @@
 
 
     // ==========================================================
-    // Modal de preview dos tópicos
+    // ✅ Modal de preview dos tópicos detectados
     // ==========================================================
     function mostrarPreview(lista) {
       document.querySelector("#preview-modal")?.remove();
@@ -112,8 +126,12 @@
       modal.innerHTML = `
         <div class="preview-modal">
           <h3>📋 Tópicos detectados</h3>
-          <ul>${lista.map(t => `<li>• ${t}</li>`).join("")}</ul>
-          <button id="fechar-preview" class="chip mt-4">Fechar</button>
+          <ul style="max-height:300px; overflow:auto; padding-left:1rem; margin-top:.5rem;">
+            ${lista.map(txt => `<li>• ${txt}</li>`).join("")}
+          </ul>
+          <div class="text-right mt-4">
+            <button class="chip" id="fechar-preview">Fechar</button>
+          </div>
         </div>
       `;
       document.body.appendChild(modal);
@@ -128,7 +146,6 @@
     els.btnGerarUpload?.addEventListener("click", async () => {
       console.log("▶️ Botão Gerar (UPLOAD)");
 
-      // ✅ valida semantic.js somente no clique
       if (!window.gerarPlanoPorUpload) {
         alert("❌ Módulo semantic.js não está pronto.");
         return;
@@ -147,7 +164,7 @@
 
 
     // ==========================================================
-    // 🚀 GERAR PLANO — POR TEMA usando IA (plano-simulador.js)
+    // 🚀 GERAR PLANO — POR TEMA (IA) — via plano-simulador.js
     // ==========================================================
     els.btnGerar?.addEventListener("click", async () => {
       console.log("▶️ Botão Gerar (TEMA)");
@@ -177,7 +194,7 @@
 
 
     // ==========================================================
-    // ✅ Renderiza o plano no painel
+    // ✅ Renderização final do plano no painel direito
     // ==========================================================
     function renderizarPlano(plano) {
       if (!Array.isArray(plano)) {
@@ -204,7 +221,7 @@
     }
 
 
-    // Helper para depuração
+    // Debug helper
     window.LioraCore = { els, renderizarPlano };
 
     console.log("🟢 core.js carregado com sucesso");
