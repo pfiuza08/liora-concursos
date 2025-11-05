@@ -1,207 +1,191 @@
-// =============================================================
+// ==========================================================
 // 🧠 LIORA — CORE PRINCIPAL
-// Gera plano de estudos por TEMA ou por UPLOAD
-// =============================================================
+// Coordena a UI + geração do plano por TEMA (IA) e por UPLOAD (PDF/TXT)
+// ==========================================================
 
-// Estado global
-window.state = {
-  tema: "",
-  nivel: "",
-  dias: 5,
-  materialTexto: "",
-  plano: [],
+// ==========================================================
+// 📌 Referências ao DOM (corrige "els não definido")
+// ==========================================================
+const els = {
+  // PAINEL DE TEMA
+  inpTema: document.getElementById("inp-tema"),
+  selNivel: document.getElementById("sel-nivel"),
+  selDias: document.getElementById("sel-dias"),
+  btnGerar: document.getElementById("btn-gerar"),
+  status: document.getElementById("status"),
+
+  // PAINEL DE UPLOAD
+  inpFile: document.getElementById("inp-file"),
+  selDiasUpload: document.getElementById("sel-dias-upload"),
+  btnGerarUpload: document.getElementById("btn-gerar-upload"),
+  statusUpload: document.getElementById("status-upload"),
+
+  // OUTROS
+  plano: document.getElementById("plano"),
+  ctx: document.getElementById("ctx"),
+  painelTema: document.getElementById("painel-tema"),
+  painelUpload: document.getElementById("painel-upload"),
+  modoTema: document.getElementById("modo-tema"),
+  modoUpload: document.getElementById("modo-upload"),
 };
 
-// =============================================================
-// 🌙 Tema claro / escuro
-// =============================================================
+// ==========================================================
+// 🌗 Tema claro/escuro
+// ==========================================================
 const themeBtn = document.getElementById("btn-theme");
-const html = document.documentElement;
-const body = document.body;
 
-if (!localStorage.getItem("liora_theme")) {
-  localStorage.setItem("liora_theme", "dark");
-}
-
-function setTheme(mode) {
-  const isLight = mode === "light";
-  html.classList.toggle("light", isLight);
-  html.classList.toggle("dark", !isLight);
-  body.classList.toggle("light", isLight);
-  body.classList.toggle("dark", !isLight);
-  themeBtn.textContent = isLight ? "☀️" : "🌙";
+function aplicarTema(mode) {
+  document.documentElement.classList.toggle("light", mode === "light");
+  document.body.classList.toggle("light", mode === "light");
   localStorage.setItem("liora_theme", mode);
+  themeBtn.textContent = mode === "light" ? "☀️" : "🌙";
 }
 
-themeBtn?.addEventListener("click", () => {
-  const atual = localStorage.getItem("liora_theme") || "dark";
-  setTheme(atual === "light" ? "dark" : "light");
+themeBtn.addEventListener("click", () => {
+  const mode = localStorage.getItem("liora_theme") === "light" ? "dark" : "light";
+  aplicarTema(mode);
 });
 
-setTheme(localStorage.getItem("liora_theme") || "dark");
+aplicarTema(localStorage.getItem("liora_theme") || "dark");
 
+// ==========================================================
+// 🔄 Alternância entre modo Tema e Upload
+// ==========================================================
+els.modoTema.addEventListener("click", () => {
+  els.painelTema.classList.remove("hidden");
+  els.painelUpload.classList.add("hidden");
 
-// =============================================================
-// 🧩 Shim — Integrar com semantic.js
-// =============================================================
-function construirPlanoInteligenteShim(texto, dias, temaOpcional) {
-  console.log("⚙️ construirPlanoInteligenteShim() chamado...");
+  els.modoTema.classList.add("selected");
+  els.modoUpload.classList.remove("selected");
+});
 
-  if (window.Semantic && typeof window.Semantic.construirPlanoInteligente === "function") {
-    console.log("✅ Usando Semantic.construirPlanoInteligente()");
-    const tipo = window.Semantic.detectarTipoMaterial(texto);
-    return window.Semantic.construirPlanoInteligente(texto, tipo, dias, temaOpcional);
-  }
+els.modoUpload.addEventListener("click", () => {
+  els.painelUpload.classList.remove("hidden");
+  els.painelTema.classList.add("hidden");
 
-  console.warn("⚠️ semantic.js não carregado — usando fallback simples.");
+  els.modoUpload.classList.add("selected");
+  els.modoTema.classList.remove("selected");
+});
 
-  const linhas = texto.split(/\n+/).map(l => l.trim()).filter(Boolean);
-  if (!linhas.length) return [];
+// ==========================================================
+// 📂 UPLOAD DE ARQUIVO (PDF/TXT)
+// ==========================================================
 
-  const porDia = Math.ceil(linhas.length / dias);
-  const plano = [];
-  for (let i = 0; i < dias; i++) {
-    const grupo = linhas.slice(i * porDia, (i + 1) * porDia);
-    if (!grupo.length) break;
-    plano.push({
-      dia: i + 1,
-      titulo: `Sessão ${i + 1}`,
-      resumo: grupo[0]?.slice(0, 120) || "",
-      descricao: grupo.join("\n"),
-      densidade: "📗 leve",
-      conceitos: [],
-    });
-  }
-  return plano;
+// Conexão com semantic.js
+if (!window.processarArquivoUpload) {
+  console.warn("⚠️ semantic.js ainda não carregado.");
 }
 
-
-// =============================================================
-// 📥 UPLOAD DE ARQUIVO
-// =============================================================
-const inputFile = document.getElementById("inp-file");
-const fileName = document.getElementById("file-name");
-const fileType = document.getElementById("file-type");
-
-inputFile?.addEventListener("change", async (e) => {
+els.inpFile?.addEventListener("change", async (e) => {
   const file = e.target.files[0];
   if (!file) return;
 
-  fileName.textContent = `Carregando ${file.name}...`;
+  els.statusUpload.textContent = "⏳ Processando arquivo...";
 
   try {
-    const ext = file.name.split(".").pop().toLowerCase();
-    let text = "";
+    const resultado = await window.processarArquivoUpload(file); // <-- semantic.js
+    els.statusUpload.textContent = resultado.tipoMsg;
 
-    if (ext === "txt") {
-      text = await file.text();
-    } else if (ext === "pdf") {
-      text = await pdfjsLib.getDocument({ data: await file.arrayBuffer() }).promise
-        .then(async (pdf) => {
-          let full = "";
-          for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-            const page = await pdf.getPage(pageNum);
-            const textContent = await page.getTextContent();
-            full += textContent.items.map((item) => item.str).join(" ") + "\n";
-          }
-          return full;
-        });
-    }
-
-    window.state.materialTexto = text;
-    fileName.textContent = `✅ ${file.name} carregado (${ext.toUpperCase()})`;
-    fileType.textContent = "Material pronto para gerar o plano.";
-
+    // Exibir preview dos tópicos detectados
+    mostrarPreview(resultado.topicos.slice(0, 12));
   } catch (err) {
-    console.error("❌ Erro ao ler arquivo:", err);
-    fileName.textContent = "Erro ao carregar arquivo.";
+    console.error(err);
+    els.statusUpload.textContent = "❌ Falha ao ler o arquivo.";
   }
 });
 
+// EXIBE MODAL COM PRÉVIA DOS TÓPICOS
+function mostrarPreview(lista) {
+  document.querySelector("#preview-modal")?.remove();
 
-// ==========================
-// GERAR PLANO POR TEMA
-// ==========================
+  const modal = document.createElement("div");
+  modal.id = "preview-modal";
+  modal.style = `
+      position:fixed; inset:0; background:rgba(0,0,0,.6);
+      display:flex; align-items:center; justify-content:center; z-index:5000;
+  `;
+  modal.innerHTML = `
+      <div style="background:var(--card); color:var(--fg); padding:1.5rem; max-width:600px; border-radius:1rem;">
+          <h3 class="mb-2">📋 Tópicos detectados</h3>
+          <ul style="max-height:300px; overflow:auto; padding-left:1rem;">
+             ${lista.map(t => `<li>• ${t}</li>`).join("")}
+          </ul>
+          <div class="text-right mt-4">
+             <button class="chip" id="fechar-preview">Fechar</button>
+          </div>
+      </div>
+  `;
+  document.body.appendChild(modal);
+
+  document.getElementById("fechar-preview").onclick = () => modal.remove();
+}
+
+// ==========================================================
+// 🚀 GERAR PLANO POR UPLOAD (PDF / TXT)
+// usando processamento semântico do semantic.js
+// ==========================================================
+els.btnGerarUpload?.addEventListener("click", async () => {
+  console.log("▶️ Botão Gerar (UPLOAD)");
+
+  const sessoes = parseInt(els.selDiasUpload.value);
+  if (!window.gerarPlanoPorUpload) {
+    alert("❌ Módulo semantic.js não carregado.");
+    return;
+  }
+
+  const plano = await window.gerarPlanoPorUpload(sessoes);
+  renderizarPlano(plano);
+});
+
+// ==========================================================
+// 🚀 GERAR PLANO POR TEMA + NÍVEL
+// usando IA — plano-simulador.js
+// ==========================================================
 els.btnGerar?.addEventListener("click", async () => {
   console.log("▶️ Botão Gerar (TEMA)");
 
-  const tema = document.getElementById("inp-tema").value.trim();
-  const nivel = document.getElementById("sel-nivel").value.trim();
-  const sessoes = parseInt(document.getElementById("sel-dias").value, 10);
+  const tema = els.inpTema.value.trim();
+  const nivel = els.selNivel.value;
+  const sessoes = parseInt(els.selDias.value);
 
-  console.log("[core.js] Valores coletados -> ", { tema, nivel, sessoes });
+  if (!tema) return alert("Digite um tema para estudo.");
 
-  if (!tema) {
-    alert("Digite um tema para continuar.");
+  if (!window.generatePlanByTheme) {
+    alert("❌ Módulo de plano por tema não carregado.");
     return;
   }
 
   try {
-    const planoGerado = await window.generatePlanByTheme({ tema, nivel, sessoes });
-
-    if (!planoGerado || !Array.isArray(planoGerado)) {
-      throw new Error("Retorno do modelo inválido.");
-    }
-
-    state.tema = tema;
-    state.plano = planoGerado;
-    updateCtx();
-    renderPlano();
-
+    const plano = await window.generatePlanByTheme(tema, nivel, sessoes);
+    renderizarPlano(plano);
   } catch (err) {
-    console.error("[core.js] Falha ao gerar plano por tema:", err);
-    alert("Falha ao gerar plano por tema.");
+    console.error(err);
+    alert("❌ Falha ao gerar plano por tema.");
   }
 });
 
+// ==========================================================
+// ✅ Renderização final do plano no painel direito
+// ==========================================================
+function renderizarPlano(plano) {
+  els.plano.innerHTML = "";
+  els.ctx.textContent = `📘 ${plano.length} sessões`;
 
-// =============================================================
-// ▶️ Botão GERAR PLANO — MODO UPLOAD
-// =============================================================
-document.getElementById("btn-gerar-upload")?.addEventListener("click", async () => {
-  console.log("▶️ Botão Gerar (UPLOAD)");
-
-  const texto = window.state.materialTexto?.trim();
-  const sessoes = parseInt(document.getElementById("sel-dias-upload")?.value || "5");
-
-  if (!texto) {
-    alert("Envie um arquivo antes de gerar.");
-    return;
-  }
-
-  const plano = construirPlanoInteligenteShim(texto, sessoes, window.state.tema || "Tema");
-
-  window.state.plano = plano;
-  document.getElementById("ctx").textContent = `${plano.length} sessões geradas · origem: upload`;
-  renderPlano();
-});
-
-
-// =============================================================
-// 🖥 Renderização do plano
-// =============================================================
-function renderPlano() {
-  const cont = document.getElementById("plano");
-  cont.innerHTML = "";
-
-  if (!state.plano?.length) {
-    cont.innerHTML = `<p class="text-sm text-[var(--muted)]">Nenhum plano de estudo gerado.</p>`;
-    return;
-  }
-
-  state.plano.forEach((sessao) => {
+  plano.forEach(sessao => {
     const div = document.createElement("div");
     div.className = "session-card";
     div.innerHTML = `
-      <div class="flex items-center justify-between">
-        <h3>${sessao.titulo}</h3>
-        <span class="text-xs opacity-70">${sessao.densidade || ""}</span>
-      </div>
-      <p class="text-sm opacity-70 mb-1">${sessao.resumo || ""}</p>
-      <pre>${sessao.descricao}</pre>
+      <h3>${sessao.titulo}</h3>
+      <p class="text-[var(--muted)] text-sm mb-2">${sessao.resumo}</p>
+      <pre>${sessao.conteudo}</pre>
     `;
-    cont.appendChild(div);
+    els.plano.appendChild(div);
   });
+
+  console.log("✅ Plano renderizado.");
 }
 
-console.log("✅ core.js carregado com sucesso.");
+// ==========================================================
+// ✅ Log final
+// ==========================================================
+console.log("🟢 core.js carregado com sucesso");
