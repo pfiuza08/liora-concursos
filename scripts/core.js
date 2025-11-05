@@ -168,6 +168,12 @@ els.btnGerar?.addEventListener("click", async () => {
 // ✅ Renderização final do plano no painel direito
 // ==========================================================
 function renderizarPlano(plano) {
+  if (!Array.isArray(plano)) {
+    console.error("❌ Plano inválido recebido:", plano);
+    alert("Erro ao construir o plano. Tente novamente.");
+    return;
+  }
+
   els.plano.innerHTML = "";
   els.ctx.textContent = `📘 ${plano.length} sessões`;
 
