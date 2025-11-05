@@ -6,11 +6,10 @@
 (function () {
   console.log("🔵 Inicializando Liora Core...");
 
-  // Aguarda DOM estar pronto antes de acessar elementos
   document.addEventListener("DOMContentLoaded", () => {
 
     // ==========================================================
-    // 📌 Referências ao DOM (corrige elementos nulos)
+    // 📌 Referências ao DOM
     // ==========================================================
     const els = {
       // PAINEL DE TEMA
@@ -47,12 +46,10 @@
       els.themeBtn.textContent = mode === "light" ? "☀️" : "🌙";
     }
 
-    if (els.themeBtn) {
-      els.themeBtn.addEventListener("click", () => {
-        const atual = localStorage.getItem("liora_theme") || "dark";
-        aplicarTema(atual === "light" ? "dark" : "light");
-      });
-    }
+    els.themeBtn?.addEventListener("click", () => {
+      const atual = localStorage.getItem("liora_theme") || "dark";
+      aplicarTema(atual === "light" ? "dark" : "light");
+    });
 
     aplicarTema(localStorage.getItem("liora_theme") || "dark");
 
@@ -60,55 +57,51 @@
     // ==========================================================
     // 🔄 Alternância entre modo Tema e Upload
     // ==========================================================
-    if (els.modoTema && els.modoUpload) {
-      els.modoTema.addEventListener("click", () => {
-        els.painelTema.classList.remove("hidden");
-        els.painelUpload.classList.add("hidden");
+    els.modoTema?.addEventListener("click", () => {
+      els.painelTema.classList.remove("hidden");
+      els.painelUpload.classList.add("hidden");
 
-        els.modoTema.classList.add("selected");
-        els.modoUpload.classList.remove("selected");
-      });
+      els.modoTema.classList.add("selected");
+      els.modoUpload.classList.remove("selected");
+    });
 
-      els.modoUpload.addEventListener("click", () => {
-        els.painelUpload.classList.remove("hidden");
-        els.painelTema.classList.add("hidden");
+    els.modoUpload?.addEventListener("click", () => {
+      els.painelUpload.classList.remove("hidden");
+      els.painelTema.classList.add("hidden");
 
-        els.modoUpload.classList.add("selected");
-        els.modoTema.classList.remove("selected");
-      });
-    }
+      els.modoUpload.classList.add("selected");
+      els.modoTema.classList.remove("selected");
+    });
 
 
     // ==========================================================
-    // 📂 UPLOAD DE ARQUIVO (PDF/TXT) — via semantic.js
+    // 📂 UPLOAD — Processamento do arquivo (PDF/TXT)
     // ==========================================================
-    if (els.inpFile) {
-      els.inpFile.addEventListener("change", async (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
+    els.inpFile?.addEventListener("change", async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
 
-        els.statusUpload.textContent = "⏳ Processando arquivo...";
+      els.statusUpload.textContent = "⏳ Processando arquivo...";
 
-        if (!window.processarArquivoUpload) {
-          console.warn("❌ semantic.js não carregado ainda.");
-          els.statusUpload.textContent = "❌ Falha ao carregar módulo de leitura.";
-          return;
-        }
+      // ✅ valida semantic.js somente quando necessário
+      if (!window.processarArquivoUpload) {
+        alert("❌ O módulo de processamento do arquivo ainda não está pronto.");
+        return;
+      }
 
-        try {
-          const resultado = await window.processarArquivoUpload(file);
-          els.statusUpload.textContent = resultado.tipoMsg;
-          mostrarPreview(resultado.topicos?.slice(0, 12) || []);
-        } catch (err) {
-          console.error(err);
-          els.statusUpload.textContent = "❌ Falha ao ler o arquivo.";
-        }
-      });
-    }
+      try {
+        const resultado = await window.processarArquivoUpload(file);
+        els.statusUpload.textContent = resultado.tipoMsg;
+        mostrarPreview(resultado.topicos?.slice(0, 12) || []);
+      } catch (err) {
+        console.error(err);
+        els.statusUpload.textContent = "❌ Falha ao ler o arquivo.";
+      }
+    });
 
 
     // ==========================================================
-    // POPUP de preview dos tópicos
+    // Modal de preview dos tópicos
     // ==========================================================
     function mostrarPreview(lista) {
       document.querySelector("#preview-modal")?.remove();
@@ -124,70 +117,67 @@
         </div>
       `;
       document.body.appendChild(modal);
+
       document.getElementById("fechar-preview").onclick = () => modal.remove();
     }
 
 
     // ==========================================================
-    // 🚀 GERAR PLANO POR UPLOAD (PDF / TXT)
+    // 🚀 GERAR PLANO — UPLOAD (PDF/TXT)
     // ==========================================================
-    if (els.btnGerarUpload) {
-      els.btnGerarUpload.addEventListener("click", async () => {
-        console.log("▶️ Botão Gerar (UPLOAD)");
+    els.btnGerarUpload?.addEventListener("click", async () => {
+      console.log("▶️ Botão Gerar (UPLOAD)");
 
-        if (!window.gerarPlanoPorUpload) {
-          alert("❌ Módulo semantic.js não carregado.");
-          return;
-        }
+      // ✅ valida semantic.js somente no clique
+      if (!window.gerarPlanoPorUpload) {
+        alert("❌ Módulo semantic.js não está pronto.");
+        return;
+      }
 
-        const sessoes = parseInt(els.selDiasUpload.value);
-        els.statusUpload.textContent = "⏳ Gerando plano...";
+      els.statusUpload.textContent = "⏳ Gerando plano...";
 
-        try {
-          const plano = await window.gerarPlanoPorUpload(sessoes);
-          renderizarPlano(plano);
-        } catch (err) {
-          console.error(err);
-          alert("❌ Falha ao gerar plano por upload.");
-        }
-      });
-    }
+      try {
+        const plano = await window.gerarPlanoPorUpload(parseInt(els.selDiasUpload.value));
+        renderizarPlano(plano);
+      } catch (err) {
+        console.error(err);
+        alert("❌ Erro ao gerar plano por upload.");
+      }
+    });
 
 
     // ==========================================================
-    // 🚀 GERAR PLANO POR TEMA + NÍVEL
+    // 🚀 GERAR PLANO — POR TEMA usando IA (plano-simulador.js)
     // ==========================================================
-    if (els.btnGerar) {
-      els.btnGerar.addEventListener("click", async () => {
-        console.log("▶️ Botão Gerar (TEMA)");
+    els.btnGerar?.addEventListener("click", async () => {
+      console.log("▶️ Botão Gerar (TEMA)");
 
-        const tema = els.inpTema.value.trim();
-        if (!tema) return alert("Digite um tema para estudo.");
+      const tema = els.inpTema.value.trim();
+      if (!tema) return alert("Digite um tema.");
 
-        if (!window.generatePlanByTheme) {
-          alert("❌ Módulo de plano por tema não carregado.");
-          return;
-        }
+      if (!window.generatePlanByTheme) {
+        alert("❌ Módulo de plano por tema não está pronto.");
+        return;
+      }
 
-        els.status.textContent = "⏳ Gerando plano...";
+      els.status.textContent = "⏳ Gerando plano...";
 
-        try {
-          const plano = await window.generatePlanByTheme(
-            tema,
-            els.selNivel.value,
-            parseInt(els.selDias.value)
-          );
-          renderizarPlano(plano);
-        } catch (err) {
-          console.error(err);
-          alert("❌ Falha ao gerar plano por tema.");
-        }
-      });
-    }
+      try {
+        const plano = await window.generatePlanByTheme(
+          tema,
+          els.selNivel.value,
+          parseInt(els.selDias.value)
+        );
+        renderizarPlano(plano);
+      } catch (err) {
+        console.error(err);
+        alert("❌ Falha ao gerar plano.");
+      }
+    });
 
 
     // ==========================================================
-    // ✅ Renderização final do plano no painel direito
+    // ✅ Renderiza o plano no painel
     // ==========================================================
     function renderizarPlano(plano) {
       if (!Array.isArray(plano)) {
@@ -213,7 +203,8 @@
       console.log("✅ Plano renderizado.");
     }
 
-    // Exporta para debugging
+
+    // Helper para depuração
     window.LioraCore = { els, renderizarPlano };
 
     console.log("🟢 core.js carregado com sucesso");
