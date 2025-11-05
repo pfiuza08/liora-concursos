@@ -2,12 +2,83 @@
 (function () {
   const LOG = (...a) => console.log('[plano-simulador]', ...a);
 
-  // Hook público para gerar por tema+nivel
-  window.generatePlanByTheme = async function ({ tema, nivel, sessoes }) {
-    try {
-      if (!tema || !nivel || !sessoes) {
-        throw new Error('Parâmetros inválidos (tema, nivel, sessoes)');
-      }
+ // ==========================================================
+// 📚 GERADOR DE PLANO POR TEMA (IA real)
+// ==========================================================
+
+window.generatePlanByTheme = async function (tema, nivel, sessoes) {
+  console.log("[plano-simulador] parâmetros recebidos:", { tema, nivel, sessoes });
+
+  // VALIDAR mas sem bloquear quando número vem como string
+  if (!tema || !nivel || !sessoes || isNaN(parseInt(sessoes))) {
+    throw new Error("Parâmetros inválidos (tema, nivel, sessoes)");
+  }
+
+  sessoes = parseInt(sessoes);
+
+  // MONTA O PROMPT PARA A IA
+  const prompt = `
+Você é uma especialista em ensino e microlearning.
+
+Tema: **${tema}**
+Nível do aluno: **${nivel}**
+Quantidade de sessões: **${sessoes}**
+
+➤ Gere um PLANO DE ESTUDO dividido em ${sessoes} sessões numeradas.
+➤ Para cada sessão, retorne exatamente nesta estrutura:
+
+Sessão X — Título curto
+Resumo: (1 parágrafo, objetivo da sessão)
+Conteúdo:
+• item 1
+• item 2
+• item 3
+
+Responda em JSON válido.
+
+EXEMPLO:
+[
+  { "titulo": "Sessão 1 — Fundamentos", "resumo": "...", "conteudo": "• ..." }
+]
+  `;
+
+  try {
+    console.log("[plano-simulador] solicitando IA...");
+
+    const res = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${window.OPENAI_API_KEY}`, // 🔑 API KEY
+      },
+      body: JSON.stringify({
+        model: "gpt-4.1-mini",  // pode trocar pelo modelo desejado
+        temperature: 0.4,
+        messages: [{ role: "user", content: prompt }],
+      }),
+    });
+
+    const data = await res.json();
+
+    console.log("[plano-simulador] retorno da IA:", data);
+
+    let json = data.choices?.[0]?.message?.content;
+
+    if (!json) throw new Error("Resposta da IA vazia");
+
+    json = json.replace(/```json|```/g, "").trim(); // remove markdown
+
+    const plano = JSON.parse(json);
+
+    if (!Array.isArray(plano)) throw new Error("Formato inválido da IA");
+
+    return plano; // ✅ garante lista
+  } catch (err) {
+    console.error("[plano-simulador] Exceção ao gerar plano:", err);
+    throw err;
+  }
+};
+
 
       // Chamada ao endpoint
       const resp = await fetch('/api/plan', {
