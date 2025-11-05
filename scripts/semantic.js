@@ -1,16 +1,14 @@
 // ==========================================================
 // 🧠 Liora — Módulo de Processamento Semântico (semantic.js)
 // ==========================================================
-// Responsável por analisar blocos de texto e extrair:
-// - Palavras-chave relevantes (conceitos)
-// - Resumo contextualizado
-// - Grau de densidade cognitiva
+// Responsável por ler arquivos PDF/TXT, extrair tópicos,
+// e montar um plano de estudo baseado no conteúdo enviado.
 // ==========================================================
 
 console.log("🧩 semantic.js carregado com sucesso");
 
 // ==========================================================
-// 🔍 Função principal — análise semântica
+// 🔍 Funções de análise semântica (já existentes)
 // ==========================================================
 function analisarSemantica(texto) {
   if (!texto || texto.trim().length < 20) {
@@ -22,19 +20,17 @@ function analisarSemantica(texto) {
     };
   }
 
-  // --- Normalização ---
   const textoLimpo = texto
     .replace(/\s+/g, " ")
     .replace(/[“”‘’"']/g, "")
     .trim();
 
   const palavras = textoLimpo.split(/\s+/).filter(w => w.length > 2);
-
-  // --- Frequência de palavras ---
   const freq = {};
+
   for (const w of palavras) {
     const key = w.toLowerCase().replace(/[.,;:!?()]/g, "");
-    if (!key.match(/^(para|com|como|onde|quando|entre|pois|este|esta|isso|aquele|aquela|são|estão|pode|ser|mais|menos|muito|cada|outro|porque|seja|todo|toda|essa|aquele|essa|essa|que|nos|nas|das|dos|pelos|pelas|tem|há|sobre|após|antes)$/)) {
+    if (!key.match(/^(para|com|como|onde|quando|pois|ser|mais|menos|muito|porque|que|tem|nos|nas|dos)$/)) {
       freq[key] = (freq[key] || 0) + 1;
     }
   }
@@ -44,54 +40,90 @@ function analisarSemantica(texto) {
     .slice(0, 10)
     .map(e => e[0]);
 
-  // --- Resumo (duas frases principais) ---
   const frases = textoLimpo.split(/(?<=[.!?])\s+/).filter(s => s.length > 40);
   const resumo = frases.slice(0, 2).join(" ") + (frases.length > 2 ? " ..." : "");
 
-  // --- Título gerado automaticamente ---
   const titulo = conceitos.length > 0
     ? conceitos[0].charAt(0).toUpperCase() + conceitos[0].slice(1)
     : "Conteúdo analisado";
 
-  // --- Densidade cognitiva ---
-  const mediaPalavras = palavras.length / (frases.length || 1);
   let densidade = "📗 leve";
+  const mediaPalavras = palavras.length / (frases.length || 1);
   if (mediaPalavras > 18 && conceitos.length > 7) densidade = "📙 densa";
   else if (mediaPalavras > 12) densidade = "📘 média";
 
   return { titulo, resumo, conceitos, densidade };
 }
 
-// ==========================================================
-// 🧩 Função auxiliar — comparação semântica entre textos
-// ==========================================================
-// Retorna um índice de similaridade simples entre 0 e 1.
-function similaridadeSemantica(a, b) {
-  if (!a || !b) return 0;
-  const palavrasA = new Set(a.toLowerCase().split(/\s+/));
-  const palavrasB = new Set(b.toLowerCase().split(/\s+/));
-  const intersecao = [...palavrasA].filter(x => palavrasB.has(x));
-  return intersecao.length / Math.max(palavrasA.size, palavrasB.size);
-}
 
 // ==========================================================
-// 📊 Análise de diversidade lexical
+// 🧩 Leitura / processamento do arquivo (PDF / TXT)
 // ==========================================================
-// Mede quão variado é o vocabulário usado.
-function diversidadeLexical(texto) {
-  const palavras = texto.toLowerCase().split(/\s+/).filter(w => w.length > 3);
-  const unicas = new Set(palavras);
-  const indice = (unicas.size / palavras.length) * 100;
-  if (indice > 60) return "🎨 Diverso";
-  if (indice > 40) return "⚖️ Moderado";
-  return "🧩 Reduzido";
+async function processarArquivoUpload(file) {
+  const tipo = file.type;
+
+  let textoExtraido = "";
+
+  if (tipo === "text/plain") {
+    textoExtraido = await file.text();
+  }
+
+  else if (tipo === "application/pdf") {
+    const pdf = await pdfjsLib.getDocument(URL.createObjectURL(file)).promise;
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const content = await page.getTextContent();
+      textoExtraido += content.items.map(item => item.str).join(" ") + "\n";
+    }
+  }
+
+  else {
+    throw new Error("Formato não suportado.");
+  }
+
+  // Quebra o texto em blocos (~200 palavras por tópico)
+  const blocos = textoExtraido
+    .split(/\n{2,}/)
+    .map(b => b.trim())
+    .filter(b => b.length > 50);
+
+  const topicos = blocos.map(analisarSemantica);
+
+  return {
+    tipoMsg: `✅ Arquivo lido (${topicos.length} tópicos detectados)`,
+    topicos
+  };
 }
 
+
 // ==========================================================
-// 🌐 Exportação para o escopo global (necessário p/ integração)
+// 🧠 Gera plano de estudo baseado no conteúdo do arquivo
 // ==========================================================
-window.analisarSemantica = analisarSemantica;
-window.similaridadeSemantica = similaridadeSemantica;
-window.diversidadeLexical = diversidadeLexical;
+async function gerarPlanoPorUpload(sessoes = 7) {
+
+  if (!window.__ultimoUpload) {
+    throw new Error("processarArquivoUpload deve ser chamado antes.");
+  }
+
+  const blocos = window.__ultimoUpload.topicos.slice(0, sessoes);
+
+  return blocos.map((b, i) => ({
+    titulo: `Sessão ${i + 1} — ${b.titulo}`,
+    resumo: b.resumo,
+    conteudo: `• ${b.conceitos.join("\n• ")}\n\nDensidade: ${b.densidade}`
+  }));
+}
+
+
+// ==========================================================
+// 🌐 Exporta funções para o CORE (agora expõe tudo que ele espera)
+// ==========================================================
+window.processarArquivoUpload = async (file) => {
+  const resultado = await processarArquivoUpload(file);
+  window.__ultimoUpload = resultado;  // guarda internamente
+  return resultado;
+};
+
+window.gerarPlanoPorUpload = gerarPlanoPorUpload;
 
 console.log("✅ semantic.js pronto e integrado ao escopo global");
