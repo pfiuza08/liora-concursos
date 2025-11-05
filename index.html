@@ -6,7 +6,7 @@
   <title>Liora — Plano de Estudo Inteligente</title>
   <meta name="description" content="Liora cria planos de estudo personalizados com base no tema OU no upload de um material.">
 
-  <!-- Tailwind -->
+  <!-- Tailwind (atenção: recomendado PostCSS em produção) -->
   <script src="https://cdn.tailwindcss.com"></script>
 
   <!-- PDF.js -->
@@ -116,11 +116,11 @@
 </footer>
 
 
-<!-- 🚨 ORDEM CORRETA DOS SCRIPTS (temas.js REMOVIDO) -->
-<script src="/scripts/core.js?v=8" defer></script>
-<script src="/scripts/plano-simulador.js?v=8" defer></script>
-<script src="/scripts/semantic.js?v=8" defer></script>
-<script src="/scripts/concursos-plano.js?v=8" defer></script>
+<!-- ✅ ORDEM CERTA DOS SCRIPTS -->
+<script src="/scripts/semantic.js?v=9"></script>            <!-- expõe window.Semantic -->
+<script src="/scripts/core.js?v=9"></script>               <!-- registra eventos, inicializa -->
+<script src="/scripts/plano-simulador.js?v=9"></script>    <!-- usa App + Semantic -->
+<script src="/scripts/concursos-plano.js?v=9"></script>    <!-- opcional / modos especiais -->
 
 </body>
 </html>
