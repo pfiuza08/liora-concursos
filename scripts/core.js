@@ -121,21 +121,23 @@
       }
     }
 
-    // =========================================================
-    // IA
-    // =========================================================
-    async function callLLM(system, prompt) {
-      if (window.LIORA?.ask) {
-        return await window.LIORA.ask({ system, user: prompt });
-      }
-      const res = await fetch("/api/liora/generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ system, user: prompt })
-      });
-      const data = await res.json();
-      return data.text || data;
-    }
+    // =======================
+// IA — unifica chamadas
+// =======================
+async function callLLM(system, prompt) {
+
+  // ✅ SE EXISTE window.LIORA.ask → usa ela (já configurada no projeto)
+  if (window.LIORA && typeof window.LIORA.ask === "function") {
+    return await window.LIORA.ask({
+      system,
+      user: prompt,
+      stream: false
+    });
+  }
+
+  // ❌ NÃO usar /api/liora/generate (não existe)
+  throw new Error("⚠️ Nenhum modelo configurado. Liora.ask não encontrado.");
+}
 
     async function gerarPlanoDeSessoes(tema, nivel) {
       const system = "Você é a Liora, especialista em microlearning e método Oakley.";
