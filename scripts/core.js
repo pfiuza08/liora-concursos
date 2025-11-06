@@ -1,31 +1,21 @@
 // ==========================================================
-// 🧠 LIORA — CORE PRINCIPAL
-// Coordena UI + geração do plano (TEMA e UPLOAD)
+// 🧠 LIORA — CORE PRINCIPAL (v13)
+// Tema e Upload AUTOMÁTICOS (IA decide sessões)
 // ==========================================================
-
 (function () {
   console.log("🔵 Inicializando Liora Core...");
 
   document.addEventListener("DOMContentLoaded", () => {
-
-    // ==========================================================
-    // 📌 Referências ao DOM
-    // ==========================================================
     const els = {
-      // PAINEL DE TEMA
       inpTema: document.getElementById("inp-tema"),
       selNivel: document.getElementById("sel-nivel"),
-      selDias: document.getElementById("sel-dias"),
       btnGerar: document.getElementById("btn-gerar"),
       status: document.getElementById("status"),
 
-      // PAINEL DE UPLOAD
       inpFile: document.getElementById("inp-file"),
-      selDiasUpload: document.getElementById("sel-dias-upload"),
       btnGerarUpload: document.getElementById("btn-gerar-upload"),
       statusUpload: document.getElementById("status-upload"),
 
-      // OUTROS
       plano: document.getElementById("plano"),
       ctx: document.getElementById("ctx"),
       painelTema: document.getElementById("painel-tema"),
@@ -34,80 +24,56 @@
       modoUpload: document.getElementById("modo-upload"),
       themeBtn: document.getElementById("btn-theme"),
 
-      // ✅ barra de evolução
       progressBar: document.getElementById("progress-bar"),
       progressFill: document.getElementById("progress-fill"),
     };
 
-
-    // ==========================================================
-    // 🌗 Tema claro/escuro
-    // ==========================================================
+    // Tema claro/escuro
     function aplicarTema(mode) {
       document.documentElement.classList.toggle("light", mode === "light");
       document.body.classList.toggle("light", mode === "light");
       localStorage.setItem("liora_theme", mode);
       els.themeBtn.textContent = mode === "light" ? "☀️" : "🌙";
     }
-
     els.themeBtn?.addEventListener("click", () => {
       const atual = localStorage.getItem("liora_theme") || "dark";
       aplicarTema(atual === "light" ? "dark" : "light");
     });
-
     aplicarTema(localStorage.getItem("liora_theme") || "dark");
 
-
-
-    // ==========================================================
-    // 📊 BARRA DE EVOLUÇÃO (PROGRESS BAR)
-    // ==========================================================
+    // Progress bar
     function iniciarProgresso() {
       els.progressFill.style.width = "0%";
       els.progressBar.classList.remove("hidden");
-
       let progresso = 0;
       const intervalo = setInterval(() => {
         progresso += Math.random() * 15;
-        if (progresso > 90) progresso = 90;   // mantém até finalização
+        if (progresso > 90) progresso = 90;
         els.progressFill.style.width = `${progresso}%`;
       }, 350);
-
       return intervalo;
     }
-
     function finalizarProgresso(intervalo) {
       clearInterval(intervalo);
       els.progressFill.style.width = "100%";
       setTimeout(() => els.progressBar.classList.add("hidden"), 600);
     }
 
-
-
-    // ==========================================================
-    // 🔄 Alternância entre modo Tema e Upload
-    // ==========================================================
+    // Alternância Tema/Upload
     els.modoTema?.addEventListener("click", () => {
       els.painelTema.classList.remove("hidden");
       els.painelUpload.classList.add("hidden");
-
       els.modoTema.classList.add("selected");
       els.modoUpload.classList.remove("selected");
     });
-
     els.modoUpload?.addEventListener("click", () => {
       els.painelUpload.classList.remove("hidden");
       els.painelTema.classList.add("hidden");
-
       els.modoUpload.classList.add("selected");
       els.modoTema.classList.remove("selected");
     });
 
-
-
-    // ==========================================================
-    // 📂 UPLOAD — Processamento do arquivo (PDF/TXT)
-    // ==========================================================
+    // Upload — processamento do arquivo
     els.inpFile?.addEventListener("change", async (e) => {
       const file = e.target.files[0];
       if (!file) return;
@@ -141,14 +107,9 @@
       }
     });
 
-
-
-    // ==========================================================
-    // ✅ Modal de preview dos tópicos detectados
-    // ==========================================================
+    // Modal de preview
     function mostrarPreview(lista) {
       document.querySelector("#preview-modal")?.remove();
-
       const modal = document.createElement("div");
       modal.id = "preview-modal";
       modal.className = "preview-modal-overlay";
@@ -164,28 +125,24 @@
         </div>
       `;
       document.body.appendChild(modal);
-
       document.getElementById("fechar-preview").onclick = () => modal.remove();
     }
 
-
-
-    // ==========================================================
-    // 🚀 GERAR PLANO — UPLOAD (PDF/TXT)
-    // ==========================================================
+    // Gerar plano — Upload (automático: 1 tópico = 1 sessão)
     els.btnGerarUpload?.addEventListener("click", async () => {
       console.log("▶️ Botão Gerar (UPLOAD)");
-
       if (!window.gerarPlanoPorUpload) {
         alert("❌ Módulo semantic.js não está pronto.");
         return;
       }
 
-      const loading = iniciarProgresso();  // ✅ Inicia barra
+      const loading = iniciarProgresso();
 
       try {
-        const plano = await window.gerarPlanoPorUpload(parseInt(els.selDiasUpload.value));
-        finalizarProgresso(loading);       // ✅ Finaliza barra
+        const out = await window.gerarPlanoPorUpload(); // agora sem arg
+        const { sessoes, plano } = normalizeOutput(out);
+        finalizarProgresso(loading);
+        els.ctx.textContent = `📘 ${sessoes} sessões geradas automaticamente — baseado na análise do material enviado.`;
         renderizarPlano(plano);
       } catch (err) {
         finalizarProgresso(loading);
@@ -194,15 +151,12 @@
       }
     });
 
-
-
-    // ==========================================================
-    // 🚀 GERAR PLANO — POR TEMA (IA / plano-simulador.js)
-    // ==========================================================
+    // Gerar plano — Tema (automático: IA decide nº de sessões)
     els.btnGerar?.addEventListener("click", async () => {
       console.log("▶️ Botão Gerar (TEMA)");
 
       const tema = els.inpTema.value.trim();
+      const nivel = els.selNivel.value;
       if (!tema) return alert("Digite um tema.");
 
       if (!window.generatePlanByTheme) {
@@ -210,16 +164,13 @@
         return;
       }
 
-      const loading = iniciarProgresso(); // ✅ Inicia barra
+      const loading = iniciarProgresso();
 
       try {
-        const plano = await window.generatePlanByTheme(
-          tema,
-          els.selNivel.value,
-          parseInt(els.selDias.value)
-        );
-
-        finalizarProgresso(loading);      // ✅ Finaliza barra
+        const out = await window.generatePlanByTheme(tema, nivel); // sem sessoes
+        const { sessoes, plano } = normalizeOutput(out);
+        finalizarProgresso(loading);
+        els.ctx.textContent = `📘 ${sessoes} sessões geradas automaticamente — baseado no nível ${nivel} e na complexidade estimada do tema.`;
         renderizarPlano(plano);
       } catch (err) {
         finalizarProgresso(loading);
@@ -228,11 +179,17 @@
       }
     });
 
+    // Normaliza saída (aceita {sessoes, plano} OU array legado)
+    function normalizeOutput(out) {
+      if (Array.isArray(out)) {
+        return { sessoes: out.length, plano: out };
+      }
+      const sessoes = Number(out?.sessoes || out?.total_sessoes || (out?.plano?.length || 0));
+      const plano = Array.isArray(out?.plano) ? out.plano : [];
+      return { sessoes, plano };
+    }
 
-
-    // ==========================================================
-    // ✅ Renderização final do plano no painel direito
-    // ==========================================================
+    // Renderização do plano
     function renderizarPlano(plano) {
       if (!Array.isArray(plano)) {
         console.error("❌ Plano inválido:", plano);
@@ -241,22 +198,24 @@
       }
 
       els.plano.innerHTML = "";
-      els.ctx.textContent = `📘 ${plano.length} sessões`;
-
       plano.forEach(sessao => {
+        const titulo = sessao.titulo || "Sessão";
+        const resumo = sessao.resumo || "Objetivo não informado.";
+        const conteudo = (sessao.conteudo && String(sessao.conteudo).trim()) ||
+          "• Conceitos principais\n• Exemplos práticos\n• Exercícios de fixação";
+
         const div = document.createElement("div");
         div.className = "session-card";
         div.innerHTML = `
-          <h3>${sessao.titulo}</h3>
-          <p class="text-[var(--muted)] text-sm mb-2">${sessao.resumo}</p>
-          <pre>${sessao.conteudo}</pre>
+          <h3>${titulo}</h3>
+          <p class="text-[var(--muted)] text-sm mb-2">${resumo}</p>
+          <pre>${conteudo}</pre>
         `;
         els.plano.appendChild(div);
       });
 
       console.log("✅ Plano renderizado.");
     }
-
 
     window.LioraCore = { els, renderizarPlano };
     console.log("🟢 core.js carregado com sucesso");
