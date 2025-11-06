@@ -33,6 +33,10 @@
       modoTema: document.getElementById("modo-tema"),
       modoUpload: document.getElementById("modo-upload"),
       themeBtn: document.getElementById("btn-theme"),
+
+      // ✅ barra de evolução
+      progressBar: document.getElementById("progress-bar"),
+      progressFill: document.getElementById("progress-fill"),
     };
 
 
@@ -52,6 +56,32 @@
     });
 
     aplicarTema(localStorage.getItem("liora_theme") || "dark");
+
+
+
+    // ==========================================================
+    // 📊 BARRA DE EVOLUÇÃO (PROGRESS BAR)
+    // ==========================================================
+    function iniciarProgresso() {
+      els.progressFill.style.width = "0%";
+      els.progressBar.classList.remove("hidden");
+
+      let progresso = 0;
+      const intervalo = setInterval(() => {
+        progresso += Math.random() * 15;
+        if (progresso > 90) progresso = 90;   // mantém até finalização
+        els.progressFill.style.width = `${progresso}%`;
+      }, 350);
+
+      return intervalo;
+    }
+
+    function finalizarProgresso(intervalo) {
+      clearInterval(intervalo);
+      els.progressFill.style.width = "100%";
+      setTimeout(() => els.progressBar.classList.add("hidden"), 600);
+    }
+
 
 
     // ==========================================================
@@ -74,6 +104,7 @@
     });
 
 
+
     // ==========================================================
     // 📂 UPLOAD — Processamento do arquivo (PDF/TXT)
     // ==========================================================
@@ -92,17 +123,14 @@
         const resultado = await window.processarArquivoUpload(file);
         els.statusUpload.textContent = resultado.tipoMsg;
 
-        // ✅ converte objetos de tópicos em linhas legíveis
         const previewItems = (resultado.topicos || [])
           .slice(0, 12)
           .map((t) => {
             if (typeof t === "string") return t;
-
             const titulo = t?.titulo || "Tópico";
             const conceitos = Array.isArray(t?.conceitos)
               ? t.conceitos.slice(0, 3).join(", ")
               : "";
-
             return conceitos ? `${titulo} — ${conceitos}` : titulo;
           });
 
@@ -112,6 +140,7 @@
         els.statusUpload.textContent = "❌ Falha ao ler o arquivo.";
       }
     });
+
 
 
     // ==========================================================
@@ -140,6 +169,7 @@
     }
 
 
+
     // ==========================================================
     // 🚀 GERAR PLANO — UPLOAD (PDF/TXT)
     // ==========================================================
@@ -151,20 +181,23 @@
         return;
       }
 
-      els.statusUpload.textContent = "⏳ Gerando plano...";
+      const loading = iniciarProgresso();  // ✅ Inicia barra
 
       try {
         const plano = await window.gerarPlanoPorUpload(parseInt(els.selDiasUpload.value));
+        finalizarProgresso(loading);       // ✅ Finaliza barra
         renderizarPlano(plano);
       } catch (err) {
+        finalizarProgresso(loading);
         console.error(err);
         alert("❌ Erro ao gerar plano por upload.");
       }
     });
 
 
+
     // ==========================================================
-    // 🚀 GERAR PLANO — POR TEMA (IA) — via plano-simulador.js
+    // 🚀 GERAR PLANO — POR TEMA (IA / plano-simulador.js)
     // ==========================================================
     els.btnGerar?.addEventListener("click", async () => {
       console.log("▶️ Botão Gerar (TEMA)");
@@ -177,7 +210,7 @@
         return;
       }
 
-      els.status.textContent = "⏳ Gerando plano...";
+      const loading = iniciarProgresso(); // ✅ Inicia barra
 
       try {
         const plano = await window.generatePlanByTheme(
@@ -185,12 +218,16 @@
           els.selNivel.value,
           parseInt(els.selDias.value)
         );
+
+        finalizarProgresso(loading);      // ✅ Finaliza barra
         renderizarPlano(plano);
       } catch (err) {
+        finalizarProgresso(loading);
         console.error(err);
         alert("❌ Falha ao gerar plano.");
       }
     });
+
 
 
     // ==========================================================
@@ -221,9 +258,7 @@
     }
 
 
-    // Debug helper
     window.LioraCore = { els, renderizarPlano };
-
     console.log("🟢 core.js carregado com sucesso");
   });
 })();
