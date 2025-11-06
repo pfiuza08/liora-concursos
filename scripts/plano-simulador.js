@@ -1,102 +1,81 @@
-// /scripts/plano-simulador.js (v17 — somente resumo no plano principal + conteúdo detalhado separado)
+// ==========================================================
+// 📚 plano-simulador.js (v18)
+// Tema → IA decide sessões (retorno compatível com core v14)
+// Upload em módulos é tratado pelo semantic.js (generatePlanFromUploadAI)
+// ==========================================================
 (function () {
   const LOG = (...a) => console.log("[plano-simulador]", ...a);
 
-  // ==========================================================
-  // API PRINCIPAL (exposta ao core.js)
-  // ==========================================================
-  window.generatePlanByTheme = async function (tema, nivel, sessoesUsuario) {
-    LOG("📥 parâmetros recebidos:", { tema, nivel, sessoesUsuario });
+  function sanitizeTitle(t, tema, i) {
+    if (!t) return `Sessão ${i} — ${tema}`;
+    return t.length > 60 ? t.slice(0, 58) + "…" : t;
+  }
+  function shortText(t, fb) { return t ? (t.length > 140 ? t.slice(0,137) + "..." : t) : fb; }
+  function shortBullets(c, tema) {
+    if (!c) return "• Objetivo claro\n• Exemplo simples\n• Mini tarefa";
+    const linhas = c.split(/\n|•/).map(s=>s.trim()).filter(Boolean).slice(0,3);
+    return "• " + linhas.join("\n• ");
+  }
 
-    const sess = parseInt(sessoesUsuario) || null;
-
+  window.generatePlanByTheme = async function (tema, nivel) {
     const prompt = `
-Você é especialista em microlearning (Barbara Oakley).
-
-Divida o tema em subtópicos e gere um plano progressivo.
-
-RETORNE SOMENTE JSON VÁLIDO:
+Crie um plano de estudo em microlearning para o tema "${tema}" (${nivel}).
+Retorne APENAS JSON válido:
 
 {
+  "sessoes": <numero>,
   "plano": [
-    {
-      "titulo": "Sessão X — Nome do subtópico",
-      "resumo": "Descrição breve e clara do objetivo da sessão.",
-      "detalhamento": "Aqui sim você pode expandir: explicação + exemplos + mini tarefa."
-    }
+    {"titulo":"Sessão X — Subtópico","resumo":"até 140c","conteudo":"• bullet 1\\n• bullet 2\\n• bullet 3"}
   ]
 }
-
-Tema: "${tema}"
-Nível do aluno: "${nivel}"
-Se o usuário não informou quantidade de sessões, você pode decidir a quantidade ideal.
 `.trim();
 
-    try {
-      if (window.OPENAI_API_KEY) {
-        LOG("🔗 Chamando OpenAI diretamente…");
-
+    if (window.OPENAI_API_KEY) {
+      try {
         const res = await fetch("https://api.openai.com/v1/chat/completions", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${window.OPENAI_API_KEY}`
+            Authorization: `Bearer ${window.OPENAI_API_KEY}`,
           },
           body: JSON.stringify({
             model: "gpt-4.1-mini",
             temperature: 0.35,
-            messages: [{ role: "user", content: prompt }]
+            messages: [{ role: "user", content: prompt }],
           }),
         });
-
         const data = await res.json();
-        let json = data.choices?.[0]?.message?.content?.trim();
-
-        json = json.replace(/```json|```/g, "").trim();
-
-        const parsed = JSON.parse(json);
-
-        return normalizePlan(parsed);
-      }
-    } catch (err) {
-      LOG("❌ Erro OpenAI:", err);
+        let content = data?.choices?.[0]?.message?.content || "";
+        content = content.replace(/```json|```/g,"").trim();
+        const obj = JSON.parse(content);
+        if (!Array.isArray(obj?.plano)) throw new Error("Formato inválido");
+        const out = obj.plano.map((s, i) => ({
+          titulo: sanitizeTitle(s?.titulo, tema, i+1),
+          resumo: shortText(s?.resumo, `Objetivo da sessão sobre ${tema}.`),
+          detalhamento:
+            `🎯 Objetivo: ${shortText(s?.resumo, `Entender subtema do tema ${tema}.`)}\n` +
+            `📘 Mini-aula:\n${shortBullets(s?.conteudo, tema)}\n` +
+            `🧪 Exercício: aplique o subtema em um exemplo real.\n` +
+            `✅ Checklist: [ ] conceito [ ] exemplo [ ] exercício`
+        }));
+        return { sessoes: out.length, plano: out };
+      } catch(e) { console.warn("IA tema falhou:", e); }
     }
 
-    LOG("⚠️ fallback local (sem IA)");
-    return fallbackLocal(tema, nivel, sess || 6);
+    // Fallback simples
+    const base = ["Fundamentos","Aplicações","Ferramentas","Exemplos","Projeto","Revisão"];
+    const plano = base.map((b, i) => ({
+      titulo: `Sessão ${i+1} — ${b} de ${tema}`,
+      resumo: `Objetivo prático sobre ${b}.`,
+      detalhamento:
+        `🎯 Objetivo: dominar ${b} de ${tema}.\n` +
+        `📘 Explicação: visão direta do conceito.\n` +
+        `🧠 Exemplos: 2 casos.\n` +
+        `🧪 Exercício: produza seu exemplo.\n` +
+        `✅ Checklist: [ ] Conceito [ ] Exemplo [ ] Exercício`
+    }));
+    return { sessoes: plano.length, plano };
   };
 
-
-  // ==========================================================
-  // Normalização da estrutura recebida
-  // ==========================================================
-  function normalizePlan(data) {
-    const lista = Array.isArray(data.plano) ? data.plano : [];
-
-    return lista.map((item, index) => ({
-      titulo: item?.titulo || `Sessão ${index + 1}`,
-      resumo: item?.resumo || "Resumo não disponível.",
-      detalhamento: item?.detalhamento || "Detalhamento não disponível."
-    }));
-  }
-
-
-  // ==========================================================
-  // Fallback local (excelente agora no novo formato)
-  // ==========================================================
-  function fallbackLocal(tema, nivel, qtd) {
-    const base = ["Fundamentos", "Aplicações", "Ferramentas", "Exemplos reais", "Projeto guiado", "Revisão"];
-
-    return Array.from({ length: qtd }, (_, i) => ({
-      titulo: `Sessão ${i + 1} — ${base[i] || tema}`,
-      resumo: `Nesta sessão você vai aprender sobre ${base[i] || tema} aplicado ao tema.`,
-      detalhamento: `
-• O que é ${base[i] || tema}
-• Exemplo aplicado a ${tema}
-• Mini tarefa para praticar
-`
-    }));
-  }
-
-  LOG("✅ plano-simulador.js carregado (v17)");
+  LOG("✅ plano-simulador.js v18 carregado");
 })();
