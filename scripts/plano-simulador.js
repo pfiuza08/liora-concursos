@@ -1,135 +1,147 @@
-// /scripts/plano-simulador.js  (v11)
+// /scripts/plano-simulador.js  (v13)
 (function () {
   const LOG = (...a) => console.log('[plano-simulador]', ...a);
 
-  // ==========================================================
-  // 🌟 GERADOR DE PLANO POR TEMA (IA + backend + fallback)
-  // ==========================================================
+  // ===== utils de robustez =====
+  const bulletJoin = (arr) =>
+    Array.isArray(arr) && arr.length
+      ? '• ' + arr.map(x => String(x).trim()).filter(Boolean).join('\n• ')
+      : '';
 
-  window.generatePlanByTheme = async function (tema, nivel, sessoes) {
-    LOG("parâmetros recebidos:", { tema, nivel, sessoes });
+  function extractJSONObject(text) {
+    if (!text) return null;
+    let t = String(text).trim().replace(/```json|```/g, '').trim();
+    // tenta parse direto
+    try { return JSON.parse(t); } catch {}
+    // fallback: pega o maior bloco entre { ... }
+    const first = t.indexOf('{'); const last = t.lastIndexOf('}');
+    if (first === -1 || last === -1 || last <= first) return null;
+    try { return JSON.parse(t.slice(first, last + 1)); } catch { return null; }
+  }
 
-    if (!tema || !nivel || !sessoes || isNaN(parseInt(sessoes))) {
-      throw new Error("Parâmetros inválidos (tema, nivel, sessoes)");
+  function normalizeSession(item, idx, tema, nivel) {
+    const o = item || {};
+    const titulo = o.titulo || o.title || o['título'] || `Sessão ${idx + 1} — ${tema}`;
+    const resumo = o.resumo || o.summary || o['síntese'] || `Objetivo da sessão ${idx + 1} sobre ${tema} (nível ${nivel}).`;
+
+    let conteudo =
+      o.conteudo || o['conteúdo'] || o.content || o.items || o.topicos || o['tópicos'];
+
+    if (Array.isArray(conteudo)) conteudo = bulletJoin(conteudo);
+    else if (conteudo && typeof conteudo === 'object') {
+      const maybe = conteudo.items || conteudo.topicos || conteudo['tópicos'] || conteudo.points || conteudo.bullets;
+      conteudo = bulletJoin(maybe);
+    } else if (typeof conteudo === 'string') {
+      conteudo = conteudo.trim();
     }
 
-    sessoes = parseInt(sessoes); // normaliza
+    if (!conteudo) conteudo = '• Conceitos principais\n• Exemplos práticos\n• Exercícios de fixação';
 
-    // PROMPT reforçado (obriga JSON sem texto fora)
-    const prompt = `
-Você é especialista em microlearning e Barbara Oakley.
-
-Gere um PLANO DE ESTUDOS dividido em **${sessoes} sessões**.
-
-Tema: **${tema}**
-Nível do aluno: **${nivel}**
-
-⚠️ FORMATO OBRIGATÓRIO DA RESPOSTA (apenas JSON válido, sem markdown e sem explicações):
-[
-  {
-    "titulo": "Sessão X — título curto",
-    "resumo": "Objetivo da sessão (1 parágrafo)",
-    "conteudo": "• item 1\\n• item 2\\n• item 3"
+    return { titulo: String(titulo).trim(), resumo: String(resumo).trim(), conteudo: String(conteudo).trim() };
   }
-]
+
+  function normalizePlanObject(obj, tema, nivel) {
+    // aceita { sessoes, plano } ou { total_sessoes, plano } ou até um array legado
+    if (Array.isArray(obj)) {
+      return { sessoes: obj.length, plano: obj.map((it, i) => normalizeSession(it, i, tema, nivel)) };
+    }
+    const sessoes = Number(obj?.sessoes || obj?.total_sessoes || (obj?.plano?.length || 0));
+    const planoRaw = Array.isArray(obj?.plano) ? obj.plano : [];
+    const plano = planoRaw.map((it, i) => normalizeSession(it, i, tema, nivel));
+    return { sessoes: sessoes || plano.length, plano };
+  }
+
+  // ===== geração principal (automática) =====
+  window.generatePlanByTheme = async function (tema, nivel) {
+    LOG('parâmetros recebidos:', { tema, nivel });
+
+    if (!tema || !nivel) {
+      throw new Error('Parâmetros inválidos (tema, nivel)');
+    }
+
+    const prompt = `
+Você é especialista em microlearning (Barbara Oakley).
+
+Decida quantas sessões são necessárias para o tema e gere o plano.
+RETORNE APENAS JSON VÁLIDO (sem markdown, sem texto extra) neste formato:
+
+{
+  "sessoes": <numero_inteiro>,
+  "plano": [
+    {
+      "titulo": "Sessão X — título curto",
+      "resumo": "Objetivo da sessão (1 parágrafo).",
+      "conteudo": "• item 1\\n• item 2\\n• item 3"
+    }
+  ]
+}
+
+Regras:
+- Use as chaves exatamente: "sessoes", "plano", "titulo", "resumo", "conteudo".
+- Se algum conteúdo não for claro, preencha com três bullets padrão.
+- Tema: "${tema}"
+- Nível do aluno: "${nivel}"
 `.trim();
 
-
-    // ======================================================
-    // ✅ 1) CHAMADA DIRETA À OPENAI (se houver API KEY)
-    // ======================================================
+    // 1) OpenAI direta (se houver chave)
     if (window.OPENAI_API_KEY) {
       try {
-        LOG("usando chamada direta à OpenAI");
-
-        const res = await fetch("https://api.openai.com/v1/chat/completions", {
-          method: "POST",
+        LOG('chamada direta à OpenAI (automática)');
+        const res = await fetch('https://api.openai.com/v1/chat/completions', {
+          method: 'POST',
           headers: {
-            "Content-Type": "application/json",
+            'Content-Type': 'application/json',
             Authorization: `Bearer ${window.OPENAI_API_KEY}`,
           },
           body: JSON.stringify({
-            model: "gpt-4.1-mini",
-            temperature: 0.3,
-            messages: [{ role: "user", content: prompt }],
+            model: 'gpt-4.1-mini',
+            temperature: 0.2,
+            messages: [{ role: 'user', content: prompt }],
           }),
         });
 
         const data = await res.json();
-        LOG("resposta da IA:", data);
+        const content = data?.choices?.[0]?.message?.content;
+        if (!content) throw new Error('IA retornou vazio');
 
-        let json = data.choices?.[0]?.message?.content;
-        if (!json) throw new Error("IA retornou vazio");
+        const obj = extractJSONObject(content);
+        if (!obj) throw new Error('Não foi possível extrair JSON válido.');
 
-        // remove possíveis fences markdown
-        json = json.replace(/```json|```/g, "").trim();
-
-        let plano = JSON.parse(json);
-
-        // ✅ Normaliza sessões sem conteúdo
-        plano = plano.map((sessao, index) => ({
-          titulo: sessao.titulo || `Sessão ${index + 1} — ${tema}`,
-          resumo: sessao.resumo || `Exploração do tema para o nível ${nivel}.`,
-          conteudo: sessao.conteudo?.trim() ||
-            `• Conceitos principais\n• Exemplos práticos\n• Exercícios de fixação`,
-        }));
-
-        return plano;
+        const normalized = normalizePlanObject(obj, tema, nivel);
+        LOG('plano (IA automática) normalizado:', normalized);
+        return normalized; // { sessoes, plano }
       } catch (err) {
-        LOG("Falha ao chamar OpenAI direto:", err.message);
+        LOG('OpenAI automática falhou:', err.message);
       }
     }
 
-
-    // ======================================================
-    // ✅ 2) BACKEND OPCIONAL (/api/plan)
-    // ======================================================
+    // 2) Backend opcional (/api/plan-auto)
     try {
-      LOG("tentando backend /api/plan...");
-
-      const resp = await fetch("/api/plan", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tema, nivel, sessoes }),
+      LOG('tentando backend /api/plan-auto...');
+      const resp = await fetch('/api/plan-auto', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tema, nivel }),
       });
 
       if (resp.ok) {
         const result = await resp.json();
-
-        if (result?.plano && Array.isArray(result.plano)) {
-          LOG("Plano gerado pelo backend:", result.origem);
-          return result.plano;
-        }
+        const normalized = normalizePlanObject(result, tema, nivel);
+        LOG('plano (backend auto) normalizado:', normalized);
+        return normalized;
       }
-
-      LOG("backend não retornou formato válido.");
+      LOG('backend auto não retornou formato válido.');
     } catch (err) {
-      LOG("Erro no backend /api/plan:", err.message);
+      LOG('Erro no backend /api/plan-auto:', err.message);
     }
 
-
-    // ======================================================
-    // ✅ 3) FALLBACK (sempre funciona)
-    // ======================================================
-    LOG("usando fallback local");
-
-    return fallbackLocal(tema, nivel, sessoes);
+    // 3) Fallback local (estima nº de sessões pelo nível)
+    const estimativa = (nivel === 'avancado' ? 5 : (nivel === 'intermediario' ? 6 : 8));
+    const plano = Array.from({ length: estimativa }, (_, i) =>
+      normalizeSession({}, i, tema, nivel)
+    );
+    return { sessoes: estimativa, plano };
   };
 
-
-  // ======================================================
-  // 🔄 FALLBACK → garante plano SEM undefined
-  // ======================================================
-  function fallbackLocal(tema, nivel, sessoes) {
-    const dens = nivel === "avancado" ? "📙" :
-                 nivel === "intermediario" ? "📘" : "📗";
-
-    return Array.from({ length: sessoes }, (_, i) => ({
-      titulo: `Sessão ${i + 1} — ${tema}`,
-      resumo: `Exploração do tema adaptado ao nível ${nivel}.`,
-      conteudo: `• Conceitos principais\n• Leituras recomendadas\n• Exercícios\n• Densidade cognitiva ${dens}`,
-    }));
-  }
-
-  LOG("✅ plano-simulador.js carregado");
+  LOG('✅ plano-simulador.js carregado');
 })();
