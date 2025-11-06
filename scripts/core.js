@@ -515,7 +515,7 @@ Responda em JSON EXATO:
       document.getElementById("fechar-detalhe").onclick = () => modal.remove();
     }
 
-    console.log("🟢 core.js com WIZARD carregado");
-  });
+        console.log("🟢 core.js com WIZARD carregado");
+  });     // ✅ fecha DOMContentLoaded
 
-})();
+})();      // ✅ fecha o wrapper principal (IIFE)
