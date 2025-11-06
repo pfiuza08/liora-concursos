@@ -1,9 +1,9 @@
-// /scripts/plano-simulador.js  (v10)
+// /scripts/plano-simulador.js  (v11)
 (function () {
   const LOG = (...a) => console.log('[plano-simulador]', ...a);
 
   // ==========================================================
-  // 🌟 GERADOR DE PLANO POR TEMA (IA + fallback)
+  // 🌟 GERADOR DE PLANO POR TEMA (IA + backend + fallback)
   // ==========================================================
 
   window.generatePlanByTheme = async function (tema, nivel, sessoes) {
@@ -13,31 +13,30 @@
       throw new Error("Parâmetros inválidos (tema, nivel, sessoes)");
     }
 
-    sessoes = parseInt(sessoes);
+    sessoes = parseInt(sessoes); // normaliza
 
-    // PROMPT para IA
+    // PROMPT reforçado (obriga JSON sem texto fora)
     const prompt = `
-Você é especialista em microlearning com base na metodologia da Barbara Oakley.
+Você é especialista em microlearning e Barbara Oakley.
 
-Crie um PLANO DE ESTUDO dividido em ${sessoes} sessões.
+Gere um PLANO DE ESTUDOS dividido em **${sessoes} sessões**.
 
 Tema: **${tema}**
 Nível do aluno: **${nivel}**
 
-PARA CADA SESSÃO, RETORNE ESTA ESTRUTURA (EM JSON VÁLIDO):
-
+⚠️ FORMATO OBRIGATÓRIO DA RESPOSTA (apenas JSON válido, sem markdown e sem explicações):
 [
   {
     "titulo": "Sessão X — título curto",
-    "resumo": "Objetivo da sessão — 1 parágrafo",
-    "conteudo": "• item 1\n• item 2\n• item 3"
+    "resumo": "Objetivo da sessão (1 parágrafo)",
+    "conteudo": "• item 1\\n• item 2\\n• item 3"
   }
 ]
-    `.trim();
+`.trim();
 
 
     // ======================================================
-    // 1) PRIMEIRA TENTATIVA → IA direto (se existir API KEY)
+    // ✅ 1) CHAMADA DIRETA À OPENAI (se houver API KEY)
     // ======================================================
     if (window.OPENAI_API_KEY) {
       try {
@@ -51,7 +50,7 @@ PARA CADA SESSÃO, RETORNE ESTA ESTRUTURA (EM JSON VÁLIDO):
           },
           body: JSON.stringify({
             model: "gpt-4.1-mini",
-            temperature: 0.4,
+            temperature: 0.3,
             messages: [{ role: "user", content: prompt }],
           }),
         });
@@ -62,10 +61,20 @@ PARA CADA SESSÃO, RETORNE ESTA ESTRUTURA (EM JSON VÁLIDO):
         let json = data.choices?.[0]?.message?.content;
         if (!json) throw new Error("IA retornou vazio");
 
+        // remove possíveis fences markdown
         json = json.replace(/```json|```/g, "").trim();
-        const plano = JSON.parse(json);
 
-        if (Array.isArray(plano)) return plano;
+        let plano = JSON.parse(json);
+
+        // ✅ Normaliza sessões sem conteúdo
+        plano = plano.map((sessao, index) => ({
+          titulo: sessao.titulo || `Sessão ${index + 1} — ${tema}`,
+          resumo: sessao.resumo || `Exploração do tema para o nível ${nivel}.`,
+          conteudo: sessao.conteudo?.trim() ||
+            `• Conceitos principais\n• Exemplos práticos\n• Exercícios de fixação`,
+        }));
+
+        return plano;
       } catch (err) {
         LOG("Falha ao chamar OpenAI direto:", err.message);
       }
@@ -73,7 +82,7 @@ PARA CADA SESSÃO, RETORNE ESTA ESTRUTURA (EM JSON VÁLIDO):
 
 
     // ======================================================
-    // 2) SEGUNDA TENTATIVA → /api/plan (backend opcional)
+    // ✅ 2) BACKEND OPCIONAL (/api/plan)
     // ======================================================
     try {
       LOG("tentando backend /api/plan...");
@@ -100,7 +109,7 @@ PARA CADA SESSÃO, RETORNE ESTA ESTRUTURA (EM JSON VÁLIDO):
 
 
     // ======================================================
-    // 🔄 FALLBACK → gera um plano local (sempre funciona)
+    // ✅ 3) FALLBACK (sempre funciona)
     // ======================================================
     LOG("usando fallback local");
 
@@ -109,7 +118,7 @@ PARA CADA SESSÃO, RETORNE ESTA ESTRUTURA (EM JSON VÁLIDO):
 
 
   // ======================================================
-  // FALLBACK PARA QUANDO NÃO CONSEGUE GERAR VIA IA
+  // 🔄 FALLBACK → garante plano SEM undefined
   // ======================================================
   function fallbackLocal(tema, nivel, sessoes) {
     const dens = nivel === "avancado" ? "📙" :
@@ -118,7 +127,7 @@ PARA CADA SESSÃO, RETORNE ESTA ESTRUTURA (EM JSON VÁLIDO):
     return Array.from({ length: sessoes }, (_, i) => ({
       titulo: `Sessão ${i + 1} — ${tema}`,
       resumo: `Exploração do tema adaptado ao nível ${nivel}.`,
-      conteudo: `• Conceitos principais\n• Leituras recomendadas\n• Exercícios\n• Revisão — ${dens}`,
+      conteudo: `• Conceitos principais\n• Leituras recomendadas\n• Exercícios\n• Densidade cognitiva ${dens}`,
     }));
   }
 
