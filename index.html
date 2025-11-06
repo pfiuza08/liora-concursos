@@ -48,31 +48,26 @@
       <button id="modo-upload" class="btn-secondary">Upload</button>
     </div>
 
-    <!-- ========== MODO TEMA / NÍVEL ========== -->
+    <!-- ========== MODO TEMA (AUTOMÁTICO) ========== -->
     <div id="painel-tema">
 
       <label class="block text-sm font-medium mb-1">Tema de estudo</label>
       <input id="inp-tema" type="text" placeholder="Ex.: Direito Constitucional — Poder Legislativo" class="mb-3">
 
       <label class="block text-sm font-medium mb-1">Nível de conhecimento</label>
-      <select id="sel-nivel" class="mb-3">
+      <select id="sel-nivel" class="mb-2">
         <option value="iniciante">Iniciante</option>
         <option value="intermediario">Intermediário</option>
         <option value="avancado">Avançado</option>
       </select>
 
-      <label class="block text-sm font-medium mb-1">Sessões</label>
-      <select id="sel-dias" class="mb-3">
-        <option>5</option>
-        <option>7</option>
-        <option>10</option>
-      </select>
+      <p class="text-xs text-[var(--muted)] mb-3">A Liora decidirá automaticamente a quantidade de sessões com base no tema e no nível informado.</p>
 
-      <button id="btn-gerar" class="btn w-full mt-3">Gerar plano</button>
+      <button id="btn-gerar" class="btn w-full mt-1">Gerar plano</button>
       <p id="status" class="text-xs text-[var(--muted)] mt-2"></p>
     </div>
 
-    <!-- ========== MODO UPLOAD MATERIAL ========== -->
+    <!-- ========== MODO UPLOAD MATERIAL (AUTOMÁTICO) ========== -->
     <div id="painel-upload" class="hidden">
 
       <label class="block text-sm font-medium mb-1">Envie seu material</label>
@@ -84,38 +79,28 @@
         <input id="inp-file" type="file" accept=".pdf,.txt" />
       </label>
 
-      <p id="file-name" class="text-[11px] text-[var(--muted)] mt-2"></p>
-      <p id="file-type" class="text-[12px] text-[var(--muted)] mt-1 italic"></p>
+      <p class="text-xs text-[var(--muted)] mt-2">Cada tópico detectado no material vira uma sessão do plano.</p>
 
-      <label class="block text-sm font-medium mt-4 mb-1">Sessões</label>
-      <select id="sel-dias-upload" class="mb-4">
-        <option>5</option>
-        <option>7</option>
-        <option>10</option>
-      </select>
-
-      <button id="btn-gerar-upload" class="btn w-full">Gerar plano</button>
+      <button id="btn-gerar-upload" class="btn w-full mt-3">Gerar plano</button>
       <p id="status-upload" class="text-xs text-[var(--muted)] mt-2"></p>
     </div>
 
   </section>
 
-<!-- ===== PAINEL DIREITO ===== -->
-<section class="lg:col-span-2 card p-5">
-  <div class="flex items-center justify-between mb-3">
-    <h2 class="section-title">Seu plano de estudo</h2>
-    <div class="text-sm text-[var(--muted)]" id="ctx"></div>
-  </div>
+  <!-- ===== PAINEL DIREITO ===== -->
+  <section class="lg:col-span-2 card p-5">
+    <div class="flex items-center justify-between mb-3">
+      <h2 class="section-title">Seu plano de estudo</h2>
+      <div class="text-sm text-[var(--muted)]" id="ctx"></div>
+    </div>
 
-  <!-- ✅ Barra de progresso -->
-  <div id="progress-bar" class="hidden w-full bg-gray-300/60 rounded-full h-2 mb-4 overflow-hidden">
-    <div id="progress-fill" class="h-2 rounded-full" style="background:var(--brand); width:0%;"></div>
-  </div>
+    <!-- ✅ Barra de progresso -->
+    <div id="progress-bar" class="hidden w-full bg-gray-300/60 rounded-full h-2 mb-4 overflow-hidden">
+      <div id="progress-fill" class="h-2 rounded-full" style="background:var(--brand); width:0%;"></div>
+    </div>
 
-  <!-- Conteúdo do plano -->
-  <div id="plano" class="space-y-3"></div>
-</section>
-
+    <div id="plano" class="space-y-3"></div>
+  </section>
 
 </main>
 
@@ -123,12 +108,11 @@
   <p>Liora — IA aplicada a estudos. © Intellih</p>
 </footer>
 
-
 <!-- ✅ ORDEM CERTA DOS SCRIPTS -->
-<script src="/scripts/semantic.js?v=9"></script>            <!-- expõe window.Semantic -->
-<script src="/scripts/core.js?v=9"></script>               <!-- registra eventos, inicializa -->
-<script src="/scripts/plano-simulador.js?v=9"></script>    <!-- usa App + Semantic -->
-<script src="/scripts/concursos-plano.js?v=9"></script>    <!-- opcional / modos especiais -->
+<script src="/scripts/semantic.js?v=13"></script>
+<script src="/scripts/core.js?v=13"></script>
+<script src="/scripts/plano-simulador.js?v=13"></script>
+<script src="/scripts/concursos-plano.js?v=13"></script>
 
 </body>
 </html>
