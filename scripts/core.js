@@ -259,4 +259,347 @@
 
     console.log("🟢 core.js carregado com sucesso");
   });
+// ==========================================================
+// LIORA — SESSÕES POR TEMA (Wizard) — v1
+// Integra com: #inp-tema, #sel-nivel, #btn-gerar, #status
+// Renderiza em: #liora-sessoes
+// ==========================================================
+(function () {
+  // --- elementos do DOM já existentes + novos ---
+  const els = {
+    temaInput: document.getElementById("inp-tema"),
+    nivelSelect: document.getElementById("sel-nivel"),
+    btnGerar: document.getElementById("btn-gerar"),
+    status: document.getElementById("status"),
+
+    container: document.getElementById("liora-sessoes"),
+    temaAtivo: document.getElementById("liora-tema-ativo"),
+    progressBar: document.getElementById("liora-progress-bar"),
+    progressLabel: document.getElementById("liora-progress-label"),
+
+    sessaoTitulo: document.getElementById("liora-sessao-titulo"),
+    sessaoObjetivo: document.getElementById("liora-sessao-objetivo"),
+    sessaoConteudo: document.getElementById("liora-sessao-conteudo"),
+    sessaoAnalogias: document.getElementById("liora-sessao-analogias"),
+    sessaoAtivacao: document.getElementById("liora-sessao-ativacao"),
+    sessaoQuiz: document.getElementById("liora-sessao-quiz"),
+    sessaoQuizFeedback: document.getElementById("liora-sessao-quiz-feedback"),
+    sessaoFlashcards: document.getElementById("liora-sessao-flashcards"),
+
+    btnVoltar: document.getElementById("liora-btn-voltar"),
+    btnSalvar: document.getElementById("liora-btn-salvar"),
+    btnProxima: document.getElementById("liora-btn-proxima"),
+  };
+
+  // --- estado em memória ---
+  let wizard = {
+    tema: null,
+    nivel: null,
+    plano: [],       // [{numero, nome}]
+    sessoes: [],     // array de objetos de sessão completa
+    atual: 0         // índice da sessão atual (0-based)
+  };
+
+  // --- chave de persistência ---
+  const key = (tema, nivel) => `liora:wizard:${(tema||"").toLowerCase()}::${(nivel||"").toLowerCase()}`;
+
+  // ====== INTEGRAÇÃO COM O SEU LLM ======
+  // Adapte esta função para sua chamada real de IA.
+  // Opções: usar sua função global (ex.: window.LIORA.ask), fetch a um endpoint /api, etc.
+  async function callLLM(systemPrompt, userPrompt) {
+    // EXEMPLO A: se você já tem uma função global de IA:
+    if (window.LIORA && typeof window.LIORA.ask === "function") {
+      return await window.LIORA.ask({ system: systemPrompt, user: userPrompt });
+    }
+
+    // EXEMPLO B: fallback (ajuste o endpoint conforme seu backend)
+    const res = await fetch("/api/liora/generate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json"},
+      body: JSON.stringify({ system: systemPrompt, user: userPrompt })
+    });
+    if (!res.ok) throw new Error("Falha ao gerar com IA");
+    const data = await res.json();
+    return data.text || data; // ajuste se necessário
+  }
+
+  // Gera o plano de sessões (lista de tópicos)
+  async function gerarPlanoDeSessoes(tema, nivel) {
+    const system = "Você é a Liora, especialista em microlearning e método Oakley.";
+    const user = `
+Gere um plano de sessões para estudar o tema: "${tema}" (nível: ${nivel}).
+Crie de 4 a 7 sessões, retornando JSON puro:
+[
+  {"numero": 1, "nome": "título da sessão"},
+  {"numero": 2, "nome": "título da sessão"}
+]
+    `.trim();
+
+    const out = await callLLM(system, user);
+    // Tolerante: se vier string, tentar JSON.parse
+    let plano;
+    try {
+      plano = typeof out === "string" ? JSON.parse(out) : out;
+    } catch (e) {
+      // fallback simples se o modelo não retornar JSON válido
+      plano = [
+        { numero: 1, nome: "Introdução e visão geral" },
+        { numero: 2, nome: "Conceitos essenciais" },
+        { numero: 3, nome: "Aplicações práticas" },
+        { numero: 4, nome: "Erros comuns e boas práticas" },
+        { numero: 5, nome: "Revisão e teste final" }
+      ];
+    }
+    // normaliza e ordena por numero
+    plano = (plano || []).map(s => ({ numero: Number(s.numero), nome: String(s.nome) }))
+                         .sort((a,b) => a.numero - b.numero);
+    return plano;
+  }
+
+  // Gera o conteúdo completo de uma sessão
+  async function gerarSessao(tema, nivel, numero, nomeTopico) {
+    const system = "Você é a Liora, especialista em microlearning e método Oakley.";
+    const user = `
+Gere a sessão número ${numero} do tema "${tema}" (nível: ${nivel}), tópico: "${nomeTopico}".
+Responda em JSON com o seguinte formato EXATO:
+{
+  "titulo": "Sessão ${numero} — ${nomeTopico}",
+  "objetivo": "frase clara de resultado de aprendizagem",
+  "conteudo": ["parágrafo 1", "parágrafo 2", "parágrafo 3"],
+  "analogias": ["analogia 1", "analogia 2"],
+  "ativacao": ["pergunta 1", "pergunta 2", "pergunta 3"],
+  "quiz": {
+    "pergunta": "pergunta de múltipla escolha",
+    "alternativas": ["a) ...", "b) ...", "c) ..."],
+    "corretaIndex": 2,
+    "explicacao": "por que esta é a correta em 1 linha"
+  },
+  "flashcards": [
+    {"q":"pergunta", "a":"resposta"},
+    {"q":"pergunta", "a":"resposta"}
+  ]
+}
+    `.trim();
+
+    const out = await callLLM(system, user);
+    let sessao;
+    try {
+      sessao = typeof out === "string" ? JSON.parse(out) : out;
+    } catch (e) {
+      // fallback mínimo caso retorne fora do padrão
+      sessao = {
+        titulo: `Sessão ${numero} — ${nomeTopico}`,
+        objetivo: `Compreender ${nomeTopico} no contexto de ${tema}.`,
+        conteudo: [
+          `${nomeTopico}: visão geral.`,
+          `Relação de ${nomeTopico} com ${tema}.`,
+          `Pontos-chave para lembrar.`
+        ],
+        analogias: [`Pense em ${nomeTopico} como ...`],
+        ativacao: [
+          `Explique ${nomeTopico} com suas palavras.`,
+          `Dê um exemplo prático de ${nomeTopico}.`,
+          `Qual erro comum em ${nomeTopico}?`
+        ],
+        quiz: {
+          pergunta: `Qual afirmação sobre ${nomeTopico} é correta?`,
+          alternativas: ["a) ...", "b) ...", "c) ..."],
+          corretaIndex: 2,
+          explicacao: "A alternativa c) resume o ponto-chave."
+        },
+        flashcards: [
+          { q: `${nomeTopico} em 1 frase:`, a: "..." },
+          { q: `Exemplo de ${nomeTopico}:`, a: "..." }
+        ]
+      };
+    }
+    return sessao;
+  }
+
+  // Renderização da sessão atual
+  function render() {
+    const total = wizard.sessoes.length;
+    const idx = wizard.atual;
+    const sess = wizard.sessoes[idx];
+    if (!sess) return;
+
+    els.container.style.display = "block";
+    els.temaAtivo.textContent = wizard.tema;
+
+    // progresso
+    els.progressLabel.textContent = `Sessão ${idx+1}/${total}`;
+    els.progressBar.style.width = `${((idx+1)/total)*100}%`;
+
+    // conteúdo
+    els.sessaoTitulo.textContent = sess.titulo || `Sessão ${idx+1}`;
+    els.sessaoObjetivo.textContent = sess.objetivo || "—";
+
+    els.sessaoConteudo.innerHTML = "";
+    (sess.conteudo || []).forEach(p => {
+      const para = document.createElement("p"); para.textContent = p;
+      els.sessaoConteudo.appendChild(para);
+    });
+
+    els.sessaoAnalogias.innerHTML = "";
+    (sess.analogias || []).forEach(a => {
+      const para = document.createElement("p"); para.textContent = a;
+      els.sessaoAnalogias.appendChild(para);
+    });
+
+    els.sessaoAtivacao.innerHTML = "";
+    (sess.ativacao || []).forEach(q => {
+      const li = document.createElement("li"); li.textContent = q;
+      els.sessaoAtivacao.appendChild(li);
+    });
+
+    // quiz
+    els.sessaoQuiz.innerHTML = "";
+    els.sessaoQuizFeedback.textContent = "";
+    if (sess.quiz && sess.quiz.pergunta && Array.isArray(sess.quiz.alternativas)) {
+      const q = document.createElement("p");
+      q.textContent = sess.quiz.pergunta;
+      els.sessaoQuiz.appendChild(q);
+
+      sess.quiz.alternativas.forEach((alt, i) => {
+        const label = document.createElement("label");
+        label.className = "liora-quiz-option";
+
+        const input = document.createElement("input");
+        input.type = "radio";
+        input.name = "liora-quiz";
+        input.value = String(i);
+
+        label.appendChild(input);
+        const span = document.createElement("span");
+        span.textContent = alt;
+        label.appendChild(span);
+
+        label.addEventListener("change", () => {
+          const ok = Number(input.value) === Number(sess.quiz.corretaIndex);
+          els.sessaoQuizFeedback.textContent = ok
+            ? `✅ Correto! ${sess.quiz.explicacao || ""}`
+            : `❌ Não é essa. ${sess.quiz.explicacao || ""}`;
+        });
+
+        els.sessaoQuiz.appendChild(label);
+      });
+    }
+
+    // flashcards
+    els.sessaoFlashcards.innerHTML = "";
+    (sess.flashcards || []).forEach(card => {
+      const li = document.createElement("li");
+      li.innerHTML = `<strong>${card.q}</strong> — ${card.a}`;
+      els.sessaoFlashcards.appendChild(li);
+    });
+
+    // controles
+    els.btnVoltar.disabled = idx === 0;
+    els.btnProxima.textContent = (idx === total - 1) ? "Concluir tema" : "Próxima sessão";
+  }
+
+  // salvar/recuperar progresso local
+  function saveProgress() {
+    const k = key(wizard.tema, wizard.nivel);
+    const data = {
+      tema: wizard.tema,
+      nivel: wizard.nivel,
+      plano: wizard.plano,
+      sessoes: wizard.sessoes,
+      atual: wizard.atual
+    };
+    localStorage.setItem(k, JSON.stringify(data));
+  }
+  function loadProgress(tema, nivel) {
+    const k = key(tema, nivel);
+    const raw = localStorage.getItem(k);
+    if (!raw) return null;
+    try { return JSON.parse(raw); } catch { return null; }
+  }
+
+  // eventos
+  els.btnVoltar.addEventListener("click", () => {
+    if (wizard.atual > 0) {
+      wizard.atual -= 1;
+      render();
+      saveProgress();
+    }
+  });
+
+  els.btnSalvar.addEventListener("click", () => {
+    saveProgress();
+    if (els.status) els.status.textContent = "💾 Progresso salvo.";
+    setTimeout(()=>{ if (els.status) els.status.textContent = ""; }, 1500);
+  });
+
+  els.btnProxima.addEventListener("click", async () => {
+    // último passo = concluir
+    if (wizard.atual >= wizard.sessoes.length - 1) {
+      if (els.status) els.status.textContent = "🎉 Tema concluído! Você pode gerar um novo tema ou revisar.";
+      saveProgress();
+      return;
+    }
+    wizard.atual += 1;
+    render();
+    saveProgress();
+  });
+
+  // Hooka o botão GERAR já existente
+  if (els.btnGerar) {
+    els.btnGerar.addEventListener("click", async () => {
+      const tema = (els.temaInput?.value || "").trim();
+      const nivel = (els.nivelSelect?.value || "Padrão").trim();
+      if (!tema) {
+        if (els.status) els.status.textContent = "Informe um tema para começar.";
+        return;
+      }
+
+      // tentar carregar progresso salvo
+      const cached = loadProgress(tema, nivel);
+      if (cached && Array.isArray(cached.sessoes) && cached.sessoes.length) {
+        wizard = cached;
+        els.temaAtivo.textContent = wizard.tema;
+        render();
+        if (els.status) els.status.textContent = "🔁 Retomando seu estudo salvo.";
+        return;
+      }
+
+      // gerar novo plano e sessões
+      els.status && (els.status.textContent = "🔧 Gerando plano de sessões...");
+      const plano = await gerarPlanoDeSessoes(tema, nivel);
+      wizard.tema = tema;
+      wizard.nivel = nivel;
+      wizard.plano = plano;
+      wizard.sessoes = [];
+      wizard.atual = 0;
+
+      els.temaAtivo.textContent = tema;
+      els.container.style.display = "block";
+
+      // gerar sessões de forma sequencial (para evitar sobrecarga de tokens)
+      for (const item of plano) {
+        els.status && (els.status.textContent = `🧠 Gerando sessão ${item.numero}: ${item.nome}...`);
+        // eslint-disable-next-line no-await-in-loop
+        const s = await gerarSessao(tema, nivel, item.numero, item.nome);
+        wizard.sessoes.push(s);
+        saveProgress();
+      }
+
+      els.status && (els.status.textContent = "✅ Sessões prontas!");
+      render();
+    });
+  }
+
+  // Exposição opcional para debug
+  window.LIORA_WIZARD = {
+    getState: () => JSON.parse(JSON.stringify(wizard)),
+    reset: () => {
+      const k = key(wizard.tema, wizard.nivel);
+      localStorage.removeItem(k);
+      wizard.atual = 0;
+      render();
+    }
+  };
+})();
+  
 })();
