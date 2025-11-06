@@ -276,3 +276,31 @@ footer {
   transition: opacity .3s ease;
 }
 footer:hover { opacity:1; }
+
+/* ===== LIORA Wizard (estilo leve) ===== */
+.liora-wizard {max-width: 960px; margin: 24px auto; padding: 12px;}
+.liora-wizard__header{display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:16px; margin-bottom:16px;}
+.liora-wizard__topic h2{margin:4px 0 0 0; font-size:1.5rem;}
+.liora-badge{display:inline-block; font-size:.75rem; padding:4px 8px; border-radius:999px; background:#111; color:#fff;}
+.liora-progress{height:8px; background:#eee; border-radius:999px; overflow:hidden; width:260px;}
+.liora-progress__bar{height:100%; background:#c44b04; width:0%; transition:width .3s ease;}
+.liora-wizard__progress{display:flex; align-items:center; gap:12px;}
+.liora-card{background:#fff; border:1px solid #eee; border-radius:16px; padding:20px; box-shadow:0 2px 12px rgba(0,0,0,.05);}
+.liora-session-title{margin-top:0; margin-bottom:12px; font-size:1.25rem;}
+.liora-block{margin:16px 0;}
+.liora-block h4{margin:.2rem 0 .5rem; font-size:1rem;}
+.liora-quiz-feedback{margin-top:8px; font-size:.95rem;}
+.liora-wizard__footer{display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:16px;}
+.liora-btn{border:none; border-radius:10px; padding:10px 14px; cursor:pointer;}
+.liora-btn.primary{background:#c44b04; color:#fff;}
+.liora-btn.secondary{background:#111; color:#fff;}
+.liora-btn.ghost{background:transparent; color:#111; border:1px solid #ddd;}
+.liora-btn[disabled]{opacity:.5; cursor:not-allowed;}
+/* listas */
+#liora-sessao-ativacao{padding-left:18px;}
+#liora-sessao-flashcards{padding-left:18px;}
+/* quiz */
+.liora-quiz-option{display:block; padding:8px 10px; border:1px solid #eee; border-radius:8px; margin:8px 0; cursor:pointer;}
+.liora-quiz-option input{margin-right:8px;}
+
+
