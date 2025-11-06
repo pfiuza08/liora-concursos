@@ -37,20 +37,16 @@
 
 <main class="max-w-5xl mx-auto px-4 py-8 grid lg:grid-cols-3 gap-6">
 
-  <!-- ===== PAINEL ESQUERDO ===== -->
   <section class="lg:col-span-1 card p-5">
 
     <h2 class="section-title mb-4">Como você deseja estudar?</h2>
 
-    <!-- Escolha de modo -->
     <div class="grid grid-cols-2 gap-2 mb-6">
       <button id="modo-tema" class="btn-secondary selected">Tema</button>
       <button id="modo-upload" class="btn-secondary">Upload</button>
     </div>
 
-    <!-- ========== MODO TEMA (AUTOMÁTICO) ========== -->
     <div id="painel-tema">
-
       <label class="block text-sm font-medium mb-1">Tema de estudo</label>
       <input id="inp-tema" type="text" placeholder="Ex.: Direito Constitucional — Poder Legislativo" class="mb-3">
 
@@ -67,9 +63,7 @@
       <p id="status" class="text-xs text-[var(--muted)] mt-2"></p>
     </div>
 
-    <!-- ========== MODO UPLOAD MATERIAL (AUTOMÁTICO) ========== -->
     <div id="painel-upload" class="hidden">
-
       <label class="block text-sm font-medium mb-1">Envie seu material</label>
 
       <label id="upload-zone" class="upload-zone">
@@ -87,14 +81,12 @@
 
   </section>
 
-  <!-- ===== PAINEL DIREITO ===== -->
   <section class="lg:col-span-2 card p-5">
     <div class="flex items-center justify-between mb-3">
       <h2 class="section-title">Seu plano de estudo</h2>
       <div class="text-sm text-[var(--muted)]" id="ctx"></div>
     </div>
 
-    <!-- ✅ Barra de progresso -->
     <div id="progress-bar" class="hidden w-full bg-gray-300/60 rounded-full h-2 mb-4 overflow-hidden">
       <div id="progress-fill" class="h-2 rounded-full" style="background:var(--brand); width:0%;"></div>
     </div>
@@ -104,17 +96,7 @@
 
 </main>
 
-<footer class="max-w-5xl mx-auto px-4 pb-10 text-xs text-[var(--muted)] text-center">
-  <p>Liora — IA aplicada a estudos. © Intellih</p>
-</footer>
-
-<!-- ✅ ORDEM CERTA DOS SCRIPTS -->
-<script src="/scripts/semantic.js?v=13"></script>
-<script src="/scripts/core.js?v=13"></script>
-<script src="/scripts/plano-simulador.js?v=13"></script>
-<script src="/scripts/concursos-plano.js?v=13"></script>
-
-<!-- LIORA: Container de Sessões por Tema (Wizard) -->
+<!-- ✅ ********** WIZARD DAS SESSÕES ********** -->
 <section id="liora-sessoes" style="display:none;">
   <div class="liora-wizard">
     <header class="liora-wizard__header">
@@ -174,6 +156,16 @@
     </footer>
   </div>
 </section>
-  
+
+<footer class="max-w-5xl mx-auto px-4 pb-10 text-xs text-[var(--muted)] text-center">
+  <p>Liora — IA aplicada a estudos. © Intellih</p>
+</footer>
+
+<!-- ✅ ORDEM CERTA DOS SCRIPTS (Sempre após o WIZARD) -->
+<script src="/scripts/semantic.js?v=13"></script>
+<script src="/scripts/core.js?v=13"></script>
+<script src="/scripts/plano-simulador.js?v=13"></script>
+<script src="/scripts/concursos-plano.js?v=13"></script>
+
 </body>
 </html>
