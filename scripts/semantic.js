@@ -1,86 +1,44 @@
 // ==========================================================
-// 🧠 Liora — Módulo de Processamento Semântico (v13)
-// Extração de tópicos + montagem automática do plano por upload
+// 🧠 Liora — semantic.js (v2)
+// Upload: extrai texto (PDF/TXT) e prepara dados para IA
 // ==========================================================
+console.log("🧩 semantic.js carregado");
 
-console.log("🧩 semantic.js carregado com sucesso");
-
-// ----------------------------------------------------------
-// 🔎 Utilitários
-// ----------------------------------------------------------
-function normalizarTexto(txt) {
-  return (txt || "")
-    .replace(/\u00AD/g, "")          // remove soft hyphen
-    .replace(/[“”‘’]/g, '"')         // padroniza aspas
-    .replace(/\s+/g, " ")            // remove múltiplos espaços
-    .trim();
-}
-
-// ----------------------------------------------------------
-// 🔍 Análise semântica: extrai título, resumo, conceitos e densidade
-// ----------------------------------------------------------
-function analisarSemantica(texto) {
-  const t = normalizarTexto(texto);
-  if (!t || t.length < 40) {
-    return { titulo: "Conteúdo breve", resumo: t, conceitos: [], densidade: "📗 leve" };
+(function () {
+  // ----------------------------------------------------------
+  // 🔧 Utilitários
+  // ----------------------------------------------------------
+  function normalizarTexto(txt) {
+    return (txt || "")
+      .replace(/\u00AD/g, "")           // soft hyphen
+      .replace(/[“”‘’]/g, '"')
+      .replace(/\s+/g, " ")
+      .trim();
   }
 
-  const palavras = t.split(/\s+/).filter(w => w.length > 3);
-  const freq = {};
-
-  for (const w of palavras) {
-    const key = w.toLowerCase().replace(/[.,;:!?()]/g, "");
-    if (!/^(para|como|onde|quando|pois|este|esta|isso|são|estão|mais|menos|cada|porque|todo|toda|tem|que|nos|nas|dos|das|uma|numa|num|pela|pelas|seja|outro|essa|esse|há)$/.test(key)) {
-      freq[key] = (freq[key] || 0) + 1;
-    }
-  }
-
-  const conceitos = Object.entries(freq)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 10)
-    .map(e => e[0]);
-
-  const frases = t.split(/(?<=[.!?])\s+/).filter(s => s.length > 40);
-  const resumo = frases.slice(0, 2).join(" ") + (frases.length > 2 ? " ..." : "");
-
-  const titulo = conceitos.length
-    ? conceitos[0].charAt(0).toUpperCase() + conceitos[0].slice(1)
-    : "Conteúdo analisado";
-
-  const mediaPalavras = palavras.length / (frases.length || 1);
-  let densidade = "📗 leve";
-  if (mediaPalavras > 18 && conceitos.length > 7) densidade = "📙 densa";
-  else if (mediaPalavras > 12) densidade = "📘 média";
-
-  return { titulo, resumo, conceitos, densidade };
-}
-
-// ----------------------------------------------------------
-// 📄 Processa arquivo (TXT ou PDF)
-// ----------------------------------------------------------
-async function processarArquivoUpload(file) {
-  if (!file) throw new Error("Nenhum arquivo recebido.");
-
-  const nome = (file.name || "").toLowerCase();
-  const mime = file.type || "";
-  const isTXT = mime === "text/plain" || /\.txt$/.test(nome);
-  const isPDF = mime === "application/pdf" || /\.pdf$/.test(nome);
-
-  try {
-    let textoExtraido = "";
+  // ----------------------------------------------------------
+  // 🔍 Extração de texto (TXT / PDF)
+  // ----------------------------------------------------------
+  async function extrairTextoDeArquivo(file) {
+    const nome = (file.name || "").toLowerCase();
+    const mime = file.type || "";
+    const isTXT = mime === "text/plain" || /\.txt$/.test(nome);
+    const isPDF = mime === "application/pdf" || /\.pdf$/.test(nome);
 
     if (isTXT) {
-      textoExtraido = await file.text();
+      const texto = await file.text();
+      return normalizarTexto(texto);
     }
 
     if (isPDF) {
       if (!window.pdfjsLib || !pdfjsLib.getDocument) {
-        throw new Error("PDF.js não está disponível. Verifique a inclusão do script.");
+        throw new Error("PDF.js não está disponível.");
       }
-
       const data = await file.arrayBuffer();
-      const pdf = await pdfjsLib.getDocument({ data }).promise;
+      const loadingTask = pdfjsLib.getDocument({ data });
+      const pdf = await loadingTask.promise;
 
+      let texto = "";
       for (let i = 1; i <= pdf.numPages; i++) {
         try {
           const page = await pdf.getPage(i);
@@ -88,88 +46,169 @@ async function processarArquivoUpload(file) {
           const linhas = content.items
             .map(it => (typeof it.str === "string" ? it.str : ""))
             .filter(Boolean);
-          textoExtraido += linhas.join(" ") + "\n";
-        } catch (pgErr) {
-          console.warn(`⚠️ Falha ao ler página ${i}:`, pgErr);
+          texto += linhas.join(" ") + "\n";
+        } catch (e) {
+          console.warn(`⚠️ Falha ao ler página ${i}:`, e);
         }
       }
+      return normalizarTexto(texto);
     }
 
-    const limpo = normalizarTexto(textoExtraido);
-    if (!limpo || limpo.length < 40) {
-      throw new Error("Não foi possível extrair texto do PDF (pode estar escaneado/sem texto).");
-    }
-
-    return montarTopicos(limpo);
-
-  } catch (err) {
-    console.error("processarArquivoUpload erro:", err);
-    return {
-      tipoMsg: `❌ Falha ao ler o arquivo: ${err.message}`,
-      topicos: []
-    };
+    throw new Error("Formato não suportado. Envie .pdf ou .txt");
   }
+
+  // ----------------------------------------------------------
+  // 🧩 Tópicos simples para preview (não é o plano final)
+  // ----------------------------------------------------------
+  function detectarTopicosParaPreview(texto) {
+    // corta por parágrafos/dobras de linha
+    let blocos = texto.split(/\n{2,}/).map(normalizarTexto).filter(b => b.length > 80);
+
+    // se pouco, faz chunking por ~220 palavras
+    if (blocos.length < 6) {
+      const palavras = texto.split(/\s+/);
+      const chunkSize = 220;
+      const chunks = [];
+      for (let i = 0; i < palavras.length; i += chunkSize) {
+        chunks.push(palavras.slice(i, i + chunkSize).join(" "));
+      }
+      blocos = chunks.map(normalizarTexto).filter(b => b.length > 80);
+    }
+
+    // gera rótulos por palavra frequente
+    const stop = /^(de|da|do|das|dos|em|no|na|para|por|com|como|que|uma|um|e|ou|se|os|as|a|o|é|ser|há|quando|onde|entre|mais|menos|muito|pouco|sobre)$/i;
+    return blocos.slice(0, 30).map((b, i) => {
+      const freq = Object.create(null);
+      b.split(/\s+/).forEach(w => {
+        const k = w.toLowerCase().replace(/[.,;:!?()]/g, "");
+        if (k.length > 3 && !stop.test(k)) freq[k] = (freq[k] || 0) + 1;
+      });
+      const termo = Object.entries(freq).sort((a,b)=>b[1]-a[1])[0]?.[0] || `Bloco ${i+1}`;
+      return { titulo: termo[0]?.toUpperCase() + termo.slice(1), resumo: b.slice(0,140) + (b.length>140?"…":""), conceitos: Object.keys(freq).slice(0,5) };
+    });
+  }
+
+  // ----------------------------------------------------------
+  // 🌐 IA para módulos/sessões (mini-aula)
+  // ----------------------------------------------------------
+  async function gerarModulosESessoesPelaIA(texto, nivel = "iniciante") {
+    // Se não houver API, cai no fallback
+    if (!window.OPENAI_API_KEY) return fallbackModulos(texto, nivel);
+
+    const prompt = `
+Você é especialista em design instrucional (Barbara Oakley). Transforme o CONTEÚDO abaixo em um PLANO DE MICRO-LEARNING organizado por MÓDULOS → SESSÕES.
+
+Regras:
+- Decida a quantidade adequada de módulos e sessões (progressão básica → prática).
+- Cada sessão deve conter: "titulo", "resumo" (máx. 140c) e "detalhamento" (mini aula com: objetivo, explicação, exemplos, exercício guiado e checklist).
+- Use JSON válido neste formato, sem comentários e sem texto fora do JSON:
+
+{
+  "modulos": [
+    {
+      "titulo": "Módulo X — Nome",
+      "sessoes": [
+        { "titulo": "Sessão Y — Nome",
+          "resumo": "Descrição breve (máx. 140c).",
+          "detalhamento": "🎯 Objetivo...\\n📘 Explicação...\\n🧠 Exemplos...\\n🧪 Exercício...\\n✅ Checklist..."
+        }
+      ]
+    }
+  ]
 }
 
-// ----------------------------------------------------------
-// 🧠 Quebra o conteúdo em blocos e analisa semanticamente
-// ----------------------------------------------------------
-function montarTopicos(textoCru) {
-  let blocos = textoCru
-    .split(/\n{2,}/)                // tenta dividir por parágrafos
-    .map(normalizarTexto)
-    .filter(b => b.length > 60);
+Nível do aluno: "${nivel}"
+CONTEÚDO:
+"""${texto.slice(0, 120000)}"""
+(Se o conteúdo for maior, assuma continuação similar. Foque em uma cobertura representativa.)
+`.trim();
 
-  if (blocos.length < 3) {
-    const palavras = textoCru.split(/\s+/);
-    const chunkSize = 220;
-    const tmp = [];
-    for (let i = 0; i < palavras.length; i += chunkSize) {
-      tmp.push(palavras.slice(i, i + chunkSize).join(" "));
+    try {
+      const res = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${window.OPENAI_API_KEY}`,
+        },
+        body: JSON.stringify({
+          model: "gpt-4.1-mini",
+          temperature: 0.3,
+          messages: [{ role: "user", content: prompt }],
+        }),
+      });
+
+      const data = await res.json();
+      let content = data?.choices?.[0]?.message?.content || "";
+      content = content.replace(/```json|```/g, "").trim();
+
+      const obj = JSON.parse(content);
+      if (!obj?.modulos || !Array.isArray(obj.modulos)) throw new Error("Formato inválido");
+
+      // Sanitização leve
+      obj.modulos.forEach((m, mi) => {
+        m.titulo = m.titulo || `Módulo ${mi+1}`;
+        m.sessoes = Array.isArray(m.sessoes) ? m.sessoes : [];
+        m.sessoes = m.sessoes.map((s, si) => ({
+          titulo: s?.titulo || `Sessão ${si+1}`,
+          resumo: (s?.resumo || "").slice(0, 140),
+          detalhamento: s?.detalhamento || "🎯 Objetivo...\n📘 Explicação...\n🧠 Exemplos...\n🧪 Exercício...\n✅ Checklist..."
+        }));
+      });
+
+      return obj;
+    } catch (e) {
+      console.warn("⚠️ IA falhou, usando fallback:", e);
+      return fallbackModulos(texto, nivel);
     }
-    blocos = tmp.map(normalizarTexto).filter(b => b.length > 60);
   }
 
-  const topicos = blocos.map(analisarSemantica);
+  // ----------------------------------------------------------
+  // 🛟 Fallback local para módulos/sessões
+  // ----------------------------------------------------------
+  function fallbackModulos(texto, nivel) {
+    // Cria 3 módulos × 3 sessões como estrutura padrão
+    const temas = ["Fundamentos", "Ferramentas e Operações", "Aplicações e Prática"];
+    const mkSess = (idx, base) => ({
+      titulo: `Sessão ${idx} — ${base}`,
+      resumo: `Objetivo prático sobre ${base}.`,
+      detalhamento:
+        `🎯 Objetivo: dominar ${base}.\n` +
+        `📘 Explicação: visão direta do conceito e quando aplicar.\n` +
+        `🧠 Exemplos: 2 casos simples do material.\n` +
+        `🧪 Exercício: reproduza o procedimento com seu próprio exemplo.\n` +
+        `✅ Checklist: [ ] Conceito entendido [ ] Exemplo feito [ ] Exercício concluído`
+    });
 
-  return {
-    tipoMsg: `✅ Arquivo processado — ${topicos.length} tópicos detectados`,
-    topicos
+    const modulos = temas.map((t, i) => ({
+      titulo: `Módulo ${i+1} — ${t}`,
+      sessoes: [mkSess(1, t), mkSess(2, t), mkSess(3, t)]
+    }));
+
+    return { modulos };
+  }
+
+  // ----------------------------------------------------------
+  // 🌐 APIs expostas no window
+  // ----------------------------------------------------------
+  window.processarArquivoUpload = async (file) => {
+    try {
+      const texto = await extrairTextoDeArquivo(file);
+      const topicos = detectarTopicosParaPreview(texto);
+      window.__uploadTextoBruto = texto;
+      return { tipoMsg: `✅ Arquivo lido (${topicos.length} tópicos detectados)`, topicos };
+    } catch (err) {
+      console.error("processarArquivoUpload erro:", err);
+      return { tipoMsg: `❌ Falha ao ler o arquivo: ${err.message}`, topicos: [] };
+    }
   };
-}
 
-// ----------------------------------------------------------
-// 🎯 1 tópico = 1 sessão do plano
-// ----------------------------------------------------------
-async function gerarPlanoPorUpload() {
-  const dados = window.__ultimoUpload;
+  window.generatePlanFromUploadAI = async (nivel = "iniciante") => {
+    const texto = window.__uploadTextoBruto;
+    if (!texto || texto.length < 80) {
+      throw new Error("processarArquivoUpload deve concluir com sucesso antes.");
+    }
+    return await gerarModulosESessoesPelaIA(texto, nivel);
+  };
 
-  if (!dados || !Array.isArray(dados.topicos) || dados.topicos.length === 0) {
-    throw new Error("processarArquivoUpload deve ser chamado antes.");
-  }
-
-  const plano = dados.topicos.map((b, i) => ({
-    titulo: `Sessão ${i + 1} — ${b.titulo || "Tópico"}`,
-    resumo: b.resumo || "Resumo não disponível.",
-    conteudo: (Array.isArray(b.conceitos) && b.conceitos.length)
-      ? `• ${b.conceitos.join("\n• ")}\n\nDensidade cognitiva: ${b.densidade || "📗 leve"}`
-      : `• Conceitos principais\n• Exemplos práticos\n• Exercícios\n\nDensidade cognitiva: ${b.densidade || "📗 leve"}`
-  }));
-
-  return { sessoes: plano.length, plano };
-}
-
-// ----------------------------------------------------------
-// 🌐 Exportação para o escopo global
-// ----------------------------------------------------------
-const _processarUploadInterno = processarArquivoUpload;
-
-window.processarArquivoUpload = async (file) => {
-  const resultado = await _processarUploadInterno(file);
-  window.__ultimoUpload = resultado;       // guarda para uso posterior
-  return resultado;
-};
-
-window.gerarPlanoPorUpload = async () => gerarPlanoPorUpload();
-
-console.log("✅ semantic.js pronto e integrado ao escopo global");
+  console.log("✅ semantic.js pronto");
+})();
