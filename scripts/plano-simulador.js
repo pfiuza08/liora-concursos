@@ -59,29 +59,38 @@
       throw new Error('Parâmetros inválidos (tema, nivel)');
     }
 
-    const prompt = `
-Você é especialista em microlearning (Barbara Oakley).
+   const prompt = `
+Você é especialista em microlearning (Barbara Oakley) e design instrucional.
 
-Decida quantas sessões são necessárias para o tema e gere o plano.
-RETORNE APENAS JSON VÁLIDO (sem markdown, sem texto extra) neste formato:
+Crie um plano de estudo COMPLETO e PROGRESSIVO para o tema abaixo.
+Antes de gerar o plano, identifique os PRINCIPAIS SUBTÓPICOS.
+
+REGRAS IMPORTANTES:
+
+1. Cada sessão deve tratar um subtópico específico (não repita temas).
+2. Cada sessão deve ter conteúdo diferente e aprofundamento progressivo.
+3. Não use "conceitos principais" repetidamente.
+4. O conteúdo deve ter bullets específicos e aplicáveis.
+
+FORMATO OBRIGATÓRIO DA RESPOSTA (somente JSON válido):
 
 {
-  "sessoes": <numero_inteiro>,
+  "sessoes": <numero>,
   "plano": [
     {
-      "titulo": "Sessão X — título curto",
-      "resumo": "Objetivo da sessão (1 parágrafo).",
-      "conteudo": "• item 1\\n• item 2\\n• item 3"
+      "titulo": "Sessão X — Nome do Subtópico",
+      "resumo": "Objetivo da sessão (1 parágrafo)",
+      "conteudo": "• bullet 1\\n• bullet 2\\n• bullet 3"
     }
   ]
 }
 
-Regras:
-- Use as chaves exatamente: "sessoes", "plano", "titulo", "resumo", "conteudo".
-- Se algum conteúdo não for claro, preencha com três bullets padrão.
-- Tema: "${tema}"
-- Nível do aluno: "${nivel}"
+Tema: "${tema}"
+Nível do aluno: "${nivel}"
+
+Agora produza o JSON.
 `.trim();
+
 
     // 1) OpenAI direta (se houver chave)
     if (window.OPENAI_API_KEY) {
