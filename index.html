@@ -100,14 +100,22 @@
 
   </section>
 
-  <!-- ===== PAINEL DIREITO ===== -->
-  <section class="lg:col-span-2 card p-5">
-    <div class="flex items-center justify-between mb-3">
-      <h2 class="section-title">Seu plano de estudo</h2>
-      <div class="text-sm text-[var(--muted)]" id="ctx"></div>
-    </div>
-    <div id="plano" class="space-y-3"></div>
-  </section>
+<!-- ===== PAINEL DIREITO ===== -->
+<section class="lg:col-span-2 card p-5">
+  <div class="flex items-center justify-between mb-3">
+    <h2 class="section-title">Seu plano de estudo</h2>
+    <div class="text-sm text-[var(--muted)]" id="ctx"></div>
+  </div>
+
+  <!-- ✅ Barra de progresso -->
+  <div id="progress-bar" class="hidden w-full bg-gray-300/60 rounded-full h-2 mb-4 overflow-hidden">
+    <div id="progress-fill" class="h-2 rounded-full" style="background:var(--brand); width:0%;"></div>
+  </div>
+
+  <!-- Conteúdo do plano -->
+  <div id="plano" class="space-y-3"></div>
+</section>
+
 
 </main>
 
