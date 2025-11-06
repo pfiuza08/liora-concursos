@@ -1,215 +1,191 @@
-// /scripts/plano-simulador.js — v15 (subtópicos garantidos + fallback específico)
+// /scripts/plano-simulador.js (v16 — com subtópicos + sessões + conteúdo compacto)
 (function () {
   const LOG = (...a) => console.log("[plano-simulador]", ...a);
 
-  // =======================
-  // 🔧 Utils
-  // =======================
-  const isNonEmptyStr = (s) => typeof s === "string" && s.trim().length > 0;
+  // ==========================================================
+  // 🔥 Função principal exposta ao core
+  // ==========================================================
+  window.generatePlanByTheme = async function (tema, nivel, sessoesUsuario) {
+    LOG("📥 parâmetros recebidos:", { tema, nivel, sessoesUsuario });
 
-  // Remove cercas e tenta extrair JSON válido ({...} ou {...} com ruído)
-  function extractJSONObject(text) {
-    if (!text) return null;
-    let t = String(text).replace(/```json|```/g, "").trim();
-    try { return JSON.parse(t); } catch {}
-    const first = t.indexOf("{"), last = t.lastIndexOf("}");
-    if (first === -1 || last === -1 || last <= first) return null;
-    try { return JSON.parse(t.slice(first, last + 1)); } catch { return null; }
-  }
+    const sess = parseInt(sessoesUsuario) || null;
 
-  // Heurística: conteúdo “genérico demais”?
-  function looksGeneric(content) {
-    const c = String(content || "").toLowerCase();
-    return (
-      c.includes("conceitos principais") ||
-      c.includes("aplicação prática") ||
-      c.includes("exercícios") && c.split("\n").length <= 4
-    );
-  }
-
-  // Constrói subtópicos determinísticos a partir do tema e nível
-  function buildSubtopics(theme, level, wanted) {
-    const base = [
-      "Fundamentos e Terminologia de {TEMA}",
-      "Arquiteturas/Modelos em {TEMA}",
-      "Dados, Pré-processamento e Qualidade em {TEMA}",
-      "Técnicas/Procedimentos essenciais em {TEMA}",
-      "Ferramentas/Frameworks para {TEMA}",
-      "Boas práticas e Erros comuns em {TEMA}",
-      "Aplicações no mundo real de {TEMA}",
-      "Métricas, Avaliação e Iteração em {TEMA}",
-      "Ética, Riscos e Conformidade em {TEMA}",
-      "Projeto Guiado: {TEMA} end-to-end",
-    ];
-
-    // Ajusta quantidade sugerida por nível caso "wanted" não seja informado
-    const suggested =
-      level === "avancado" ? 6 :
-      level === "intermediario" ? 7 :
-      8;
-
-    const n = Math.max(3, Math.min(wanted || suggested, base.length));
-    const out = [];
-    for (let i = 0; i < n; i++) {
-      out.push(base[i].replaceAll("{TEMA}", theme));
-    }
-    return out;
-  }
-
-  // Gera bullets específicos para um subtópico (sem frases genéricas)
-  function bulletsFor(subtopic, theme, level) {
-    const lvlHint =
-      level === "avancado" ? "aprofundamento técnico" :
-      level === "intermediario" ? "aplicação prática orientada" :
-      "compreensão básica com prática guiada";
-
-    return [
-      `Definição e escopo de **${subtopic}** (${lvlHint}).`,
-      `Exemplo concreto: aplique ${subtopic.toLowerCase()} em um mini-caso relacionado a **${theme}**.`,
-      `Checklist de verificação rápida para ${subtopic.toLowerCase()}.`,
-      `Tarefa: produzir um pequeno artefato (nota, código, mapa mental) sobre **${subtopic}**.`
-    ].map(s => "• " + s).join("\n");
-  }
-
-  // Normaliza uma sessão recebida da IA; se genérica, substitui bullets
-  function normalizeSession(item, idx, theme, level, fallbackTitle) {
-    const titulo = (item?.titulo && String(item.titulo)) || fallbackTitle || `Sessão ${idx + 1} — ${theme}`;
-    const resumo = (item?.resumo && String(item.resumo)) || `Objetivo da sessão ${idx + 1} sobre ${theme} (nível ${level}).`;
-
-    let conteudo = item?.conteudo;
-    if (Array.isArray(conteudo)) {
-      conteudo = conteudo.map(x => `• ${String(x).trim()}`).join("\n");
-    }
-
-    if (!isNonEmptyStr(conteudo) || looksGeneric(conteudo)) {
-      // Extrai subtítulo (após “—”) para gerar bullets específicos
-      const afterDash = titulo.split("—")[1]?.trim() || theme;
-      conteudo = bulletsFor(afterDash, theme, level);
-    }
-
-    return { titulo: titulo.trim(), resumo: resumo.trim(), conteudo: String(conteudo).trim() };
-  }
-
-  // Deduplica títulos; se repetidos, força nome do subtópico da lista
-  function dedupeAndEnforceSubtopics(plan, subtopics, theme, level) {
-    const seen = new Set();
-    return plan.map((s, i) => {
-      let titulo = s.titulo || `Sessão ${i + 1} — ${theme}`;
-      const dash = titulo.indexOf("—");
-      const prefix = dash !== -1 ? titulo.slice(0, dash).trim() : `Sessão ${i + 1}`;
-      let suffix = dash !== -1 ? titulo.slice(dash + 1).trim() : subtopics[i] || theme;
-
-      if (seen.has(titulo)) {
-        suffix = subtopics[i] || `${suffix} (${i + 1})`;
-        titulo = `${prefix} — ${suffix}`;
-      }
-      seen.add(titulo);
-
-      // Regera conteúdo se ficou genérico
-      const fixed = normalizeSession({ ...s, titulo }, i, theme, level, titulo);
-      return fixed;
-    });
-  }
-
-  // Monta um plano completo, garantindo especificidade
-  function buildSpecificPlanFromSubtopics(theme, level, subtopics) {
-    const plano = subtopics.map((st, i) => {
-      const titulo = `Sessão ${i + 1} — ${st}`;
-      const resumo = `Nesta sessão, você dominará o subtópico **${st}**, conectando-o ao tema **${theme}** no nível ${level}.`;
-      const conteudo = bulletsFor(st, theme, level);
-      return { titulo, resumo, conteudo };
-    });
-    return { sessoes: plano.length, plano };
-  }
-
-  // =======================
-  // 🚀 IA — Geração Automática
-  // =======================
-  window.generatePlanByTheme = async function (tema, nivel) {
-    LOG("🚀 Geração por TEMA (auto sessões):", { tema, nivel });
-
-    // 1) Se não houver API ou se der erro, usar gerador local específico
-    if (!window.OPENAI_API_KEY) {
-      LOG("⚠️ Sem OPENAI_API_KEY — usando gerador local específico.");
-      const subtopics = buildSubtopics(tema, nivel);
-      return buildSpecificPlanFromSubtopics(tema, nivel, subtopics);
-    }
-
-    // 2) Tentar IA com prompt que pede subtópicos + plano
     const prompt = `
-Você é especialista em microlearning (Barbara Oakley) e design instrucional.
-TAREFA: crie um plano PROGRESSIVO baseado em **subtópicos distintos** do tema.
+Você é especialista em design instrucional e microlearning (Método Barbara Oakley).
 
-Etapas:
-1) Liste os subtópicos (ordem pedagógica do básico ao avançado).
-2) Cada subtópico vira uma sessão com bullets **concretos e acionáveis** (evite "conceitos principais", "exercícios" genéricos).
+OBJETIVO: criar um **plano de estudo progressivo**, dividido em sessões.  
+Cada sessão deve abordar **um subconjunto diferente do tema**, sem repetição.
 
-RETORNE APENAS JSON VÁLIDO:
+---
+REGRAS
+- Identifique os SUBTÓPICOS do tema antes de gerar o plano.
+- Cada sessão deve ter apenas **1 assunto principal**.
+- O conteúdo deve ser CURTO e objetivo (não estourar interface).
+- Adaptar profundidade ao nível do aluno: ${nivel}.
+- Se o aluno não informar quantidade de sessões, você define a melhor quantidade.
+
+---
+FORMATO OBRIGATÓRIO (somente JSON válido, sem texto fora):
+
 {
   "sessoes": <numero>,
   "plano": [
-    { "titulo": "Sessão X — Nome do Subtópico",
-      "resumo": "Objetivo da sessão (1 parágrafo).",
+    {
+      "titulo": "Sessão X — Nome do subtópico",
+      "resumo": "Objetivo da sessão (máx. 140 caracteres)",
       "conteudo": "• bullet 1\\n• bullet 2\\n• bullet 3"
     }
   ]
 }
 
 Tema: "${tema}"
-Nível: "${nivel}"
+Quantidade sugerida de sessões: ${sess || "a IA decide a melhor quantidade"}
+
+Agora gere o JSON.
 `.trim();
 
+
+    // ==========================================================
+    // 1) Tentativa — IA via OpenAI direto
+    // ==========================================================
+    if (window.OPENAI_API_KEY) {
+      try {
+        LOG("🔗 Chamando OpenAI diretamente...");
+
+        const res = await fetch("https://api.openai.com/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${window.OPENAI_API_KEY}`,
+          },
+          body: JSON.stringify({
+            model: "gpt-4.1-mini",
+            temperature: 0.35,
+            messages: [{ role: "user", content: prompt }],
+          }),
+        });
+
+        const data = await res.json();
+        LOG("📩 IA respondeu:", data);
+
+        let json = data.choices?.[0]?.message?.content?.trim();
+        if (!json) throw new Error("IA retornou vazio.");
+
+        json = json.replace(/```json|```/g, "").trim();
+
+        const parsed = JSON.parse(json);
+        return normalizePlan(parsed, tema, nivel);
+
+      } catch (err) {
+        LOG("❌ erro OpenAI:", err);
+      }
+    }
+
+    // ==========================================================
+    // 2) Backend opcional (/api/plan)
+    // ==========================================================
     try {
-      LOG("🌐 Chamando OpenAI…");
-      const res = await fetch("https://api.openai.com/v1/chat/completions", {
+      LOG("🌐 Tentando backend /api/plan...");
+      const req = await fetch("/api/plan", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${window.OPENAI_API_KEY}`,
-        },
-        body: JSON.stringify({
-          model: "gpt-4.1-mini",
-          temperature: 0.15, // menos aleatório = mais obediente
-          messages: [{ role: "user", content: prompt }],
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tema, nivel, sessoes: sess }),
       });
 
-      const data = await res.json();
-      const content = data?.choices?.[0]?.message?.content || "";
-      const obj = extractJSONObject(content);
+      const result = await req.json();
 
-      if (!obj || !Array.isArray(obj.plano) || !Number(obj.sessoes)) {
-        throw new Error("Resposta da IA fora do formato esperado.");
+      if (result?.plano && Array.isArray(result.plano)) {
+        return normalizePlan({ sessoes: result.plano.length, plano: result.plano }, tema, nivel);
       }
-
-      // 3) Pós-processamento: garantir subtópicos únicos e bullets específicos
-      let plan = obj.plano.map((s, i) => normalizeSession(s, i, tema, nivel, s?.titulo));
-      const wanted = Number(obj.sessoes) || plan.length;
-
-      // Se títulos repetidos, força subtópicos determinísticos
-      const deterministicSubtopics = buildSubtopics(tema, nivel, wanted);
-      plan = dedupeAndEnforceSubtopics(plan, deterministicSubtopics, tema, nivel);
-
-      // Ajusta contagem
-      if (plan.length > wanted) plan = plan.slice(0, wanted);
-      if (plan.length < wanted) {
-        const missing = deterministicSubtopics.slice(plan.length);
-        plan = plan.concat(
-          missing.map((st, i) => {
-            const idx = plan.length + i;
-            return normalizeSession({ titulo: `Sessão ${idx + 1} — ${st}` }, idx, tema, nivel);
-          })
-        );
-      }
-
-      return { sessoes: plan.length, plano: plan };
-
-    } catch (e) {
-      LOG("❌ Falha IA, usando gerador local específico. Motivo:", e.message);
-      const subtopics = buildSubtopics(tema, nivel);
-      return buildSpecificPlanFromSubtopics(tema, nivel, subtopics);
+    } catch (err) {
+      LOG("⚠️ erro backend:", err);
     }
+
+    // ==========================================================
+    // 3) Fallback — SEM IA
+    // ==========================================================
+    LOG("⚠️ Fallback local");
+    return fallbackLocal(tema, nivel, sess || 6);
   };
 
-  LOG("✅ plano-simulador.js carregado (v15)");
+
+  // ==========================================================
+  // 🛠 Normalização — garante que cada sessão tenha campos válidos
+  // ==========================================================
+  function normalizePlan(data, tema, nivel) {
+    const sessoes = data?.sessoes || data?.plano?.length || 5;
+    const lista = Array.isArray(data.plano) ? data.plano : [];
+
+    return lista.slice(0, sessoes).map((item, i) => ({
+      titulo: sanitizeTitle(item.titulo, tema, i + 1),
+      resumo: shortText(item?.resumo, `Objetivo: aprender ${tema}.`),
+      conteudo: shortBullets(item?.conteudo, tema, nivel),
+    }));
+  }
+
+  function sanitizeTitle(titulo, tema, index) {
+    if (!titulo || typeof titulo !== "string") return `Sessão ${index} — ${tema}`;
+    return titulo.length > 60 ? titulo.slice(0, 58) + "…" : titulo;
+  }
+
+  function shortText(texto, fallback) {
+    if (!texto) return fallback;
+    return texto.length > 140 ? texto.slice(0, 137) + "..." : texto;
+  }
+
+  function shortBullets(conteudo, tema, nivel) {
+    if (!conteudo) {
+      return bulletsFor("Subtópico", tema, nivel);
+    }
+
+    // mantém só os 3 primeiros bullets para evitar estourar o card
+    const linhas = conteudo.split(/\n|•/).map(t => t.trim()).filter(Boolean).slice(0, 3);
+    return "• " + linhas.join("\n• ");
+  }
+
+
+  // ==========================================================
+  // ✅ Fallback Local (offline)
+  // ==========================================================
+  function fallbackLocal(tema, nivel, sessoes) {
+    const dens =
+      nivel === "avancado" ? "📙" :
+      nivel === "intermediario" ? "📘" : "📗";
+
+    const topicos = [
+      "Fundamentos",
+      "Aplicações",
+      "Ferramentas",
+      "Exemplos reais",
+      "Projeto guiado",
+      "Revisão prática",
+      "Avaliação"
+    ];
+
+    return Array.from({ length: sessoes }, (_, i) => ({
+      titulo: `Sessão ${i + 1} — ${topicos[i] || tema}`,
+      resumo: `Aprender ${topicos[i]} do tema ${tema}.`,
+      conteudo: bulletsFor(topicos[i] || tema, tema, nivel) + `\n${dens}`,
+    }));
+  }
+
+
+  // ==========================================================
+  // 📌 Bullets curtos para qualquer sessão
+  // ==========================================================
+  function bulletsFor(subtopic, theme, level) {
+    const depth =
+      level === "avancado" ? "aprofundamento" :
+      level === "intermediario" ? "aplicação prática" :
+      "compreensão básica";
+
+    return [
+      `• O que é ${subtopic}. (${depth})`,
+      `• Exemplo aplicado em ${theme}`,
+      `• Mini tarefa: criar um resumo de 3 frases`
+    ].join("\n");
+  }
+
+
+  LOG("✅ plano-simulador.js carregado com sucesso");
 })();
