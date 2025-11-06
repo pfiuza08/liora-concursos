@@ -1,22 +1,23 @@
 // ==========================================================
-// 🧠 LIORA — CORE PRINCIPAL (v14)
-// Tema e Upload AUTOMÁTICOS — IA decide número de sessões
-// Exibe apenas TÍTULO + RESUMO (detalhamento via modal)
+// 🧠 LIORA — CORE PRINCIPAL (v15)
+// Mantém: tema/upload, progress bar, preview, tema claro/escuro
+// Novo: Upload → módulos (cards). Sessões abrem MINI-AULA em modal.
 // ==========================================================
 (function () {
   console.log("🔵 Inicializando Liora Core...");
 
   document.addEventListener("DOMContentLoaded", () => {
     const els = {
+      // Tema
       inpTema: document.getElementById("inp-tema"),
       selNivel: document.getElementById("sel-nivel"),
       btnGerar: document.getElementById("btn-gerar"),
       status: document.getElementById("status"),
-
+      // Upload
       inpFile: document.getElementById("inp-file"),
       btnGerarUpload: document.getElementById("btn-gerar-upload"),
       statusUpload: document.getElementById("status-upload"),
-
+      // UI
       plano: document.getElementById("plano"),
       ctx: document.getElementById("ctx"),
       painelTema: document.getElementById("painel-tema"),
@@ -24,61 +25,51 @@
       modoTema: document.getElementById("modo-tema"),
       modoUpload: document.getElementById("modo-upload"),
       themeBtn: document.getElementById("btn-theme"),
-
+      // progress
       progressBar: document.getElementById("progress-bar"),
       progressFill: document.getElementById("progress-fill"),
     };
 
-    // ==========================================================
-    // 🌗 Tema claro/escuro
-    // ==========================================================
+    // ===== Tema claro/escuro
     function aplicarTema(mode) {
       document.documentElement.classList.toggle("light", mode === "light");
       document.body.classList.toggle("light", mode === "light");
       localStorage.setItem("liora_theme", mode);
       els.themeBtn.textContent = mode === "light" ? "☀️" : "🌙";
     }
-
     els.themeBtn?.addEventListener("click", () => {
       const atual = localStorage.getItem("liora_theme") || "dark";
       aplicarTema(atual === "light" ? "dark" : "light");
     });
-
     aplicarTema(localStorage.getItem("liora_theme") || "dark");
 
-    // ==========================================================
-    // 📊 Barra de progresso
-    // ==========================================================
+    // ===== Progress bar
     function iniciarProgresso() {
+      if (!els.progressBar || !els.progressFill) return null;
       els.progressFill.style.width = "0%";
       els.progressBar.classList.remove("hidden");
       let progresso = 0;
-
       const intervalo = setInterval(() => {
         progresso += Math.random() * 15;
         if (progresso > 90) progresso = 90;
         els.progressFill.style.width = `${progresso}%`;
       }, 350);
-
       return intervalo;
     }
-
     function finalizarProgresso(intervalo) {
+      if (!intervalo) return;
       clearInterval(intervalo);
       els.progressFill.style.width = "100%";
       setTimeout(() => els.progressBar.classList.add("hidden"), 600);
     }
 
-    // ==========================================================
-    // 🔄 Alternância Tema / Upload
-    // ==========================================================
+    // ===== Alternância Tema/Upload
     els.modoTema?.addEventListener("click", () => {
       els.painelTema.classList.remove("hidden");
       els.painelUpload.classList.add("hidden");
       els.modoTema.classList.add("selected");
       els.modoUpload.classList.remove("selected");
     });
-
     els.modoUpload?.addEventListener("click", () => {
       els.painelUpload.classList.remove("hidden");
       els.painelTema.classList.add("hidden");
@@ -86,32 +77,21 @@
       els.modoTema.classList.remove("selected");
     });
 
-    // ==========================================================
-    // 📂 UPLOAD — leitura + preview + plano
-    // ==========================================================
+    // ===== Upload — leitura + preview
     els.inpFile?.addEventListener("change", async (e) => {
       const file = e.target.files[0];
       if (!file) return;
-
       els.statusUpload.textContent = "⏳ Processando arquivo...";
-
       if (!window.processarArquivoUpload) {
         alert("❌ Módulo semantic.js não está pronto.");
         return;
       }
-
       try {
         const resultado = await window.processarArquivoUpload(file);
         els.statusUpload.textContent = resultado.tipoMsg;
-
         const previewItems = (resultado.topicos || [])
           .slice(0, 12)
-          .map((t) =>
-            typeof t === "string"
-              ? t
-              : `${t?.titulo || "Tópico"} — ${Array.isArray(t?.conceitos) ? t.conceitos.slice(0, 3).join(", ") : ""}`
-          );
-
+          .map(t => `${t?.titulo || "Tópico"} — ${(t?.conceitos||[]).slice(0,2).join(", ")}`);
         mostrarPreview(previewItems);
       } catch (err) {
         console.error(err);
@@ -121,11 +101,9 @@
 
     function mostrarPreview(lista) {
       document.querySelector("#preview-modal")?.remove();
-
       const modal = document.createElement("div");
       modal.id = "preview-modal";
       modal.className = "preview-modal-overlay";
-
       modal.innerHTML = `
         <div class="preview-modal">
           <h3>📋 Tópicos detectados</h3>
@@ -135,29 +113,27 @@
           <div class="text-right mt-4">
             <button class="chip" id="fechar-preview">Fechar</button>
           </div>
-        </div>
-      `;
-
+        </div>`;
       document.body.appendChild(modal);
       document.getElementById("fechar-preview").onclick = () => modal.remove();
     }
 
-    // ==========================================================
-    // 🚀 Gerar plano (UPLOAD)
-    // ==========================================================
+    // ===== Gerar plano (UPLOAD → IA em MÓDULOS)
     els.btnGerarUpload?.addEventListener("click", async () => {
-      console.log("▶️ Botão Gerar (UPLOAD)");
-
+      console.log("▶️ Gerar plano (UPLOAD → MÓDULOS)");
       const loading = iniciarProgresso();
-
       try {
-        const out = await window.gerarPlanoPorUpload();
-        const { sessoes, plano } = normalizeOutput(out);
-
+        if (!window.generatePlanFromUploadAI) {
+          alert("❌ Função generatePlanFromUploadAI indisponível.");
+          finalizarProgresso(loading);
+          return;
+        }
+        const nivel = els.selNivel?.value || "iniciante"; // usa nível atual como dica
+        const result = await window.generatePlanFromUploadAI(nivel); // {modulos:[{titulo,sessoes:[]}]}
         finalizarProgresso(loading);
-        els.ctx.textContent = `📘 ${sessoes} sessões geradas automaticamente — com base no material enviado.`;
 
-        renderizarPlano(plano);
+        els.ctx.textContent = `📘 Plano por módulos (upload) — ${result.modulos?.length || 0} módulos.`;
+        renderizarModulos(result.modulos || []);
       } catch (err) {
         finalizarProgresso(loading);
         console.error(err);
@@ -165,27 +141,22 @@
       }
     });
 
-    // ==========================================================
-    // 🚀 Gerar plano (TEMA)
-    // ==========================================================
+    // ===== Gerar plano (TEMA → sessões simples)
     els.btnGerar?.addEventListener("click", async () => {
       console.log("▶️ Botão Gerar (TEMA)");
-
       const tema = els.inpTema.value.trim();
       const nivel = els.selNivel.value;
       if (!tema) return alert("Digite um tema.");
-
+      if (!window.generatePlanByTheme) {
+        alert("❌ Módulo de plano por tema não está pronto.");
+        return;
+      }
       const loading = iniciarProgresso();
-
       try {
-        const out = await window.generatePlanByTheme(tema, nivel);
-        const { sessoes, plano } = normalizeOutput(out);
-
+        const out = await window.generatePlanByTheme(tema, nivel); // {sessoes, plano}
         finalizarProgresso(loading);
-        els.ctx.textContent =
-          `📘 ${sessoes} sessões geradas automaticamente — baseado no nível ${nivel} e na complexidade do tema.`;
-
-        renderizarPlano(plano);
+        els.ctx.textContent = `📘 ${out.sessoes || out.plano?.length || 0} sessões (tema).`;
+        renderizarSessoes(out.plano || []);
       } catch (err) {
         finalizarProgresso(loading);
         console.error(err);
@@ -193,72 +164,98 @@
       }
     });
 
-    // ==========================================================
-    // 🔧 Normaliza output
-    // ==========================================================
-    function normalizeOutput(out) {
-      if (Array.isArray(out)) return { sessoes: out.length, plano: out };
-      const sessoes = Number(out?.sessoes || out?.plano?.length || 0);
-      const plano = Array.isArray(out?.plano) ? out.plano : [];
-      return { sessoes, plano };
+    // ===== Renderização — MÓDULOS (cards)
+    function renderizarModulos(modulos) {
+      els.plano.innerHTML = "";
+      if (!Array.isArray(modulos) || !modulos.length) {
+        els.plano.innerHTML = `<p class="text-[var(--muted)]">Nenhum módulo gerado.</p>`;
+        return;
+      }
+
+      modulos.forEach((mod, midx) => {
+        const card = document.createElement("div");
+        card.className = "card p-4 mb-4";
+        card.innerHTML = `
+          <h3 class="section-title mb-2">${mod.titulo || `Módulo ${midx+1}`}</h3>
+          <div class="space-y-2" id="mod-${midx}"></div>
+        `;
+        const lista = card.querySelector(`#mod-${midx}`);
+
+        (mod.sessoes || []).forEach((sess, sidx) => {
+          const row = document.createElement("div");
+          row.className = "session-card";
+          row.innerHTML = `
+            <div class="flex items-start justify-between gap-3">
+              <div>
+                <div class="font-semibold">${sess.titulo || `Sessão ${sidx+1}`}</div>
+                <div class="text-sm text-[var(--muted)]">${(sess.resumo || "").slice(0,140)}</div>
+              </div>
+              <button class="chip btn-detalhar" data-mid="${midx}" data-sid="${sidx}">Ver detalhes →</button>
+            </div>
+          `;
+          lista.appendChild(row);
+        });
+
+        els.plano.appendChild(card);
+      });
+
+      // bind botões
+      els.plano.querySelectorAll(".btn-detalhar").forEach(btn => {
+        btn.addEventListener("click", (e) => {
+          const mid = Number(e.currentTarget.dataset.mid);
+          const sid = Number(e.currentTarget.dataset.sid);
+          const sessao = modulos?.[mid]?.sessoes?.[sid];
+          abrirDetalhamento(sessao);
+        });
+      });
     }
 
-    // ==========================================================
-    // ✅ Renderização do Plano (TÍTULO + RESUMO + DETALHES)
-    // ==========================================================
-    function renderizarPlano(plano) {
+    // ===== Renderização — SESSÕES (tema)
+    function renderizarSessoes(plano) {
       els.plano.innerHTML = "";
-
+      if (!Array.isArray(plano) || !plano.length) {
+        els.plano.innerHTML = `<p class="text-[var(--muted)]">Nenhuma sessão gerada.</p>`;
+        return;
+      }
       plano.forEach((sessao, index) => {
         const div = document.createElement("div");
         div.className = "session-card";
-
         div.innerHTML = `
-          <h3>${sessao.titulo || "Sessão"}</h3>
-          <p class="text-[var(--muted)] text-sm mb-2">${sessao.resumo || "Resumo não disponível."}</p>
-
-          <button class="chip btn-detalhar" data-id="${index}">
-            Ver detalhes →
-          </button>
+          <h3>${sessao.titulo || `Sessão ${index+1}`}</h3>
+          <p class="text-[var(--muted)] text-sm mb-2">${(sessao.resumo || "").slice(0,140)}</p>
+          <button class="chip btn-detalhar" data-id="${index}">Ver detalhes →</button>
         `;
-
         els.plano.appendChild(div);
       });
 
-      document.querySelectorAll(".btn-detalhar").forEach(btn => {
+      els.plano.querySelectorAll(".btn-detalhar").forEach(btn => {
         btn.addEventListener("click", (e) => {
-          const id = e.target.dataset.id;
+          const id = Number(e.currentTarget.dataset.id);
           abrirDetalhamento(plano[id]);
         });
       });
     }
 
-    // ==========================================================
-    // 🪟 Modal com detalhamento da sessão
-    // ==========================================================
+    // ===== Modal — Detalhamento (mini-aula)
     function abrirDetalhamento(sessao) {
       document.querySelector("#modal-detalhamento")?.remove();
-
       const modal = document.createElement("div");
       modal.className = "preview-modal-overlay";
       modal.id = "modal-detalhamento";
-
       modal.innerHTML = `
         <div class="preview-modal">
-          <h3>${sessao.titulo}</h3>
-          <pre>${sessao.detalhamento || "Sem detalhamento disponível."}</pre>
+          <h3>${sessao?.titulo || "Sessão"}</h3>
+          <pre>${sessao?.detalhamento || "🎯 Objetivo...\n📘 Explicação...\n🧠 Exemplos...\n🧪 Exercício...\n✅ Checklist..."}</pre>
           <div class="text-right mt-4">
             <button class="chip" id="fechar-detalhe">Fechar</button>
           </div>
-        </div>
-      `;
-
+        </div>`;
       document.body.appendChild(modal);
       document.getElementById("fechar-detalhe").onclick = () => modal.remove();
     }
 
     // Debug
-    window.LioraCore = { els, renderizarPlano };
+    window.LioraCore = { els, renderizarModulos, renderizarSessoes };
 
     console.log("🟢 core.js carregado com sucesso");
   });
