@@ -81,81 +81,24 @@
 
   </section>
 
-  <section class="lg:col-span-2 card p-5">
-    <div class="flex items-center justify-between mb-3">
-      <h2 class="section-title">Seu plano de estudo</h2>
-      <div class="text-sm text-[var(--muted)]" id="ctx"></div>
-    </div>
+ <!-- ===== PAINEL DIREITO ===== -->
+<section class="lg:col-span-2 card p-5">
+  <div class="flex items-center justify-between mb-3">
+    <h2 class="section-title">Seu plano de estudo</h2>
+    <div class="text-sm text-[var(--muted)]" id="ctx"></div>
+  </div>
 
-    <div id="progress-bar" class="hidden w-full bg-gray-300/60 rounded-full h-2 mb-4 overflow-hidden">
-      <div id="progress-fill" class="h-2 rounded-full" style="background:var(--brand); width:0%;"></div>
-    </div>
+  <!-- container que recebe listas de sessões -->
+  <div id="plano" class="space-y-3"></div>
 
-    <div id="plano" class="space-y-3"></div>
-  </section>
+  <!-- ✅ COLE AQUI o wizard -->
+  <section id="liora-sessoes" class="hidden"></section>
+</section>
 
 </main>
 
 <!-- ✅ ********** WIZARD DAS SESSÕES ********** -->
-<section id="liora-sessoes">
-  <div class="liora-wizard">
-    <header class="liora-wizard__header">
-      <div class="liora-wizard__topic">
-        <span class="liora-badge">Tema</span>
-        <h2 id="liora-tema-ativo">—</h2>
-      </div>
-      <div class="liora-wizard__progress">
-        <div class="liora-progress">
-          <div class="liora-progress__bar" id="liora-progress-bar" style="width:0%"></div>
-        </div>
-        <span id="liora-progress-label">Sessão 0/0</span>
-      </div>
-    </header>
 
-    <article class="liora-card" id="liora-sessao-card">
-      <h3 class="liora-session-title" id="liora-sessao-titulo">—</h3>
-
-      <div class="liora-block">
-        <h4>🎯 Objetivo da sessão</h4>
-        <p id="liora-sessao-objetivo">—</p>
-      </div>
-
-      <div class="liora-block">
-        <h4>🧠 Conteúdo Essencial</h4>
-        <div id="liora-sessao-conteudo"></div>
-      </div>
-
-      <div class="liora-block">
-        <h4>✨ Analogias</h4>
-        <div id="liora-sessao-analogias"></div>
-      </div>
-
-      <div class="liora-block">
-        <h4>🔎 Ativação</h4>
-        <ol id="liora-sessao-ativacao"></ol>
-      </div>
-
-      <div class="liora-block">
-        <h4>✅ Teste rápido</h4>
-        <div id="liora-sessao-quiz"></div>
-        <div id="liora-sessao-quiz-feedback" class="liora-quiz-feedback"></div>
-      </div>
-
-      <div class="liora-block">
-        <h4>🧠 Flashcards</h4>
-        <ul id="liora-sessao-flashcards"></ul>
-      </div>
-    </article>
-
-    <footer class="liora-wizard__footer">
-      <button id="liora-btn-voltar" class="liora-btn ghost">Voltar</button>
-      <div class="liora-wizard__footer-right">
-        <button id="liora-btn-salvar" class="liora-btn secondary">Salvar progresso</button>
-        <button id="liora-btn-proxima" class="liora-btn primary">Próxima sessão</button>
-      </div>
-    </footer>
-  </div>
-</section>
 
 <footer class="max-w-5xl mx-auto px-4 pb-10 text-xs text-[var(--muted)] text-center">
   <p>Liora — IA aplicada a estudos. © Intellih</p>
