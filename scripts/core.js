@@ -183,37 +183,52 @@
 
   ensureWizardVisible();
 
-  els.wizardTema?.textContent = wizard.tema || "";
-  els.wizardProgressLabel?.textContent = `Sessão ${wizard.atual + 1}/${wizard.sessoes.length}`;
-  els.wizardProgressBar && (els.wizardProgressBar.style.width = `${((wizard.atual + 1) / wizard.sessoes.length) * 100}%`);
+  if (els.wizardTema) els.wizardTema.textContent = wizard.tema || "";
+  if (els.wizardProgressLabel) els.wizardProgressLabel.textContent = `Sessão ${wizard.atual + 1}/${wizard.sessoes.length}`;
+  if (els.wizardProgressBar) els.wizardProgressBar.style.width = `${((wizard.atual + 1) / wizard.sessoes.length) * 100}%`;
 
-  els.wizardTitulo?.textContent = s.titulo || "";
-  els.wizardObjetivo?.textContent = s.objetivo || "";
+  if (els.wizardTitulo) els.wizardTitulo.textContent = s.titulo;
+  if (els.wizardObjetivo) els.wizardObjetivo.textContent = s.objetivo;
 
-  els.wizardConteudo && (els.wizardConteudo.innerHTML = s.conteudo.map(p => `<p>${p}</p>`).join(""));
-  els.wizardAnalogias && (els.wizardAnalogias.innerHTML = s.analogias.map(a => `<p>${a}</p>`).join(""));
-  els.wizardAtivacao && (els.wizardAtivacao.innerHTML = s.ativacao.map(q => `<li>${q}</li>`).join(""));
+  if (els.wizardConteudo)
+    els.wizardConteudo.innerHTML = (s.conteudo || []).map(p => `<p>${p}</p>`).join("");
 
-  // Quiz
+  if (els.wizardAnalogias)
+    els.wizardAnalogias.innerHTML = (s.analogias || []).map(a => `<p>${a}</p>`).join("");
+
+  if (els.wizardAtivacao)
+    els.wizardAtivacao.innerHTML = (s.ativacao || []).map(q => `<li>${q}</li>`).join("");
+
+  // quiz
   if (els.wizardQuiz) {
     els.wizardQuiz.innerHTML = "";
-    const quizName = `quiz-${wizard.atual}`;
-    s.quiz.alternativas.forEach((alt, i) => {
+    const quizName = `liora-quiz-${wizard.atual}`;
+
+    (s.quiz.alternativas || []).forEach((alt, i) => {
       const opt = document.createElement("label");
       opt.className = "liora-quiz-option";
-      opt.innerHTML = `<input type="radio" name="${quizName}" value="${i}"> ${alt}`;
+      opt.innerHTML =
+        `<input type="radio" name="${quizName}" value="${i}"> <span>${alt}</span>`;
+
       opt.onclick = () => {
-        els.wizardQuizFeedback.textContent =
-          i == s.quiz.corretaIndex ? `✅ Correto! ${s.quiz.explicacao}` : "❌ Tente novamente.";
+        if (els.wizardQuizFeedback)
+          els.wizardQuizFeedback.textContent =
+            i === Number(s.quiz.corretaIndex)
+              ? `✅ Correto! ${s.quiz.explicacao}`
+              : "❌ Tente novamente.";
       };
+
       els.wizardQuiz.appendChild(opt);
     });
   }
 
-  els.wizardFlashcards && (els.wizardFlashcards.innerHTML = s.flashcards
-    .map(f => `<li><strong>${f.q}</strong>: ${f.a}</li>`).join(""));
+  if (els.wizardFlashcards)
+    els.wizardFlashcards.innerHTML = (s.flashcards || [])
+      .map(f => `<li><strong>${f.q}</strong>: ${f.a}</li>`)
+      .join("");
 
-  els.wizardContainer?.scrollIntoView({ behavior: "smooth", block: "start" });
+  if (els.wizardContainer)
+    els.wizardContainer.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 
