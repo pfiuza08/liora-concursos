@@ -331,3 +331,10 @@ footer:hover { opacity:1; }
   gap: 20px;
   width: 100%;
 }
+/* Garante que o wizard apareça mesmo se algum inline/class tentar esconder */
+#liora-sessoes {
+  display: flex !important;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+}
