@@ -194,7 +194,9 @@ Formato JSON EXATO:
       const s = wizard.sessoes[wizard.atual];
       if (!s) return;
 
-      els.wizardContainer.style.display = "block";
+      //els.wizardContainer.style.display = "block";
+      els.wizardContainer.style.display = "flex";
+      els.wizardContainer.style.flexDirection = "column";
 
       els.wizardTema.textContent = wizard.tema;
       els.wizardProgressLabel.textContent = `Sessão ${wizard.atual + 1}/${wizard.sessoes.length}`;
