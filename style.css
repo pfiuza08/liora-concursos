@@ -1,7 +1,6 @@
 /* ==========================================================
-   🎨 LIORA — ESTILO PRINCIPAL
-   ========================================================== */
-
+   🎨 VARIÁVEIS DE TEMA (dark / light)
+========================================================== */
 :root {
   --brand:#c44b04;
   --bg:#0b0b0b;
@@ -12,241 +11,168 @@
   --shadow:0 2px 8px rgba(0,0,0,0.4);
 }
 
-/* ==========================================================
-   🌗 TEMA CLARO / ESCURO (atualizado)
-   ========================================================== */
-
 html.light, body.light {
-  --brand:#f4a261;
-  --bg:#faf7f2;
-  --fg:#1e1e1e;
+  --brand:#f49b2a;
+  --bg:#fafafa;
+  --fg:#121212;
   --card:#ffffff;
-  --muted:#6b6b6b;
-  --stroke:#e0ddd8;
+  --muted:#5c5c5c;
+  --stroke:#dddddd;
   --shadow:0 2px 10px rgba(0,0,0,0.1);
 }
 
-html.dark, body.dark {
-  --brand:#c44b04;
-  --bg:#0b0b0b;
-  --fg:#ffffff;
-  --card:#151515;
-  --muted:#bfbfbf;
-  --stroke:#252525;
-  --shadow:0 2px 8px rgba(0,0,0,0.4);
-}
-
 /* ==========================================================
-   🧱 ESTRUTURA GLOBAL
-   ========================================================== */
-
+   🌎 BASE GLOBAL
+========================================================== */
 html, body {
-  height:100%;
   background:var(--bg);
   color:var(--fg);
-  transition: background-color .3s ease, color .3s ease;
-}
-
-body {
-  font-family:"Inter", ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", sans-serif;
-  line-height:1.7;
+  margin:0;
+  padding:0;
+  font-family: "Inter", sans-serif;
+  line-height: 1.6;
+  transition: background .3s ease, color .3s ease;
 }
 
 /* ==========================================================
-   🗂 CARTÕES / PAINÉIS
-   ========================================================== */
-
+   🧱 CARTÕES
+========================================================== */
 .card {
   background:var(--card);
   border:1px solid var(--stroke);
   border-radius:1rem;
-  padding:1.2rem;
   box-shadow:var(--shadow);
-  transition:background-color .4s ease, box-shadow .4s ease, transform .3s ease;
-}
-
-.card:hover {
-  transform:translateY(-2px);
-  box-shadow:0 4px 16px rgba(0,0,0,0.5);
+  padding:20px;
 }
 
 /* ==========================================================
-   🔘 BOTÕES / CHIPS
-   ========================================================== */
+   🧩 GRID PRINCIPAL (PAINEL ESQ + DIREITA)
+========================================================== */
+.liora-grid {
+  display:grid;
+  grid-template-columns: 380px 1fr;
+  gap:20px;
+  max-width:1400px;
+  width:100%;
+  margin:40px auto;
+  padding:0 20px;
+}
+
+/* responsivo */
+@media(max-width: 980px) {
+  .liora-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ==========================================================
+   🔘 BOTÕES
+========================================================== */
+.btn, .btn-secondary {
+  border-radius:12px;
+  padding:.7rem 1rem;
+  width:100%;
+  font-weight:600;
+  transition:.2s;
+  cursor:pointer;
+}
 
 .btn {
   background:var(--brand);
   color:#fff;
-  border-radius:14px;
-  padding:.7rem 1rem;
-  font-weight:600;
-  transition:background .3s ease, transform .2s ease, box-shadow .3s ease;
-  box-shadow:0 0 6px rgba(196,75,4,0.4);
 }
 
 .btn:hover {
-  background:#d75b0a;
-  transform:translateY(-1px);
-  box-shadow:0 0 10px rgba(196,75,4,0.6);
+  filter:brightness(1.15);
 }
 
-.chip {
+.btn-secondary {
+  background:transparent;
   border:1px solid var(--stroke);
-  border-radius:999px;
-  padding:.4rem .8rem;
-  font-size:.85rem;
-  color:var(--muted);
-  display:inline-flex;
-  align-items:center;
-  cursor:pointer;
-  transition:background .3s ease, color .3s ease;
+  color:var(--fg);
 }
 
-.chip:hover {
+.btn-secondary.selected {
   background:var(--brand);
   color:#fff;
 }
 
-/* ==========================================================
-   ✏️ INPUTS / SELECTS
-   ========================================================== */
+/* Chip */
+.chip {
+  padding:.4rem .7rem;
+  border-radius:999px;
+  border:1px solid var(--stroke);
+  background:transparent;
+  cursor:pointer;
+}
 
+/* ==========================================================
+   ✏️ INPUTS
+========================================================== */
 input, select {
   background:transparent;
   border:1px solid var(--stroke);
   border-radius:8px;
-  padding:.5rem .75rem;
+  padding:.6rem .75rem;
   width:100%;
   color:var(--fg);
-  transition:border .3s ease, box-shadow .3s ease;
 }
 
 input:focus, select:focus {
+  outline:none;
   border-color:var(--brand);
   box-shadow:0 0 0 2px rgba(196,75,4,0.3);
-  outline:none;
-}
-
-select option {
-  background:#fff;
-  color:#000;
-}
-body.dark select option {
-  background:#000;
-  color:#fff;
 }
 
 /* ==========================================================
-   🧠 CARDS DE SESSÃO (PLANO DO USUÁRIO)
-   ========================================================== */
-
-.session-card {
-  background:var(--card);
-  border:1px solid var(--stroke);
-  border-radius:1rem;
-  padding:1rem;
-  box-shadow:var(--shadow);
-  color:var(--fg);
-}
-
-.session-card pre {
-  white-space:pre-wrap;
-  overflow:hidden;
-  max-height:120px;
-  position:relative;
-  transition:max-height .3s ease;
-}
-
-.session-card pre.conteudo-fechado::after {
-  content:"";
-  position:absolute;
-  bottom:0; left:0;
-  height:35px; width:100%;
-  background:linear-gradient(to bottom, transparent, var(--card));
-}
-
-/* ==========================================================
-   📁 ÁREA DE UPLOAD
-   ========================================================== */
+   📁 UPLOAD
+========================================================== */
 
 .upload-zone {
-  border: 2px dashed var(--stroke);
-  border-radius: 1rem;
-  padding: 1.2rem;
-  text-align: center;
-  cursor: pointer;
-  background: rgba(255,255,255,0.01);
-  transition:border-color .3s ease, background .3s ease;
+  border:2px dashed var(--stroke);
+  border-radius:1rem;
+  padding:1rem;
+  text-align:center;
+  cursor:pointer;
+  transition:.3s ease;
 }
 
 .upload-zone:hover {
-  border-color: var(--brand);
-  background: rgba(196,75,4,0.05);
+  border-color:var(--brand);
+  background:rgba(196,75,4,0.15);
 }
 
-.upload-zone input {
-  opacity:0;
-  position:absolute;
-  inset:0;
-}
-
-/* ==========================================================
-   🔄 MODAL DE PRÉ-VISUALIZAÇÃO
-   ========================================================== */
-
-.preview-modal-overlay {
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.6);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  z-index:999;
-}
-
-.preview-modal {
-  background:var(--card);
-  border:1px solid var(--stroke);
-  padding:1.5rem;
-  border-radius:1rem;
-  width:90%;
-  max-width:600px;
-  color:var(--fg);
+#upload-spinner {
+  display:none;
+  border:3px solid var(--stroke);
+  border-top:3px solid var(--brand);
+  border-radius:50%;
+  width:26px;
+  height:26px;
+  animation:spin 1s linear infinite;
 }
 
 /* ==========================================================
-   ✅ LIORA WIZARD — TEMA INTEGRADO
-   ========================================================== */
+   🧠 WIZARD (SESSÃO)
+========================================================== */
 
-/* Wizard ocupa toda a coluna direita */
-.liora-wizard {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-}
-
-/* Card da sessão */
-.liora-card {
-  background: var(--card);
-  color: var(--fg);
-  border-radius: 20px;
-  padding: 24px;
-  width: 100%;
+#liora-sessoes {
+  width:100%;
+  max-width:900px;
+  margin:40px auto;
+  padding:0 20px;
 }
 
 .liora-wizard__header {
   display:flex;
-  flex-wrap:wrap;
-  align-items:center;
   justify-content:space-between;
-  gap:16px;
-  margin-bottom:16px;
+  align-items:center;
+  margin-bottom:12px;
 }
 
 .liora-badge {
+  padding:3px 8px;
   font-size:.75rem;
-  padding:4px 8px;
   border-radius:999px;
   background:var(--brand);
   color:#fff;
@@ -254,135 +180,93 @@ body.dark select option {
 
 .liora-progress {
   height:8px;
+  width:180px;
   background:var(--stroke);
   border-radius:999px;
-  overflow:hidden;
-  width:260px;
 }
 
 .liora-progress__bar {
   height:100%;
   background:var(--brand);
   width:0%;
+  border-radius:999px;
   transition:width .3s ease;
 }
 
+/* cartão */
 .liora-card {
   background:var(--card);
   border:1px solid var(--stroke);
-  color:var(--fg);
+  border-radius:1rem;
   padding:20px;
-  border-radius:16px;
-  box-shadow:var(--shadow);
 }
 
-.liora-block { margin:16px 0; }
-
-/* Quiz */
-.liora-quiz-option {
-  display:block;
-  padding:8px 10px;
-  border:1px solid var(--stroke);
-  border-radius:8px;
-  margin:8px 0;
-  cursor:pointer;
-  transition:background .2s ease;
-}
-.liora-quiz-option:hover {
-  background:rgba(196, 75, 4, .15);
-}
-
-.liora-wizard__footer {
-  display:flex;
-  justify-content:space-between;
-  gap:12px;
+/* blocos */
+.liora-block {
   margin-top:16px;
 }
 
+/* quiz */
+.liora-quiz-option {
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:8px 10px;
+  border-radius:8px;
+  border:1px solid var(--stroke);
+  cursor:pointer;
+}
+
+.liora-quiz-option:hover {
+  background:rgba(255,255,255,0.05);
+}
+
+/* flashcards */
+#liora-sessao-ativacao,
+#liora-sessao-flashcards {
+  padding-left:18px;
+}
+
+/* rodapé */
+.liora-wizard__footer {
+  margin-top:20px;
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+}
+
 .liora-btn {
-  border:none;
+  padding:10px 12px;
   border-radius:10px;
-  padding:10px 14px;
   cursor:pointer;
   font-weight:600;
-  transition:background .3s ease;
 }
 
 .liora-btn.primary {
   background:var(--brand);
   color:#fff;
 }
-.liora-btn.primary:hover {
-  background:#d75b0a;
-}
 
 .liora-btn.secondary {
-  background:var(--stroke);
-  color:var(--fg);
-}
-
-.liora-btn.ghost {
   background:transparent;
   border:1px solid var(--stroke);
   color:var(--fg);
 }
 
-/* rodapé */
-footer {
-  text-align:center;
-  opacity:.75;
-  transition:opacity .3s ease;
-}
-footer:hover { opacity:1; }
-
-#liora-sessoes {
-  display: flex !important;
-  flex-direction: column;
-  gap: 20px;
-  width: 100%;
-}
-/* Garante que o wizard apareça mesmo se algum inline/class tentar esconder */
-#liora-sessoes {
-  display: flex !important;
-  flex-direction: column;
-  gap: 20px;
-  width: 100%;
-}
-/* === 📌 Ajuste de layout do Wizard === */
-#liora-sessoes {
-  width: 100%;
-  margin-top: 2rem;
+.liora-btn.ghost {
+  background:transparent;
+  border:none;
+  color:var(--muted);
 }
 
-/* Faz o card preencher a largura da coluna */
-.liora-card {
-  width: 100%;
-  max-width: 100%;
-  background: var(--card);
-  color: var(--fg);
+/* ==========================================================
+   🐛 FIXES (específicos do seu HTML)
+========================================================== */
+
+#liora-layout > section {
+  height: fit-content;
 }
 
-/* === ✅ Quiz alinhado e com pergunta visível === */
-.liora-quiz-question {
-  margin-bottom: 8px;
-  font-weight: 600;
-  font-size: 1rem;
+#liora-sessoes.hidden {
+  display:none !important;
 }
-
-.liora-quiz-option {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  border: 1px solid var(--stroke);
-  padding: 10px;
-  border-radius: 8px;
-  margin-bottom: 6px;
-  cursor: pointer;
-  background: rgba(255,255,255,0.05);
-}
-
-/* Corrige o alinhamento do input */
-.liora-quiz-option input {
-  transform: scale(1.3);
-}
-
