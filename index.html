@@ -36,6 +36,70 @@
 </header>
 
 <main class="max-w-5xl mx-auto px-4 py-8 grid lg:grid-cols-3 gap-6">
+<section id="liora-sessoes" style="display:none;">
+  <div class="liora-wizard">
+
+    <header class="liora-wizard__header">
+      <div class="liora-wizard__topic">
+        <span class="liora-badge">Tema</span>
+        <h2 id="liora-tema-ativo">—</h2>
+      </div>
+
+      <div class="liora-wizard__progress">
+        <div class="liora-progress">
+          <div id="liora-progress-bar" class="liora-progress__bar"></div>
+        </div>
+        <span id="liora-progress-label">Sessão 0/0</span>
+      </div>
+    </header>
+
+    <article class="liora-card" id="liora-sessao-card">
+      <h3 id="liora-sessao-titulo" class="liora-session-title">—</h3>
+
+      <div class="liora-block">
+        <h4>🎯 Objetivo</h4>
+        <p id="liora-sessao-objetivo">—</p>
+      </div>
+
+      <div class="liora-block">
+        <h4>📘 Conteúdo Essencial</h4>
+        <div id="liora-sessao-conteudo"></div>
+      </div>
+
+      <div class="liora-block">
+        <h4>✨ Analogias</h4>
+        <div id="liora-sessao-analogias"></div>
+      </div>
+
+      <div class="liora-block">
+        <h4>🧠 Ativação</h4>
+        <ul id="liora-sessao-ativacao"></ul>
+      </div>
+
+      <div class="liora-block">
+        <h4>✅ Teste rápido</h4>
+        <div id="liora-sessao-quiz"></div>
+        <div id="liora-sessao-quiz-feedback" class="liora-quiz-feedback"></div>
+      </div>
+
+      <div class="liora-block">
+        <h4>🧠 Flashcards</h4>
+        <ul id="liora-sessao-flashcards"></ul>
+      </div>
+    </article>
+
+    <footer class="liora-wizard__footer">
+      <button id="liora-btn-voltar" class="liora-btn ghost">Voltar</button>
+      <button id="liora-btn-salvar" class="liora-btn secondary">Salvar progresso</button>
+      <button id="liora-btn-proxima" class="liora-btn primary">Próxima sessão</button>
+    </footer>
+
+  </div>
+</section>
+
+
+
+  
 
   <section class="lg:col-span-1 card p-5">
 
