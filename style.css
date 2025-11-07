@@ -218,11 +218,21 @@ body.dark select option {
    ✅ LIORA WIZARD — TEMA INTEGRADO
    ========================================================== */
 
+/* Wizard ocupa toda a coluna direita */
 .liora-wizard {
-  max-width: 960px;
-  margin: 24px auto;
-  padding: 12px;
-  color:var(--fg);
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Card da sessão */
+.liora-card {
+  background: var(--card);
+  color: var(--fg);
+  border-radius: 20px;
+  padding: 24px;
+  width: 100%;
 }
 
 .liora-wizard__header {
