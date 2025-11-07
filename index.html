@@ -1,12 +1,13 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Liora — Plano de Estudo Inteligente</title>
-  <meta name="description" content="Liora cria planos de estudo personalizados com base no tema OU no upload de um material.">
+  <meta name="description" content="Liora cria planos de estudo personalizados com base no tema OU upload de material.">
 
-  <!-- Tailwind (atenção: recomendado PostCSS em produção) -->
+  <!-- Tailwind (dev only; depois migramos para PostCSS) -->
   <script src="https://cdn.tailwindcss.com"></script>
 
   <!-- PDF.js -->
@@ -21,7 +22,7 @@
 
 <body>
 
-<header class="max-w-5xl mx-auto px-4 pt-8">
+<header class="max-w-6xl mx-auto px-6 pt-8">
   <div class="flex items-center justify-between">
     <div class="flex items-center gap-3">
       <div class="w-10 h-10 rounded-2xl flex items-center justify-center text-white font-black"
@@ -35,73 +36,11 @@
   </div>
 </header>
 
-<main class="max-w-5xl mx-auto px-4 py-8 grid lg:grid-cols-3 gap-6">
-<section id="liora-sessoes" style="display:none;">
-  <div class="liora-wizard">
+<!-- ========== GRID PRINCIPAL ========== -->
+<main id="liora-layout" class="liora-grid">
 
-    <header class="liora-wizard__header">
-      <div class="liora-wizard__topic">
-        <span class="liora-badge">Tema</span>
-        <h2 id="liora-tema-ativo">—</h2>
-      </div>
-
-      <div class="liora-wizard__progress">
-        <div class="liora-progress">
-          <div id="liora-progress-bar" class="liora-progress__bar"></div>
-        </div>
-        <span id="liora-progress-label">Sessão 0/0</span>
-      </div>
-    </header>
-
-    <article class="liora-card" id="liora-sessao-card">
-      <h3 id="liora-sessao-titulo" class="liora-session-title">—</h3>
-
-      <div class="liora-block">
-        <h4>🎯 Objetivo</h4>
-        <p id="liora-sessao-objetivo">—</p>
-      </div>
-
-      <div class="liora-block">
-        <h4>📘 Conteúdo Essencial</h4>
-        <div id="liora-sessao-conteudo"></div>
-      </div>
-
-      <div class="liora-block">
-        <h4>✨ Analogias</h4>
-        <div id="liora-sessao-analogias"></div>
-      </div>
-
-      <div class="liora-block">
-        <h4>🧠 Ativação</h4>
-        <ul id="liora-sessao-ativacao"></ul>
-      </div>
-
-      <div class="liora-block">
-        <h4>✅ Teste rápido</h4>
-        <div id="liora-sessao-quiz"></div>
-        <div id="liora-sessao-quiz-feedback" class="liora-quiz-feedback"></div>
-      </div>
-
-      <div class="liora-block">
-        <h4>🧠 Flashcards</h4>
-        <ul id="liora-sessao-flashcards"></ul>
-      </div>
-    </article>
-
-    <footer class="liora-wizard__footer">
-      <button id="liora-btn-voltar" class="liora-btn ghost">Voltar</button>
-      <button id="liora-btn-salvar" class="liora-btn secondary">Salvar progresso</button>
-      <button id="liora-btn-proxima" class="liora-btn primary">Próxima sessão</button>
-    </footer>
-
-  </div>
-</section>
-
-
-
-  
-
-  <section class="lg:col-span-1 card p-5">
+  <!-- ► Painel esquerdo (Tema / Upload) -->
+  <section class="card p-6 liora-left">
 
     <h2 class="section-title mb-4">Como você deseja estudar?</h2>
 
@@ -110,6 +49,7 @@
       <button id="modo-upload" class="btn-secondary">Upload</button>
     </div>
 
+    <!-- Painel tema -->
     <div id="painel-tema">
       <label class="block text-sm font-medium mb-1">Tema de estudo</label>
       <input id="inp-tema" type="text" placeholder="Ex.: Direito Constitucional — Poder Legislativo" class="mb-3">
@@ -121,12 +61,15 @@
         <option value="avancado">Avançado</option>
       </select>
 
-      <p class="text-xs text-[var(--muted)] mb-3">A Liora decidirá automaticamente a quantidade de sessões com base no tema e no nível informado.</p>
+      <p class="text-xs text-[var(--muted)] mb-3">
+        A Liora definirá automaticamente as sessões com base no tema.
+      </p>
 
       <button id="btn-gerar" class="btn w-full mt-1">Gerar plano</button>
       <p id="status" class="text-xs text-[var(--muted)] mt-2"></p>
     </div>
 
+    <!-- Painel upload -->
     <div id="painel-upload" class="hidden">
       <label class="block text-sm font-medium mb-1">Envie seu material</label>
 
@@ -137,28 +80,28 @@
         <input id="inp-file" type="file" accept=".pdf,.txt" />
       </label>
 
-      <p class="text-xs text-[var(--muted)] mt-2">Cada tópico detectado no material vira uma sessão do plano.</p>
-
       <button id="btn-gerar-upload" class="btn w-full mt-3">Gerar plano</button>
       <p id="status-upload" class="text-xs text-[var(--muted)] mt-2"></p>
     </div>
 
   </section>
 
- <!-- ===== PAINEL DIREITO ===== -->
-<section class="lg:col-span-2 card p-5">
-  <div class="flex items-center justify-between mb-3">
-    <h2 class="section-title">Seu plano de estudo</h2>
-    <div class="text-sm text-[var(--muted)]" id="ctx"></div>
-  </div>
+  <!-- ► Painel direito (Resumo do plano gerado) -->
+  <section class="card p-6 liora-right">
 
-  <!-- container que recebe listas de sessões -->
-  <div id="plano" class="space-y-3"></div>
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="section-title">Seu plano de estudo</h2>
+      <p id="ctx" class="text-sm text-[var(--muted)]"></p>
+    </div>
 
-  <!-- ✅ COLE AQUI o wizard -->
- <section id="liora-sessoes" class="hidden liora-wizard">
+    <div id="plano" class="space-y-3"></div>
+  </section>
 
-  <!-- cabeçalho -->
+</main>
+
+<!-- ========== WIZARD DAS SESSÕES (ABAIXO DO GRID) ========== -->
+<section id="liora-sessoes" class="hidden liora-wizard">
+
   <div class="liora-wizard__header">
     <div class="liora-wizard__topic">
       <span class="liora-badge">Tema</span>
@@ -166,25 +109,23 @@
     </div>
 
     <div class="liora-wizard__progress">
-      <span id="liora-progress-label">Sessão 1/6</span>
+      <span id="liora-progress-label">Sessão 1/1</span>
       <div class="liora-progress">
         <div id="liora-progress-bar" class="liora-progress__bar"></div>
       </div>
     </div>
   </div>
 
-  <!-- cartão onde a sessão aparece -->
   <div class="liora-card">
-
-    <h3 id="liora-sessao-titulo" class="liora-session-title">Título da sessão</h3>
+    <h3 id="liora-sessao-titulo" class="liora-session-title">Título</h3>
 
     <div class="liora-block">
-      <h4>🎯 Objetivo prático</h4>
+      <h4>🎯 Objetivo</h4>
       <p id="liora-sessao-objetivo"></p>
     </div>
 
     <div class="liora-block">
-      <h4>📘 Explicação simples</h4>
+      <h4>📘 Conteúdo</h4>
       <div id="liora-sessao-conteudo"></div>
     </div>
 
@@ -194,7 +135,7 @@
     </div>
 
     <div class="liora-block">
-      <h4>🧠 Ativação neural (faça sem olhar)</h4>
+      <h4>🧠 Ativação neural</h4>
       <ul id="liora-sessao-ativacao"></ul>
     </div>
 
@@ -210,7 +151,6 @@
     </div>
   </div>
 
-  <!-- rodapé com botões -->
   <div class="liora-wizard__footer">
     <button id="liora-btn-voltar" class="liora-btn ghost">◀ Voltar</button>
     <button id="liora-btn-salvar" class="liora-btn secondary">💾 Salvar progresso</button>
@@ -219,20 +159,12 @@
 
 </section>
 
-</section>
-
-</main>
-
-<!-- ✅ ********** WIZARD DAS SESSÕES ********** -->
-
-
-<footer class="max-w-5xl mx-auto px-4 pb-10 text-xs text-[var(--muted)] text-center">
+<footer class="max-w-6xl mx-auto px-4 pb-10 text-xs text-[var(--muted)] text-center">
   <p>Liora — IA aplicada a estudos. © Intellih</p>
 </footer>
 
-<!-- ✅ ORDEM CERTA DOS SCRIPTS (Sempre após o WIZARD) -->
+<!-- Scripts -->
 <script src="/scripts/semantic.js?v=13"></script>
-  
 <script>
   window.LIORA = {
     ask: async ({ system, user }) => {
@@ -247,10 +179,7 @@
     }
   };
 </script>
-
 <script src="/scripts/core.js?v=13"></script>
-<script src="/scripts/plano-simulador.js?v=13"></script>
-<script src="/scripts/concursos-plano.js?v=13"></script>
 
 </body>
 </html>
