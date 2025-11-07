@@ -338,3 +338,41 @@ footer:hover { opacity:1; }
   gap: 20px;
   width: 100%;
 }
+/* === 📌 Ajuste de layout do Wizard === */
+#liora-sessoes {
+  width: 100%;
+  margin-top: 2rem;
+}
+
+/* Faz o card preencher a largura da coluna */
+.liora-card {
+  width: 100%;
+  max-width: 100%;
+  background: var(--card);
+  color: var(--fg);
+}
+
+/* === ✅ Quiz alinhado e com pergunta visível === */
+.liora-quiz-question {
+  margin-bottom: 8px;
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.liora-quiz-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--stroke);
+  padding: 10px;
+  border-radius: 8px;
+  margin-bottom: 6px;
+  cursor: pointer;
+  background: rgba(255,255,255,0.05);
+}
+
+/* Corrige o alinhamento do input */
+.liora-quiz-option input {
+  transform: scale(1.3);
+}
+
