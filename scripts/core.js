@@ -1,6 +1,6 @@
 // ==========================================================
 // 🧠 LIORA — CORE PRINCIPAL (v21)
-// Tema / Upload + Sessões no modo WIZARD (sem lista).
+// Tema / Upload + Sessões no modo WIZARD
 // ==========================================================
 
 (function () {
@@ -26,6 +26,7 @@
       // UI painéis
       plano: document.getElementById("plano"),
       ctx: document.getElementById("ctx"),
+
       painelTema: document.getElementById("painel-tema"),
       painelUpload: document.getElementById("painel-upload"),
       modoTema: document.getElementById("modo-tema"),
@@ -55,11 +56,24 @@
     };
 
     // =========================================================
-    // THEME
+    // FUNÇÕES DE VISIBILIDADE
+    // =========================================================
+    function ensureWizardVisible() {
+      els.wizardContainer.classList.remove("hidden");
+      els.plano.style.display = "none";                 // Esconde o plano
+      els.wizardContainer.style.display = "flex";       // Ocupa toda largura
+    }
+
+    function restorePlanoVisible() {
+      els.wizardContainer.classList.add("hidden");
+      els.plano.style.display = "block";
+    }
+
+    // =========================================================
+    // DARK/LIGHT THEME
     // =========================================================
     function aplicarTema(mode) {
       document.documentElement.classList.toggle("light", mode === "light");
-      document.body.classList.toggle("light", mode === "light");
       localStorage.setItem("liora_theme", mode);
       els.themeBtn.textContent = mode === "light" ? "☀️" : "🌙";
     }
@@ -78,32 +92,18 @@
       els.progressFill.style.width = "0%";
       els.progressBar.classList.remove("hidden");
       let p = 0;
-      const timer = setInterval(() => {
+      return setInterval(() => {
         p += Math.random() * 12;
         if (p > 90) p = 90;
         els.progressFill.style.width = `${p}%`;
       }, 350);
-      return timer;
     }
 
     function finalizarProgresso(ref) {
       clearInterval(ref);
       els.progressFill.style.width = "100%";
-      setTimeout(() => els.progressBar.classList.add("hidden"), 600);
+      setTimeout(() => els.progressBar.classList.add("hidden"), 500);
     }
-
-    // =========================================================
-    // ALTERNÂNCIA TEMA ↔ UPLOAD
-    // =========================================================
-    els.modoTema.addEventListener("click", () => {
-      els.painelTema.classList.remove("hidden");
-      els.painelUpload.classList.add("hidden");
-    });
-
-    els.modoUpload.addEventListener("click", () => {
-      els.painelUpload.classList.remove("hidden");
-      els.painelTema.classList.add("hidden");
-    });
 
     // =========================================================
     // ESTADO DO WIZARD
@@ -113,7 +113,7 @@
       nivel: null,
       plano: [],
       sessoes: [],
-      atual: 0
+      atual: 0,
     };
 
     const key = (tema, nivel) => `liora:wizard:${tema.toLowerCase()}::${nivel.toLowerCase()}`;
@@ -128,74 +128,58 @@
     }
 
     // =========================================================
-    // GARANTE QUE O WIZARD FIQUE VISÍVEL NO MAIN
-    // =========================================================
-    function ensureWizardVisible() {
-      const wc = els.wizardContainer;
-      if (!wc) return;
-
-      wc.hidden = false;
-      wc.classList.remove("hidden");
-      wc.style.display = "block";
-      wc.style.width = "100%";
-
-      const main = document.querySelector("main");
-      if (main && wc.parentElement !== main) {
-        main.appendChild(wc);
-      }
-    }
-
-    // =========================================================
     // CHAMADA À API `/api/liora`
     // =========================================================
     async function callLLM(system, prompt) {
       const res = await fetch("/api/liora", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ system, user: prompt })
+        body: JSON.stringify({ system, user: prompt }),
       });
 
       const json = await res.json();
-      if (!json.output) throw new Error("Resposta inválida da IA");
-
       return json.output;
     }
 
     // =========================================================
-    // GERAÇÃO DE PLANO (LISTA DE SESSÕES)
+    // GERAÇÃO DO PLANO (lista antes do wizard!)
     // =========================================================
     async function gerarPlanoDeSessoes(tema, nivel) {
-      const prompt = `
+      const raw = await callLLM(
+        "Você é Liora, especialista em microlearning.",
+        `
 Gere um plano de sessões para o tema "${tema}" (nível: ${nivel}).
 Retorne JSON:
 [
-  {"numero":1, "nome":"Fundamentos"},
-  {"numero":2, "nome":"Aplicações"}
-]`;
+ {"numero":1, "nome":"Fundamentos"},
+ {"numero":2, "nome":"Aplicações"}
+]`
+      );
 
-      const raw = await callLLM("Você é Liora, especialista em microlearning.", prompt);
       return JSON.parse(raw);
     }
 
     // =========================================================
-    // GERAÇÃO DE UMA SESSÃO (CONTEÚDO COMPLETO)
+    // GERA UMA SESSÃO COMPLETA (mini aula)
     // =========================================================
     async function gerarSessao(tema, nivel, numero, nome) {
-      const prompt = `
+      const raw = await callLLM(
+        "Você é Liora.",
+        `
 Sessão ${numero}: ${nome}
 Tema: ${tema}
-Formato JSON EXATO:
+Formato JSON:
 {
  "titulo":"Sessão ${numero} — ${nome}",
  "objetivo":"...",
- "conteudo":["...","..."],
+ "conteudo":["..."],
  "analogias":["..."],
  "ativacao":["...","...","..."],
  "quiz":{"pergunta":"...","alternativas":["a)","b)","c)"],"corretaIndex":1,"explicacao":"..."},
  "flashcards":[{"q":"...","a":"..."}]
-}`;
+}`
+      );
 
-      const raw = await callLLM("Você é Liora.", prompt);
       return JSON.parse(raw);
     }
 
@@ -208,8 +192,6 @@ Formato JSON EXATO:
 
       ensureWizardVisible();
 
-      if (els.plano) els.plano.innerHTML = "";
-
       els.wizardTema.textContent = wizard.tema;
       els.wizardProgressLabel.textContent = `Sessão ${wizard.atual + 1}/${wizard.sessoes.length}`;
       els.wizardProgressBar.style.width = `${((wizard.atual + 1) / wizard.sessoes.length) * 100}%`;
@@ -220,9 +202,10 @@ Formato JSON EXATO:
       els.wizardAnalogias.innerHTML = s.analogias.map(a => `<p>${a}</p>`).join("");
       els.wizardAtivacao.innerHTML = s.ativacao.map(q => `<li>${q}</li>`).join("");
 
-      // ✅ Quiz com pergunta + layout correto
-      els.wizardQuiz.innerHTML = `<p class="liora-quiz-question">${s.quiz.pergunta}</p>`;
-      const quizName = `liora-quiz-${wizard.atual}`;
+      els.wizardQuiz.innerHTML = `
+        <p class="liora-quiz-question">${s.quiz.pergunta}</p>
+      `;
+      const quizName = `quiz-${wizard.atual}`;
 
       s.quiz.alternativas.forEach((alt, i) => {
         const opt = document.createElement("label");
@@ -235,20 +218,21 @@ Formato JSON EXATO:
         els.wizardQuiz.appendChild(opt);
       });
 
-      els.wizardFlashcards.innerHTML = s.flashcards.map(f => `<li><strong>${f.q}</strong>: ${f.a}</li>`).join("");
-
-      els.wizardVoltar.disabled = wizard.atual === 0;
-      els.wizardProxima.textContent = wizard.atual === wizard.sessoes.length - 1 ? "Concluir tema" : "Próxima sessão";
+      els.wizardFlashcards.innerHTML = s.flashcards
+        .map(f => `<li><strong>${f.q}</strong>: ${f.a}</li>`)
+        .join("");
     }
 
     // =========================================================
-    // BOTÕES DO WIZARD
+    // EVENTOS DO WIZARD
     // =========================================================
     els.wizardVoltar.addEventListener("click", () => {
       if (wizard.atual > 0) {
         wizard.atual--;
         renderWizard();
         saveProgress();
+      } else {
+        restorePlanoVisible();
       }
     });
 
@@ -259,23 +243,22 @@ Formato JSON EXATO:
     });
 
     els.wizardProxima.addEventListener("click", () => {
-      if (wizard.atual >= wizard.sessoes.length - 1) {
-        els.status.textContent = "🎉 Tema concluído!";
-        return;
-      }
+      if (wizard.atual >= wizard.sessoes.length - 1) return;
       wizard.atual++;
       renderWizard();
       saveProgress();
     });
 
     // =========================================================
-    // GERAR PLANO (BOTÃO)
+    // BOTÃO GERAR (Tema)
     // =========================================================
     els.btnGerar.addEventListener("click", async () => {
       const tema = els.inpTema.value.trim();
       const nivel = els.selNivel.value;
 
       if (!tema) return alert("Digite um tema.");
+
+      restorePlanoVisible();  // <- mostra a lista
 
       const cached = loadProgress(tema, nivel);
       if (cached) {
@@ -287,20 +270,32 @@ Formato JSON EXATO:
       const ref = iniciarProgresso();
 
       try {
-        els.ctx.textContent = "🧭 Gerando plano...";
+        els.ctx.textContent = "Gerando plano...";
         const plano = await gerarPlanoDeSessoes(tema, nivel);
+
+        // Mostra lista antes do wizard
+        els.plano.innerHTML = plano.map(p => `
+          <div class="session-card">
+            <div class="flex justify-between items-center">
+              <div>
+                <strong>Sessão ${p.numero} — ${p.nome}</strong>
+              </div>
+              <button class="chip" onclick="window._openWizard(${p.numero - 1})">➡️ Entrar</button>
+            </div>
+          </div>
+        `).join("");
 
         wizard = { tema, nivel, plano, sessoes: [], atual: 0 };
 
+        // Gera sessões em background
         for (const item of plano) {
-          els.status.textContent = `🧠 Sessão ${item.numero} — ${item.nome}`;
+          els.status.textContent = `Gerando ${item.nome}...`;
           const sessao = await gerarSessao(tema, nivel, item.numero, item.nome);
           wizard.sessoes.push(sessao);
           saveProgress();
         }
 
-        els.status.textContent = "✅ Sessões prontas!";
-        renderWizard();
+        els.status.textContent = "✅ Sessões geradas!";
 
       } catch (e) {
         console.error(e);
@@ -309,6 +304,12 @@ Formato JSON EXATO:
         finalizarProgresso(ref);
       }
     });
+
+    // Função para abrir o wizard ao clicar na lista
+    window._openWizard = (index) => {
+      wizard.atual = index;
+      renderWizard();
+    };
 
     console.log("🟢 core.js com WIZARD carregado");
   });
