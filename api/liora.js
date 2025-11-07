@@ -26,8 +26,12 @@ export default async function handler(req, res) {
       output: completion.choices[0].message.content
     });
 
-  } catch (err) {
-    console.error("❌ Erro na IA:", err);
-    return res.status(500).json({ error: "IA error", detail: err.message });
-  }
+} catch (err) {
+  console.error("❌ Erro na IA:", err.response?.data || err.message);
+  return res.status(500).json({
+    error: "IA error",
+    detail: err.response?.data || err.message,
+  });
+}
+
 }
