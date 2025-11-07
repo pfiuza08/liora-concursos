@@ -1,19 +1,17 @@
-// /api/liora.js
+// /api/liora.js — serverless (Node.js runtime)
+
 import OpenAI from "openai";
 
-export const config = {
-  runtime: "edge"
-};
+export default async function handler(req, res) {
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed" });
+  }
 
-export default async function handler(req) {
   try {
-    const { system, user } = await req.json();
+    const { system, user } = req.body;
 
-    if (!system || !user) {
-      return new Response(
-        JSON.stringify({ error: "Missing system or user message" }),
-        { status: 400, headers: { "Content-Type": "application/json" } }
-      );
+    if (!process.env.OPENAI_API_KEY) {
+      return res.status(500).json({ error: "Missing OPENAI_API_KEY" });
     }
 
     const client = new OpenAI({
@@ -29,22 +27,15 @@ export default async function handler(req) {
       ],
     });
 
-    return new Response(
-      JSON.stringify({
-        output: completion.choices[0].message.content,
-      }),
-      { status: 200, headers: { "Content-Type": "application/json" } }
-    );
+    return res.status(200).json({
+      output: completion.choices[0].message.content
+    });
 
   } catch (err) {
-    console.error("❌ Erro no handler:", err);
-
-    return new Response(
-      JSON.stringify({
-        error: "IA error",
-        detail: err.message || err.toString(),
-      }),
-      { status: 500, headers: { "Content-Type": "application/json" } }
-    );
+    console.error("❌ Erro no servidor:", err);
+    return res.status(500).json({
+      error: "IA error",
+      detail: err.message || err.toString(),
+    });
   }
 }
