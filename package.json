@@ -1,0 +1,7 @@
+{
+  "name": "liora",
+  "type": "module",
+  "dependencies": {
+    "openai": "^4.67.0"
+  }
+}
