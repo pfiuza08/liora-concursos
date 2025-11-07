@@ -1,5 +1,5 @@
 // ==========================================================
-// 🧠 LIORA — CORE PRINCIPAL (v20)
+// 🧠 LIORA — CORE PRINCIPAL (v21)
 // Tema / Upload + Sessões no modo WIZARD (sem lista).
 // ==========================================================
 
@@ -55,7 +55,7 @@
     };
 
     // =========================================================
-    // TEMA CLARO / ESCURO
+    // THEME
     // =========================================================
     function aplicarTema(mode) {
       document.documentElement.classList.toggle("light", mode === "light");
@@ -128,23 +128,20 @@
     }
 
     // =========================================================
-    // FUNÇÃO PARA FORÇAR VISIBILIDADE DO WIZARD
+    // GARANTE QUE O WIZARD FIQUE VISÍVEL NO MAIN
     // =========================================================
     function ensureWizardVisible() {
       const wc = els.wizardContainer;
       if (!wc) return;
 
-      wc.removeAttribute("style");
       wc.hidden = false;
       wc.classList.remove("hidden");
-
-      wc.style.display = "flex";
-      wc.style.flexDirection = "column";
-      wc.style.gap = "20px";
+      wc.style.display = "block";
+      wc.style.width = "100%";
 
       const main = document.querySelector("main");
       if (main && wc.parentElement !== main) {
-        main.appendChild(wc); // move para o fluxo visual correto
+        main.appendChild(wc);
       }
     }
 
@@ -165,7 +162,7 @@
     }
 
     // =========================================================
-    // GERAÇÃO DE PLANO
+    // GERAÇÃO DE PLANO (LISTA DE SESSÕES)
     // =========================================================
     async function gerarPlanoDeSessoes(tema, nivel) {
       const prompt = `
@@ -181,7 +178,7 @@ Retorne JSON:
     }
 
     // =========================================================
-    // GERAÇÃO DE SESSÃO (MINI-AULA COMPLETA)
+    // GERAÇÃO DE UMA SESSÃO (CONTEÚDO COMPLETO)
     // =========================================================
     async function gerarSessao(tema, nivel, numero, nome) {
       const prompt = `
@@ -223,8 +220,10 @@ Formato JSON EXATO:
       els.wizardAnalogias.innerHTML = s.analogias.map(a => `<p>${a}</p>`).join("");
       els.wizardAtivacao.innerHTML = s.ativacao.map(q => `<li>${q}</li>`).join("");
 
-      els.wizardQuiz.innerHTML = "";
+      // ✅ Quiz com pergunta + layout correto
+      els.wizardQuiz.innerHTML = `<p class="liora-quiz-question">${s.quiz.pergunta}</p>`;
       const quizName = `liora-quiz-${wizard.atual}`;
+
       s.quiz.alternativas.forEach((alt, i) => {
         const opt = document.createElement("label");
         opt.className = "liora-quiz-option";
@@ -240,12 +239,10 @@ Formato JSON EXATO:
 
       els.wizardVoltar.disabled = wizard.atual === 0;
       els.wizardProxima.textContent = wizard.atual === wizard.sessoes.length - 1 ? "Concluir tema" : "Próxima sessão";
-
-      els.wizardContainer.scrollIntoView({ behavior: "smooth", block: "start" });
     }
 
     // =========================================================
-    // EVENTOS DE NAVEGAÇÃO DO WIZARD
+    // BOTÕES DO WIZARD
     // =========================================================
     els.wizardVoltar.addEventListener("click", () => {
       if (wizard.atual > 0) {
