@@ -177,46 +177,44 @@
     // =========================================================
     // ✅ Renderização do Wizard
     // =========================================================
-    function renderWizard() {
-      const s = wizard.sessoes[wizard.atual];
-      if (!s) return;
+  function renderWizard() {
+  const s = wizard.sessoes[wizard.atual];
+  if (!s) return;
 
-      ensureWizardVisible();
+  ensureWizardVisible();
 
-      els.wizardContainer.scrollIntoView({ behavior: "smooth", block: "start" });
+  els.wizardTema?.textContent = wizard.tema || "";
+  els.wizardProgressLabel?.textContent = `Sessão ${wizard.atual + 1}/${wizard.sessoes.length}`;
+  els.wizardProgressBar && (els.wizardProgressBar.style.width = `${((wizard.atual + 1) / wizard.sessoes.length) * 100}%`);
 
-      els.wizardTema.textContent = wizard.tema;
-      els.wizardProgressLabel.textContent = `Sessão ${wizard.atual + 1}/${wizard.sessoes.length}`;
-      els.wizardProgressBar.style.width = `${((wizard.atual + 1) / wizard.sessoes.length) * 100}%`;
+  els.wizardTitulo?.textContent = s.titulo || "";
+  els.wizardObjetivo?.textContent = s.objetivo || "";
 
-      els.wizardTitulo.textContent = s.titulo;
-      els.wizardObjetivo.textContent = s.objetivo;
-      els.wizardConteudo.innerHTML = s.conteudo.map(p => `<p>${p}</p>`).join("");
-      els.wizardAnalogias.innerHTML = s.analogias.map(a => `<p>${a}</p>`).join("");
-      els.wizardAtivacao.innerHTML = s.ativacao.map(q => `<li>${q}</li>`).join("");
+  els.wizardConteudo && (els.wizardConteudo.innerHTML = s.conteudo.map(p => `<p>${p}</p>`).join(""));
+  els.wizardAnalogias && (els.wizardAnalogias.innerHTML = s.analogias.map(a => `<p>${a}</p>`).join(""));
+  els.wizardAtivacao && (els.wizardAtivacao.innerHTML = s.ativacao.map(q => `<li>${q}</li>`).join(""));
 
-      els.wizardQuiz.innerHTML = "";
-      const quizName = `quiz-${wizard.atual}`;
+  // Quiz
+  if (els.wizardQuiz) {
+    els.wizardQuiz.innerHTML = "";
+    const quizName = `quiz-${wizard.atual}`;
+    s.quiz.alternativas.forEach((alt, i) => {
+      const opt = document.createElement("label");
+      opt.className = "liora-quiz-option";
+      opt.innerHTML = `<input type="radio" name="${quizName}" value="${i}"> ${alt}`;
+      opt.onclick = () => {
+        els.wizardQuizFeedback.textContent =
+          i == s.quiz.corretaIndex ? `✅ Correto! ${s.quiz.explicacao}` : "❌ Tente novamente.";
+      };
+      els.wizardQuiz.appendChild(opt);
+    });
+  }
 
-      s.quiz.alternativas.forEach((alt, i) => {
-        const opt = document.createElement("label");
-        opt.className = "liora-quiz-option";
-        opt.innerHTML = `<input type="radio" name="${quizName}" value="${i}"> ${alt}`;
-        opt.onclick = () => {
-          els.wizardQuizFeedback.textContent =
-            i == s.quiz.corretaIndex ? `✅ Correto! ${s.quiz.explicacao}` : "❌ Tente novamente.";
-        };
-        els.wizardQuiz.appendChild(opt);
-      });
+  els.wizardFlashcards && (els.wizardFlashcards.innerHTML = s.flashcards
+    .map(f => `<li><strong>${f.q}</strong>: ${f.a}</li>`).join(""));
 
-      els.wizardFlashcards.innerHTML = s.flashcards
-        .map(f => `<li><strong>${f.q}</strong>: ${f.a}</li>`)
-        .join("");
-
-      els.wizardVoltar.disabled = wizard.atual === 0;
-      els.wizardProxima.textContent =
-        wizard.atual === wizard.sessoes.length - 1 ? "Concluir tema" : "Próxima sessão";
-    }
+  els.wizardContainer?.scrollIntoView({ behavior: "smooth", block: "start" });
+}
 
 
     // =========================================================
