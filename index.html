@@ -163,6 +163,22 @@
 
 <!-- ✅ ORDEM CERTA DOS SCRIPTS (Sempre após o WIZARD) -->
 <script src="/scripts/semantic.js?v=13"></script>
+  
+<script>
+  window.LIORA = {
+    ask: async ({ system, user }) => {
+      const res = await fetch("/api/liora", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ system, user })
+      });
+
+      const data = await res.json();
+      return data.output;
+    }
+  };
+</script>
+
 <script src="/scripts/core.js?v=13"></script>
 <script src="/scripts/plano-simulador.js?v=13"></script>
 <script src="/scripts/concursos-plano.js?v=13"></script>
