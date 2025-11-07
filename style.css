@@ -324,3 +324,10 @@ footer {
   transition:opacity .3s ease;
 }
 footer:hover { opacity:1; }
+
+#liora-sessoes {
+  display: flex !important;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+}
