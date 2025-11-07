@@ -1,27 +1,26 @@
 // /api/liora.js
-
 import OpenAI from "openai";
 
-export default async function handler(req, res) {
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
-  }
+export const config = {
+  runtime: "edge"
+};
 
-  const client = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY ?? null,
-  });
-
-  const { system, user } = req.body;
-
-  if (!client.apiKey) {
-    return res.status(500).json({
-      error: "Missing OPENAI_API_KEY",
-      detail: "Adicione a variável OPENAI_API_KEY nas variáveis de ambiente da Vercel"
-    });
-  }
-
+export default async function handler(req) {
   try {
-    const result = await client.chat.completions.create({
+    const { system, user } = await req.json();
+
+    if (!system || !user) {
+      return new Response(
+        JSON.stringify({ error: "Missing system or user message" }),
+        { status: 400, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
+    const client = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    });
+
+    const completion = await client.chat.completions.create({
       model: "gpt-4.1-mini",
       temperature: 0.3,
       messages: [
@@ -30,16 +29,22 @@ export default async function handler(req, res) {
       ],
     });
 
-    return res.status(200).json({
-      output: result.choices[0].message.content
-    });
+    return new Response(
+      JSON.stringify({
+        output: completion.choices[0].message.content,
+      }),
+      { status: 200, headers: { "Content-Type": "application/json" } }
+    );
 
   } catch (err) {
-    console.error("❌ ERRO DA IA:", err);
+    console.error("❌ Erro no handler:", err);
 
-    return res.status(500).json({
-      error: "IA error",
-      detail: err?.error || err?.message || "Erro desconhecido"
-    });
+    return new Response(
+      JSON.stringify({
+        error: "IA error",
+        detail: err.message || err.toString(),
+      }),
+      { status: 500, headers: { "Content-Type": "application/json" } }
+    );
   }
 }
