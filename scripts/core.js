@@ -227,7 +227,8 @@
     // --------------------------------------------------------
     // BOTÃO GERAR — CORRIGIDO PARA FUNCIONAR SEMPRE
     // --------------------------------------------------------
-    els.btnGerar?.addEventListener("click", async () => {
+    document.getElementById("btn-gerar").addEventListener("click", async () => {
+
       const tema = els.inpTema.value.trim();
       const nivel = els.selNivel.value.trim();
 
