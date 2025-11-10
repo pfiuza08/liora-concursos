@@ -1,23 +1,25 @@
 // ==========================================================
-// 🧠 Liora — semantic.js (v2)
-// Upload: extrai texto (PDF/TXT) e prepara dados para IA
+// 🧠 Liora — semantic.js (v3 FINAL)
+// Upload: extrai texto (PDF/TXT) → detecta tópicos → converte
+// em plano no formato esperado pelo core.js
 // ==========================================================
 console.log("🧩 semantic.js carregado");
 
 (function () {
+
   // ----------------------------------------------------------
-  // 🔧 Utilitários
+  // 🔧 utilitário para limpar texto
   // ----------------------------------------------------------
   function normalizarTexto(txt) {
     return (txt || "")
-      .replace(/\u00AD/g, "")           // soft hyphen
-      .replace(/[“”‘’]/g, '"')
+      .replace(/\u00AD/g, "")              // soft hyphen
+      .replace(/[“”‘’]/g, '"')             // aspas especiais
       .replace(/\s+/g, " ")
       .trim();
   }
 
   // ----------------------------------------------------------
-  // 🔍 Extração de texto (TXT / PDF)
+  // 📄 extrair texto (PDF ou TXT)
   // ----------------------------------------------------------
   async function extrairTextoDeArquivo(file) {
     const nome = (file.name || "").toLowerCase();
@@ -34,6 +36,7 @@ console.log("🧩 semantic.js carregado");
       if (!window.pdfjsLib || !pdfjsLib.getDocument) {
         throw new Error("PDF.js não está disponível.");
       }
+
       const data = await file.arrayBuffer();
       const loadingTask = pdfjsLib.getDocument({ data });
       const pdf = await loadingTask.promise;
@@ -44,11 +47,12 @@ console.log("🧩 semantic.js carregado");
           const page = await pdf.getPage(i);
           const content = await page.getTextContent();
           const linhas = content.items
-            .map(it => (typeof it.str === "string" ? it.str : ""))
+            .map(it => typeof it.str === "string" ? it.str : "")
             .filter(Boolean);
+
           texto += linhas.join(" ") + "\n";
         } catch (e) {
-          console.warn(`⚠️ Falha ao ler página ${i}:`, e);
+          console.warn(`⚠️ erro lendo página ${i}:`, e);
         }
       }
       return normalizarTexto(texto);
@@ -58,157 +62,144 @@ console.log("🧩 semantic.js carregado");
   }
 
   // ----------------------------------------------------------
-  // 🧩 Tópicos simples para preview (não é o plano final)
+  // 🔍 tópicos para preview antes de gerar plano
   // ----------------------------------------------------------
   function detectarTopicosParaPreview(texto) {
-    // corta por parágrafos/dobras de linha
     let blocos = texto.split(/\n{2,}/).map(normalizarTexto).filter(b => b.length > 80);
 
-    // se pouco, faz chunking por ~220 palavras
     if (blocos.length < 6) {
+      // fragmenta em ~220 palavras quando não há muitos blocos
       const palavras = texto.split(/\s+/);
       const chunkSize = 220;
       const chunks = [];
+
       for (let i = 0; i < palavras.length; i += chunkSize) {
         chunks.push(palavras.slice(i, i + chunkSize).join(" "));
       }
+
       blocos = chunks.map(normalizarTexto).filter(b => b.length > 80);
     }
 
-    // gera rótulos por palavra frequente
-    const stop = /^(de|da|do|das|dos|em|no|na|para|por|com|como|que|uma|um|e|ou|se|os|as|a|o|é|ser|há|quando|onde|entre|mais|menos|muito|pouco|sobre)$/i;
+    const stop = /^(de|da|do|das|dos|em|no|na|para|por|com|como|que|uma|um|e|ou|se|os|as|a|o|é|ser|há|quando|onde|entre|mais|menos)$/i;
+
     return blocos.slice(0, 30).map((b, i) => {
-      const freq = Object.create(null);
+      const freq = {};
       b.split(/\s+/).forEach(w => {
         const k = w.toLowerCase().replace(/[.,;:!?()]/g, "");
-        if (k.length > 3 && !stop.test(k)) freq[k] = (freq[k] || 0) + 1;
+        if (k.length > 3 && !stop.test(k)) {
+          freq[k] = (freq[k] || 0) + 1;
+        }
       });
-      const termo = Object.entries(freq).sort((a,b)=>b[1]-a[1])[0]?.[0] || `Bloco ${i+1}`;
-      return { titulo: termo[0]?.toUpperCase() + termo.slice(1), resumo: b.slice(0,140) + (b.length>140?"…":""), conceitos: Object.keys(freq).slice(0,5) };
+
+      const termoForte = Object.entries(freq).sort((a,b)=>b[1]-a[1])[0]?.[0] || `Bloco ${i+1}`;
+
+      return {
+        titulo: termoForte[0]?.toUpperCase() + termoForte.slice(1),
+        resumo: b.slice(0,140) + (b.length>140?"…":""),
+        conceitos: Object.keys(freq).slice(0,5)
+      };
     });
   }
 
   // ----------------------------------------------------------
-  // 🌐 IA para módulos/sessões (mini-aula)
+  // 🤖 IA → converte conteúdo em módulos e sessões
   // ----------------------------------------------------------
   async function gerarModulosESessoesPelaIA(texto, nivel = "iniciante") {
-    // Se não houver API, cai no fallback
-    if (!window.OPENAI_API_KEY) return fallbackModulos(texto, nivel);
 
+    // ❗ não usa OPENAI direto → o core.js usa /api/liora
     const prompt = `
-Você é especialista em design instrucional (Barbara Oakley). Transforme o CONTEÚDO abaixo em um PLANO DE MICRO-LEARNING organizado por MÓDULOS → SESSÕES.
+Você é especialista em microlearning (Barbara Oakley).
+Transforme o conteúdo abaixo em MÓDULOS ➝ SESSÕES.
 
-Regras:
-- Decida a quantidade adequada de módulos e sessões (progressão básica → prática).
-- Cada sessão deve conter: "titulo", "resumo" (máx. 140c) e "detalhamento" (mini aula com: objetivo, explicação, exemplos, exercício guiado e checklist).
-- Use JSON válido neste formato, sem comentários e sem texto fora do JSON:
-
+Formato JSON exato:
 {
-  "modulos": [
+  "modulos":[
     {
-      "titulo": "Módulo X — Nome",
-      "sessoes": [
-        { "titulo": "Sessão Y — Nome",
-          "resumo": "Descrição breve (máx. 140c).",
-          "detalhamento": "🎯 Objetivo...\\n📘 Explicação...\\n🧠 Exemplos...\\n🧪 Exercício...\\n✅ Checklist..."
-        }
+      "titulo":"Módulo X — Nome",
+      "sessoes":[
+        { "titulo":"Sessão Y — Nome", "resumo":"...", "detalhamento":"..." }
       ]
     }
   ]
 }
 
-Nível do aluno: "${nivel}"
 CONTEÚDO:
 """${texto.slice(0, 120000)}"""
-(Se o conteúdo for maior, assuma continuação similar. Foque em uma cobertura representativa.)
 `.trim();
 
-    try {
-      const res = await fetch("https://api.openai.com/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${window.OPENAI_API_KEY}`,
-        },
-        body: JSON.stringify({
-          model: "gpt-4.1-mini",
-          temperature: 0.3,
-          messages: [{ role: "user", content: prompt }],
-        }),
-      });
-
-      const data = await res.json();
-      let content = data?.choices?.[0]?.message?.content || "";
-      content = content.replace(/```json|```/g, "").trim();
-
-      const obj = JSON.parse(content);
-      if (!obj?.modulos || !Array.isArray(obj.modulos)) throw new Error("Formato inválido");
-
-      // Sanitização leve
-      obj.modulos.forEach((m, mi) => {
-        m.titulo = m.titulo || `Módulo ${mi+1}`;
-        m.sessoes = Array.isArray(m.sessoes) ? m.sessoes : [];
-        m.sessoes = m.sessoes.map((s, si) => ({
-          titulo: s?.titulo || `Sessão ${si+1}`,
-          resumo: (s?.resumo || "").slice(0, 140),
-          detalhamento: s?.detalhamento || "🎯 Objetivo...\n📘 Explicação...\n🧠 Exemplos...\n🧪 Exercício...\n✅ Checklist..."
-        }));
-      });
-
-      return obj;
-    } catch (e) {
-      console.warn("⚠️ IA falhou, usando fallback:", e);
-      return fallbackModulos(texto, nivel);
-    }
-  }
-
-  // ----------------------------------------------------------
-  // 🛟 Fallback local para módulos/sessões
-  // ----------------------------------------------------------
-  function fallbackModulos(texto, nivel) {
-    // Cria 3 módulos × 3 sessões como estrutura padrão
-    const temas = ["Fundamentos", "Ferramentas e Operações", "Aplicações e Prática"];
-    const mkSess = (idx, base) => ({
-      titulo: `Sessão ${idx} — ${base}`,
-      resumo: `Objetivo prático sobre ${base}.`,
-      detalhamento:
-        `🎯 Objetivo: dominar ${base}.\n` +
-        `📘 Explicação: visão direta do conceito e quando aplicar.\n` +
-        `🧠 Exemplos: 2 casos simples do material.\n` +
-        `🧪 Exercício: reproduza o procedimento com seu próprio exemplo.\n` +
-        `✅ Checklist: [ ] Conceito entendido [ ] Exemplo feito [ ] Exercício concluído`
+    const res = await window.LIORA.ask({
+      system: "Você é a Liora, especialista em microlearning.",
+      user: prompt
     });
 
-    const modulos = temas.map((t, i) => ({
-      titulo: `Módulo ${i+1} — ${t}`,
-      sessoes: [mkSess(1, t), mkSess(2, t), mkSess(3, t)]
-    }));
+    let parsed;
+    try {
+      parsed = JSON.parse(
+        res.replace(/```json/gi, "").replace(/```/g, "").trim()
+      );
+    } catch (e) {
+      console.warn("⚠️ IA retornou JSON inválido, fallback ativado");
+      return fallbackModulos(texto);
+    }
 
-    return { modulos };
+    return parsed;
   }
 
   // ----------------------------------------------------------
-  // 🌐 APIs expostas no window
+  // 🛟 fallback sem IA (estrutural)
+  // ----------------------------------------------------------
+  function fallbackModulos() {
+    return {
+      modulos: [
+        { titulo: "Módulo 1 — Fundamentos", sessoes: [{ titulo: "Sessão 1 — Fundamentos" }] },
+        { titulo: "Módulo 2 — Aplicações", sessoes: [{ titulo: "Sessão 2 — Aplicações" }] }
+      ]
+    };
+  }
+
+  // ----------------------------------------------------------
+  // ✅ API usada pelo core.js
   // ----------------------------------------------------------
   window.processarArquivoUpload = async (file) => {
     try {
       const texto = await extrairTextoDeArquivo(file);
       const topicos = detectarTopicosParaPreview(texto);
+
       window.__uploadTextoBruto = texto;
-      return { tipoMsg: `✅ Arquivo lido (${topicos.length} tópicos detectados)`, topicos };
+      return {
+        tipoMsg: `✅ Arquivo lido (${topicos.length} tópicos detectados)`,
+        topicos
+      };
     } catch (err) {
       console.error("processarArquivoUpload erro:", err);
-      return { tipoMsg: `❌ Falha ao ler o arquivo: ${err.message}`, topicos: [] };
+      return { tipoMsg: `❌ Falha ao ler: ${err.message}`, topicos: [] };
     }
   };
 
+  // ✅ *** ALTERAÇÃO IMPORTANTE ***
+  // retorna o plano no formato esperado pelo core.js
   window.generatePlanFromUploadAI = async (nivel = "iniciante") => {
     const texto = window.__uploadTextoBruto;
-    if (!texto || texto.length < 80) {
-      throw new Error("processarArquivoUpload deve concluir com sucesso antes.");
-    }
-    return await gerarModulosESessoesPelaIA(texto, nivel);
+    if (!texto) throw new Error("processarArquivoUpload deve ser executado antes.");
+
+    const result = await gerarModulosESessoesPelaIA(texto, nivel);
+
+    const sessoes = [];
+    result.modulos?.forEach((m) => {
+      m.sessoes?.forEach((s) => {
+        sessoes.push({
+          numero: sessoes.length + 1,
+          nome: s.titulo || `Sessão ${sessoes.length + 1}`
+        });
+      });
+    });
+
+    return {
+      plano: sessoes,   // ✅ agora o core entende
+      sessoes          // apenas debugging
+    };
   };
 
-  console.log("✅ semantic.js pronto");
+  console.log("✅ semantic.js pronto (v3)");
+
 })();
