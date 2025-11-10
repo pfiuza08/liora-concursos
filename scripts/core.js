@@ -356,4 +356,3 @@ JSON exato:
     console.log("🟢 core.js v25 carregado");
   });
 })();
-
