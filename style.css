@@ -362,3 +362,19 @@ html, body {
 /* Botão do tema troca visualmente */
 #btn-theme { transition: transform .15s ease; }
 #btn-theme:active { transform: scale(.95); }
+
+.liora-topico-lista {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.liora-topico-item {
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  margin-bottom: 6px;
+  cursor: default;
+  font-size: 0.95rem;
+}
