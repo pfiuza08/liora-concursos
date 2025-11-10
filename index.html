@@ -7,7 +7,7 @@
   <title>Liora — Plano de Estudo Inteligente</title>
   <meta name="description" content="Liora cria planos de estudo personalizados com base no tema OU upload de material.">
 
-  <!-- Tailwind (dev only; depois migramos para PostCSS) -->
+  <!-- Tailwind (dev only; depois migramos para build) -->
   <script src="https://cdn.tailwindcss.com"></script>
 
   <!-- PDF.js -->
@@ -36,10 +36,11 @@
   </div>
 </header>
 
-<!-- ========== GRID PRINCIPAL ========== -->
+
+<!-- ✅ GRID PRINCIPAL -->
 <main id="liora-layout" class="liora-grid">
 
-  <!-- ► Painel esquerdo (Tema / Upload) -->
+  <!-- ► Painel esquerdo (tema / upload) -->
   <section class="card p-6 liora-left">
 
     <h2 class="section-title mb-4">Como você deseja estudar?</h2>
@@ -65,6 +66,7 @@
         A Liora definirá automaticamente as sessões com base no tema.
       </p>
 
+      <!-- ✅ botão está correto -->
       <button id="btn-gerar" class="btn w-full mt-1">Gerar plano</button>
       <p id="status" class="text-xs text-[var(--muted)] mt-2"></p>
     </div>
@@ -86,9 +88,9 @@
 
   </section>
 
-  <!-- ► Painel direito (Resumo do plano gerado) -->
-  <section class="card p-6 liora-right">
 
+  <!-- ► Painel direito (lista do plano de estudo) -->
+  <section class="card p-6 liora-right">
     <div class="flex items-center justify-between mb-4">
       <h2 class="section-title">Seu plano de estudo</h2>
       <p id="ctx" class="text-sm text-[var(--muted)]"></p>
@@ -99,7 +101,8 @@
 
 </main>
 
-<!-- ========== WIZARD DAS SESSÕES (ABAIXO DO GRID) ========== -->
+
+<!-- ✅ Wizard das sessões (Certo: fora do grid) -->
 <section id="liora-sessoes" class="hidden liora-wizard">
 
   <div class="liora-wizard__header">
@@ -116,6 +119,7 @@
     </div>
   </div>
 
+  <!-- Cartão com conteúdo -->
   <div class="liora-card">
     <h3 id="liora-sessao-titulo" class="liora-session-title">Título</h3>
 
@@ -159,12 +163,15 @@
 
 </section>
 
+
 <footer class="max-w-6xl mx-auto px-4 pb-10 text-xs text-[var(--muted)] text-center">
   <p>Liora — IA aplicada a estudos. © Intellih</p>
 </footer>
 
-<!-- Scripts -->
+
+<!-- ✅ Scripts SEMPRE NO FINAL -->
 <script src="/scripts/semantic.js?v=13"></script>
+
 <script>
   window.LIORA = {
     ask: async ({ system, user }) => {
@@ -179,7 +186,8 @@
     }
   };
 </script>
-<script src="/scripts/core.js?v=13"></script>
+
+<script src="/scripts/core.js?v=14"></script>
 
 </body>
 </html>
