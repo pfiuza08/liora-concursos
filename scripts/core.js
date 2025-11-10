@@ -191,26 +191,31 @@ JSON EXATO:
     // -------------------------
     // RENDER: RESUMO DO PLANO (painel direito)
     // -------------------------
-    function renderPlanoResumo(plano) {
-      if (!els.plano) return;
-      els.plano.innerHTML = "";
-      if (!Array.isArray(plano) || !plano.length) {
-        els.plano.innerHTML = `<p class="text-[var(--muted)]">Nenhuma sessão gerada ainda.</p>`;
-        return;
-      }
-      plano.forEach((p) => {
-        const div = document.createElement("div");
-        div.className = "session-card";
-        div.innerHTML = `
-          <div class="flex items-center justify-between gap-3">
-            <div>
-              <div class="font-semibold">Sessão ${p.numero} — ${p.nome}</div>
-              <div class="text-sm text-[var(--muted)]">Abra as sessões abaixo e avance com "Próxima sessão".</div>
-            </div>
-          </div>`;
-        els.plano.appendChild(div);
-      });
-    }
+    // -------------------------
+// RENDER: RESUMO DO PLANO (direita)
+// -------------------------
+function renderPlanoResumo(plano) {
+  if (!els.plano) return;
+  els.plano.innerHTML = "";
+
+  if (!Array.isArray(plano) || !plano.length) {
+    els.plano.innerHTML = `<p class="text-[var(--muted)]">Nenhum plano gerado ainda.</p>`;
+    return;
+  }
+
+  // ✅ apenas lista de tópicos, sem frase
+  const ul = document.createElement("ul");
+  ul.className = "liora-topico-lista";
+
+  plano.forEach((p) => {
+    const li = document.createElement("li");
+    li.className = "liora-topico-item";
+    li.textContent = `Sessão ${p.numero} — ${p.nome}`;
+    ul.appendChild(li);
+  });
+
+  els.plano.appendChild(ul);
+}
 
     // -------------------------
     // WIZARD (abaixo do grid)
@@ -316,6 +321,64 @@ JSON EXATO:
         wizard = { tema, nivel, plano, sessoes: [], atual: 0 };
         renderPlanoResumo(plano);
 
+        // -------------------------
+// BOTÃO: GERAR (TEMA)
+// -------------------------
+document.getElementById("btn-gerar")?.addEventListener("click", async () => {
+  const tema = (els.inpTema?.value || "").trim();
+  const nivel = els.selNivel?.value || "iniciante";
+  if (!tema) return alert("Digite um tema.");
+
+  const cached = loadProgress(tema, nivel);
+  if (cached && Array.isArray(cached.sessoes) && cached.sessoes.length) {
+    wizard = cached;
+    renderPlanoResumo(wizard.plano);
+    renderWizard();
+    return;
+  }
+
+  try {
+    els.btnGerar.disabled = true;
+    els.ctx && (els.ctx.textContent = "🔧 Criando plano...");
+
+    // ✅ 1. GERA O PLANO (lista)
+    const plano = await gerarPlanoDeSessoes(tema, nivel);
+    wizard = { tema, nivel, plano, sessoes: [], atual: 0 };
+    renderPlanoResumo(plano);
+
+    // ✅ 2. BARRA DE PROGRESSO para gerar sessões
+    let progresso = 0;
+    const total = plano.length;
+    els.ctx.textContent = `⏳ Preparando sessões (0/${total})`;
+
+    for (const item of plano) {
+      progresso++;
+      els.ctx.textContent = `⏳ Sessão ${progresso}/${total}: ${item.nome}`;
+
+      // eslint-disable-next-line no-await-in-loop
+      const sessao = await gerarSessao(tema, nivel, item.numero, item.nome);
+      wizard.sessoes.push(sessao);
+      saveProgress();
+    }
+
+    els.ctx.textContent = "✅ Sessões prontas!";
+    renderWizard();
+
+  } catch (e) {
+    console.error(e);
+    alert("Erro ao gerar o plano/sessões. Veja o console.");
+  } finally {
+    els.btnGerar.disabled = false;
+  }
+});
+
+        
+        
+        
+        
+        
+        
+        
         // gera sessões sequenciais
         for (const item of plano) {
           els.status && (els.status.textContent = `🧠 Sessão ${item.numero} — ${item.nome}`);
