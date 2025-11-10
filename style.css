@@ -328,3 +328,37 @@ input:focus, select:focus {
   margin:.4rem 0; 
 }
 .liora-quiz-option input{ margin:0; }
+
+/* === Tema: classes unificadas (aplicar em <html> e <body>) === */
+
+/* Light (padrão visual claro) */
+html.light, body.light {
+  --brand:#f4a261;
+  --bg:#faf7f2;
+  --fg:#1e1e1e;
+  --card:#ffffff;
+  --muted:#6b6b6b;
+  --stroke:#e0ddd8;
+  --shadow:0 2px 10px rgba(0,0,0,0.1);
+}
+
+/* Dark */
+html.dark, body.dark {
+  --brand:#c44b04;
+  --bg:#0b0b0b;
+  --fg:#ffffff;
+  --card:#151515;
+  --muted:#bfbfbf;
+  --stroke:#252525;
+  --shadow:0 2px 8px rgba(0,0,0,0.4);
+}
+
+/* Garante que o body sempre use as vars atuais */
+html, body {
+  background: var(--bg);
+  color: var(--fg);
+}
+
+/* Botão do tema troca visualmente */
+#btn-theme { transition: transform .15s ease; }
+#btn-theme:active { transform: scale(.95); }
