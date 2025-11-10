@@ -7,7 +7,7 @@
   <title>Liora — Plano de Estudo Inteligente</title>
   <meta name="description" content="Liora cria planos de estudo personalizados com base no tema OU upload de material.">
 
-  <!-- Tailwind (dev only; depois migramos para build) -->
+  <!-- Tailwind (dev only — depois migramos para PostCSS) -->
   <script src="https://cdn.tailwindcss.com"></script>
 
   <!-- PDF.js -->
@@ -17,6 +17,7 @@
       "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.14.305/pdf.worker.min.js";
   </script>
 
+  <!-- Seu CSS -->
   <link rel="stylesheet" href="/style.css" />
 </head>
 
@@ -66,7 +67,6 @@
         A Liora definirá automaticamente as sessões com base no tema.
       </p>
 
-      <!-- ✅ botão está correto -->
       <button id="btn-gerar" class="btn w-full mt-1">Gerar plano</button>
       <p id="status" class="text-xs text-[var(--muted)] mt-2"></p>
     </div>
@@ -89,7 +89,7 @@
   </section>
 
 
-  <!-- ► Painel direito (lista do plano de estudo) -->
+  <!-- ► Painel direito (lista do plano) -->
   <section class="card p-6 liora-right">
     <div class="flex items-center justify-between mb-4">
       <h2 class="section-title">Seu plano de estudo</h2>
@@ -102,8 +102,9 @@
 </main>
 
 
-<!-- ✅ Wizard das sessões (Certo: fora do grid) -->
-<section id="liora-sessoes" class="hidden liora-wizard">
+
+<!-- ✅ Wizard das sessões (fora do grid e UNIDADE ÚNICA) -->
+<section id="liora-sessoes" class="hidden liora-wizard max-w-6xl mx-auto px-6 pb-10">
 
   <div class="liora-wizard__header">
     <div class="liora-wizard__topic">
@@ -112,14 +113,13 @@
     </div>
 
     <div class="liora-wizard__progress">
-      <span id="liora-progress-label">Sessão 1/1</span>
+      <span id="liora-progress-label">Sessão 0/0</span>
       <div class="liora-progress">
         <div id="liora-progress-bar" class="liora-progress__bar"></div>
       </div>
     </div>
   </div>
 
-  <!-- Cartão com conteúdo -->
   <div class="liora-card">
     <h3 id="liora-sessao-titulo" class="liora-session-title">Título</h3>
 
@@ -163,14 +163,13 @@
 
 </section>
 
-
 <footer class="max-w-6xl mx-auto px-4 pb-10 text-xs text-[var(--muted)] text-center">
   <p>Liora — IA aplicada a estudos. © Intellih</p>
 </footer>
 
 
-<!-- ✅ Scripts SEMPRE NO FINAL -->
-<script src="/scripts/semantic.js?v=13"></script>
+<!-- ✅ SCRIPTS (sempre no final) -->
+<script src="/scripts/semantic.js?v=14"></script>
 
 <script>
   window.LIORA = {
@@ -180,14 +179,13 @@
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ system, user })
       });
-
       const data = await res.json();
       return data.output;
     }
   };
 </script>
 
-<script src="/scripts/core.js?v=14"></script>
+<script src="/scripts/core.js?v=24"></script>
 
 </body>
 </html>
