@@ -270,3 +270,61 @@ input:focus, select:focus {
 #liora-sessoes.hidden {
   display:none !important;
 }
+
+/* Botões Tema/Upload — estado ativo */
+.btn-secondary.selected{
+  background: var(--brand);
+  color:#fff;
+  border-color: var(--brand) !important;
+}
+
+/* Upload: evita sobreposição visual */
+.upload-zone{
+  position: relative;
+  border: 2px dashed var(--stroke);
+  border-radius: 1rem;
+  padding: 1.2rem 1rem;
+  text-align: center;
+  cursor: pointer;
+  background: rgba(255,255,255,0.02);
+  display: flex; 
+  flex-direction: column; 
+  align-items: center; 
+  gap: .35rem;
+}
+.upload-zone #upload-icon{ font-size:2rem; line-height:1; }
+.upload-zone #upload-text{ font-size:.9rem; color:var(--muted); }
+.upload-zone input{
+  position:absolute; inset:0; opacity:0; cursor:pointer;
+}
+.upload-zone.dragover{ 
+  border-color: var(--brand); 
+  background: rgba(196,75,4,0.08); 
+}
+
+/* Resumo do plano (lado direito) */
+.session-card{
+  background:var(--card);
+  border:1px solid var(--stroke);
+  border-radius: 12px;
+  padding: .9rem 1rem;
+}
+
+/* Wizard — largura e alinhamento */
+.liora-wizard{ 
+  max-width: 980px; 
+  margin: 28px auto; 
+  padding: 0 16px; 
+}
+.liora-card{ width: 100%; }
+
+.liora-quiz-option{ 
+  display:flex; 
+  gap:.5rem; 
+  align-items:center; 
+  padding:.45rem .6rem; 
+  border:1px solid #eee; 
+  border-radius:8px; 
+  margin:.4rem 0; 
+}
+.liora-quiz-option input{ margin:0; }
