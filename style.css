@@ -378,3 +378,26 @@ html, body {
   cursor: default;
   font-size: 0.95rem;
 }
+/* -----------------------------
+   Cards de plano clicáveis (lado direito)
+-------------------------------- */
+.liora-card-topico {
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: var(--bgCard);
+  cursor: pointer;
+  transition: 0.2s ease;
+  border: 1px solid transparent;
+}
+
+.liora-card-topico:hover {
+  background: var(--bgHover);
+  border-color: var(--brand);
+  transform: translateY(-2px);
+}
+
+.liora-card-topico strong {
+  color: var(--brand);
+  margin-right: 6px;
+}
+
