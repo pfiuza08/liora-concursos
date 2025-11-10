@@ -1,23 +1,24 @@
 // ==========================================================
-// 🧠 LIORA — CORE PRINCIPAL (v23)
-// Corrige: alternância Tema/Upload (selected), upload sem sobreposição,
-// "Gerar plano" (tema & upload), render plano à direita e wizard abaixo.
+// 🧠 LIORA — CORE PRINCIPAL (v24)
+// Tema robusto + Alternância Tema/Upload (.selected)
+// Upload UX + "Gerar plano" (tema & upload)
+// Resumo do plano (direita) + Wizard abaixo do grid
 // ==========================================================
 (function () {
-  console.log("🔵 Inicializando Liora Core v23...");
+  console.log("🔵 Inicializando Liora Core v24...");
 
   document.addEventListener("DOMContentLoaded", () => {
     // -------------------------
     // MAPA DE ELEMENTOS
     // -------------------------
     const els = {
-      // controles iniciais
+      // toggles
       modoTema: document.getElementById("modo-tema"),
       modoUpload: document.getElementById("modo-upload"),
       painelTema: document.getElementById("painel-tema"),
       painelUpload: document.getElementById("painel-upload"),
 
-      // tema
+      // tema estudo
       inpTema: document.getElementById("inp-tema"),
       selNivel: document.getElementById("sel-nivel"),
       btnGerar: document.getElementById("btn-gerar"),
@@ -32,7 +33,7 @@
       uploadText: document.getElementById("upload-text"),
       uploadSpinner: document.getElementById("upload-spinner"),
 
-      // painel direito
+      // painel direito (resumo)
       plano: document.getElementById("plano"),
       ctx: document.getElementById("ctx"),
 
@@ -52,7 +53,47 @@
       wizardVoltar: document.getElementById("liora-btn-voltar"),
       wizardSalvar: document.getElementById("liora-btn-salvar"),
       wizardProxima: document.getElementById("liora-btn-proxima"),
+
+      // botão tema UI
+      themeBtn: document.getElementById("btn-theme"),
     };
+
+    // -------------------------
+    // THEME (light/dark) — robusto
+    // -------------------------
+    (function setupTheme() {
+      const btn = els.themeBtn;
+
+      function applyTheme(theme) {
+        document.documentElement.classList.remove("light", "dark");
+        document.body.classList.remove("light", "dark");
+        document.documentElement.classList.add(theme);
+        document.body.classList.add(theme);
+        localStorage.setItem("liora_theme", theme);
+        if (btn) btn.textContent = theme === "light" ? "☀️" : "🌙";
+      }
+
+      function initialTheme() {
+        const saved = localStorage.getItem("liora_theme");
+        if (saved === "light" || saved === "dark") return saved;
+        const prefersLight = window.matchMedia &&
+          window.matchMedia("(prefers-color-scheme: light)").matches;
+        return prefersLight ? "light" : "dark";
+      }
+
+      applyTheme(initialTheme());
+
+      btn && btn.addEventListener("click", () => {
+        const current = document.documentElement.classList.contains("light") ? "light" : "dark";
+        applyTheme(current === "light" ? "dark" : "light");
+      });
+
+      const media = window.matchMedia("(prefers-color-scheme: light)");
+      media.onchange = () => {
+        const saved = localStorage.getItem("liora_theme");
+        if (!saved) applyTheme(media.matches ? "light" : "dark");
+      };
+    })();
 
     // -------------------------
     // ESTADO
@@ -68,19 +109,14 @@
     };
 
     // -------------------------
-    // PROGRESS BAR (direita)
-    // -------------------------
-    // (Sem elementos dedicados no HTML—usamos ctx/status como feedback textual)
-
-    // -------------------------
     // ALTERNÂNCIA MODO TEMA/UPLOAD (com .selected)
     // -------------------------
     function setMode(mode) {
       const tema = mode === "tema";
-      els.painelTema.classList.toggle("hidden", !tema);
-      els.painelUpload.classList.toggle("hidden", tema);
-      els.modoTema.classList.toggle("selected", tema);
-      els.modoUpload.classList.toggle("selected", !tema);
+      els.painelTema?.classList.toggle("hidden", !tema);
+      els.painelUpload?.classList.toggle("hidden", tema);
+      els.modoTema?.classList.toggle("selected", tema);
+      els.modoUpload?.classList.toggle("selected", !tema);
     }
     els.modoTema?.addEventListener("click", () => setMode("tema"));
     els.modoUpload?.addEventListener("click", () => setMode("upload"));
@@ -95,7 +131,11 @@
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ system, user })
       });
-      const json = await res.json();
+      if (!res.ok) {
+        const text = await res.text().catch(()=> "");
+        throw new Error(`Erro API (${res.status}): ${text}`);
+      }
+      const json = await res.json().catch(()=> ({}));
       if (!json?.output) throw new Error("Resposta inválida da IA");
       return json.output;
     }
@@ -105,8 +145,8 @@
     // -------------------------
     async function gerarPlanoDeSessoes(tema, nivel) {
       const prompt = `
-Gere um plano de 5-7 sessões para o tema "${tema}" (nível: ${nivel}).
-JSON puro, exemplo:
+Gere um plano de 5 a 7 sessões para o tema "${tema}" (nível: ${nivel}).
+Responda com JSON puro (array), ex:
 [
   {"numero":1,"nome":"Fundamentos"},
   {"numero":2,"nome":"Aplicações"}
@@ -114,7 +154,6 @@ JSON puro, exemplo:
       const raw = await callLLM("Você é Liora, especialista em microlearning.", prompt);
       let arr;
       try { arr = JSON.parse(raw); } catch { throw new Error("Plano em formato inválido"); }
-      // normaliza
       return (arr || []).map((s, i) => ({
         numero: Number(s.numero ?? i+1),
         nome: String(s.nome ?? s.titulo ?? `Sessão ${i+1}`)
@@ -150,7 +189,7 @@ JSON EXATO:
     }
 
     // -------------------------
-    // RENDER: RESUMO DO PLANO (direita)
+    // RENDER: RESUMO DO PLANO (painel direito)
     // -------------------------
     function renderPlanoResumo(plano) {
       if (!els.plano) return;
@@ -166,7 +205,7 @@ JSON EXATO:
           <div class="flex items-center justify-between gap-3">
             <div>
               <div class="font-semibold">Sessão ${p.numero} — ${p.nome}</div>
-              <div class="text-sm text-[var(--muted)]">Clique em "Próxima sessão" para ver os detalhes abaixo.</div>
+              <div class="text-sm text-[var(--muted)]">Abra as sessões abaixo e avance com "Próxima sessão".</div>
             </div>
           </div>`;
         els.plano.appendChild(div);
@@ -174,10 +213,11 @@ JSON EXATO:
     }
 
     // -------------------------
-    // RENDER: WIZARD (abaixo do grid)
+    // WIZARD (abaixo do grid)
     // -------------------------
     function ensureWizardVisible() {
-      els.wizardContainer?.classList.remove("hidden");
+      if (!els.wizardContainer) return;
+      els.wizardContainer.classList.remove("hidden");
       els.wizardContainer.style.display = "block";
     }
 
@@ -187,23 +227,18 @@ JSON EXATO:
 
       ensureWizardVisible();
 
-      if (els.wizardTema) els.wizardTema.textContent = wizard.tema || "";
-      if (els.wizardProgressLabel) els.wizardProgressLabel.textContent = `Sessão ${wizard.atual + 1}/${wizard.sessoes.length}`;
-      if (els.wizardProgressBar) els.wizardProgressBar.style.width = `${((wizard.atual + 1) / wizard.sessoes.length) * 100}%`;
+      els.wizardTema && (els.wizardTema.textContent = wizard.tema || "");
+      els.wizardProgressLabel && (els.wizardProgressLabel.textContent = `Sessão ${wizard.atual + 1}/${wizard.sessoes.length}`);
+      els.wizardProgressBar && (els.wizardProgressBar.style.width = `${((wizard.atual + 1) / wizard.sessoes.length) * 100}%`);
 
-      if (els.wizardTitulo) els.wizardTitulo.textContent = s.titulo;
-      if (els.wizardObjetivo) els.wizardObjetivo.textContent = s.objetivo;
+      els.wizardTitulo && (els.wizardTitulo.textContent = s.titulo);
+      els.wizardObjetivo && (els.wizardObjetivo.textContent = s.objetivo);
 
-      if (els.wizardConteudo)
-        els.wizardConteudo.innerHTML = (s.conteudo || []).map(p => `<p>${p}</p>`).join("");
+      els.wizardConteudo && (els.wizardConteudo.innerHTML = (s.conteudo || []).map(p => `<p>${p}</p>`).join(""));
+      els.wizardAnalogias && (els.wizardAnalogias.innerHTML = (s.analogias || []).map(a => `<p>${a}</p>`).join(""));
+      els.wizardAtivacao && (els.wizardAtivacao.innerHTML = (s.ativacao || []).map(q => `<li>${q}</li>`).join(""));
 
-      if (els.wizardAnalogias)
-        els.wizardAnalogias.innerHTML = (s.analogias || []).map(a => `<p>${a}</p>`).join("");
-
-      if (els.wizardAtivacao)
-        els.wizardAtivacao.innerHTML = (s.ativacao || []).map(q => `<li>${q}</li>`).join("");
-
-      // Quiz (garante pergunta e alinhamento)
+      // Quiz (pergunta + alternativas alinhadas)
       if (els.wizardQuiz) {
         els.wizardQuiz.innerHTML = "";
         const pergunta = document.createElement("p");
@@ -227,9 +262,8 @@ JSON EXATO:
         });
       }
 
-      if (els.wizardFlashcards)
-        els.wizardFlashcards.innerHTML = (s.flashcards || [])
-          .map(f => `<li><strong>${f.q}</strong>: ${f.a}</li>`).join("");
+      els.wizardFlashcards && (els.wizardFlashcards.innerHTML = (s.flashcards || [])
+        .map(f => `<li><strong>${f.q}</strong>: ${f.a}</li>`).join(""));
     }
 
     // -------------------------
@@ -245,7 +279,7 @@ JSON EXATO:
     els.wizardSalvar?.addEventListener("click", () => {
       saveProgress();
       els.status && (els.status.textContent = "💾 Progresso salvo!");
-      setTimeout(() => { if (els.status) els.status.textContent = ""; }, 1200);
+      setTimeout(()=> { if (els.status) els.status.textContent = ""; }, 1200);
     });
     els.wizardProxima?.addEventListener("click", () => {
       if (wizard.atual >= wizard.sessoes.length - 1) {
@@ -260,22 +294,21 @@ JSON EXATO:
     // -------------------------
     // BOTÃO: GERAR (TEMA)
     // -------------------------
-    document.getElementById("btn-gerar")?.addEventListener("click", async () => {
+    els.btnGerar?.addEventListener("click", async () => {
       const tema = (els.inpTema?.value || "").trim();
       const nivel = els.selNivel?.value || "iniciante";
       if (!tema) return alert("Digite um tema.");
-
-      // retomar
-      const cached = loadProgress(tema, nivel);
-      if (cached && Array.isArray(cached.sessoes) && cached.sessoes.length) {
-        wizard = cached;
-        els.ctx && (els.ctx.textContent = `🔁 Retomando estudo (${wizard.sessoes.length} sessões)`);
-        renderPlanoResumo(wizard.plano);
-        renderWizard();
-        return;
-      }
-
       try {
+        // retomar
+        const cached = loadProgress(tema, nivel);
+        if (cached && Array.isArray(cached.sessoes) && cached.sessoes.length) {
+          wizard = cached;
+          els.ctx && (els.ctx.textContent = `🔁 Retomando (${wizard.sessoes.length} sessões)`);
+          renderPlanoResumo(wizard.plano);
+          renderWizard();
+          return;
+        }
+
         els.ctx && (els.ctx.textContent = "🧭 Gerando plano...");
         els.btnGerar.disabled = true;
 
@@ -306,7 +339,7 @@ JSON EXATO:
     // -------------------------
     // UPLOAD: UX + GERAR
     // -------------------------
-    // UX: highlight drag/drop
+    // drag highlight
     ["dragenter","dragover"].forEach(ev =>
       els.uploadZone?.addEventListener(ev, (e)=>{e.preventDefault(); els.uploadZone.classList.add("dragover");})
     );
@@ -314,20 +347,19 @@ JSON EXATO:
       els.uploadZone?.addEventListener(ev, (e)=>{e.preventDefault(); els.uploadZone.classList.remove("dragover");})
     );
 
-    // UX: mostrar nome do arquivo
+    // nome do arquivo
     els.inpFile?.addEventListener("change", (e) => {
       const f = e.target.files?.[0];
       if (!f) return;
-      if (els.uploadText) els.uploadText.textContent = `Selecionado: ${f.name}`;
+      els.uploadText && (els.uploadText.textContent = `Selecionado: ${f.name}`);
     });
 
     // GERAR (UPLOAD)
-    document.getElementById("btn-gerar-upload")?.addEventListener("click", async () => {
+    els.btnGerarUpload?.addEventListener("click", async () => {
       const nivel = els.selNivel?.value || "iniciante";
       const file = els.inpFile?.files?.[0];
       if (!file) return alert("Selecione um arquivo (.pdf ou .txt).");
 
-      // dependências do seu projeto
       if (!window.processarArquivoUpload || !window.generatePlanFromUploadAI) {
         return alert("Módulos de upload indisponíveis (semantic.js / generatePlanFromUploadAI).");
       }
@@ -339,7 +371,7 @@ JSON EXATO:
 
         // 1) extrai tópicos do arquivo
         const r = await window.processarArquivoUpload(file);
-        // 2) gera plano (módulos/sessões) via IA usando esses tópicos
+        // 2) gera plano via IA com tópicos
         const out = await window.generatePlanFromUploadAI(nivel, r?.topicos || []);
 
         const plano = (out?.sessoes || out?.plano || []).map((s, i) => ({
@@ -350,7 +382,6 @@ JSON EXATO:
         wizard = { tema: (file.name || "Material"), nivel, plano, sessoes: [], atual: 0 };
         renderPlanoResumo(plano);
 
-        // gera sessões
         for (const item of plano) {
           els.statusUpload && (els.statusUpload.textContent = `🧠 Sessão ${item.numero} — ${item.nome}`);
           // eslint-disable-next-line no-await-in-loop
@@ -370,6 +401,6 @@ JSON EXATO:
       }
     });
 
-    console.log("🟢 core.js v23 carregado");
+    console.log("🟢 core.js v24 carregado");
   });
 })();
