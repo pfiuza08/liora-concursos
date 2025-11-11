@@ -193,7 +193,8 @@
 <div id="liora-build-info"></div>
 
 <!-- ✅ SCRIPTS (sempre no final) -->
-<script src="/scripts/semantic.js?v=%NEXT_PUBLIC_COMMIT_SHA%"></script>
+<script type="module" src="/scripts/semantic.js?v=${Date.now()}"></script>
+<script type="module" src="/scripts/core.js?v=${Date.now()}"></script>
 
 <script>
   window.LIORA = {
