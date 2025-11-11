@@ -11,13 +11,11 @@
   --stroke:#252525;
   --shadow:0 2px 8px rgba(0,0,0,0.4);
 
-  /* usadas nos cards clicáveis (lado direito) */
   --bgCard:#151515;
   --bgHover:#1d1d1d;
   --border:#252525;
 }
 
-/* Tema Claro */
 html.light, body.light {
   --brand:#f4a261;
   --bg:#faf7f2;
@@ -32,7 +30,6 @@ html.light, body.light {
   --border:#e0ddd8;
 }
 
-/* Tema Escuro */
 html.dark, body.dark {
   --brand:#c44b04;
   --bg:#0b0b0b;
@@ -113,7 +110,6 @@ html, body {
   border-color:var(--brand) !important;
 }
 
-/* Wizard Footer */
 .liora-btn.primary{ background:var(--brand); color:#fff; }
 .liora-btn.secondary{ background:transparent; border:1px solid var(--stroke); color:var(--fg); }
 .liora-btn.ghost{ background:transparent; border:none; color:var(--muted); }
@@ -154,6 +150,7 @@ input:focus, select:focus {
 }
 .upload-zone:hover{ border-color:var(--brand); background:rgba(196,75,4,.15); }
 .upload-zone input{ position:absolute; inset:0; opacity:0; cursor:pointer;}
+
 #upload-spinner {
   display:none;
   border:3px solid var(--stroke);
@@ -190,7 +187,7 @@ input:focus, select:focus {
 }
 
 /* ==========================================================
-   🔥 CARDS CLICÁVEIS DO PLANO (painel direito)
+   🗂 Cards do Plano (painel direito)
 ========================================================== */
 .liora-card-topico {
   padding:12px 16px;
@@ -205,103 +202,86 @@ input:focus, select:focus {
   border-color:var(--brand);
   transform:translateY(-2px);
 }
-.liora-card-topico strong { color:var(--brand); }
 
 /* ==========================================================
-   MISC
+   ✅ QUIZ (TESTE RÁPIDO)
 ========================================================== */
-.liora-topico-lista{ list-style:none; padding:0; margin:0; }
-.liora-topico-item{
-  padding:8px 12px; border-radius:8px;
-  background:var(--card); border:1px solid var(--stroke);
-  margin-bottom:6px; font-size:0.95rem;
-}
-
-#btn-theme{ transition:.15s; }
-#btn-theme:active{ transform:scale(.95); }
-
-@keyframes spin { to { transform:rotate(360deg); } }
-
-/* ==========================================================
-   ✅ QUIZ — TESTE RÁPIDO COM ÍCONES + ANIMAÇÃO
-========================================================== */
-
-.liora-quiz-container {
-  background: var(--card);
-  border: 2px solid var(--brand);
-  border-radius: 14px;
-  padding: 24px;
-  margin-top: 28px;
-  margin-bottom: 24px;
-  box-shadow: var(--shadow);
-  animation: fadeIn .35s ease-in;
-}
-
-.liora-quiz-title {
-  font-size: 1.25rem;
-  font-weight: 700;
-  margin-bottom: 16px;
-  color: var(--brand);
-}
-
-/* Card de opção */
 .liora-quiz-option {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 14px 18px;
-  border-radius: 14px;
-  border: 1px solid var(--stroke);
-  cursor: pointer;
-  transition: .25s ease;
-  background: var(--bgCard);
-  margin-bottom: 10px;
-  transform: scale(1);
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:10px 14px;
+  border-radius:12px;
+  border:1px solid var(--stroke);
+  cursor:pointer;
+  transition:.25s ease;
+  background:var(--bgCard);
+  margin-bottom:8px;
 }
-
 .liora-quiz-option:hover {
-  background: var(--bgHover);
-  border-color: var(--brand);
-  transform: translateY(-3px);
+  background:var(--bgHover);
+  border-color:var(--brand);
 }
-
-/* estado selecionado */
 .liora-quiz-option.selected {
-  background: var(--brand);
-  border-color: var(--brand) !important;
-  color: #fff;
-  transform: scale(1.03);
-  box-shadow: 0 0 14px rgba(196,75,4,0.6);
+  background:var(--brand);
+  border-color:var(--brand) !important;
+  color:#fff;
 }
-
-/* ícones */
-.liora-quiz-option-icon {
-  font-size: 1.7rem;
-  width: 34px;
-  text-align: center;
-}
-
-/* input */
 .liora-quiz-option input {
-  width: 20px;
-  height: 20px;
-  accent-color: var(--brand);
-  cursor: pointer;
+  width:18px;
+  height:18px;
+  accent-color:var(--brand);
 }
 
-/* texto */
-.liora-quiz-option-text {
-  flex: 1;
-  font-size: 0.95rem;
-  line-height: 1.35;
+/* ==========================================================
+   ✅ TÍTULOS + DIVIDER ANIMADO
+========================================================== */
+
+/* títulos das seções (OBJETIVO, etc.) */
+.liora-card h4 {
+  font-weight: 700;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+  letter-spacing: .3px;
 }
 
-/* animação container do quiz */
-@keyframes fadeIn {
-  from { opacity:0; transform:translateY(10px); }
-  to   { opacity:1; transform:translateY(0); }
+/* divider animado */
+.liora-block {
+  position: relative;
+  padding-bottom: 16px;
+  margin-bottom: 22px;
 }
 
+.liora-block::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 0%;
+  height: 1px;
+  background: var(--stroke);
+  opacity: 0.35;
+  transition: width .5s ease, opacity .5s ease;
+}
+
+.liora-block:hover::after {
+  width: 100%;
+  opacity: 0.9;
+}
+
+/* animação automática ao renderizar sessão */
+.liora-block.animate-divider::after {
+  width: 100%;
+  opacity: 0.9;
+}
+
+.liora-block:last-child::after {
+  display: none;
+}
+
+/* ==========================================================
+   Build info (versão no rodapé)
+========================================================== */
 #liora-build-info {
   position: fixed;
   bottom: 10px;
@@ -319,99 +299,4 @@ input:focus, select:focus {
 html.light #liora-build-info { background: rgba(255,255,255,0.35); }
 #liora-build-info:hover { opacity: .9; }
 
-/* ----------------------------------------------
-   Títulos das seções do Wizard (OBJETIVO, etc.)
----------------------------------------------- */
-.liora-card h4 {
-  font-weight: 700;           /* negrito */
-  text-transform: uppercase;  /* MAIÚSCULAS */
-  text-decoration: underline; /* sublinhado */
-  margin-bottom: 6px;
-  letter-spacing: .3px;
-}
-
-/* ----------------------------------------------
-   Divider ANIMADO (automático + hover)
----------------------------------------------- */
-.liora-block {
-  position: relative;
-  padding-bottom: 16px;
-  margin-bottom: 22px;
-}
-
-.liora-block::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  bottom: 0;
-  width: 0%;
-  height: 1px;
-  background: var(--stroke);
-  opacity: 0.35;
-  transition: width .5s ease, opacity .5s ease;
-}
-
-/* hover */
-.liora-block:hover::after {
-  width: 100%;
-  opacity: 0.9;
-}
-
-/* animação automática ao renderizar sessão */
-.liora-block.animate-divider::after {
-  width: 100%;
-  opacity: 0.9;
-}
-
-/* última seção sem divider */
-.liora-block:last-child::after {
-  display: none;
-}
-/* ----------------------------------------------
-   Títulos das seções do Wizard (OBJETIVO, CONTEÚDO, etc.)
----------------------------------------------- */
-.liora-card h4 {
-  font-weight: 700;           /* negrito */
-  text-transform: uppercase;  /* MAIÚSCULAS */
-  margin-bottom: 6px;
-  letter-spacing: .3px;
-}
-
-/* ----------------------------------------------
-   Divider ANIMADO (automático + hover)
----------------------------------------------- */
-.liora-block {
-  position: relative;
-  padding-bottom: 16px;
-  margin-bottom: 22px;
-}
-
-.liora-block::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  bottom: 0;
-  width: 0%;
-  height: 1px;
-  background: var(--stroke);
-  opacity: 0.35;
-  transition: width .5s ease, opacity .5s ease;
-}
-
-/* hover */
-.liora-block:hover::after {
-  width: 100%;
-  opacity: 0.9;
-}
-
-/* animação automática ao renderizar sessão */
-.liora-block.animate-divider::after {
-  width: 100%;
-  opacity: 0.9;
-}
-
-/* última seção sem divider */
-.liora-block:last-child::after {
-  display: none;
-}
-
+@keyframes spin { to { transform:rotate(360deg); } }
