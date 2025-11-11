@@ -167,12 +167,17 @@
 </footer>
 
 
-<!-- ✅ FORÇA ANTI-CACHE E MÓDULO -->
+<!-- ✅ força anti-cache e carrega os scripts como módulos -->
 <script>
   const ts = Date.now();
+
+  // semantic.js primeiro (exporta funções globalmente no window)
   document.write(`<script type="module" src="/scripts/semantic.js?v=${ts}"><\/script>`);
+
+  // core.js depois (usa window.* e não import)
   document.write(`<script type="module" src="/scripts/core.js?v=${ts}"><\/script>`);
 </script>
+
 
 </body>
 </html>
