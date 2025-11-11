@@ -1,8 +1,8 @@
 // ============================================================================
-// semantic.js v33 (ES Module + anti-cache + upload fixado)
+// semantic.js v34 — módulo + expõe funções no window
 // ============================================================================
 
-console.log("🧩 semantic.js (v33) carregado");
+console.log("🧩 semantic.js (v34) carregado");
 
 export async function processarArquivoUpload(file) {
   return new Promise((resolve, reject) => {
@@ -36,14 +36,11 @@ export async function gerarPlanoViaUploadAI(nivel) {
   if (!window.__liora_upload_text) throw new Error("Nenhum arquivo processado.");
 
   const prompt = `
-Analise o conteúdo abaixo e devolva SESSÕES de aprendizado.
-FORMATO JSON EXATO:
-
+Analise o conteúdo abaixo e devolva SESSÕES de aprendizado. JSON exato:
 [
   {"nome": "Conceitos básicos"},
   {"nome": "Aplicações"}
 ]
-
 "${window.__liora_upload_text.substring(0, 15000)}"
 `;
 
@@ -54,19 +51,23 @@ FORMATO JSON EXATO:
   });
 
   const data = await res.json();
-  let sessoes = [];
+  let sessoes;
 
   try {
     sessoes = JSON.parse(data.output);
   } catch (e) {
-    console.warn("[LIORA-UPLOAD] JSON inválido vindo da IA, fallback aplicado");
+    console.warn("⚠️ JSON inválido vindo da IA — aplicado fallback");
     sessoes = [{ nome: "Sessão 1" }];
   }
 
   return sessoes.map((s, i) => ({
     numero: i + 1,
-    nome: s.nome || `Sessão ${i + 1}`
+    nome: s.nome || `Sessão ${i + 1}`,
   }));
 }
 
-console.log("✅ semantic.js pronto (v33)");
+// deixa disponível globalmente:
+window.processarArquivoUpload = processarArquivoUpload;
+window.gerarPlanoViaUploadAI = gerarPlanoViaUploadAI;
+
+console.log("✅ semantic.js pronto (v34)");
