@@ -367,4 +367,51 @@ html.light #liora-build-info { background: rgba(255,255,255,0.35); }
 .liora-block:last-child::after {
   display: none;
 }
+/* ----------------------------------------------
+   Títulos das seções do Wizard (OBJETIVO, CONTEÚDO, etc.)
+---------------------------------------------- */
+.liora-card h4 {
+  font-weight: 700;           /* negrito */
+  text-transform: uppercase;  /* MAIÚSCULAS */
+  margin-bottom: 6px;
+  letter-spacing: .3px;
+}
+
+/* ----------------------------------------------
+   Divider ANIMADO (automático + hover)
+---------------------------------------------- */
+.liora-block {
+  position: relative;
+  padding-bottom: 16px;
+  margin-bottom: 22px;
+}
+
+.liora-block::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 0%;
+  height: 1px;
+  background: var(--stroke);
+  opacity: 0.35;
+  transition: width .5s ease, opacity .5s ease;
+}
+
+/* hover */
+.liora-block:hover::after {
+  width: 100%;
+  opacity: 0.9;
+}
+
+/* animação automática ao renderizar sessão */
+.liora-block.animate-divider::after {
+  width: 100%;
+  opacity: 0.9;
+}
+
+/* última seção sem divider */
+.liora-block:last-child::after {
+  display: none;
+}
 
