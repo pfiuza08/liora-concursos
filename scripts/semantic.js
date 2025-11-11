@@ -1,64 +1,51 @@
 // ============================================================================
-// semantic.js v32
-// Processamento de arquivo + geração de plano orientado por conteúdo
+// semantic.js v33 (ES Module + anti-cache + sessão via upload corrigida)
 // ============================================================================
 
-console.log("🧩 semantic.js carregado");
+console.log("🧩 semantic.js (v33) carregado");
 
-window.processarArquivoUpload = async function (file) {
+export async function processarArquivoUpload(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
 
-    reader.onload = function (e) {
-      const content = e.target.result;
-      window.__liora_upload_text = content; // cache global
-      resolve(content);
+    reader.onload = (e) => {
+      window.__liora_upload_text = e.target.result;
+      resolve(window.__liora_upload_text);
     };
 
     reader.onerror = reject;
 
     if (file.type.includes("pdf")) {
-      pdfjsLib
-        .getDocument({ data: file })
-        .promise.then(async (pdf) => {
-          let text = "";
-          for (let i = 1; i <= pdf.numPages; i++) {
-            const page = await pdf.getPage(i);
-            const content = await page.getTextContent();
-            text += content.items.map((s) => s.str).join(" ") + "\n";
-          }
-          window.__liora_upload_text = text;
-          resolve(text);
-        })
-        .catch(reject);
+      pdfjsLib.getDocument({ data: file }).promise.then(async (pdf) => {
+        let txt = "";
+        for (let i = 1; i <= pdf.numPages; i++) {
+          const page = await pdf.getPage(i);
+          const content = await page.getTextContent();
+          txt += content.items.map((s) => s.str).join(" ") + "\n";
+        }
+        window.__liora_upload_text = txt;
+        resolve(txt);
+      });
     } else {
       reader.readAsText(file);
     }
   });
-};
+}
 
-window.generatePlanFromUploadAI = async function (nivel) {
-  if (!window.__liora_upload_text) {
-    throw new Error("Nenhum arquivo carregado.");
-  }
+export async function gerarPlanoViaUploadAI(nivel) {
+  if (!window.__liora_upload_text) throw new Error("Nenhum arquivo processado.");
 
   const prompt = `
-Você é especialista em microlearning.
-Analise o conteúdo abaixo e QUEBRE em sessões lógicas de estudo.
-Cada sessão deve ter um nome curto, forte e objetivo.
-
-Retorno obrigatório: JSON puro
+Analise o conteúdo abaixo e devolva SESSÕES de aprendizado:
+Retorno JSON EXATO:
 
 [
-  {"nome": "Fundamentos"},
-  {"nome": "Aplicações"},
-  {"nome": "Exemplos Práticos"}
+  {"nome": "Conceitos básicos"},
+  {"nome": "Aplicações"}
 ]
 
-Conteúdo:
-"""
-${window.__liora_upload_text}
-"""`;
+"${window.__liora_upload_text.substring(0, 20000)}"
+`;
 
   const res = await fetch("/api/liora", {
     method: "POST",
@@ -66,22 +53,20 @@ ${window.__liora_upload_text}
     body: JSON.stringify({ system: "Você é Liora.", user: prompt }),
   });
 
-  const json = await res.json();
+  let json = await res.json();
   let sessoes = [];
 
   try {
     sessoes = JSON.parse(json.output);
-  } catch {
-    sessoes = [];
+  } catch (err) {
+    console.warn("LLM retornou JSON inválido, fallback ativado.");
+    sessoes = [{ nome: "Sessão 1" }];
   }
 
-  // ✅ normalização: SEM número vindo do LLM
-  return {
-    sessoes: sessoes.map((s, i) => ({
-      numero: i + 1,
-      nome: s.nome || s.titulo || `Sessão ${i + 1}`
-    }))
-  };
-};
+  return sessoes.map((s, i) => ({
+    numero: i + 1,
+    nome: s.nome || `Sessão ${i + 1}`
+  }));
+}
 
-console.log("✅ semantic.js pronto (v32)");
+console.log("✅ semantic.js pronto (v33)");
