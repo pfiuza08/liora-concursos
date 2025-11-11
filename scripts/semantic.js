@@ -1,5 +1,5 @@
 // ============================================================================
-// semantic.js v33 (ES Module + anti-cache + sessão via upload corrigida)
+// semantic.js v33 (ES Module + anti-cache + upload fixado)
 // ============================================================================
 
 console.log("🧩 semantic.js (v33) carregado");
@@ -36,15 +36,15 @@ export async function gerarPlanoViaUploadAI(nivel) {
   if (!window.__liora_upload_text) throw new Error("Nenhum arquivo processado.");
 
   const prompt = `
-Analise o conteúdo abaixo e devolva SESSÕES de aprendizado:
-Retorno JSON EXATO:
+Analise o conteúdo abaixo e devolva SESSÕES de aprendizado.
+FORMATO JSON EXATO:
 
 [
   {"nome": "Conceitos básicos"},
   {"nome": "Aplicações"}
 ]
 
-"${window.__liora_upload_text.substring(0, 20000)}"
+"${window.__liora_upload_text.substring(0, 15000)}"
 `;
 
   const res = await fetch("/api/liora", {
@@ -53,13 +53,13 @@ Retorno JSON EXATO:
     body: JSON.stringify({ system: "Você é Liora.", user: prompt }),
   });
 
-  let json = await res.json();
+  const data = await res.json();
   let sessoes = [];
 
   try {
-    sessoes = JSON.parse(json.output);
-  } catch (err) {
-    console.warn("LLM retornou JSON inválido, fallback ativado.");
+    sessoes = JSON.parse(data.output);
+  } catch (e) {
+    console.warn("[LIORA-UPLOAD] JSON inválido vindo da IA, fallback aplicado");
     sessoes = [{ nome: "Sessão 1" }];
   }
 
