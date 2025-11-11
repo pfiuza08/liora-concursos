@@ -107,40 +107,97 @@
     // Geração do plano
     // ===============================================
     async function gerarPlanoDeSessoes(tema, nivel) {
-      const prompt = `
-Crie um plano de sessões para o tema "${tema}" (nível: ${nivel}).
-JSON:
+  const limite =
+    nivel === "iniciante" ? 4 :
+    nivel === "intermediario" ? 6 :
+    8; // avançado
+
+  const system = `
+Você é LIORA, especialista em microlearning.
+Responda apenas com JSON válido, sem explicações.
+`;
+
+  const user = `
+Crie um plano de estudo dividido em sessões para o tema: "${tema}".
+Nível do aluno: ${nivel.toUpperCase()}.
+Quantidade máxima de sessões: ${limite}.
+
+Formato obrigatório do retorno (somente JSON):
 [
   {"numero":1,"nome":"Fundamentos"},
   {"numero":2,"nome":"Aplicações"}
-]`;
+]
+`;
 
-      const raw = await callLLM("Você é Liora, especialista em microlearning.", prompt);
-      return JSON.parse(raw);
-    }
+  const raw = await callLLM(system, user);
+
+  // Remove texto extra antes ou depois do JSON
+  const cleaned = raw.trim().replace(/^[^{[]+/, "").replace(/[^}\]]+$/, "");
+
+  try {
+    const parsed = JSON.parse(cleaned);
+
+    // garante que tem numero e nome
+    return parsed.map((s, i) => ({
+      numero: s.numero ?? i + 1,
+      nome: s.nome ?? `Sessão ${i + 1}`
+    }));
+
+  } catch (e) {
+    console.error("Erro no JSON do plano:", raw);
+    throw new Error("JSON inválido no retorno da IA ao gerar plano.");
+  }
+}
+
 
 
     // ===============================================
     // Geração de sessão
     // ===============================================
-    async function gerarSessao(tema, nivel, numero, nome) {
-      const raw = await callLLM("Você é Liora.", `
-Gere a sessão ${numero} do tema "${tema}".
-JSON:
+  async function gerarSessao(tema, nivel, numero, nome) {
+  const system = `
+Você é LIORA. Responda apenas com JSON válido.
+`;
+
+  const user = `
+Gere o conteúdo da sessão ${numero} do tema "${tema}".
+Nível do aluno: ${nivel.toUpperCase()}.
+
+Formato obrigatório (somente JSON):
 {
  "titulo":"Sessão ${numero} — ${nome}",
- "objetivo":"resultado esperado",
- "conteudo":["p1","p2"],
- "analogias":["a1"],
+ "objetivo":"resultado claro e específico",
+ "conteudo":["p1","p2","p3"],
+ "analogias":["a1","a2"],
  "ativacao":["q1","q2"],
- "quiz":{"pergunta":"?","alternativas":["a","b"],"corretaIndex":1,"explicacao":"..."},
+ "quiz":{"pergunta":"?","alternativas":["a","b","c"],"corretaIndex":1,"explicacao":"..."},
  "flashcards":[{"q":"...","a":"..."}]
-}`);
+}
+`;
 
-      const s = JSON.parse(raw);
-      s.titulo = `Sessão ${numero} — ${(s.titulo || nome).replace(/^Sessão.*—/i, "")}`;
-      return s;
-    }
+  let raw = await callLLM(system, user);
+
+  const cleaned = raw.trim().replace(/^[^{]+/, "").replace(/[^}]+$/, "");
+
+  try {
+    const s = JSON.parse(cleaned);
+
+    return {
+      titulo: `Sessão ${numero} — ${(s.titulo || nome).replace(/^Sessão.*—/i, "")}`,
+      objetivo: s.objetivo ?? "",
+      conteudo: s.conteudo ?? [],
+      analogias: s.analogias ?? [],
+      ativacao: s.ativacao ?? [],
+      quiz: s.quiz ?? { pergunta:"", alternativas:[], corretaIndex:0, explicacao:"" },
+      flashcards: s.flashcards ?? [],
+    };
+
+  } catch (err) {
+    console.warn("Sessão inválida, regenerando…");
+    return gerarSessao(tema, nivel, numero, nome); // tenta de novo
+  }
+}
+
 
 
     // ===============================================
