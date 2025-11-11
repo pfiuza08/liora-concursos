@@ -7,7 +7,7 @@
   <title>Liora — Plano de Estudo Inteligente</title>
   <meta name="description" content="Liora cria planos de estudo personalizados com base no tema OU upload de material.">
 
-  <!-- Tailwind (dev only — no build ainda, ignore o warning) -->
+  <!-- Tailwind (dev; depois podemos migrar para build) -->
   <script src="https://cdn.tailwindcss.com"></script>
 
   <!-- PDF.js -->
@@ -18,7 +18,7 @@
   </script>
 
   <!-- CSS -->
-  <link rel="stylesheet" href="/style.css?v=1">
+  <link rel="stylesheet" href="/style.css" />
 </head>
 
 <body>
@@ -33,6 +33,7 @@
         <p class="text-sm text-[var(--muted)]">Crie um plano de estudo sob medida para qualquer assunto.</p>
       </div>
     </div>
+
     <button id="btn-theme" class="chip" title="Alternar tema">🌙</button>
   </div>
 </header>
@@ -41,7 +42,7 @@
 <!-- ✅ GRID PRINCIPAL -->
 <main id="liora-layout" class="liora-grid">
 
-  <!-- ► Painel esquerdo (tema / upload) -->
+  <!-- ◀ Painel esquerdo -->
   <section class="card p-6 liora-left">
 
     <h2 class="section-title mb-4">Como você deseja estudar?</h2>
@@ -51,7 +52,7 @@
       <button id="modo-upload" class="btn-secondary">Upload</button>
     </div>
 
-    <!-- Painel tema -->
+    <!-- ▶ Estudo por tema -->
     <div id="painel-tema">
       <label class="block text-sm font-medium mb-1">Tema de estudo</label>
       <input id="inp-tema" type="text" placeholder="Ex.: Direito Constitucional — Poder Legislativo" class="mb-3">
@@ -71,8 +72,9 @@
       <p id="status" class="text-xs text-[var(--muted)] mt-2"></p>
     </div>
 
-    <!-- Painel upload -->
+    <!-- ▶ Estudo por upload -->
     <div id="painel-upload" class="hidden">
+
       <label class="block text-sm font-medium mb-1">Envie seu material</label>
 
       <label id="upload-zone" class="upload-zone">
@@ -89,7 +91,7 @@
   </section>
 
 
-  <!-- ► Painel direito (lista do plano) -->
+  <!-- ▶ Painel direito -->
   <section class="card p-6 liora-right">
     <div class="flex items-center justify-between mb-4">
       <h2 class="section-title">Seu plano de estudo</h2>
@@ -102,8 +104,7 @@
 </main>
 
 
-
-<!-- ✅ Wizard das sessões -->
+<!-- ✅ Wizard das Sessões -->
 <section id="liora-sessoes" class="hidden liora-wizard max-w-6xl mx-auto px-6 pb-10">
 
   <div class="liora-wizard__header">
@@ -112,8 +113,8 @@
       <h2 id="liora-tema-ativo">—</h2>
     </div>
 
-    <div>
-      <span id="liora-progress-label">0/0</span>
+    <div class="liora-wizard__progress">
+      <span id="liora-progress-label">Sessão 0/0</span>
       <div class="liora-progress">
         <div id="liora-progress-bar" class="liora-progress__bar"></div>
       </div>
@@ -121,7 +122,7 @@
   </div>
 
   <div class="liora-card animate-fade">
-    <h3 id="liora-sessao-titulo"></h3>
+    <h3 id="liora-sessao-titulo" class="liora-session-title"></h3>
 
     <div class="liora-block">
       <h4>Objetivo</h4>
@@ -139,14 +140,14 @@
     </div>
 
     <div class="liora-block">
-      <h4>Ativação Neural</h4>
+      <h4>Ativação</h4>
       <ul id="liora-sessao-ativacao"></ul>
     </div>
 
     <div class="liora-block">
-      <h4>Teste Rápido</h4>
+      <h4>Teste rápido</h4>
       <div id="liora-sessao-quiz"></div>
-      <p id="liora-sessao-quiz-feedback"></p>
+      <p id="liora-sessao-quiz-feedback" class="liora-quiz-feedback"></p>
     </div>
 
     <div class="liora-block">
@@ -164,20 +165,26 @@
 
 <footer class="max-w-6xl mx-auto px-4 pb-10 text-xs text-[var(--muted)] text-center">
   <p>Liora — IA aplicada a estudos. © Intellih</p>
+  <div id="liora-build-info"></div>
 </footer>
 
 
-<!-- ✅ força anti-cache e carrega os scripts como módulos -->
-<script>
+<!-- ✅ Scripts (v35, anti-cache automático) -->
+<script type="module">
   const ts = Date.now();
 
-  // semantic.js primeiro (exporta funções globalmente no window)
-  document.write(`<script type="module" src="/scripts/semantic.js?v=${ts}"><\/script>`);
+  const load = (path) => {
+    const s = document.createElement("script");
+    s.type = "module";
+    s.src = `/scripts/${path}?v=${ts}`;
+    document.body.appendChild(s);
+  };
 
-  // core.js depois (usa window.* e não import)
-  document.write(`<script type="module" src="/scripts/core.js?v=${ts}"><\/script>`);
+  load("semantic.js");
+  load("core.js");
+
+  document.getElementById("liora-build-info").textContent = `v35 · ${ts}`;
 </script>
-
 
 </body>
 </html>
