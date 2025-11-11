@@ -218,27 +218,57 @@ JSON:
     // ===============================================
     // BOTÃO GERAR (tema) — agora com barra de progresso
     // ===============================================
-    els.btnGerar.onclick = async () => {
-      const tema = els.inpTema.value.trim();
-      const nivel = els.selNivel.value;
-      if (!tema) return alert("Digite um tema.");
+ // ===============================================
+// BOTÃO GERAR (tema) — agora com progresso visual
+// ===============================================
+els.btnGerar.onclick = async () => {
+  const tema = els.inpTema.value.trim();
+  const nivel = els.selNivel.value;
+  if (!tema) return alert("Digite um tema.");
 
-      els.ctx.textContent = "Gerando plano...";
-      els.btnGerar.disabled = true;
+  els.btnGerar.disabled = true;
+  els.ctx.textContent = "Criando plano de estudo...";
 
-      const plano = await gerarPlanoDeSessoes(tema, nivel);
-      wizard = { tema, nivel, plano, sessoes: [], atual: 0 };
-      renderPlanoResumo(plano);
+  const progressWrapper = document.getElementById("liora-generating-progress");
+  const progressBar = document.getElementById("liora-generating-progress-bar");
 
-      for (let i = 0; i < plano.length; i++) {
-        els.ctx.textContent = `Criando sessão ${i + 1}/${plano.length}`;
-        wizard.sessoes.push(await gerarSessao(tema, nivel, plano[i].numero, plano[i].nome));
-      }
+  progressWrapper.style.display = "block";
+  progressBar.style.width = "0%";
 
-      els.ctx.textContent = "";
-      els.btnGerar.disabled = false;
-      renderWizard();
-    };
+  try {
+    const plano = await gerarPlanoDeSessoes(tema, nivel);
+    wizard = { tema, nivel, plano, sessoes: [], atual: 0 };
+    renderPlanoResumo(plano);
+
+    for (let i = 0; i < plano.length; i++) {
+      const perc = ((i + 1) / plano.length) * 100;
+      progressBar.style.width = perc + "%";
+
+      els.ctx.textContent = `Gerando sessão ${i + 1}/${plano.length}`;
+
+      const sessao = await gerarSessao(tema, nivel, plano[i].numero, plano[i].nome);
+      wizard.sessoes.push(sessao);
+    }
+
+    progressBar.style.width = "100%";
+    els.ctx.textContent = "";
+
+    // Só renderiza agora, quando tudo estiver completo
+    renderWizard();
+
+  } catch (err) {
+    console.error(err);
+    alert("Erro ao gerar o plano.");
+  } finally {
+    setTimeout(() => {
+      progressWrapper.style.display = "none";
+      progressBar.style.width = "0%";
+    }, 500);
+
+    els.btnGerar.disabled = false;
+  }
+};
+
 
 
     // ===============================================
