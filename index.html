@@ -193,8 +193,11 @@
 <div id="liora-build-info"></div>
 
 <!-- ✅ SCRIPTS (sempre no final) -->
-<script type="module" src="/scripts/semantic.js?v=${Date.now()}"></script>
-<script type="module" src="/scripts/core.js?v=${Date.now()}"></script>
+<script>
+  const ts = Date.now(); // cache-bust real
+  document.write(`<script type="module" src="/scripts/semantic.js?v=${ts}"><\/script>`);
+  document.write(`<script type="module" src="/scripts/core.js?v=${ts}"><\/script>`);
+</script>
 
 <script>
   window.LIORA = {
