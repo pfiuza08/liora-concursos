@@ -1,18 +1,21 @@
 // ============================================================================
-// core.js v33 — ES MODULE + anti-cache + wizard fix + upload fix
+// core.js v33 — ES MODULE + wizard fix + upload fix + progress-bar
 // ============================================================================
 
 import { processarArquivoUpload, gerarPlanoViaUploadAI } from "./semantic.js?v=" + Date.now();
 
-console.log("🔵 Inicializando Liora Core v33...");
+console.log("🚀 core.js v33 carregado");
 
 document.addEventListener("DOMContentLoaded", () => {
 
+  // ---------------------------
+  // ELEMENTOS
+  // ---------------------------
   const els = {
-    modoUpload: document.getElementById("modo-upload"),
     modoTema: document.getElementById("modo-tema"),
-    painelUpload: document.getElementById("painel-upload"),
+    modoUpload: document.getElementById("modo-upload"),
     painelTema: document.getElementById("painel-tema"),
+    painelUpload: document.getElementById("painel-upload"),
 
     inpTema: document.getElementById("inp-tema"),
     selNivel: document.getElementById("sel-nivel"),
@@ -44,6 +47,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   let wizard = { tema: null, nivel: null, plano: [], sessoes: [], atual: 0 };
 
+  // ---------------------------
+  // TEMA/UPLOAD VIEW
+  // ---------------------------
   function setMode(mode) {
     els.painelTema.classList.toggle("hidden", mode !== "tema");
     els.painelUpload.classList.toggle("hidden", mode !== "upload");
@@ -51,10 +57,13 @@ document.addEventListener("DOMContentLoaded", () => {
     els.modoUpload.classList.toggle("selected", mode === "upload");
   }
 
-  els.modoTema.addEventListener("click", () => setMode("tema"));
-  els.modoUpload.addEventListener("click", () => setMode("upload"));
+  els.modoTema.onclick = () => setMode("tema");
+  els.modoUpload.onclick = () => setMode("upload");
   setMode("tema");
 
+  // ---------------------------
+  // CHAMAR LLM
+  // ---------------------------
   async function callLLM(system, user) {
     const r = await fetch("/api/liora", {
       method: "POST",
@@ -64,12 +73,16 @@ document.addEventListener("DOMContentLoaded", () => {
     return (await r.json()).output;
   }
 
+  // ---------------------------
+  // GERAR SESSÃO COMPLETA
+  // ---------------------------
   async function gerarSessao(tema, nivel, numero, nome) {
     const raw = await callLLM("Você é Liora.", `
-Gere conteúdo da sessão ${numero}, JSON exato:
+Gere a sessão ${numero} do tema "${tema}". Responda JSON exato:
 {"titulo":"${nome}","objetivo":"","conteudo":[""],"analogias":[""],"ativacao":[""],"quiz":{"pergunta":"?","alternativas":["a","b"],"corretaIndex":1,"explicacao":""},"flashcards":[{"q":"","a":""}]}`);
 
     const s = JSON.parse(raw);
+
     return {
       numero,
       titulo: `Sessão ${numero} — ${s.titulo}`,
@@ -82,8 +95,12 @@ Gere conteúdo da sessão ${numero}, JSON exato:
     };
   }
 
+  // ---------------------------
+  // RENDER WIZARD
+  // ---------------------------
   function renderWizard() {
     const s = wizard.sessoes[wizard.atual];
+
     els.wizardContainer.classList.remove("hidden");
     els.wizardTema.textContent = wizard.tema;
     els.wizardProgressLabel.textContent = `${wizard.atual + 1}/${wizard.sessoes.length}`;
@@ -96,14 +113,18 @@ Gere conteúdo da sessão ${numero}, JSON exato:
     els.wizardAtivacao.innerHTML = s.ativacao.map((q) => `<li>${q}</li>`).join("");
 
     els.wizardQuiz.innerHTML = "";
+    els.wizardQuizFeedback.textContent = "";
+
     s.quiz.alternativas.forEach((alt, i) => {
       const opt = document.createElement("label");
       opt.className = "liora-quiz-option";
       opt.innerHTML = `<input type="radio" name="quiz" value="${i}"><span>${alt}</span>`;
+
       opt.addEventListener("change", () => {
         els.wizardQuizFeedback.textContent =
           i === s.quiz.corretaIndex ? "✅ Correto!" : "❌ Tente novamente.";
       });
+
       els.wizardQuiz.appendChild(opt);
     });
 
@@ -112,53 +133,43 @@ Gere conteúdo da sessão ${numero}, JSON exato:
       .join("");
   }
 
-  // -------------------------------------------------------
-  // BOTÃO PRÓXIMA SESSÃO (listener garantido)
-  // -------------------------------------------------------
-  els.wizardProxima.addEventListener("click", () => {
+  // ---------------------------
+  // BOTÕES DO WIZARD
+  // ---------------------------
+  els.wizardProxima.onclick = () => {
     if (wizard.atual < wizard.sessoes.length - 1) wizard.atual++;
     renderWizard();
-  });
+  };
 
-  els.wizardVoltar.addEventListener("click", () => {
+  els.wizardVoltar.onclick = () => {
     if (wizard.atual > 0) wizard.atual--;
     renderWizard();
-  });
+  };
 
-  // -------------------------------------------------------
-  // UPLOAD — NOVO fluxo
-  // -------------------------------------------------------
-  async function gerarPlanoViaUpload() {
-    const nivel = els.selNivel.value;
+  // ---------------------------
+  // UPLOAD
+  // ---------------------------
+  els.btnGerarUpload.onclick = async () => {
     const file = els.inpFile.files?.[0];
     if (!file) return alert("Selecione um arquivo.");
 
     els.btnGerarUpload.disabled = true;
-    els.statusUpload.textContent = "Processando...";
+    els.statusUpload.textContent = "Processando arquivo...";
 
     await processarArquivoUpload(file);
-    const sessoes = await gerarPlanoViaUploadAI(nivel);
+    const sessoes = await gerarPlanoViaUploadAI(els.selNivel.value);
 
-    wizard = {
-      tema: file.name,
-      nivel,
-      plano: sessoes,
-      sessoes: [],
-      atual: 0
-    };
+    wizard = { tema: file.name, nivel: els.selNivel.value, plano: sessoes, sessoes: [], atual: 0 };
 
     for (let i = 0; i < sessoes.length; i++) {
-      els.statusUpload.textContent = `(${i + 1}/${sessoes.length}) Gerando ${sessoes[i].nome}`;
-      const sessao = await gerarSessao(file.name, nivel, i + 1, sessoes[i].nome);
+      els.statusUpload.textContent = `(${i + 1}/${sessoes.length}) Gerando: ${sessoes[i].nome}`;
+      const sessao = await gerarSessao(file.name, wizard.nivel, i + 1, sessoes[i].nome);
       wizard.sessoes.push(sessao);
     }
 
     els.statusUpload.textContent = "Plano concluído!";
     els.btnGerarUpload.disabled = false;
     renderWizard();
-  }
+  };
 
-  els.btnGerarUpload.addEventListener("click", gerarPlanoViaUpload);
-
-  console.log("🟢 core.js v33 carregado");
 });
