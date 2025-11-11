@@ -5,9 +5,8 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Liora — Plano de Estudo Inteligente</title>
-  <meta name="description" content="Liora cria planos de estudo personalizados com base no tema OU upload de material.">
 
-  <!-- Tailwind (dev; depois podemos migrar para build) -->
+  <!-- Tailwind (modo DEV, depois removemos) -->
   <script src="https://cdn.tailwindcss.com"></script>
 
   <!-- PDF.js -->
@@ -17,7 +16,6 @@
       "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.14.305/pdf.worker.min.js";
   </script>
 
-  <!-- CSS -->
   <link rel="stylesheet" href="/style.css" />
 </head>
 
@@ -34,16 +32,14 @@
       </div>
     </div>
 
-    <button id="btn-theme" class="chip" title="Alternar tema">🌙</button>
+    <button id="btn-theme" class="btn-secondary" style="width:auto; padding:.3rem .6rem">🌙</button>
   </div>
 </header>
 
 
-<!-- ✅ GRID PRINCIPAL -->
 <main id="liora-layout" class="liora-grid">
 
-  <!-- ◀ Painel esquerdo -->
-  <section class="card p-6 liora-left">
+  <section class="card p-6">
 
     <h2 class="section-title mb-4">Como você deseja estudar?</h2>
 
@@ -52,7 +48,6 @@
       <button id="modo-upload" class="btn-secondary">Upload</button>
     </div>
 
-    <!-- ▶ Estudo por tema -->
     <div id="painel-tema">
       <label class="block text-sm font-medium mb-1">Tema de estudo</label>
       <input id="inp-tema" type="text" placeholder="Ex.: Direito Constitucional — Poder Legislativo" class="mb-3">
@@ -72,14 +67,13 @@
       <p id="status" class="text-xs text-[var(--muted)] mt-2"></p>
     </div>
 
-    <!-- ▶ Estudo por upload -->
+
     <div id="painel-upload" class="hidden">
 
       <label class="block text-sm font-medium mb-1">Envie seu material</label>
 
       <label id="upload-zone" class="upload-zone">
-        <div id="upload-icon">📁</div>
-        <p id="upload-text">Clique aqui ou arraste um arquivo (.txt, .pdf)</p>
+        <p id="upload-text">Clique ou arraste um arquivo (.txt, .pdf)</p>
         <div id="upload-spinner"></div>
         <input id="inp-file" type="file" accept=".pdf,.txt" />
       </label>
@@ -91,8 +85,7 @@
   </section>
 
 
-  <!-- ▶ Painel direito -->
-  <section class="card p-6 liora-right">
+  <section class="card p-6">
     <div class="flex items-center justify-between mb-4">
       <h2 class="section-title">Seu plano de estudo</h2>
       <p id="ctx" class="text-sm text-[var(--muted)]"></p>
@@ -104,7 +97,7 @@
 </main>
 
 
-<!-- ✅ Wizard das Sessões -->
+
 <section id="liora-sessoes" class="hidden liora-wizard max-w-6xl mx-auto px-6 pb-10">
 
   <div class="liora-wizard__header">
@@ -122,7 +115,7 @@
   </div>
 
   <div class="liora-card animate-fade">
-    <h3 id="liora-sessao-titulo" class="liora-session-title"></h3>
+    <h3 id="liora-sessao-titulo"></h3>
 
     <div class="liora-block">
       <h4>Objetivo</h4>
@@ -147,7 +140,7 @@
     <div class="liora-block">
       <h4>Teste rápido</h4>
       <div id="liora-sessao-quiz"></div>
-      <p id="liora-sessao-quiz-feedback" class="liora-quiz-feedback"></p>
+      <p id="liora-sessao-quiz-feedback"></p>
     </div>
 
     <div class="liora-block">
@@ -163,27 +156,24 @@
 
 </section>
 
+
 <footer class="max-w-6xl mx-auto px-4 pb-10 text-xs text-[var(--muted)] text-center">
   <p>Liora — IA aplicada a estudos. © Intellih</p>
   <div id="liora-build-info"></div>
 </footer>
 
 
-<!-- ✅ Scripts (v35, anti-cache automático) -->
 <script type="module">
   const ts = Date.now();
 
-  const load = (path) => {
+  ["semantic.js", "core.js"].forEach(src => {
     const s = document.createElement("script");
     s.type = "module";
-    s.src = `/scripts/${path}?v=${ts}`;
+    s.src = `/scripts/${src}?v=${ts}`;
     document.body.appendChild(s);
-  };
+  });
 
-  load("semantic.js");
-  load("core.js");
-
-  document.getElementById("liora-build-info").textContent = `v35 · ${ts}`;
+  document.getElementById("liora-build-info").textContent = `v36 - ${ts}`;
 </script>
 
 </body>
