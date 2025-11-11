@@ -1,16 +1,11 @@
 // ============================================================================
-// core.js v33 — ES MODULE + wizard fix + upload fix + progress-bar
+// core.js v34 — sem imports, usa funções globais do semantic.js
 // ============================================================================
 
-import { processarArquivoUpload, gerarPlanoViaUploadAI } from "./semantic.js?v=" + Date.now();
-
-console.log("🚀 core.js v33 carregado");
+console.log("🚀 core.js v34 carregado");
 
 document.addEventListener("DOMContentLoaded", () => {
 
-  // ---------------------------
-  // ELEMENTOS
-  // ---------------------------
   const els = {
     modoTema: document.getElementById("modo-tema"),
     modoUpload: document.getElementById("modo-upload"),
@@ -47,9 +42,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   let wizard = { tema: null, nivel: null, plano: [], sessoes: [], atual: 0 };
 
-  // ---------------------------
-  // TEMA/UPLOAD VIEW
-  // ---------------------------
   function setMode(mode) {
     els.painelTema.classList.toggle("hidden", mode !== "tema");
     els.painelUpload.classList.toggle("hidden", mode !== "upload");
@@ -61,9 +53,7 @@ document.addEventListener("DOMContentLoaded", () => {
   els.modoUpload.onclick = () => setMode("upload");
   setMode("tema");
 
-  // ---------------------------
-  // CHAMAR LLM
-  // ---------------------------
+
   async function callLLM(system, user) {
     const r = await fetch("/api/liora", {
       method: "POST",
@@ -73,16 +63,13 @@ document.addEventListener("DOMContentLoaded", () => {
     return (await r.json()).output;
   }
 
-  // ---------------------------
-  // GERAR SESSÃO COMPLETA
-  // ---------------------------
+
   async function gerarSessao(tema, nivel, numero, nome) {
     const raw = await callLLM("Você é Liora.", `
-Gere a sessão ${numero} do tema "${tema}". Responda JSON exato:
+Gere a sessão ${numero} do tema "${tema}". JSON exato:
 {"titulo":"${nome}","objetivo":"","conteudo":[""],"analogias":[""],"ativacao":[""],"quiz":{"pergunta":"?","alternativas":["a","b"],"corretaIndex":1,"explicacao":""},"flashcards":[{"q":"","a":""}]}`);
 
     const s = JSON.parse(raw);
-
     return {
       numero,
       titulo: `Sessão ${numero} — ${s.titulo}`,
@@ -95,9 +82,7 @@ Gere a sessão ${numero} do tema "${tema}". Responda JSON exato:
     };
   }
 
-  // ---------------------------
-  // RENDER WIZARD
-  // ---------------------------
+
   function renderWizard() {
     const s = wizard.sessoes[wizard.atual];
 
@@ -133,9 +118,7 @@ Gere a sessão ${numero} do tema "${tema}". Responda JSON exato:
       .join("");
   }
 
-  // ---------------------------
-  // BOTÕES DO WIZARD
-  // ---------------------------
+
   els.wizardProxima.onclick = () => {
     if (wizard.atual < wizard.sessoes.length - 1) wizard.atual++;
     renderWizard();
@@ -146,9 +129,7 @@ Gere a sessão ${numero} do tema "${tema}". Responda JSON exato:
     renderWizard();
   };
 
-  // ---------------------------
-  // UPLOAD
-  // ---------------------------
+
   els.btnGerarUpload.onclick = async () => {
     const file = els.inpFile.files?.[0];
     if (!file) return alert("Selecione um arquivo.");
@@ -156,8 +137,8 @@ Gere a sessão ${numero} do tema "${tema}". Responda JSON exato:
     els.btnGerarUpload.disabled = true;
     els.statusUpload.textContent = "Processando arquivo...";
 
-    await processarArquivoUpload(file);
-    const sessoes = await gerarPlanoViaUploadAI(els.selNivel.value);
+    await window.processarArquivoUpload(file);
+    const sessoes = await window.gerarPlanoViaUploadAI(els.selNivel.value);
 
     wizard = { tema: file.name, nivel: els.selNivel.value, plano: sessoes, sessoes: [], atual: 0 };
 
