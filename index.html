@@ -1,12 +1,10 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Liora — Plano de Estudo Inteligente</title>
 
-  <!-- Tailwind (modo DEV, depois removemos) -->
   <script src="https://cdn.tailwindcss.com"></script>
 
   <!-- PDF.js -->
@@ -18,27 +16,27 @@
 
   <link rel="stylesheet" href="/style.css" />
 </head>
-
 <body>
 
 <header class="max-w-6xl mx-auto px-6 pt-8">
-  <div class="flex items-center justify-between">
+  <div class="flex justify-between items-center">
     <div class="flex items-center gap-3">
-      <div class="w-10 h-10 rounded-2xl flex items-center justify-center text-white font-black"
-           style="background:var(--brand)">Li</div>
+      <div class="w-10 h-10 rounded-2xl bg-[var(--brand)] text-white font-black flex items-center justify-center">
+        Li
+      </div>
       <div>
         <h1 class="text-xl font-bold">Liora — Plano de Estudo Inteligente</h1>
-        <p class="text-sm text-[var(--muted)]">Crie um plano de estudo sob medida para qualquer assunto.</p>
+        <p class="text-sm text-[var(--muted)]">Personaliza seu plano de estudo em minutos.</p>
       </div>
     </div>
 
-    <button id="btn-theme" class="btn-secondary" style="width:auto; padding:.3rem .6rem">🌙</button>
+    <button id="btn-theme" class="btn-secondary" style="padding:.3rem .6rem">🌙</button>
   </div>
 </header>
 
-
 <main id="liora-layout" class="liora-grid">
 
+  <!-- ---- ESQUERDA ---- -->
   <section class="card p-6">
 
     <h2 class="section-title mb-4">Como você deseja estudar?</h2>
@@ -48,29 +46,25 @@
       <button id="modo-upload" class="btn-secondary">Upload</button>
     </div>
 
+    <!-- PAINEL TEMA -->
     <div id="painel-tema">
-      <label class="block text-sm font-medium mb-1">Tema de estudo</label>
+      <label class="text-sm font-medium">Tema de estudo</label>
       <input id="inp-tema" type="text" placeholder="Ex.: Direito Constitucional — Poder Legislativo" class="mb-3">
 
-      <label class="block text-sm font-medium mb-1">Nível de conhecimento</label>
-      <select id="sel-nivel" class="mb-2">
+      <label class="text-sm font-medium">Nível de conhecimento</label>
+      <select id="sel-nivel">
         <option value="iniciante">Iniciante</option>
         <option value="intermediario">Intermediário</option>
         <option value="avancado">Avançado</option>
       </select>
 
-      <p class="text-xs text-[var(--muted)] mb-3">
-        A Liora definirá automaticamente as sessões com base no tema.
-      </p>
-
-      <button id="btn-gerar" class="btn w-full mt-1">Gerar plano</button>
+      <button id="btn-gerar" class="btn w-full mt-3">Gerar plano</button>
       <p id="status" class="text-xs text-[var(--muted)] mt-2"></p>
     </div>
 
-
+    <!-- PAINEL UPLOAD -->
     <div id="painel-upload" class="hidden">
-
-      <label class="block text-sm font-medium mb-1">Envie seu material</label>
+      <label class="text-sm font-medium">Envie seu material</label>
 
       <label id="upload-zone" class="upload-zone">
         <p id="upload-text">Clique ou arraste um arquivo (.txt, .pdf)</p>
@@ -84,97 +78,50 @@
 
   </section>
 
-
+  <!-- ---- DIREITA ---- -->
   <section class="card p-6">
-    <div class="flex items-center justify-between mb-4">
+    <div class="flex justify-between mb-4">
       <h2 class="section-title">Seu plano de estudo</h2>
       <p id="ctx" class="text-sm text-[var(--muted)]"></p>
     </div>
-
     <div id="plano" class="space-y-3"></div>
   </section>
 
 </main>
 
-
-
 <section id="liora-sessoes" class="hidden liora-wizard max-w-6xl mx-auto px-6 pb-10">
-
   <div class="liora-wizard__header">
-    <div>
-      <span class="liora-badge">Tema</span>
-      <h2 id="liora-tema-ativo">—</h2>
-    </div>
+    <h2 id="liora-tema-ativo"></h2>
 
-    <div class="liora-wizard__progress">
-      <span id="liora-progress-label">Sessão 0/0</span>
-      <div class="liora-progress">
-        <div id="liora-progress-bar" class="liora-progress__bar"></div>
-      </div>
+    <div class="liora-progress">
+      <div id="liora-progress-bar" class="liora-progress__bar"></div>
     </div>
   </div>
 
   <div class="liora-card animate-fade">
     <h3 id="liora-sessao-titulo"></h3>
 
-    <div class="liora-block">
-      <h4>Objetivo</h4>
-      <p id="liora-sessao-objetivo"></p>
-    </div>
-
-    <div class="liora-block">
-      <h4>Conteúdo</h4>
-      <div id="liora-sessao-conteudo"></div>
-    </div>
-
-    <div class="liora-block">
-      <h4>Analogias</h4>
-      <div id="liora-sessao-analogias"></div>
-    </div>
-
-    <div class="liora-block">
-      <h4>Ativação</h4>
-      <ul id="liora-sessao-ativacao"></ul>
-    </div>
-
-    <div class="liora-block">
-      <h4>Teste rápido</h4>
-      <div id="liora-sessao-quiz"></div>
-      <p id="liora-sessao-quiz-feedback"></p>
-    </div>
-
-    <div class="liora-block">
-      <h4>Flashcards</h4>
-      <ul id="liora-sessao-flashcards"></ul>
-    </div>
+    <div class="liora-block"><h4>Objetivo</h4><p id="liora-sessao-objetivo"></p></div>
+    <div class="liora-block"><h4>Conteúdo</h4><div id="liora-sessao-conteudo"></div></div>
+    <div class="liora-block"><h4>Analogias</h4><div id="liora-sessao-analogias"></div></div>
+    <div class="liora-block"><h4>Ativação</h4><ul id="liora-sessao-ativacao"></ul></div>
+    <div class="liora-block"><h4>Teste rápido</h4><div id="liora-sessao-quiz"></div><p id="liora-sessao-quiz-feedback"></p></div>
+    <div class="liora-block"><h4>Flashcards</h4><ul id="liora-sessao-flashcards"></ul></div>
   </div>
 
   <div class="liora-wizard__footer">
     <button id="liora-btn-voltar" class="liora-btn ghost">◀ Voltar</button>
     <button id="liora-btn-proxima" class="liora-btn primary">Próxima sessão ▶</button>
   </div>
-
 </section>
 
 
 <footer class="max-w-6xl mx-auto px-4 pb-10 text-xs text-[var(--muted)] text-center">
   <p>Liora — IA aplicada a estudos. © Intellih</p>
-  <div id="liora-build-info"></div>
 </footer>
 
-
-<script type="module">
-  const ts = Date.now();
-
-  ["semantic.js", "core.js"].forEach(src => {
-    const s = document.createElement("script");
-    s.type = "module";
-    s.src = `/scripts/${src}?v=${ts}`;
-    document.body.appendChild(s);
-  });
-
-  document.getElementById("liora-build-info").textContent = `v36 - ${ts}`;
-</script>
+<script src="/scripts/semantic.js"></script>
+<script src="/scripts/core.js"></script>
 
 </body>
 </html>
