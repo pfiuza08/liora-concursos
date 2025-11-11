@@ -300,3 +300,21 @@ html.light #liora-build-info { background: rgba(255,255,255,0.35); }
 #liora-build-info:hover { opacity: .9; }
 
 @keyframes spin { to { transform:rotate(360deg); } }
+
+/* Barra de progresso do processamento (criação de sessões) */
+#liora-generating-progress {
+  margin-top: 12px;
+  width: 100%;
+  height: 6px;
+  background: var(--stroke);
+  border-radius: 999px;
+  overflow: hidden;
+  display: none;
+}
+#liora-generating-progress-bar {
+  width: 0%;
+  height: 100%;
+  background: var(--brand);
+  transition: width .35s ease;
+}
+
