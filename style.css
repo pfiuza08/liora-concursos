@@ -195,49 +195,65 @@ input:focus, select:focus {
 }
 
 /* ==========================================================
-   ✅ QUIZ (corrigido)
+   ✅ QUIZ (revisado v44)
 ========================================================== */
 .liora-quiz-option {
   display:flex;
-  flex-direction:row;
   align-items:center;
   justify-content:flex-start;
-  gap:10px;
-  padding:10px 14px;
+  gap:12px;
+  padding:12px 16px;
   border-radius:10px;
   border:1px solid var(--stroke);
   background:var(--bgCard);
   cursor:pointer;
-  transition:background .25s ease, border-color .25s ease;
+  transition:all .25s ease;
   width:100%;
-  max-width:600px;
+  max-width:640px;
   text-align:left;
+  word-break:break-word;
   white-space:normal;
-  overflow-wrap:break-word;
 }
+
 .liora-quiz-option:hover {
   background:var(--bgHover);
   border-color:var(--brand);
+  transform:translateY(-1px);
 }
+
 .liora-quiz-option.selected {
   background:var(--brand);
   border-color:var(--brand)!important;
   color:#fff;
-  box-shadow:0 0 10px rgba(196,75,4,0.6);
+  box-shadow:0 0 10px rgba(196,75,4,0.45);
+  transform:translateY(-2px);
 }
+
 .liora-quiz-option input[type="radio"] {
-  flex:0 0 auto;
-  margin-right:10px;
+  flex-shrink:0;
+  width:18px;
+  height:18px;
   accent-color:var(--brand);
+  cursor:pointer;
 }
-.liora-quiz-option span,
+
 .liora-quiz-option .liora-quiz-option-text {
   flex:1;
-  font-size:0.95rem;
-  line-height:1.4;
-  word-break:break-word;
-  white-space:normal;
-  overflow:visible;
+  font-size:0.97rem;
+  line-height:1.45;
+  color:inherit;
+}
+
+/* espaçamento entre alternativas */
+#liora-sessao-quiz label.liora-quiz-option + label.liora-quiz-option {
+  margin-top:10px;
+}
+
+/* feedback do quiz */
+#liora-sessao-quiz-feedback {
+  margin-top:10px;
+  font-size:0.9rem;
+  color:var(--muted);
 }
 
 /* ==========================================================
