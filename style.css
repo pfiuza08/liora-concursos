@@ -231,11 +231,9 @@ input:focus, select:focus {
 .liora-block:last-child::after { display:none; }
 
 /* ==========================================================
-   ✅ QUIZ
+   ✅ QUIZ - TESTE RÁPIDO
 ========================================================== */
-/* ==========================================================
-   ✅ QUIZ — TESTE RÁPIDO (alinhado à esquerda)
-========================================================== */
+
 .liora-quiz-option {
   display: flex;
   align-items: flex-start;         /* força alinhamento superior */
