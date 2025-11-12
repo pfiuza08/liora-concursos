@@ -1,9 +1,9 @@
 // ==========================================================
-// 🧠 LIORA — CORE PRINCIPAL (v45)
-// Alternativas do quiz embaralhadas + feedback com fade
+// 🧠 LIORA — CORE PRINCIPAL (v46)
+// Alternativas embaralhadas + feedback com fade + ajuda inteligente
 // ==========================================================
 (function () {
-  console.log("🔵 Inicializando Liora Core v45...");
+  console.log("🔵 Inicializando Liora Core v46...");
 
   document.addEventListener("DOMContentLoaded", () => {
     // --------------------------------------------------------
@@ -71,7 +71,6 @@
     function atualizarStatus(modo, texto, progresso = null) {
       const statusEl = modo === "tema" ? els.status : els.statusUpload;
       if (statusEl) statusEl.textContent = texto;
-
       const barra = document.getElementById(modo === "tema" ? "barra-tema-fill" : "barra-upload-fill");
       if (barra && progresso !== null) barra.style.width = `${progresso}%`;
     }
@@ -179,25 +178,25 @@ Retorne JSON:
       els.wizardAnalogias.innerHTML = s.analogias.map(a => `<p>${a}</p>`).join("");
       els.wizardAtivacao.innerHTML = s.ativacao.map(q => `<li>${q}</li>`).join("");
 
-      // ✅ Novo: embaralhamento de alternativas
+      // ✅ Quiz: embaralhamento + ajuda inteligente
       els.wizardQuiz.innerHTML = "";
       const pergunta = document.createElement("p");
       pergunta.textContent = s.quiz.pergunta;
       els.wizardQuiz.appendChild(pergunta);
 
-      // Copia e marca a alternativa correta
       const alternativas = s.quiz.alternativas.map((alt, i) => ({
         texto: String(alt).replace(/\n/g, " ").replace(/<\/?[^>]+(>|$)/g, ""),
         correta: i === Number(s.quiz.corretaIndex),
       }));
 
-      // Embaralha (Fisher-Yates)
+      // Fisher-Yates shuffle
       for (let i = alternativas.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [alternativas[i], alternativas[j]] = [alternativas[j], alternativas[i]];
       }
 
-      // Renderiza opções embaralhadas
+      let tentativasErradas = 0;
+
       alternativas.forEach((altObj, i) => {
         const opt = document.createElement("label");
         opt.className = "liora-quiz-option";
@@ -210,15 +209,21 @@ Retorne JSON:
           opt.classList.add("selected");
           opt.querySelector("input").checked = true;
 
-          // Aplica feedback animado
           els.wizardQuizFeedback.style.opacity = 0;
           setTimeout(() => {
             if (altObj.correta) {
               els.wizardQuizFeedback.textContent = `✅ Correto! ${s.quiz.explicacao}`;
               els.wizardQuizFeedback.style.color = "var(--brand)";
+              tentativasErradas = 0;
             } else {
-              els.wizardQuizFeedback.textContent = "❌ Tente novamente.";
-              els.wizardQuizFeedback.style.color = "var(--muted)";
+              tentativasErradas++;
+              if (tentativasErradas >= 2) {
+                els.wizardQuizFeedback.textContent = `💡 Dica: ${s.quiz.explicacao}`;
+                els.wizardQuizFeedback.style.color = "var(--brand)";
+              } else {
+                els.wizardQuizFeedback.textContent = "❌ Tente novamente.";
+                els.wizardQuizFeedback.style.color = "var(--muted)";
+              }
             }
             els.wizardQuizFeedback.style.transition = "opacity .4s ease";
             els.wizardQuizFeedback.style.opacity = 1;
@@ -344,6 +349,6 @@ Retorne JSON:
       }
     });
 
-    console.log("🟢 core.js v45 carregado com sucesso");
+    console.log("🟢 core.js v46 carregado com sucesso");
   });
 })();
