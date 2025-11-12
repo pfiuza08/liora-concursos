@@ -204,31 +204,57 @@ input:focus, select:focus {
 /* ==========================================================
    🔠 SEÇÕES DO WIZARD
 ========================================================== */
-.liora-card h4 {
-  font-weight:700;
-  text-transform:uppercase;
-  margin-bottom:6px;
-  letter-spacing:.3px;
-  color:var(--brand);
+/* ==========================================================
+   ✅ FIX FINAL — QUIZ (alinhamento vertical e à esquerda)
+========================================================== */
+.liora-quiz-option {
+  display: flex;
+  flex-direction: row;            /* garante layout horizontal natural */
+  align-items: flex-start;        /* topo alinhado */
+  justify-content: flex-start !important;
+  gap: 8px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  border-radius: 10px;
+  border: 1px solid var(--stroke);
+  background: var(--bgCard);
+  cursor: pointer;
+  transition: background .25s ease, border-color .25s ease;
+  width: 100%;                    /* impede quebra de layout */
+  text-align: left;               /* força alinhamento de texto */
 }
 
-/* Divisor entre seções */
-.liora-block {
-  position:relative;
-  padding-bottom:16px;
-  margin-bottom:20px;
+.liora-quiz-option:hover {
+  background: var(--bgHover);
+  border-color: var(--brand);
 }
-.liora-block::after {
-  content:"";
-  position:absolute;
-  left:0;
-  bottom:0;
-  width:100%;
-  height:1px;
-  background:var(--stroke);
-  opacity:0.3;
+
+.liora-quiz-option.selected {
+  background: var(--brand);
+  border-color: var(--brand) !important;
+  color: #fff;
+  box-shadow: 0 0 10px rgba(196, 75, 4, 0.6);
 }
-.liora-block:last-child::after { display:none; }
+
+.liora-quiz-option input[type="radio"] {
+  flex: 0 0 auto;
+  margin-top: 4px;
+  accent-color: var(--brand);
+}
+
+.liora-quiz-option span,
+.liora-quiz-option .liora-quiz-option-text {
+  flex: 1 1 auto;
+  font-size: 0.95rem;
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+/* neutraliza alinhamentos herdados */
+.liora-quiz-option > * {
+  margin: 0 !important;
+  text-align: left !important;
+}
 
 /* ==========================================================
    ✅ QUIZ - TESTE RÁPIDO
