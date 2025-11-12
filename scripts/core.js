@@ -1,9 +1,9 @@
 // ==========================================================
-// 🧠 LIORA — CORE PRINCIPAL (v47)
-// Quiz embaralhado + feedback suave + ajuda inteligente + desempenho
+// 🧠 LIORA — CORE PRINCIPAL (v46)
+// Alternativas embaralhadas + feedback com fade + ajuda inteligente
 // ==========================================================
 (function () {
-  console.log("🔵 Inicializando Liora Core v47...");
+  console.log("🔵 Inicializando Liora Core v46...");
 
   document.addEventListener("DOMContentLoaded", () => {
     // --------------------------------------------------------
@@ -78,7 +78,7 @@
     // --------------------------------------------------------
     // ESTADO GLOBAL
     // --------------------------------------------------------
-    let wizard = { tema: null, nivel: null, plano: [], sessoes: [], atual: 0, desempenho: {} };
+    let wizard = { tema: null, nivel: null, plano: [], sessoes: [], atual: 0 };
     const key = (tema, nivel) => `liora:wizard:${tema.toLowerCase()}::${nivel.toLowerCase()}`;
     const saveProgress = () => localStorage.setItem(key(wizard.tema, wizard.nivel), JSON.stringify(wizard));
     const loadProgress = (tema, nivel) => JSON.parse(localStorage.getItem(key(tema, nivel)) || "null");
@@ -147,7 +147,7 @@ Retorne JSON:
     }
 
     // --------------------------------------------------------
-    // RENDERIZAÇÃO DO PLANO (CARDS)
+    // RENDERIZAÇÃO DO PLANO (CARDS LADO DIREITO)
     // --------------------------------------------------------
     function renderPlanoResumo(plano) {
       els.plano.innerHTML = "";
@@ -178,25 +178,7 @@ Retorne JSON:
       els.wizardAnalogias.innerHTML = s.analogias.map(a => `<p>${a}</p>`).join("");
       els.wizardAtivacao.innerHTML = s.ativacao.map(q => `<li>${q}</li>`).join("");
 
-      // 🧮 Inicializa desempenho
-      const sessaoKey = `sessao_${wizard.atual + 1}`;
-      if (!wizard.desempenho[sessaoKey]) {
-        wizard.desempenho[sessaoKey] = { acertos: 0, tentativas: 0 };
-      }
-
-      // Exibe placar
-      els.wizardQuizFeedback.innerHTML = `<span id="liora-score" style="display:block; font-size:0.85rem; color:var(--muted); margin-bottom:6px;"></span>`;
-      atualizarPlacar();
-
-      function atualizarPlacar() {
-        const d = wizard.desempenho[sessaoKey];
-        const acertos = d.acertos;
-        const tentativas = d.tentativas;
-        const perc = tentativas ? Math.round((acertos / tentativas) * 100) : 0;
-        document.getElementById("liora-score").textContent = `Desempenho: ${acertos}/${tentativas} (${perc}%)`;
-      }
-
-      // ✅ Quiz
+      // ✅ Quiz: embaralhamento + ajuda inteligente
       els.wizardQuiz.innerHTML = "";
       const pergunta = document.createElement("p");
       pergunta.textContent = s.quiz.pergunta;
@@ -207,6 +189,7 @@ Retorne JSON:
         correta: i === Number(s.quiz.corretaIndex),
       }));
 
+      // Fisher-Yates shuffle
       for (let i = alternativas.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [alternativas[i], alternativas[j]] = [alternativas[j], alternativas[i]];
@@ -226,13 +209,9 @@ Retorne JSON:
           opt.classList.add("selected");
           opt.querySelector("input").checked = true;
 
-          const d = wizard.desempenho[sessaoKey];
-          d.tentativas++;
-
           els.wizardQuizFeedback.style.opacity = 0;
           setTimeout(() => {
             if (altObj.correta) {
-              d.acertos++;
               els.wizardQuizFeedback.textContent = `✅ Correto! ${s.quiz.explicacao}`;
               els.wizardQuizFeedback.style.color = "var(--brand)";
               tentativasErradas = 0;
@@ -246,10 +225,8 @@ Retorne JSON:
                 els.wizardQuizFeedback.style.color = "var(--muted)";
               }
             }
-            atualizarPlacar();
             els.wizardQuizFeedback.style.transition = "opacity .4s ease";
             els.wizardQuizFeedback.style.opacity = 1;
-            saveProgress();
           }, 100);
         });
         els.wizardQuiz.appendChild(opt);
@@ -281,31 +258,8 @@ Retorne JSON:
     });
 
     // --------------------------------------------------------
-    // BOTÃO GERAR — TEMA / UPLOAD
+    // BOTÃO GERAR — TEMA
     // --------------------------------------------------------
-    async function gerarFluxo(tema, nivel, modo, arquivoTexto = null) {
-      const btn = modo === "tema" ? els.btnGerar : els.btnGerarUpload;
-      btn.disabled = true;
-      atualizarStatus(modo, "🧩 Criando plano...", 0);
-      try {
-        const plano = await gerarPlanoDeSessoes(tema, nivel);
-        wizard = { tema, nivel, plano, sessoes: [], atual: 0, desempenho: {} };
-        renderPlanoResumo(plano);
-        for (let i = 0; i < plano.length; i++) {
-          atualizarStatus(modo, `⏳ Sessão ${i + 1}/${plano.length}: ${plano[i].nome}`, ((i + 1) / plano.length) * 100);
-          const sessao = await gerarSessao(tema, nivel, i + 1, plano[i].nome);
-          wizard.sessoes.push(sessao);
-          saveProgress();
-        }
-        atualizarStatus(modo, "✅ Sessões concluídas!", 100);
-        renderWizard();
-      } catch {
-        alert("Erro ao gerar plano.");
-      } finally {
-        btn.disabled = false;
-      }
-    }
-
     els.btnGerar.addEventListener("click", async () => {
       const tema = els.inpTema.value.trim();
       const nivel = els.selNivel.value;
@@ -317,17 +271,84 @@ Retorne JSON:
         renderWizard();
         return;
       }
-      gerarFluxo(tema, nivel, "tema");
+
+      els.btnGerar.disabled = true;
+      atualizarStatus("tema", "🧩 Criando plano...", 0);
+
+      try {
+        const plano = await gerarPlanoDeSessoes(tema, nivel);
+        wizard = { tema, nivel, plano, sessoes: [], atual: 0 };
+        renderPlanoResumo(plano);
+
+        for (let i = 0; i < plano.length; i++) {
+          atualizarStatus("tema", `⏳ Sessão ${i + 1}/${plano.length}: ${plano[i].nome}`, ((i + 1) / plano.length) * 100);
+          const sessao = await gerarSessao(tema, nivel, i + 1, plano[i].nome);
+          wizard.sessoes.push(sessao);
+          saveProgress();
+        }
+
+        atualizarStatus("tema", "✅ Sessões concluídas!", 100);
+        renderWizard();
+
+      } catch {
+        alert("Erro ao gerar o plano.");
+      } finally {
+        els.btnGerar.disabled = false;
+      }
     });
 
+    // --------------------------------------------------------
+    // 🗂️ ATUALIZAÇÃO DO NOME DO ARQUIVO (UPLOAD)
+    // --------------------------------------------------------
+    els.inpFile.addEventListener("change", (e) => {
+      const file = e.target.files?.[0];
+      const uploadText = document.getElementById("upload-text");
+      const spinner = document.getElementById("upload-spinner");
+
+      if (file) {
+        uploadText.textContent = `Selecionado: ${file.name}`;
+        spinner.style.display = "none";
+      } else {
+        uploadText.textContent = "Clique ou arraste um arquivo (.txt, .pdf)";
+      }
+    });
+
+    // --------------------------------------------------------
+    // BOTÃO GERAR — UPLOAD
+    // --------------------------------------------------------
     els.btnGerarUpload.addEventListener("click", async () => {
       const file = els.inpFile.files?.[0];
       const nivel = els.selNivel.value;
       if (!file) return alert("Selecione um arquivo.");
-      const tema = file.name.split(".")[0];
-      gerarFluxo(tema, nivel, "upload", await file.text());
+
+      els.btnGerarUpload.disabled = true;
+      atualizarStatus("upload", "🧩 Processando arquivo...", 0);
+
+      try {
+        const text = await file.text();
+        const tema = file.name.split(".")[0];
+        const plano = await gerarPlanoDeSessoes(tema, nivel);
+
+        wizard = { tema, nivel, plano, sessoes: [], atual: 0 };
+        renderPlanoResumo(plano);
+
+        for (let i = 0; i < plano.length; i++) {
+          atualizarStatus("upload", `⏳ Sessão ${i + 1}/${plano.length}: ${plano[i].nome}`, ((i + 1) / plano.length) * 100);
+          const sessao = await gerarSessao(tema, nivel, i + 1, plano[i].nome);
+          wizard.sessoes.push(sessao);
+          saveProgress();
+        }
+
+        atualizarStatus("upload", "✅ Sessões concluídas!", 100);
+        renderWizard();
+
+      } catch {
+        alert("Erro ao gerar plano via upload.");
+      } finally {
+        els.btnGerarUpload.disabled = false;
+      }
     });
 
-    console.log("🟢 core.js v47 carregado com sucesso");
+    console.log("🟢 core.js v46 carregado com sucesso");
   });
 })();
