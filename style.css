@@ -92,20 +92,36 @@ html, body {
 /* ==========================================================
    ✏️ INPUTS
 ========================================================== */
+/* ==========================================================
+   ✏️ INPUTS e SELECTS — corrigido v42.1
+========================================================== */
 input, select {
-  background:transparent;
-  border:1px solid var(--stroke);
-  border-radius:8px;
-  padding:.6rem .75rem;
-  width:100%;
-  color:var(--fg);
-  transition:border-color .2s ease;
+  background: var(--card);            /* Fundo sólido e contrastante */
+  border: 1px solid var(--stroke);
+  border-radius: 8px;
+  padding: .6rem .75rem;
+  width: 100%;
+  color: var(--fg);
+  transition: border-color .2s ease, background .2s ease;
 }
+
+input::placeholder {
+  color: var(--muted);
+  opacity: 0.8;
+}
+
+select option {
+  background: var(--card);            /* Fundo igual ao card */
+  color: var(--fg);
+}
+
 input:focus, select:focus {
-  outline:none;
-  border-color:var(--brand);
-  box-shadow:0 0 0 2px rgba(196,75,4,.3);
+  outline: none;
+  border-color: var(--brand);
+  box-shadow: 0 0 0 2px rgba(196, 75, 4, .3);
+  background: var(--card);
 }
+
 
 /* ==========================================================
    📁 UPLOAD
