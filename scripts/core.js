@@ -173,86 +173,99 @@ Crie uma sessão estruturada em JSON:
       });
     }
 
-    // --------------------------------------------------------
-    // RENDERIZAÇÃO DO WIZARD (v47 — conteúdo hierárquico)
-    // --------------------------------------------------------
-    function renderWizard() {
-      const s = wizard.sessoes[wizard.atual];
-      if (!s) return;
+   // --------------------------------------------------------
+// RENDERIZAÇÃO DO WIZARD (v47 — conteúdo hierárquico + separadores)
+// --------------------------------------------------------
+function renderWizard() {
+  const s = wizard.sessoes[wizard.atual];
+  if (!s) return;
 
-      els.wizardContainer.classList.remove("hidden");
-      els.wizardTema.textContent = wizard.tema;
-      els.wizardTitulo.textContent = s.titulo;
-      els.wizardObjetivo.textContent = s.objetivo;
+  els.wizardContainer.classList.remove("hidden");
+  els.wizardTema.textContent = wizard.tema;
+  els.wizardTitulo.textContent = s.titulo;
+  els.wizardObjetivo.textContent = s.objetivo;
 
-      const c = s.conteudo || {};
-      els.wizardConteudo.innerHTML = `
-        ${c.introducao ? `<p><strong>Introdução:</strong> ${c.introducao}</p>` : ""}
-        ${c.conceitos ? `<h5>Conceitos principais</h5><ul>${c.conceitos.map(x => `<li>${x}</li>`).join("")}</ul>` : ""}
-        ${c.exemplos ? `<h5>Exemplos</h5><ul>${c.exemplos.map(x => `<li>${x}</li>`).join("")}</ul>` : ""}
-        ${c.aplicacoes ? `<h5>Aplicações</h5><ul>${c.aplicacoes.map(x => `<li>${x}</li>`).join("")}</ul>` : ""}
-      `;
+  const c = s.conteudo || {};
+  els.wizardConteudo.innerHTML = `
+    ${c.introducao ? `<div class="liora-section">
+      <h5>Introdução</h5>
+      <p>${c.introducao}</p>
+    </div><hr class="liora-divider">` : ""}
 
-      els.wizardAnalogias.innerHTML = s.analogias.map(a => `<p>${a}</p>`).join("");
-      els.wizardAtivacao.innerHTML = s.ativacao.map(q => `<li>${q}</li>`).join("");
+    ${c.conceitos ? `<div class="liora-section">
+      <h5>Conceitos principais</h5>
+      <ul>${c.conceitos.map(x => `<li>${x}</li>`).join("")}</ul>
+    </div><hr class="liora-divider">` : ""}
 
-      // --------------------------------------------------------
-      // QUIZ (mantém feedback com fade e ajuda inteligente)
-      // --------------------------------------------------------
-      els.wizardQuiz.innerHTML = "";
-      const pergunta = document.createElement("p");
-      pergunta.textContent = s.quiz.pergunta;
-      els.wizardQuiz.appendChild(pergunta);
+    ${c.exemplos ? `<div class="liora-section">
+      <h5>Exemplos</h5>
+      <ul>${c.exemplos.map(x => `<li>${x}</li>`).join("")}</ul>
+    </div><hr class="liora-divider">` : ""}
 
-      const alternativas = s.quiz.alternativas.map((alt, i) => ({
-        texto: String(alt).replace(/\n/g, " ").replace(/<\/?[^>]+(>|$)/g, ""),
-        correta: i === Number(s.quiz.corretaIndex),
-      }));
+    ${c.aplicacoes ? `<div class="liora-section">
+      <h5>Aplicações</h5>
+      <ul>${c.aplicacoes.map(x => `<li>${x}</li>`).join("")}</ul>
+    </div>` : ""}
+  `;
 
-      // embaralhar
-      for (let i = alternativas.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [alternativas[i], alternativas[j]] = [alternativas[j], alternativas[i]];
-      }
+  els.wizardAnalogias.innerHTML = s.analogias.map(a => `<p>${a}</p>`).join("");
+  els.wizardAtivacao.innerHTML = s.ativacao.map(q => `<li>${q}</li>`).join("");
 
-      let tentativasErradas = 0;
+  // QUIZ
+  els.wizardQuiz.innerHTML = "";
+  const pergunta = document.createElement("p");
+  pergunta.textContent = s.quiz.pergunta;
+  els.wizardQuiz.appendChild(pergunta);
 
-      alternativas.forEach((altObj, i) => {
-        const opt = document.createElement("label");
-        opt.className = "liora-quiz-option";
-        opt.innerHTML = `<input type="radio" name="quiz" value="${i}"><span>${altObj.texto}</span>`;
+  const alternativas = s.quiz.alternativas.map((alt, i) => ({
+    texto: String(alt).replace(/\n/g, " ").replace(/<\/?[^>]+(>|$)/g, ""),
+    correta: i === Number(s.quiz.corretaIndex),
+  }));
 
-        opt.addEventListener("click", () => {
-          document.querySelectorAll(".liora-quiz-option").forEach(o => o.classList.remove("selected"));
-          opt.classList.add("selected");
-          opt.querySelector("input").checked = true;
+  // embaralhar
+  for (let i = alternativas.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [alternativas[i], alternativas[j]] = [alternativas[j], alternativas[i]];
+  }
 
-          els.wizardQuizFeedback.style.opacity = 0;
-          setTimeout(() => {
-            if (altObj.correta) {
-              els.wizardQuizFeedback.textContent = `✅ Correto! ${s.quiz.explicacao}`;
-              els.wizardQuizFeedback.style.color = "var(--brand)";
-              tentativasErradas = 0;
-            } else {
-              tentativasErradas++;
-              if (tentativasErradas >= 2) {
-                els.wizardQuizFeedback.textContent = `💡 Dica: ${s.quiz.explicacao}`;
-                els.wizardQuizFeedback.style.color = "var(--brand)";
-              } else {
-                els.wizardQuizFeedback.textContent = "❌ Tente novamente.";
-                els.wizardQuizFeedback.style.color = "var(--muted)";
-              }
-            }
-            els.wizardQuizFeedback.style.transition = "opacity .4s ease";
-            els.wizardQuizFeedback.style.opacity = 1;
-          }, 100);
-        });
-        els.wizardQuiz.appendChild(opt);
-      });
+  let tentativasErradas = 0;
 
-      els.wizardFlashcards.innerHTML = s.flashcards.map(f => `<li><b>${f.q}</b>: ${f.a}</li>`).join("");
-      els.wizardProgressBar.style.width = `${((wizard.atual + 1) / wizard.sessoes.length) * 100}%`;
-    }
+  alternativas.forEach((altObj, i) => {
+    const opt = document.createElement("label");
+    opt.className = "liora-quiz-option";
+    opt.innerHTML = `<input type="radio" name="quiz" value="${i}"><span>${altObj.texto}</span>`;
+    opt.addEventListener("click", () => {
+      document.querySelectorAll(".liora-quiz-option").forEach(o => o.classList.remove("selected"));
+      opt.classList.add("selected");
+      opt.querySelector("input").checked = true;
+
+      els.wizardQuizFeedback.style.opacity = 0;
+      setTimeout(() => {
+        if (altObj.correta) {
+          els.wizardQuizFeedback.textContent = `✅ Correto! ${s.quiz.explicacao}`;
+          els.wizardQuizFeedback.style.color = "var(--brand)";
+          tentativasErradas = 0;
+        } else {
+          tentativasErradas++;
+          if (tentativasErradas >= 2) {
+            els.wizardQuizFeedback.textContent = `💡 Dica: ${s.quiz.explicacao}`;
+            els.wizardQuizFeedback.style.color = "var(--brand)";
+          } else {
+            els.wizardQuizFeedback.textContent = "❌ Tente novamente.";
+            els.wizardQuizFeedback.style.color = "var(--muted)";
+          }
+        }
+        els.wizardQuizFeedback.style.transition = "opacity .4s ease";
+        els.wizardQuizFeedback.style.opacity = 1;
+      }, 100);
+    });
+    els.wizardQuiz.appendChild(opt);
+  });
+
+  els.wizardFlashcards.innerHTML = s.flashcards.map(f => `<li><b>${f.q}</b>: ${f.a}</li>`).join("");
+  els.wizardProgressBar.style.width = `${((wizard.atual + 1) / wizard.sessoes.length) * 100}%`;
+}
+
 
     // --------------------------------------------------------
     // NAVEGAÇÃO
