@@ -1,29 +1,33 @@
 // ==========================================================
-// 🧠 LIORA — CORE PRINCIPAL (v42)
-// Tema / Upload + Plano + Wizard + Barra de Progresso
+// 🧠 LIORA — CORE PRINCIPAL (v43 FINAL)
+// Unificação de status, barras de progresso e correções de UI
 // ==========================================================
 (function () {
-  console.log("🔵 Inicializando Liora Core v42...");
+  console.log("🔵 Inicializando Liora Core v43...");
 
   document.addEventListener("DOMContentLoaded", () => {
 
+    // --------------------------------------------------------
+    // MAPA DE ELEMENTOS
+    // --------------------------------------------------------
     const els = {
       modoTema: document.getElementById("modo-tema"),
       modoUpload: document.getElementById("modo-upload"),
       painelTema: document.getElementById("painel-tema"),
       painelUpload: document.getElementById("painel-upload"),
+
       inpTema: document.getElementById("inp-tema"),
       selNivel: document.getElementById("sel-nivel"),
       btnGerar: document.getElementById("btn-gerar"),
       status: document.getElementById("status"),
-      uploadZone: document.getElementById("upload-zone"),
+
       inpFile: document.getElementById("inp-file"),
       btnGerarUpload: document.getElementById("btn-gerar-upload"),
       statusUpload: document.getElementById("status-upload"),
-      uploadText: document.getElementById("upload-text"),
-      uploadSpinner: document.getElementById("upload-spinner"),
+
       plano: document.getElementById("plano"),
       ctx: document.getElementById("ctx"),
+
       wizardContainer: document.getElementById("liora-sessoes"),
       wizardTema: document.getElementById("liora-tema-ativo"),
       wizardTitulo: document.getElementById("liora-sessao-titulo"),
@@ -36,179 +40,274 @@
       wizardFlashcards: document.getElementById("liora-sessao-flashcards"),
       wizardVoltar: document.getElementById("liora-btn-voltar"),
       wizardProxima: document.getElementById("liora-btn-proxima"),
-      progressBar: document.getElementById("liora-progress-bar"),
+      wizardProgressBar: document.getElementById("liora-progress-bar"),
+
       themeBtn: document.getElementById("btn-theme"),
     };
 
-    // 🌗 Tema
+    // --------------------------------------------------------
+    // 🌗 TEMA (LIGHT / DARK)
+    // --------------------------------------------------------
     (function themeSetup() {
       function apply(theme) {
-        document.documentElement.classList.remove("light","dark");
+        document.documentElement.classList.remove("light", "dark");
         document.documentElement.classList.add(theme);
+        document.body.classList.remove("light", "dark");
+        document.body.classList.add(theme);
         localStorage.setItem("liora_theme", theme);
         els.themeBtn.textContent = theme === "light" ? "☀️" : "🌙";
       }
+
       apply(localStorage.getItem("liora_theme") || "dark");
+
       els.themeBtn.addEventListener("click", () => {
         const newTheme = document.documentElement.classList.contains("light") ? "dark" : "light";
         apply(newTheme);
       });
     })();
 
-    // Estado global
-    let wizard = { tema:null, nivel:null, plano:[], sessoes:[], atual:0 };
-    const key = (tema, nivel) => `liora:wizard:${tema}:${nivel}`;
-    const save = () => localStorage.setItem(key(wizard.tema, wizard.nivel), JSON.stringify(wizard));
-    const load = (t, n) => JSON.parse(localStorage.getItem(key(t, n)) || "null");
+    // --------------------------------------------------------
+    // STATUS + BARRAS DE PROGRESSO
+    // --------------------------------------------------------
+    function atualizarStatus(modo, texto, progresso = null) {
+      if (modo === "tema") {
+        if (els.status) els.status.textContent = texto;
+        const barra = document.getElementById("barra-tema-fill");
+        if (barra && progresso !== null) barra.style.width = `${progresso}%`;
+      } else {
+        if (els.statusUpload) els.statusUpload.textContent = texto;
+        const barra = document.getElementById("barra-upload-fill");
+        if (barra && progresso !== null) barra.style.width = `${progresso}%`;
+      }
+    }
 
-    // Alternar modo
-    function setMode(m) {
-      const tema = m === "tema";
+    // --------------------------------------------------------
+    // ESTADO GLOBAL
+    // --------------------------------------------------------
+    let wizard = { tema: null, nivel: null, plano: [], sessoes: [], atual: 0 };
+    const key = (tema, nivel) => `liora:wizard:${tema.toLowerCase()}::${nivel.toLowerCase()}`;
+    const saveProgress = () => localStorage.setItem(key(wizard.tema, wizard.nivel), JSON.stringify(wizard));
+    const loadProgress = (tema, nivel) => JSON.parse(localStorage.getItem(key(tema, nivel)) || "null");
+
+    // --------------------------------------------------------
+    // MODO (TEMA / UPLOAD)
+    // --------------------------------------------------------
+    function setMode(mode) {
+      const tema = mode === "tema";
       els.painelTema.classList.toggle("hidden", !tema);
       els.painelUpload.classList.toggle("hidden", tema);
       els.modoTema.classList.toggle("selected", tema);
       els.modoUpload.classList.toggle("selected", !tema);
     }
-    els.modoTema.onclick = () => setMode("tema");
-    els.modoUpload.onclick = () => setMode("upload");
+    els.modoTema.addEventListener("click", () => setMode("tema"));
+    els.modoUpload.addEventListener("click", () => setMode("upload"));
     setMode("tema");
 
-    // Chamada API
+    // --------------------------------------------------------
+    // CHAMADA À API
+    // --------------------------------------------------------
     async function callLLM(system, user) {
-      const r = await fetch("/api/liora", {
-        method:"POST", headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({system,user})
+      const res = await fetch("/api/liora", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ system, user }),
       });
-      const j = await r.json().catch(()=>({}));
-      if(!j.output) throw new Error("Resposta inválida da IA");
-      return j.output;
+      const json = await res.json().catch(() => ({}));
+      if (!json.output) throw new Error("Resposta inválida da IA");
+      return json.output;
     }
 
-    // Gerar plano
-    async function gerarPlano(tema,nivel) {
-      const prompt = `Crie um plano de sessões para o tema "${tema}" (nível: ${nivel}).
-Formato: JSON puro [{"numero":1,"nome":"Fundamentos"}]`;
+    // --------------------------------------------------------
+    // GERAÇÃO DE PLANO
+    // --------------------------------------------------------
+    async function gerarPlanoDeSessoes(tema, nivel) {
+      const prompt = `
+Crie um plano de sessões para o tema "${tema}" (nível: ${nivel}).
+Formato: JSON puro, ex:
+[
+ {"numero":1,"nome":"Fundamentos"},
+ {"numero":2,"nome":"Aplicações"}
+]`;
       const raw = await callLLM("Você é Liora, especialista em microlearning.", prompt);
-      const arr = JSON.parse(raw);
-      return arr.map((s,i)=>({numero:s.numero??i+1,nome:s.nome??`Sessão ${i+1}`}));
+      return JSON.parse(raw);
     }
 
-    // Gerar sessão
-    async function gerarSessao(tema,nivel,num,nome){
-      const prompt = `Gere a sessão ${num} do tema "${tema}". JSON:
-{"titulo":"Sessão ${num} — ${nome}","objetivo":"...","conteudo":["p1"],"analogias":["a1"],"ativacao":["q1"],"quiz":{"pergunta":"?","alternativas":["a","b"],"corretaIndex":1,"explicacao":"..."},"flashcards":[{"q":"...","a":"..."}]}`;
+    // --------------------------------------------------------
+    // GERAÇÃO DE SESSÃO
+    // --------------------------------------------------------
+    async function gerarSessao(tema, nivel, numero, nome) {
+      const prompt = `
+Gere a sessão ${numero} do tema "${tema}".
+Retorne JSON:
+{
+ "titulo":"Sessão ${numero} — ${nome}",
+ "objetivo":"resultado claro",
+ "conteudo":["p1","p2"],
+ "analogias":["a1"],
+ "ativacao":["q1","q2"],
+ "quiz":{"pergunta":"?","alternativas":["a","b"],"corretaIndex":0,"explicacao":"..."},
+ "flashcards":[{"q":"...","a":"..."}]
+}`;
       const raw = await callLLM("Você é Liora.", prompt);
-      const s = JSON.parse(raw);
-      s.titulo = `Sessão ${num} — ${(s.titulo||nome).replace(/^Sessão\\s*\\d+\\s*[—-]\\s*/i,"")}`;
-      return s;
+      return JSON.parse(raw);
     }
 
-    // Render plano
-    function renderPlano(plano){
-      els.plano.innerHTML="";
-      plano.forEach((p,i)=>{
-        const d=document.createElement("div");
-        d.className="liora-card-topico";
-        d.textContent=`Sessão ${i+1} — ${p.nome}`;
-        d.onclick=()=>{
-          wizard.atual=i;
-          renderSessao();
-          window.scrollTo({top:els.wizardContainer.offsetTop-20,behavior:"smooth"});
-        };
-        els.plano.appendChild(d);
+    // --------------------------------------------------------
+    // RENDERIZAÇÃO DO PLANO (CARDS LADO DIREITO)
+    // --------------------------------------------------------
+    function renderPlanoResumo(plano) {
+      els.plano.innerHTML = "";
+      plano.forEach((p, index) => {
+        const div = document.createElement("div");
+        div.className = "liora-card-topico";
+        div.textContent = `Sessão ${index + 1} — ${p.nome}`;
+        div.addEventListener("click", () => {
+          wizard.atual = index;
+          renderWizard();
+          window.scrollTo({ top: els.wizardContainer.offsetTop - 20, behavior: "smooth" });
+        });
+        els.plano.appendChild(div);
       });
     }
 
-    // Render sessão
-    function renderSessao(){
-      const s=wizard.sessoes[wizard.atual];
-      if(!s)return;
+    // --------------------------------------------------------
+    // RENDERIZAÇÃO DO WIZARD
+    // --------------------------------------------------------
+    function renderWizard() {
+      const s = wizard.sessoes[wizard.atual];
+      if (!s) return;
       els.wizardContainer.classList.remove("hidden");
-      els.wizardTema.textContent=wizard.tema;
-      els.wizardTitulo.textContent=s.titulo;
-      els.wizardObjetivo.textContent=s.objetivo;
-      els.wizardConteudo.innerHTML=s.conteudo.map(p=>`<p>${p}</p>`).join("");
-      els.wizardAnalogias.innerHTML=s.analogias.map(a=>`<p>${a}</p>`).join("");
-      els.wizardAtivacao.innerHTML=s.ativacao.map(q=>`<li>${q}</li>`).join("");
-      // Quiz
-      els.wizardQuiz.innerHTML="";
-      s.quiz.alternativas.forEach((alt,i)=>{
-        const o=document.createElement("div");
-        o.className="liora-quiz-option";
-        o.innerHTML=`<span>${alt}</span>`;
-        o.onclick=()=>{
-          document.querySelectorAll(".liora-quiz-option").forEach(el=>el.classList.remove("selected"));
-          o.classList.add("selected");
-          els.wizardQuizFeedback.textContent=
-            i===Number(s.quiz.corretaIndex)?`✅ Correto! ${s.quiz.explicacao}`:"❌ Tente novamente.";
-        };
-        els.wizardQuiz.appendChild(o);
+      els.wizardTema.textContent = wizard.tema;
+      els.wizardTitulo.textContent = s.titulo;
+      els.wizardObjetivo.textContent = s.objetivo;
+      els.wizardConteudo.innerHTML = s.conteudo.map(p => `<p>${p}</p>`).join("");
+      els.wizardAnalogias.innerHTML = s.analogias.map(a => `<p>${a}</p>`).join("");
+      els.wizardAtivacao.innerHTML = s.ativacao.map(q => `<li>${q}</li>`).join("");
+
+      els.wizardQuiz.innerHTML = "";
+      const pergunta = document.createElement("p");
+      pergunta.textContent = s.quiz.pergunta;
+      els.wizardQuiz.appendChild(pergunta);
+
+      s.quiz.alternativas.forEach((alt, i) => {
+        const opt = document.createElement("label");
+        opt.className = "liora-quiz-option";
+        opt.innerHTML = `
+          <input type="radio" name="quiz" value="${i}">
+          <span>${alt}</span>`;
+        opt.addEventListener("click", () => {
+          document.querySelectorAll(".liora-quiz-option").forEach(o => o.classList.remove("selected"));
+          opt.classList.add("selected");
+          opt.querySelector("input").checked = true;
+          els.wizardQuizFeedback.textContent =
+            i === Number(s.quiz.corretaIndex)
+              ? `✅ Correto! ${s.quiz.explicacao}`
+              : "❌ Tente novamente.";
+        });
+        els.wizardQuiz.appendChild(opt);
       });
-      els.wizardFlashcards.innerHTML=s.flashcards.map(f=>`<li><strong>${f.q}</strong>: ${f.a}</li>`).join("");
-      els.progressBar.style.width=`${((wizard.atual+1)/wizard.sessoes.length)*100}%`;
+
+      els.wizardFlashcards.innerHTML = s.flashcards.map(f => `<li><b>${f.q}</b>: ${f.a}</li>`).join("");
+      els.wizardProgressBar.style.width = `${((wizard.atual + 1) / wizard.sessoes.length) * 100}%`;
     }
 
-    // Navegação
-    els.wizardVoltar.onclick=()=>{
-      if(wizard.atual>0){wizard.atual--;renderSessao();save();}
-    };
-    els.wizardProxima.onclick=()=>{
-      if(wizard.atual<wizard.sessoes.length-1){wizard.atual++;renderSessao();save();}
-    };
+    // --------------------------------------------------------
+    // NAVEGAÇÃO DO WIZARD
+    // --------------------------------------------------------
+    els.wizardVoltar.addEventListener("click", () => {
+      if (wizard.atual > 0) {
+        wizard.atual--;
+        renderWizard();
+        saveProgress();
+      }
+    });
 
-    // Botão gerar (tema)
-    els.btnGerar.onclick=async()=>{
-      const tema=els.inpTema.value.trim();
-      const nivel=els.selNivel.value;
-      if(!tema)return alert("Digite um tema.");
-      els.btnGerar.disabled=true;
-      els.ctx.textContent="Gerando plano...";
-      try{
-        const plano=await gerarPlano(tema,nivel);
-        wizard={tema,nivel,plano,sessoes:[],atual:0};
-        renderPlano(plano);
-        for(let i=0;i<plano.length;i++){
-          els.ctx.textContent=`Gerando sessão ${i+1}/${plano.length}...`;
-          const s=await gerarSessao(tema,nivel,plano[i].numero,plano[i].nome);
-          wizard.sessoes.push(s);
-          els.progressBar.style.width=`${((i+1)/plano.length)*100}%`;
-          save();
+    els.wizardProxima.addEventListener("click", () => {
+      if (wizard.atual < wizard.sessoes.length - 1) {
+        wizard.atual++;
+        renderWizard();
+        saveProgress();
+      } else {
+        atualizarStatus("tema", "🎉 Tema concluído!", 100);
+      }
+    });
+
+    // --------------------------------------------------------
+    // BOTÃO GERAR — TEMA
+    // --------------------------------------------------------
+    els.btnGerar.addEventListener("click", async () => {
+      const tema = els.inpTema.value.trim();
+      const nivel = els.selNivel.value;
+      if (!tema) return alert("Digite um tema.");
+      const cached = loadProgress(tema, nivel);
+      if (cached?.sessoes?.length) {
+        wizard = cached;
+        renderPlanoResumo(wizard.plano);
+        renderWizard();
+        return;
+      }
+
+      els.btnGerar.disabled = true;
+      atualizarStatus("tema", "🧩 Criando plano...", 0);
+
+      try {
+        const plano = await gerarPlanoDeSessoes(tema, nivel);
+        wizard = { tema, nivel, plano, sessoes: [], atual: 0 };
+        renderPlanoResumo(plano);
+
+        for (let i = 0; i < plano.length; i++) {
+          atualizarStatus("tema", `⏳ Sessão ${i + 1}/${plano.length}: ${plano[i].nome}`, ((i + 1) / plano.length) * 100);
+          const sessao = await gerarSessao(tema, nivel, i + 1, plano[i].nome);
+          wizard.sessoes.push(sessao);
+          saveProgress();
         }
-        els.ctx.textContent="✅ Sessões prontas!";
-        renderSessao();
-      }catch(e){console.error(e);alert("Erro ao gerar plano.");}
-      finally{els.btnGerar.disabled=false;}
-    };
 
-    // Upload
-    els.inpFile.onchange=e=>{
-      const f=e.target.files?.[0];
-      if(f)els.uploadText.textContent=`Selecionado: ${f.name}`;
-    };
-    els.btnGerarUpload.onclick=async()=>{
-      const nivel=els.selNivel.value;
-      const file=els.inpFile.files?.[0];
-      if(!file)return alert("Selecione um arquivo.");
-      els.statusUpload.textContent="Processando arquivo...";
-      els.uploadSpinner.style.display="inline-block";
-      try{
-        await window.processarArquivoUpload(file);
-        const out=await window.generatePlanFromUploadAI(nivel);
-        const plano=(out?.sessoes||out?.plano||[]).map((s,i)=>({numero:s.numero??i+1,nome:s.nome??s.titulo??`Sessão ${i+1}`}));
-        wizard={tema:file.name,nivel,plano,sessoes:[],atual:0};
-        renderPlano(plano);
-        for(let i=0;i<plano.length;i++){
-          els.statusUpload.textContent=`Gerando sessão ${i+1}/${plano.length}...`;
-          const s=await gerarSessao(wizard.tema,nivel,plano[i].numero,plano[i].nome);
-          wizard.sessoes.push(s);
-          els.progressBar.style.width=`${((i+1)/plano.length)*100}%`;
-          save();
+        atualizarStatus("tema", "✅ Sessões concluídas!", 100);
+        renderWizard();
+
+      } catch (err) {
+        alert("Erro ao gerar o plano.");
+      } finally {
+        els.btnGerar.disabled = false;
+      }
+    });
+
+    // --------------------------------------------------------
+    // BOTÃO GERAR — UPLOAD
+    // --------------------------------------------------------
+    els.btnGerarUpload.addEventListener("click", async () => {
+      const file = els.inpFile.files?.[0];
+      const nivel = els.selNivel.value;
+      if (!file) return alert("Selecione um arquivo.");
+
+      els.btnGerarUpload.disabled = true;
+      atualizarStatus("upload", "🧩 Processando arquivo...", 0);
+
+      try {
+        const text = await file.text();
+        const tema = file.name.split(".")[0];
+        const plano = await gerarPlanoDeSessoes(tema, nivel);
+
+        wizard = { tema, nivel, plano, sessoes: [], atual: 0 };
+        renderPlanoResumo(plano);
+
+        for (let i = 0; i < plano.length; i++) {
+          atualizarStatus("upload", `⏳ Sessão ${i + 1}/${plano.length}: ${plano[i].nome}`, ((i + 1) / plano.length) * 100);
+          const sessao = await gerarSessao(tema, nivel, i + 1, plano[i].nome);
+          wizard.sessoes.push(sessao);
+          saveProgress();
         }
-        els.statusUpload.textContent="✅ Sessões concluídas!";
-        renderSessao();
-      }catch(e){console.error(e);alert("Erro ao processar upload.");}
-      finally{els.uploadSpinner.style.display="none";}
-    };
 
+        atualizarStatus("upload", "✅ Sessões concluídas!", 100);
+        renderWizard();
+
+      } catch (err) {
+        alert("Erro ao gerar plano via upload.");
+      } finally {
+        els.btnGerarUpload.disabled = false;
+      }
+    });
+
+    console.log("🟢 core.js v43 carregado com sucesso");
   });
 })();
