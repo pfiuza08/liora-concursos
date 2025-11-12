@@ -1,10 +1,10 @@
 // ==========================================================
-// 🧠 LIORA — CORE PRINCIPAL (v47)
-// Estrutura hierárquica de conteúdo + continuidade entre sessões
-// Mantém feedback com fade e ajuda inteligente do v46
+// 🧠 LIORA — CORE PRINCIPAL (v47 PATCH)
+// Títulos do conteúdo em MAIÚSCULAS BRANCAS + divisores
+// Mantém tudo que já funciona (shuffle, hint, progresso, tema)
 // ==========================================================
 (function () {
-  console.log("🔵 Inicializando Liora Core v47...");
+  console.log("🔵 Inicializando Liora Core v47 (patch)...");
 
   document.addEventListener("DOMContentLoaded", () => {
 
@@ -47,7 +47,7 @@
     };
 
     // --------------------------------------------------------
-    // 🌗 TEMA (LIGHT / DARK)
+    // 🌗 TEMA (LIGHT / DARK) - inalterado
     // --------------------------------------------------------
     (function themeSetup() {
       function apply(theme) {
@@ -66,7 +66,7 @@
     })();
 
     // --------------------------------------------------------
-    // STATUS + PROGRESSO
+    // STATUS + PROGRESSO - inalterado
     // --------------------------------------------------------
     function atualizarStatus(modo, texto, progresso = null) {
       const statusEl = modo === "tema" ? els.status : els.statusUpload;
@@ -76,7 +76,7 @@
     }
 
     // --------------------------------------------------------
-    // ESTADO GLOBAL
+    // ESTADO GLOBAL - inalterado
     // --------------------------------------------------------
     let wizard = { tema: null, nivel: null, plano: [], sessoes: [], atual: 0 };
     const key = (tema, nivel) => `liora:wizard:${tema.toLowerCase()}::${nivel.toLowerCase()}`;
@@ -84,7 +84,7 @@
     const loadProgress = (tema, nivel) => JSON.parse(localStorage.getItem(key(tema, nivel)) || "null");
 
     // --------------------------------------------------------
-    // MODO (TEMA / UPLOAD)
+    // MODO (TEMA / UPLOAD) - inalterado
     // --------------------------------------------------------
     function setMode(mode) {
       const tema = mode === "tema";
@@ -98,7 +98,7 @@
     setMode("tema");
 
     // --------------------------------------------------------
-    // CHAMADA À API
+    // CHAMADA À API - inalterado
     // --------------------------------------------------------
     async function callLLM(system, user) {
       const res = await fetch("/api/liora", {
@@ -112,7 +112,7 @@
     }
 
     // --------------------------------------------------------
-    // GERAÇÃO DE PLANO
+    // GERAÇÃO DE PLANO - inalterado
     // --------------------------------------------------------
     async function gerarPlanoDeSessoes(tema, nivel) {
       const prompt = `
@@ -127,7 +127,7 @@ Formato: JSON puro, ex:
     }
 
     // --------------------------------------------------------
-    // GERAÇÃO DE SESSÃO — ESTRUTURA HIERÁRQUICA + CONTEXTO
+    // GERAÇÃO DE SESSÃO — ESTRUTURA HIERÁRQUICA + CONTEXTO - inalterado
     // --------------------------------------------------------
     async function gerarSessao(tema, nivel, numero, nome, sessaoAnterior = null) {
       const contexto = sessaoAnterior
@@ -156,7 +156,7 @@ Crie uma sessão estruturada em JSON:
     }
 
     // --------------------------------------------------------
-    // RENDERIZAÇÃO DO PLANO
+    // RENDERIZAÇÃO DO PLANO - inalterado
     // --------------------------------------------------------
     function renderPlanoResumo(plano) {
       els.plano.innerHTML = "";
@@ -173,107 +173,114 @@ Crie uma sessão estruturada em JSON:
       });
     }
 
-   // --------------------------------------------------------
-// RENDERIZAÇÃO DO WIZARD (v47 — conteúdo hierárquico + separadores)
-// --------------------------------------------------------
-function renderWizard() {
-  const s = wizard.sessoes[wizard.atual];
-  if (!s) return;
+    // --------------------------------------------------------
+    // RENDERIZAÇÃO DO WIZARD — títulos brancos MAIÚSCULOS + divisores
+    // --------------------------------------------------------
+    function renderWizard() {
+      const s = wizard.sessoes[wizard.atual];
+      if (!s) return;
 
-  // 🔄 Limpa feedback e estado do quiz ao trocar de sessão
-  els.wizardQuizFeedback.textContent = "";
-  els.wizardQuizFeedback.style.opacity = 0;
+      // 🔧 saneia título duplicado "Sessão X — Sessão X — Nome"
+      if (s.titulo) {
+        s.titulo = String(s.titulo).replace(/^Sessão\s*\d+\s*[—-]\s*/i, "");
+        s.titulo = `Sessão ${wizard.atual + 1} — ${s.titulo}`;
+      }
 
-  els.wizardContainer.classList.remove("hidden");
-  els.wizardTema.textContent = wizard.tema;
-  els.wizardTitulo.textContent = s.titulo;
-  els.wizardObjetivo.textContent = s.objetivo;
-
-
-  const c = s.conteudo || {};
-  els.wizardConteudo.innerHTML = `
-    ${c.introducao ? `<div class="liora-section">
-      <h5>Introdução</h5>
-      <p>${c.introducao}</p>
-    </div><hr class="liora-divider">` : ""}
-
-    ${c.conceitos ? `<div class="liora-section">
-      <h5>Conceitos principais</h5>
-      <ul>${c.conceitos.map(x => `<li>${x}</li>`).join("")}</ul>
-    </div><hr class="liora-divider">` : ""}
-
-    ${c.exemplos ? `<div class="liora-section">
-      <h5>Exemplos</h5>
-      <ul>${c.exemplos.map(x => `<li>${x}</li>`).join("")}</ul>
-    </div><hr class="liora-divider">` : ""}
-
-    ${c.aplicacoes ? `<div class="liora-section">
-      <h5>Aplicações</h5>
-      <ul>${c.aplicacoes.map(x => `<li>${x}</li>`).join("")}</ul>
-    </div>` : ""}
-  `;
-
-  els.wizardAnalogias.innerHTML = s.analogias.map(a => `<p>${a}</p>`).join("");
-  els.wizardAtivacao.innerHTML = s.ativacao.map(q => `<li>${q}</li>`).join("");
-
-  // QUIZ
-  els.wizardQuiz.innerHTML = "";
-  const pergunta = document.createElement("p");
-  pergunta.textContent = s.quiz.pergunta;
-  els.wizardQuiz.appendChild(pergunta);
-
-  const alternativas = s.quiz.alternativas.map((alt, i) => ({
-    texto: String(alt).replace(/\n/g, " ").replace(/<\/?[^>]+(>|$)/g, ""),
-    correta: i === Number(s.quiz.corretaIndex),
-  }));
-
-  // embaralhar
-  for (let i = alternativas.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [alternativas[i], alternativas[j]] = [alternativas[j], alternativas[i]];
-  }
-
-  let tentativasErradas = 0;
-
-  alternativas.forEach((altObj, i) => {
-    const opt = document.createElement("label");
-    opt.className = "liora-quiz-option";
-    opt.innerHTML = `<input type="radio" name="quiz" value="${i}"><span>${altObj.texto}</span>`;
-    opt.addEventListener("click", () => {
-      document.querySelectorAll(".liora-quiz-option").forEach(o => o.classList.remove("selected"));
-      opt.classList.add("selected");
-      opt.querySelector("input").checked = true;
-
+      // 🔄 limpa feedback do quiz ao trocar de sessão
+      els.wizardQuizFeedback.textContent = "";
       els.wizardQuizFeedback.style.opacity = 0;
-      setTimeout(() => {
-        if (altObj.correta) {
-          els.wizardQuizFeedback.textContent = `✅ Correto! ${s.quiz.explicacao}`;
-          els.wizardQuizFeedback.style.color = "var(--brand)";
-          tentativasErradas = 0;
-        } else {
-          tentativasErradas++;
-          if (tentativasErradas >= 2) {
-            els.wizardQuizFeedback.textContent = `💡 Dica: ${s.quiz.explicacao}`;
-            els.wizardQuizFeedback.style.color = "var(--brand)";
-          } else {
-            els.wizardQuizFeedback.textContent = "❌ Tente novamente.";
-            els.wizardQuizFeedback.style.color = "var(--muted)";
-          }
-        }
-        els.wizardQuizFeedback.style.transition = "opacity .4s ease";
-        els.wizardQuizFeedback.style.opacity = 1;
-      }, 100);
-    });
-    els.wizardQuiz.appendChild(opt);
-  });
 
-  els.wizardFlashcards.innerHTML = s.flashcards.map(f => `<li><b>${f.q}</b>: ${f.a}</li>`).join("");
-  els.wizardProgressBar.style.width = `${((wizard.atual + 1) / wizard.sessoes.length) * 100}%`;
-}
+      els.wizardContainer.classList.remove("hidden");
+      els.wizardTema.textContent = wizard.tema;
+      els.wizardTitulo.textContent = s.titulo || `Sessão ${wizard.atual + 1}`;
 
+      els.wizardObjetivo.textContent = s.objetivo;
+
+      // 🧱 Conteúdo hierárquico (cabeçalhos MAIÚSCULOS brancos)
+      const c = s.conteudo || {};
+      const h = (txt) => `<h5 style="text-transform:uppercase;color:var(--fg);font-weight:700;margin:0 0 6px 0;">${txt}</h5>`;
+      const divider = `<hr class="liora-divider">`;
+
+      let html = "";
+
+      if (c.introducao) {
+        html += `<div class="liora-section">${h("Introdução")}<p>${c.introducao}</p></div>${divider}`;
+      }
+      if (Array.isArray(c.conceitos) && c.conceitos.length) {
+        html += `<div class="liora-section">${h("Conceitos principais")}<ul>${c.conceitos.map(x => `<li>${x}</li>`).join("")}</ul></div>${divider}`;
+      }
+      if (Array.isArray(c.exemplos) && c.exemplos.length) {
+        html += `<div class="liora-section">${h("Exemplos")}<ul>${c.exemplos.map(x => `<li>${x}</li>`).join("")}</ul></div>${divider}`;
+      }
+      if (Array.isArray(c.aplicacoes) && c.aplicacoes.length) {
+        html += `<div class="liora-section">${h("Aplicações")}<ul>${c.aplicacoes.map(x => `<li>${x}</li>`).join("")}</ul></div>`;
+      }
+
+      // remove divider final, se houver
+      els.wizardConteudo.innerHTML = html.replace(/<hr class="liora-divider">\s*$/, "");
+
+      // Demais blocos (inalterados)
+      els.wizardAnalogias.innerHTML = (s.analogias || []).map(a => `<p>${a}</p>`).join("");
+      els.wizardAtivacao.innerHTML = (s.ativacao || []).map(q => `<li>${q}</li>`).join("");
+
+      // ✅ Quiz (mantém shuffle + dica após 2 erros)
+      els.wizardQuiz.innerHTML = "";
+      const pergunta = document.createElement("p");
+      pergunta.textContent = s.quiz.pergunta;
+      els.wizardQuiz.appendChild(pergunta);
+
+      const alternativas = s.quiz.alternativas.map((alt, i) => ({
+        texto: String(alt).replace(/\n/g, " ").replace(/<\/?[^>]+(>|$)/g, ""),
+        correta: i === Number(s.quiz.corretaIndex),
+      }));
+
+      // Fisher-Yates
+      for (let i = alternativas.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [alternativas[i], alternativas[j]] = [alternativas[j], alternativas[i]];
+      }
+
+      let tentativasErradas = 0;
+
+      alternativas.forEach((altObj, i) => {
+        const opt = document.createElement("label");
+        opt.className = "liora-quiz-option";
+        opt.innerHTML = `<input type="radio" name="quiz" value="${i}"><span class="liora-quiz-option-text">${altObj.texto}</span>`;
+        opt.addEventListener("click", () => {
+          document.querySelectorAll(".liora-quiz-option").forEach(o => o.classList.remove("selected"));
+          opt.classList.add("selected");
+          opt.querySelector("input").checked = true;
+
+          els.wizardQuizFeedback.style.opacity = 0;
+          setTimeout(() => {
+            if (altObj.correta) {
+              els.wizardQuizFeedback.textContent = `✅ Correto! ${s.quiz.explicacao}`;
+              els.wizardQuizFeedback.style.color = "var(--brand)";
+              tentativasErradas = 0;
+            } else {
+              tentativasErradas++;
+              if (tentativasErradas >= 2) {
+                els.wizardQuizFeedback.textContent = `💡 Dica: ${s.quiz.explicacao}`;
+                els.wizardQuizFeedback.style.color = "var(--brand)";
+              } else {
+                els.wizardQuizFeedback.textContent = "❌ Tente novamente.";
+                els.wizardQuizFeedback.style.color = "var(--muted)";
+              }
+            }
+            els.wizardQuizFeedback.style.transition = "opacity .4s ease";
+            els.wizardQuizFeedback.style.opacity = 1;
+          }, 100);
+        });
+        els.wizardQuiz.appendChild(opt);
+      });
+
+      els.wizardFlashcards.innerHTML = (s.flashcards || []).map(f => `<li><b>${f.q}</b>: ${f.a}</li>`).join("");
+
+      els.wizardProgressBar.style.width = `${((wizard.atual + 1) / wizard.sessoes.length) * 100}%`;
+    }
 
     // --------------------------------------------------------
-    // NAVEGAÇÃO
+    // NAVEGAÇÃO — inalterado
     // --------------------------------------------------------
     els.wizardVoltar.addEventListener("click", () => {
       if (wizard.atual > 0) {
@@ -282,7 +289,6 @@ function renderWizard() {
         saveProgress();
       }
     });
-
     els.wizardProxima.addEventListener("click", () => {
       if (wizard.atual < wizard.sessoes.length - 1) {
         wizard.atual++;
@@ -294,7 +300,7 @@ function renderWizard() {
     });
 
     // --------------------------------------------------------
-    // FLUXOS DE GERAÇÃO
+    // FLUXOS DE GERAÇÃO — inalterado
     // --------------------------------------------------------
     async function gerarFluxo(tema, nivel, modo, textoArquivo = null) {
       const btn = modo === "tema" ? els.btnGerar : els.btnGerarUpload;
@@ -324,14 +330,13 @@ function renderWizard() {
       }
     }
 
-    // BOTÕES
+    // BOTÕES — inalterado
     els.btnGerar.addEventListener("click", async () => {
       const tema = els.inpTema.value.trim();
       const nivel = els.selNivel.value;
       if (!tema) return alert("Digite um tema.");
       gerarFluxo(tema, nivel, "tema");
     });
-
     els.btnGerarUpload.addEventListener("click", async () => {
       const file = els.inpFile.files?.[0];
       const nivel = els.selNivel.value;
@@ -340,7 +345,7 @@ function renderWizard() {
       gerarFluxo(tema, nivel, "upload", await file.text());
     });
 
-    // Atualiza nome do arquivo
+    // Atualiza nome do arquivo — inalterado
     els.inpFile.addEventListener("change", (e) => {
       const file = e.target.files?.[0];
       const uploadText = document.getElementById("upload-text");
@@ -349,6 +354,6 @@ function renderWizard() {
       if (spinner) spinner.style.display = "none";
     });
 
-    console.log("🟢 core.js v47 carregado com sucesso");
+    console.log("🟢 core.js v47 (patch) carregado");
   });
 })();
