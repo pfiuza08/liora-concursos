@@ -180,10 +180,15 @@ function renderWizard() {
   const s = wizard.sessoes[wizard.atual];
   if (!s) return;
 
+  // 🔄 Limpa feedback e estado do quiz ao trocar de sessão
+  els.wizardQuizFeedback.textContent = "";
+  els.wizardQuizFeedback.style.opacity = 0;
+
   els.wizardContainer.classList.remove("hidden");
   els.wizardTema.textContent = wizard.tema;
   els.wizardTitulo.textContent = s.titulo;
   els.wizardObjetivo.textContent = s.objetivo;
+
 
   const c = s.conteudo || {};
   els.wizardConteudo.innerHTML = `
