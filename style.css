@@ -312,9 +312,11 @@ html.light #liora-build-info { background:rgba(255,255,255,0.35); }
 }
 
 .liora-section h5 {
-  color: var(--brand);
-  font-size: 0.95rem;
+  color: var(--fg);          /* branco ou preto conforme tema */
+  font-size: 0.9rem;
   font-weight: 700;
   margin-bottom: 6px;
-  text-transform: uppercase;
+  text-transform: uppercase; /* mantém o padrão em maiúsculas */
+  letter-spacing: 0.5px;
 }
+
