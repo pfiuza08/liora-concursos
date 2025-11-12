@@ -233,28 +233,49 @@ input:focus, select:focus {
 /* ==========================================================
    ✅ QUIZ
 ========================================================== */
+/* ==========================================================
+   ✅ QUIZ — TESTE RÁPIDO (alinhado à esquerda)
+========================================================== */
 .liora-quiz-option {
-  display:flex;
-  align-items:center;
-  gap:10px;
-  padding:10px 14px;
-  border-radius:10px;
-  border:1px solid var(--stroke);
-  cursor:pointer;
-  background:var(--bgCard);
-  margin-bottom:8px;
-  transition:.25s ease;
+  display: flex;
+  align-items: flex-start;         /* força alinhamento superior */
+  justify-content: flex-start;     /* força alinhamento à esquerda */
+  gap: 6px;                        /* reduz espaço interno */
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid var(--stroke);
+  cursor: pointer;
+  background: var(--bgCard);
+  margin-bottom: 8px;
+  transition: 0.25s ease;
 }
+
 .liora-quiz-option:hover {
-  background:var(--bgHover);
-  border-color:var(--brand);
+  background: var(--bgHover);
+  border-color: var(--brand);
 }
+
 .liora-quiz-option.selected {
-  background:var(--brand);
-  color:#fff;
-  border-color:var(--brand)!important;
-  box-shadow:0 0 10px rgba(196,75,4,0.6);
+  background: var(--brand);
+  color: #fff;
+  border-color: var(--brand) !important;
+  box-shadow: 0 0 10px rgba(196, 75, 4, 0.6);
 }
+
+/* texto do item */
+.liora-quiz-option span {
+  display: block;
+  line-height: 1.3;
+  font-size: 0.95rem;
+  margin-top: 2px;
+}
+
+/* input radio */
+.liora-quiz-option input[type="radio"] {
+  margin-top: 2px;
+  accent-color: var(--brand);
+}
+
 
 /* ==========================================================
    🔄 ANIMAÇÕES
