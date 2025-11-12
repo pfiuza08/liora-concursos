@@ -59,11 +59,16 @@
       </select>
 
       <button id="btn-gerar" class="btn w-full mt-3">Gerar plano</button>
+      <!-- status unificado (TEMA) -->
       <p id="status" class="text-xs text-[var(--muted)] mt-2"></p>
+      <!-- barra de progresso (TEMA) -->
+      <div id="barra-tema" class="liora-progress mt-1" style="width:100%;">
+        <div id="barra-tema-fill" class="liora-progress__bar"></div>
+      </div>
     </div>
 
     <!-- PAINEL UPLOAD -->
-    <div id="painel-upload" class="hidden">
+    <div id="painel-upload" class="hidden mt-6">
       <label class="text-sm font-medium">Envie seu material</label>
 
       <label id="upload-zone" class="upload-zone">
@@ -73,7 +78,12 @@
       </label>
 
       <button id="btn-gerar-upload" class="btn w-full mt-3">Gerar plano</button>
+      <!-- status unificado (UPLOAD) -->
       <p id="status-upload" class="text-xs text-[var(--muted)] mt-2"></p>
+      <!-- barra de progresso (UPLOAD) -->
+      <div id="barra-upload" class="liora-progress mt-1" style="width:100%;">
+        <div id="barra-upload-fill" class="liora-progress__bar"></div>
+      </div>
     </div>
   </section>
 
@@ -95,7 +105,7 @@
       <p id="liora-tema-ativo" class="text-sm text-[var(--muted)]"></p>
     </div>
 
-    <!-- Barra de progresso -->
+    <!-- Barra de progresso da sessão -->
     <div class="liora-progress w-52">
       <div id="liora-progress-bar" class="liora-progress__bar"></div>
     </div>
