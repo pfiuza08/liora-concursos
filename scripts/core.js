@@ -1,11 +1,13 @@
 // ==========================================================
-// 🧠 LIORA — CORE PRINCIPAL (v46)
-// Alternativas embaralhadas + feedback com fade + ajuda inteligente
+// 🧠 LIORA — CORE PRINCIPAL (v47)
+// Estrutura hierárquica de conteúdo + continuidade entre sessões
+// Mantém feedback com fade e ajuda inteligente do v46
 // ==========================================================
 (function () {
-  console.log("🔵 Inicializando Liora Core v46...");
+  console.log("🔵 Inicializando Liora Core v47...");
 
   document.addEventListener("DOMContentLoaded", () => {
+
     // --------------------------------------------------------
     // MAPA DE ELEMENTOS
     // --------------------------------------------------------
@@ -56,9 +58,7 @@
         localStorage.setItem("liora_theme", theme);
         els.themeBtn.textContent = theme === "light" ? "☀️" : "🌙";
       }
-
       apply(localStorage.getItem("liora_theme") || "dark");
-
       els.themeBtn.addEventListener("click", () => {
         const newTheme = document.documentElement.classList.contains("light") ? "dark" : "light";
         apply(newTheme);
@@ -66,7 +66,7 @@
     })();
 
     // --------------------------------------------------------
-    // STATUS + BARRAS DE PROGRESSO
+    // STATUS + PROGRESSO
     // --------------------------------------------------------
     function atualizarStatus(modo, texto, progresso = null) {
       const statusEl = modo === "tema" ? els.status : els.statusUpload;
@@ -127,27 +127,36 @@ Formato: JSON puro, ex:
     }
 
     // --------------------------------------------------------
-    // GERAÇÃO DE SESSÃO
+    // GERAÇÃO DE SESSÃO — ESTRUTURA HIERÁRQUICA + CONTEXTO
     // --------------------------------------------------------
-    async function gerarSessao(tema, nivel, numero, nome) {
+    async function gerarSessao(tema, nivel, numero, nome, sessaoAnterior = null) {
+      const contexto = sessaoAnterior
+        ? `Na sessão anterior o aluno aprendeu sobre "${sessaoAnterior.nome}". Agora avance para "${nome}", mantendo coerência e evitando repetição.`
+        : `Esta é a primeira sessão do tema "${tema}".`;
+
       const prompt = `
-Gere a sessão ${numero} do tema "${tema}".
-Retorne JSON:
+${contexto}
+Crie uma sessão estruturada em JSON:
 {
  "titulo":"Sessão ${numero} — ${nome}",
- "objetivo":"resultado claro",
- "conteudo":["p1","p2"],
- "analogias":["a1"],
- "ativacao":["q1","q2"],
- "quiz":{"pergunta":"?","alternativas":["a","b"],"corretaIndex":0,"explicacao":"..."},
+ "objetivo":"clareza sobre o foco da sessão",
+ "conteudo":{
+   "introducao":"breve introdução ao tópico",
+   "conceitos":["conceito 1","conceito 2","conceito 3"],
+   "exemplos":["exemplo 1","exemplo 2"],
+   "aplicacoes":["aplicação prática 1","aplicação prática 2"]
+ },
+ "analogias":["comparação didática com algo cotidiano"],
+ "ativacao":["pergunta reflexiva 1","pergunta 2"],
+ "quiz":{"pergunta":"?","alternativas":["a","b","c"],"corretaIndex":1,"explicacao":"..."},
  "flashcards":[{"q":"...","a":"..."}]
 }`;
-      const raw = await callLLM("Você é Liora.", prompt);
+      const raw = await callLLM("Você é Liora, tutora especializada em microlearning com continuidade pedagógica.", prompt);
       return JSON.parse(raw);
     }
 
     // --------------------------------------------------------
-    // RENDERIZAÇÃO DO PLANO (CARDS LADO DIREITO)
+    // RENDERIZAÇÃO DO PLANO
     // --------------------------------------------------------
     function renderPlanoResumo(plano) {
       els.plano.innerHTML = "";
@@ -165,20 +174,31 @@ Retorne JSON:
     }
 
     // --------------------------------------------------------
-    // RENDERIZAÇÃO DO WIZARD
+    // RENDERIZAÇÃO DO WIZARD (v47 — conteúdo hierárquico)
     // --------------------------------------------------------
     function renderWizard() {
       const s = wizard.sessoes[wizard.atual];
       if (!s) return;
+
       els.wizardContainer.classList.remove("hidden");
       els.wizardTema.textContent = wizard.tema;
       els.wizardTitulo.textContent = s.titulo;
       els.wizardObjetivo.textContent = s.objetivo;
-      els.wizardConteudo.innerHTML = s.conteudo.map(p => `<p>${p}</p>`).join("");
+
+      const c = s.conteudo || {};
+      els.wizardConteudo.innerHTML = `
+        ${c.introducao ? `<p><strong>Introdução:</strong> ${c.introducao}</p>` : ""}
+        ${c.conceitos ? `<h5>Conceitos principais</h5><ul>${c.conceitos.map(x => `<li>${x}</li>`).join("")}</ul>` : ""}
+        ${c.exemplos ? `<h5>Exemplos</h5><ul>${c.exemplos.map(x => `<li>${x}</li>`).join("")}</ul>` : ""}
+        ${c.aplicacoes ? `<h5>Aplicações</h5><ul>${c.aplicacoes.map(x => `<li>${x}</li>`).join("")}</ul>` : ""}
+      `;
+
       els.wizardAnalogias.innerHTML = s.analogias.map(a => `<p>${a}</p>`).join("");
       els.wizardAtivacao.innerHTML = s.ativacao.map(q => `<li>${q}</li>`).join("");
 
-      // ✅ Quiz: embaralhamento + ajuda inteligente
+      // --------------------------------------------------------
+      // QUIZ (mantém feedback com fade e ajuda inteligente)
+      // --------------------------------------------------------
       els.wizardQuiz.innerHTML = "";
       const pergunta = document.createElement("p");
       pergunta.textContent = s.quiz.pergunta;
@@ -189,7 +209,7 @@ Retorne JSON:
         correta: i === Number(s.quiz.corretaIndex),
       }));
 
-      // Fisher-Yates shuffle
+      // embaralhar
       for (let i = alternativas.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [alternativas[i], alternativas[j]] = [alternativas[j], alternativas[i]];
@@ -200,10 +220,8 @@ Retorne JSON:
       alternativas.forEach((altObj, i) => {
         const opt = document.createElement("label");
         opt.className = "liora-quiz-option";
-        opt.innerHTML = `
-          <input type="radio" name="quiz" value="${i}">
-          <span class="liora-quiz-option-text">${altObj.texto}</span>
-        `;
+        opt.innerHTML = `<input type="radio" name="quiz" value="${i}"><span>${altObj.texto}</span>`;
+
         opt.addEventListener("click", () => {
           document.querySelectorAll(".liora-quiz-option").forEach(o => o.classList.remove("selected"));
           opt.classList.add("selected");
@@ -237,7 +255,7 @@ Retorne JSON:
     }
 
     // --------------------------------------------------------
-    // NAVEGAÇÃO DO WIZARD
+    // NAVEGAÇÃO
     // --------------------------------------------------------
     els.wizardVoltar.addEventListener("click", () => {
       if (wizard.atual > 0) {
@@ -258,97 +276,61 @@ Retorne JSON:
     });
 
     // --------------------------------------------------------
-    // BOTÃO GERAR — TEMA
+    // FLUXOS DE GERAÇÃO
     // --------------------------------------------------------
+    async function gerarFluxo(tema, nivel, modo, textoArquivo = null) {
+      const btn = modo === "tema" ? els.btnGerar : els.btnGerarUpload;
+      btn.disabled = true;
+      atualizarStatus(modo, "🧩 Criando plano...", 0);
+
+      try {
+        const plano = await gerarPlanoDeSessoes(tema, nivel);
+        wizard = { tema, nivel, plano, sessoes: [], atual: 0 };
+        renderPlanoResumo(plano);
+
+        for (let i = 0; i < plano.length; i++) {
+          const sessaoAnterior = i > 0 ? plano[i - 1] : null;
+          atualizarStatus(modo, `⏳ Sessão ${i + 1}/${plano.length}: ${plano[i].nome}`, ((i + 1) / plano.length) * 100);
+          const sessao = await gerarSessao(tema, nivel, i + 1, plano[i].nome, sessaoAnterior);
+          wizard.sessoes.push(sessao);
+          saveProgress();
+        }
+
+        atualizarStatus(modo, "✅ Sessões concluídas!", 100);
+        renderWizard();
+
+      } catch {
+        alert("Erro ao gerar plano.");
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    // BOTÕES
     els.btnGerar.addEventListener("click", async () => {
       const tema = els.inpTema.value.trim();
       const nivel = els.selNivel.value;
       if (!tema) return alert("Digite um tema.");
-      const cached = loadProgress(tema, nivel);
-      if (cached?.sessoes?.length) {
-        wizard = cached;
-        renderPlanoResumo(wizard.plano);
-        renderWizard();
-        return;
-      }
-
-      els.btnGerar.disabled = true;
-      atualizarStatus("tema", "🧩 Criando plano...", 0);
-
-      try {
-        const plano = await gerarPlanoDeSessoes(tema, nivel);
-        wizard = { tema, nivel, plano, sessoes: [], atual: 0 };
-        renderPlanoResumo(plano);
-
-        for (let i = 0; i < plano.length; i++) {
-          atualizarStatus("tema", `⏳ Sessão ${i + 1}/${plano.length}: ${plano[i].nome}`, ((i + 1) / plano.length) * 100);
-          const sessao = await gerarSessao(tema, nivel, i + 1, plano[i].nome);
-          wizard.sessoes.push(sessao);
-          saveProgress();
-        }
-
-        atualizarStatus("tema", "✅ Sessões concluídas!", 100);
-        renderWizard();
-
-      } catch {
-        alert("Erro ao gerar o plano.");
-      } finally {
-        els.btnGerar.disabled = false;
-      }
+      gerarFluxo(tema, nivel, "tema");
     });
 
-    // --------------------------------------------------------
-    // 🗂️ ATUALIZAÇÃO DO NOME DO ARQUIVO (UPLOAD)
-    // --------------------------------------------------------
-    els.inpFile.addEventListener("change", (e) => {
-      const file = e.target.files?.[0];
-      const uploadText = document.getElementById("upload-text");
-      const spinner = document.getElementById("upload-spinner");
-
-      if (file) {
-        uploadText.textContent = `Selecionado: ${file.name}`;
-        spinner.style.display = "none";
-      } else {
-        uploadText.textContent = "Clique ou arraste um arquivo (.txt, .pdf)";
-      }
-    });
-
-    // --------------------------------------------------------
-    // BOTÃO GERAR — UPLOAD
-    // --------------------------------------------------------
     els.btnGerarUpload.addEventListener("click", async () => {
       const file = els.inpFile.files?.[0];
       const nivel = els.selNivel.value;
       if (!file) return alert("Selecione um arquivo.");
-
-      els.btnGerarUpload.disabled = true;
-      atualizarStatus("upload", "🧩 Processando arquivo...", 0);
-
-      try {
-        const text = await file.text();
-        const tema = file.name.split(".")[0];
-        const plano = await gerarPlanoDeSessoes(tema, nivel);
-
-        wizard = { tema, nivel, plano, sessoes: [], atual: 0 };
-        renderPlanoResumo(plano);
-
-        for (let i = 0; i < plano.length; i++) {
-          atualizarStatus("upload", `⏳ Sessão ${i + 1}/${plano.length}: ${plano[i].nome}`, ((i + 1) / plano.length) * 100);
-          const sessao = await gerarSessao(tema, nivel, i + 1, plano[i].nome);
-          wizard.sessoes.push(sessao);
-          saveProgress();
-        }
-
-        atualizarStatus("upload", "✅ Sessões concluídas!", 100);
-        renderWizard();
-
-      } catch {
-        alert("Erro ao gerar plano via upload.");
-      } finally {
-        els.btnGerarUpload.disabled = false;
-      }
+      const tema = file.name.split(".")[0];
+      gerarFluxo(tema, nivel, "upload", await file.text());
     });
 
-    console.log("🟢 core.js v46 carregado com sucesso");
+    // Atualiza nome do arquivo
+    els.inpFile.addEventListener("change", (e) => {
+      const file = e.target.files?.[0];
+      const uploadText = document.getElementById("upload-text");
+      const spinner = document.getElementById("upload-spinner");
+      uploadText.textContent = file ? `Selecionado: ${file.name}` : "Clique ou arraste um arquivo (.txt, .pdf)";
+      if (spinner) spinner.style.display = "none";
+    });
+
+    console.log("🟢 core.js v47 carregado com sucesso");
   });
 })();
