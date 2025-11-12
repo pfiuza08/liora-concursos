@@ -273,6 +273,24 @@ Retorne JSON:
     });
 
     // --------------------------------------------------------
+    // 🗂️ ATUALIZAÇÃO DO NOME DO ARQUIVO (UPLOAD)
+   // --------------------------------------------------------
+     els.inpFile.addEventListener("change", (e) => {
+      const file = e.target.files?.[0];
+      const uploadText = document.getElementById("upload-text");
+      const spinner = document.getElementById("upload-spinner");
+
+     if (file) {
+       uploadText.textContent = `Selecionado: ${file.name}`;
+       spinner.style.display = "none"; // garante que o spinner fique invisível até o processamento
+     } else {
+       uploadText.textContent = "Clique ou arraste um arquivo (.txt, .pdf)";
+     }
+   });
+
+ 
+
+    // --------------------------------------------------------
     // BOTÃO GERAR — UPLOAD
     // --------------------------------------------------------
     els.btnGerarUpload.addEventListener("click", async () => {
