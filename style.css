@@ -1,5 +1,5 @@
 /* ==========================================================
-   🎨 VARIÁVEIS DE TEMA
+   🎨 VARIÁVEIS DE TEMA (dark / light)
 ========================================================== */
 :root {
   --brand:#c44b04;
@@ -9,16 +9,24 @@
   --muted:#bfbfbf;
   --stroke:#252525;
   --shadow:0 2px 8px rgba(0,0,0,0.4);
+
+  --bgCard:#151515;
+  --bgHover:#1d1d1d;
+  --border:#252525;
 }
 
 html.light, body.light {
   --brand:#f4a261;
-  --bg:#fdfbf8;
+  --bg:#faf7f2;
   --fg:#1e1e1e;
   --card:#ffffff;
-  --muted:#6b6b6b;
+  --muted:#5c5c5c;
   --stroke:#e0ddd8;
-  --shadow:0 2px 10px rgba(0,0,0,0.1);
+  --shadow:0 2px 10px rgba(0,0,0,0.08);
+
+  --bgCard:#ffffff;
+  --bgHover:#f2f1ee;
+  --border:#e0ddd8;
 }
 
 /* ==========================================================
@@ -41,7 +49,9 @@ html, body {
   background:var(--card);
   border:1px solid var(--stroke);
   border-radius:1rem;
+  padding:20px;
   box-shadow:var(--shadow);
+  transition:.3s ease;
 }
 
 /* ==========================================================
@@ -52,6 +62,7 @@ html, body {
   grid-template-columns:380px 1fr;
   gap:20px;
   max-width:1400px;
+  width:100%;
   margin:40px auto;
   padding:0 20px;
 }
@@ -65,7 +76,7 @@ html, body {
   padding:.7rem 1rem;
   font-weight:600;
   cursor:pointer;
-  transition:.2s ease;
+  transition:.25s ease;
 }
 
 .btn {
@@ -82,46 +93,33 @@ html, body {
 .btn-secondary.selected{
   background:var(--brand);
   color:#fff;
-  border-color:var(--brand) !important;
+  border-color:var(--brand)!important;
 }
 
-/* Wizard Footer */
 .liora-btn.primary{ background:var(--brand); color:#fff; }
+.liora-btn.secondary{ background:transparent; border:1px solid var(--stroke); color:var(--fg); }
 .liora-btn.ghost{ background:transparent; border:none; color:var(--muted); }
 
 /* ==========================================================
    ✏️ INPUTS
 ========================================================== */
-/* ==========================================================
-   ✏️ INPUTS e SELECTS — corrigido v42.1
-========================================================== */
 input, select {
-  background: var(--card);            /* Fundo sólido e contrastante */
-  border: 1px solid var(--stroke);
-  border-radius: 8px;
-  padding: .6rem .75rem;
-  width: 100%;
-  color: var(--fg);
-  transition: border-color .2s ease, background .2s ease;
+  background:var(--bgCard);
+  border:1px solid var(--stroke);
+  border-radius:8px;
+  padding:.6rem .75rem;
+  width:100%;
+  color:var(--fg);
+  font-size:0.95rem;
 }
-
-input::placeholder {
-  color: var(--muted);
-  opacity: 0.8;
-}
-
-select option {
-  background: var(--card);            /* Fundo igual ao card */
-  color: var(--fg);
-}
+input::placeholder { color:var(--muted); }
+select option { background:var(--card); color:var(--fg); }
 
 input:focus, select:focus {
-  outline: none;
-  border-color: var(--brand);
-  box-shadow: 0 0 0 2px rgba(196, 75, 4, .3);
-  background: var(--card);
+  outline:none;
+  border-color:var(--brand);
+  box-shadow:0 0 0 2px rgba(196,75,4,.3);
 }
-
 
 /* ==========================================================
    📁 UPLOAD
@@ -129,19 +127,20 @@ input:focus, select:focus {
 .upload-zone {
   border:2px dashed var(--stroke);
   border-radius:1rem;
-  padding:1rem;
+  padding:1.2rem 1rem;
   text-align:center;
   background:rgba(255,255,255,0.02);
   display:flex;
   flex-direction:column;
   align-items:center;
-  gap:.35rem;
+  gap:.4rem;
   cursor:pointer;
   position:relative;
   transition:.3s ease;
 }
-.upload-zone:hover{ border-color:var(--brand); background:rgba(196,75,4,.15); }
-.upload-zone input{ position:absolute; inset:0; opacity:0; cursor:pointer;}
+.upload-zone:hover{ border-color:var(--brand); background:rgba(196,75,4,0.08); }
+.upload-zone input{ position:absolute; inset:0; opacity:0; cursor:pointer; }
+
 #upload-spinner {
   display:none;
   border:3px solid var(--stroke);
@@ -154,65 +153,82 @@ input:focus, select:focus {
 /* ==========================================================
    🧠 WIZARD
 ========================================================== */
-.liora-wizard{ max-width:980px; margin:28px auto; padding:0 16px; }
-
-.liora-wizard__header {
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  margin-bottom:16px;
+.liora-wizard {
+  max-width:980px;
+  margin:32px auto;
+  padding:0 16px;
 }
 
+.liora-wizard__header h2 {
+  color:var(--brand);
+  font-weight:700;
+}
+
+/* ==========================================================
+   📊 BARRA DE PROGRESSO
+========================================================== */
 .liora-progress {
   height:8px;
-  width:200px;
   background:var(--stroke);
   border-radius:999px;
   overflow:hidden;
+  box-shadow:inset 0 0 2px rgba(0,0,0,0.3);
 }
+
 .liora-progress__bar {
   height:100%;
   background:var(--brand);
   width:0%;
   border-radius:999px;
-  transition:width .3s ease;
+  transition:width .4s ease;
 }
 
 /* ==========================================================
-   🔥 CARDS DO PLANO
+   🔥 CARDS CLICÁVEIS (PLANO À DIREITA)
 ========================================================== */
 .liora-card-topico {
   padding:12px 16px;
   border-radius:12px;
-  background:var(--card);
+  background:var(--bgCard);
   cursor:pointer;
-  transition:.2s ease;
-  border:1px solid var(--stroke);
+  transition:.25s ease;
+  border:1px solid var(--border);
 }
 .liora-card-topico:hover {
-  background:var(--brand);
-  color:#fff;
+  background:var(--bgHover);
+  border-color:var(--brand);
   transform:translateY(-2px);
 }
+.liora-card-topico strong { color:var(--brand); }
 
 /* ==========================================================
-   🧩 SEÇÕES INTERNAS
+   🔠 SEÇÕES DO WIZARD
 ========================================================== */
-.liora-block h4 {
+.liora-card h4 {
   font-weight:700;
   text-transform:uppercase;
-  color:var(--brand);
   margin-bottom:6px;
   letter-spacing:.3px;
+  color:var(--brand);
 }
 
+/* Divisor entre seções */
 .liora-block {
-  border-bottom:1px solid var(--stroke);
-  padding-bottom:12px;
-  margin-bottom:18px;
+  position:relative;
+  padding-bottom:16px;
+  margin-bottom:20px;
 }
-
-.liora-block:last-child { border:none; margin-bottom:0; }
+.liora-block::after {
+  content:"";
+  position:absolute;
+  left:0;
+  bottom:0;
+  width:100%;
+  height:1px;
+  background:var(--stroke);
+  opacity:0.3;
+}
+.liora-block:last-child::after { display:none; }
 
 /* ==========================================================
    ✅ QUIZ
@@ -220,50 +236,52 @@ input:focus, select:focus {
 .liora-quiz-option {
   display:flex;
   align-items:center;
-  justify-content:space-between;
-  border:1px solid var(--stroke);
+  gap:10px;
+  padding:10px 14px;
   border-radius:10px;
-  padding:.75rem 1rem;
-  margin-bottom:10px;
+  border:1px solid var(--stroke);
   cursor:pointer;
-  transition:all .25s ease;
+  background:var(--bgCard);
+  margin-bottom:8px;
+  transition:.25s ease;
 }
 .liora-quiz-option:hover {
+  background:var(--bgHover);
   border-color:var(--brand);
-  background:rgba(196,75,4,0.08);
 }
 .liora-quiz-option.selected {
   background:var(--brand);
   color:#fff;
-  border-color:var(--brand);
-  transform:scale(1.02);
-  box-shadow:0 0 10px rgba(196,75,4,0.5);
-}
-.liora-quiz-feedback {
-  margin-top:10px;
-  font-weight:500;
+  border-color:var(--brand)!important;
+  box-shadow:0 0 10px rgba(196,75,4,0.6);
 }
 
 /* ==========================================================
-   ⚙️ ANIMAÇÕES
+   🔄 ANIMAÇÕES
 ========================================================== */
 @keyframes spin { to { transform:rotate(360deg); } }
-@keyframes fadeIn { from {opacity:0; transform:translateY(10px);} to {opacity:1; transform:translateY(0);} }
+@keyframes fadeIn { from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);} }
+
 .animate-fade { animation:fadeIn .4s ease-in-out; }
 
 /* ==========================================================
-   📄 BUILD INFO
+   🪶 MISC
 ========================================================== */
+#btn-theme{ transition:.15s; }
+#btn-theme:active{ transform:scale(.95); }
+
 #liora-build-info {
   position:fixed;
   bottom:10px;
   right:14px;
   font-size:.7rem;
-  opacity:.45;
-  background:rgba(0,0,0,0.15);
+  opacity:0.5;
   padding:4px 8px;
   border-radius:6px;
-  user-select:none;
   pointer-events:none;
+  background:rgba(0,0,0,0.2);
+  backdrop-filter:blur(4px);
+  user-select:none;
 }
-html.light #liora-build-info { background:rgba(255,255,255,0.35); }
+html.light #liora-build-info { background:rgba(255,255,255,0.3); }
+#liora-build-info:hover { opacity:.9; }
