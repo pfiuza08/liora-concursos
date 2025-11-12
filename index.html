@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Liora — Plano de Estudo Inteligente</title>
 
+  <!-- Tailwind -->
   <script src="https://cdn.tailwindcss.com"></script>
 
   <!-- PDF.js -->
@@ -14,7 +15,7 @@
       "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.14.305/pdf.worker.min.js";
   </script>
 
-  <link rel="stylesheet" href="/style.css" />
+  <link rel="stylesheet" href="/style.css?v=42" />
 </head>
 <body>
 
@@ -38,7 +39,6 @@
 
   <!-- ---- ESQUERDA ---- -->
   <section class="card p-6">
-
     <h2 class="section-title mb-4">Como você deseja estudar?</h2>
 
     <div class="grid grid-cols-2 gap-2 mb-6">
@@ -75,7 +75,6 @@
       <button id="btn-gerar-upload" class="btn w-full mt-3">Gerar plano</button>
       <p id="status-upload" class="text-xs text-[var(--muted)] mt-2"></p>
     </div>
-
   </section>
 
   <!-- ---- DIREITA ---- -->
@@ -86,21 +85,23 @@
     </div>
     <div id="plano" class="space-y-3"></div>
   </section>
-
 </main>
 
+<!-- ---- WIZARD ---- -->
 <section id="liora-sessoes" class="hidden liora-wizard max-w-6xl mx-auto px-6 pb-10">
-  <div class="liora-wizard__header">
-    <h2 id="liora-tema-ativo"></h2>
+  <div class="liora-wizard__header flex justify-between items-center mb-4">
+    <div>
+      <h2 id="liora-sessao-titulo" class="text-lg font-bold mb-1"></h2>
+      <p id="liora-tema-ativo" class="text-sm text-[var(--muted)]"></p>
+    </div>
 
-    <div class="liora-progress">
+    <!-- Barra de progresso -->
+    <div class="liora-progress w-52">
       <div id="liora-progress-bar" class="liora-progress__bar"></div>
     </div>
   </div>
 
-  <div class="liora-card animate-fade">
-    <h3 id="liora-sessao-titulo"></h3>
-
+  <div class="liora-card space-y-6 p-6">
     <div class="liora-block"><h4>Objetivo</h4><p id="liora-sessao-objetivo"></p></div>
     <div class="liora-block"><h4>Conteúdo</h4><div id="liora-sessao-conteudo"></div></div>
     <div class="liora-block"><h4>Analogias</h4><div id="liora-sessao-analogias"></div></div>
@@ -109,19 +110,21 @@
     <div class="liora-block"><h4>Flashcards</h4><ul id="liora-sessao-flashcards"></ul></div>
   </div>
 
-  <div class="liora-wizard__footer">
+  <div class="liora-wizard__footer flex justify-between mt-6">
     <button id="liora-btn-voltar" class="liora-btn ghost">◀ Voltar</button>
     <button id="liora-btn-proxima" class="liora-btn primary">Próxima sessão ▶</button>
   </div>
 </section>
 
-
 <footer class="max-w-6xl mx-auto px-4 pb-10 text-xs text-[var(--muted)] text-center">
   <p>Liora — IA aplicada a estudos. © Intellih</p>
 </footer>
 
-<script src="/scripts/semantic.js"></script>
-<script src="/scripts/core.js"></script>
+<!-- Scripts (mantendo o comportamento funcional) -->
+<script src="/scripts/semantic.js?v=42"></script>
+<script src="/scripts/core.js?v=42"></script>
+
+<div id="liora-build-info">Liora v42</div>
 
 </body>
 </html>
