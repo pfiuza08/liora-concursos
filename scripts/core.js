@@ -1,11 +1,14 @@
 // ==========================================================
-// 🧠 LIORA — CORE PRINCIPAL (v44)
-// Correção do layout do quiz (for das alternativas)
+// 🧠 LIORA — CORE PRINCIPAL (v45)
+// Alternativas do quiz embaralhadas + feedback com fade
 // ==========================================================
 (function () {
-  console.log("🔵 Inicializando Liora Core v44...");
+  console.log("🔵 Inicializando Liora Core v45...");
 
   document.addEventListener("DOMContentLoaded", () => {
+    // --------------------------------------------------------
+    // MAPA DE ELEMENTOS
+    // --------------------------------------------------------
     const els = {
       modoTema: document.getElementById("modo-tema"),
       modoUpload: document.getElementById("modo-upload"),
@@ -41,7 +44,9 @@
       themeBtn: document.getElementById("btn-theme"),
     };
 
-    // --------------------- Tema claro/escuro ---------------------
+    // --------------------------------------------------------
+    // 🌗 TEMA (LIGHT / DARK)
+    // --------------------------------------------------------
     (function themeSetup() {
       function apply(theme) {
         document.documentElement.classList.remove("light", "dark");
@@ -51,14 +56,18 @@
         localStorage.setItem("liora_theme", theme);
         els.themeBtn.textContent = theme === "light" ? "☀️" : "🌙";
       }
+
       apply(localStorage.getItem("liora_theme") || "dark");
+
       els.themeBtn.addEventListener("click", () => {
         const newTheme = document.documentElement.classList.contains("light") ? "dark" : "light";
         apply(newTheme);
       });
     })();
 
-    // --------------------- Status + Progresso ---------------------
+    // --------------------------------------------------------
+    // STATUS + BARRAS DE PROGRESSO
+    // --------------------------------------------------------
     function atualizarStatus(modo, texto, progresso = null) {
       const statusEl = modo === "tema" ? els.status : els.statusUpload;
       if (statusEl) statusEl.textContent = texto;
@@ -67,13 +76,17 @@
       if (barra && progresso !== null) barra.style.width = `${progresso}%`;
     }
 
-    // --------------------- Estado Global ---------------------
+    // --------------------------------------------------------
+    // ESTADO GLOBAL
+    // --------------------------------------------------------
     let wizard = { tema: null, nivel: null, plano: [], sessoes: [], atual: 0 };
     const key = (tema, nivel) => `liora:wizard:${tema.toLowerCase()}::${nivel.toLowerCase()}`;
     const saveProgress = () => localStorage.setItem(key(wizard.tema, wizard.nivel), JSON.stringify(wizard));
     const loadProgress = (tema, nivel) => JSON.parse(localStorage.getItem(key(tema, nivel)) || "null");
 
-    // --------------------- Alternância de Modo ---------------------
+    // --------------------------------------------------------
+    // MODO (TEMA / UPLOAD)
+    // --------------------------------------------------------
     function setMode(mode) {
       const tema = mode === "tema";
       els.painelTema.classList.toggle("hidden", !tema);
@@ -85,7 +98,9 @@
     els.modoUpload.addEventListener("click", () => setMode("upload"));
     setMode("tema");
 
-    // --------------------- Chamada à API ---------------------
+    // --------------------------------------------------------
+    // CHAMADA À API
+    // --------------------------------------------------------
     async function callLLM(system, user) {
       const res = await fetch("/api/liora", {
         method: "POST",
@@ -97,7 +112,9 @@
       return json.output;
     }
 
-    // --------------------- Geração do Plano ---------------------
+    // --------------------------------------------------------
+    // GERAÇÃO DE PLANO
+    // --------------------------------------------------------
     async function gerarPlanoDeSessoes(tema, nivel) {
       const prompt = `
 Crie um plano de sessões para o tema "${tema}" (nível: ${nivel}).
@@ -110,7 +127,9 @@ Formato: JSON puro, ex:
       return JSON.parse(raw);
     }
 
-    // --------------------- Geração de Sessão ---------------------
+    // --------------------------------------------------------
+    // GERAÇÃO DE SESSÃO
+    // --------------------------------------------------------
     async function gerarSessao(tema, nivel, numero, nome) {
       const prompt = `
 Gere a sessão ${numero} do tema "${tema}".
@@ -128,7 +147,9 @@ Retorne JSON:
       return JSON.parse(raw);
     }
 
-    // --------------------- Renderização do Plano ---------------------
+    // --------------------------------------------------------
+    // RENDERIZAÇÃO DO PLANO (CARDS LADO DIREITO)
+    // --------------------------------------------------------
     function renderPlanoResumo(plano) {
       els.plano.innerHTML = "";
       plano.forEach((p, index) => {
@@ -144,7 +165,9 @@ Retorne JSON:
       });
     }
 
-    // --------------------- Renderização do Wizard ---------------------
+    // --------------------------------------------------------
+    // RENDERIZAÇÃO DO WIZARD
+    // --------------------------------------------------------
     function renderWizard() {
       const s = wizard.sessoes[wizard.atual];
       if (!s) return;
@@ -156,28 +179,50 @@ Retorne JSON:
       els.wizardAnalogias.innerHTML = s.analogias.map(a => `<p>${a}</p>`).join("");
       els.wizardAtivacao.innerHTML = s.ativacao.map(q => `<li>${q}</li>`).join("");
 
-      // ✅ FIX: renderização limpa e horizontal das alternativas
+      // ✅ Novo: embaralhamento de alternativas
       els.wizardQuiz.innerHTML = "";
       const pergunta = document.createElement("p");
       pergunta.textContent = s.quiz.pergunta;
       els.wizardQuiz.appendChild(pergunta);
 
-      s.quiz.alternativas.forEach((alt, i) => {
-        const texto = String(alt).replace(/\n/g, " ").replace(/<\/?[^>]+(>|$)/g, ""); // limpa HTML e \n
+      // Copia e marca a alternativa correta
+      const alternativas = s.quiz.alternativas.map((alt, i) => ({
+        texto: String(alt).replace(/\n/g, " ").replace(/<\/?[^>]+(>|$)/g, ""),
+        correta: i === Number(s.quiz.corretaIndex),
+      }));
+
+      // Embaralha (Fisher-Yates)
+      for (let i = alternativas.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [alternativas[i], alternativas[j]] = [alternativas[j], alternativas[i]];
+      }
+
+      // Renderiza opções embaralhadas
+      alternativas.forEach((altObj, i) => {
         const opt = document.createElement("label");
         opt.className = "liora-quiz-option";
         opt.innerHTML = `
           <input type="radio" name="quiz" value="${i}">
-          <span class="liora-quiz-option-text">${texto}</span>
+          <span class="liora-quiz-option-text">${altObj.texto}</span>
         `;
         opt.addEventListener("click", () => {
           document.querySelectorAll(".liora-quiz-option").forEach(o => o.classList.remove("selected"));
           opt.classList.add("selected");
           opt.querySelector("input").checked = true;
-          els.wizardQuizFeedback.textContent =
-            i === Number(s.quiz.corretaIndex)
-              ? `✅ Correto! ${s.quiz.explicacao}`
-              : "❌ Tente novamente.";
+
+          // Aplica feedback animado
+          els.wizardQuizFeedback.style.opacity = 0;
+          setTimeout(() => {
+            if (altObj.correta) {
+              els.wizardQuizFeedback.textContent = `✅ Correto! ${s.quiz.explicacao}`;
+              els.wizardQuizFeedback.style.color = "var(--brand)";
+            } else {
+              els.wizardQuizFeedback.textContent = "❌ Tente novamente.";
+              els.wizardQuizFeedback.style.color = "var(--muted)";
+            }
+            els.wizardQuizFeedback.style.transition = "opacity .4s ease";
+            els.wizardQuizFeedback.style.opacity = 1;
+          }, 100);
         });
         els.wizardQuiz.appendChild(opt);
       });
@@ -186,7 +231,9 @@ Retorne JSON:
       els.wizardProgressBar.style.width = `${((wizard.atual + 1) / wizard.sessoes.length) * 100}%`;
     }
 
-    // --------------------- Navegação ---------------------
+    // --------------------------------------------------------
+    // NAVEGAÇÃO DO WIZARD
+    // --------------------------------------------------------
     els.wizardVoltar.addEventListener("click", () => {
       if (wizard.atual > 0) {
         wizard.atual--;
@@ -205,7 +252,9 @@ Retorne JSON:
       }
     });
 
-    // --------------------- Botão Gerar (Tema) ---------------------
+    // --------------------------------------------------------
+    // BOTÃO GERAR — TEMA
+    // --------------------------------------------------------
     els.btnGerar.addEventListener("click", async () => {
       const tema = els.inpTema.value.trim();
       const nivel = els.selNivel.value;
@@ -235,6 +284,7 @@ Retorne JSON:
 
         atualizarStatus("tema", "✅ Sessões concluídas!", 100);
         renderWizard();
+
       } catch {
         alert("Erro ao gerar o plano.");
       } finally {
@@ -242,18 +292,25 @@ Retorne JSON:
       }
     });
 
-    // --------------------- Atualiza nome do arquivo ---------------------
+    // --------------------------------------------------------
+    // 🗂️ ATUALIZAÇÃO DO NOME DO ARQUIVO (UPLOAD)
+    // --------------------------------------------------------
     els.inpFile.addEventListener("change", (e) => {
       const file = e.target.files?.[0];
       const uploadText = document.getElementById("upload-text");
       const spinner = document.getElementById("upload-spinner");
+
       if (file) {
         uploadText.textContent = `Selecionado: ${file.name}`;
         spinner.style.display = "none";
-      } else uploadText.textContent = "Clique ou arraste um arquivo (.txt, .pdf)";
+      } else {
+        uploadText.textContent = "Clique ou arraste um arquivo (.txt, .pdf)";
+      }
     });
 
-    // --------------------- Botão Gerar (Upload) ---------------------
+    // --------------------------------------------------------
+    // BOTÃO GERAR — UPLOAD
+    // --------------------------------------------------------
     els.btnGerarUpload.addEventListener("click", async () => {
       const file = els.inpFile.files?.[0];
       const nivel = els.selNivel.value;
@@ -279,6 +336,7 @@ Retorne JSON:
 
         atualizarStatus("upload", "✅ Sessões concluídas!", 100);
         renderWizard();
+
       } catch {
         alert("Erro ao gerar plano via upload.");
       } finally {
@@ -286,6 +344,6 @@ Retorne JSON:
       }
     });
 
-    console.log("🟢 core.js v44 carregado com sucesso");
+    console.log("🟢 core.js v45 carregado com sucesso");
   });
 })();
