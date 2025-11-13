@@ -1,15 +1,15 @@
 // ==========================================================
-// 🧠 LIORA — CORE PRINCIPAL (v47 PATCH)
-// Títulos do conteúdo em MAIÚSCULAS BRANCAS + divisores
-// Mantém tudo que já funciona (shuffle, hint, progresso, tema)
+// 🧠 LIORA — CORE PRINCIPAL (v48)
+// Conteúdo hierárquico + conexão automática entre sessões + resumo rápido
+// Mantém estrutura estável do v47
 // ==========================================================
 (function () {
-  console.log("🔵 Inicializando Liora Core v47 (patch)...");
+  console.log("🔵 Inicializando Liora Core v48...");
 
   document.addEventListener("DOMContentLoaded", () => {
 
     // --------------------------------------------------------
-    // MAPA DE ELEMENTOS
+    // MAPA DE ELEMENTOS (inalterado)
     // --------------------------------------------------------
     const els = {
       modoTema: document.getElementById("modo-tema"),
@@ -47,7 +47,7 @@
     };
 
     // --------------------------------------------------------
-    // 🌗 TEMA (LIGHT / DARK) - inalterado
+    // 🌗 TEMA (mantido)
     // --------------------------------------------------------
     (function themeSetup() {
       function apply(theme) {
@@ -66,7 +66,7 @@
     })();
 
     // --------------------------------------------------------
-    // STATUS + PROGRESSO - inalterado
+    // STATUS + PROGRESSO (inalterado)
     // --------------------------------------------------------
     function atualizarStatus(modo, texto, progresso = null) {
       const statusEl = modo === "tema" ? els.status : els.statusUpload;
@@ -76,7 +76,7 @@
     }
 
     // --------------------------------------------------------
-    // ESTADO GLOBAL - inalterado
+    // ESTADO GLOBAL
     // --------------------------------------------------------
     let wizard = { tema: null, nivel: null, plano: [], sessoes: [], atual: 0 };
     const key = (tema, nivel) => `liora:wizard:${tema.toLowerCase()}::${nivel.toLowerCase()}`;
@@ -84,7 +84,7 @@
     const loadProgress = (tema, nivel) => JSON.parse(localStorage.getItem(key(tema, nivel)) || "null");
 
     // --------------------------------------------------------
-    // MODO (TEMA / UPLOAD) - inalterado
+    // MODO (TEMA / UPLOAD)
     // --------------------------------------------------------
     function setMode(mode) {
       const tema = mode === "tema";
@@ -98,7 +98,7 @@
     setMode("tema");
 
     // --------------------------------------------------------
-    // CHAMADA À API - inalterado
+    // CHAMADA À API
     // --------------------------------------------------------
     async function callLLM(system, user) {
       const res = await fetch("/api/liora", {
@@ -112,51 +112,55 @@
     }
 
     // --------------------------------------------------------
-    // GERAÇÃO DE PLANO - inalterado
+    // GERAÇÃO DE PLANO (mesmo formato)
     // --------------------------------------------------------
     async function gerarPlanoDeSessoes(tema, nivel) {
       const prompt = `
-Crie um plano de sessões para o tema "${tema}" (nível: ${nivel}).
-Formato: JSON puro, ex:
+Crie um plano de sessões interligadas para o tema "${tema}" (nível: ${nivel}).
+Cada sessão deve representar uma progressão natural do aprendizado.
+Retorne JSON puro, ex:
 [
  {"numero":1,"nome":"Fundamentos"},
  {"numero":2,"nome":"Aplicações"}
 ]`;
-      const raw = await callLLM("Você é Liora, especialista em microlearning.", prompt);
+      const raw = await callLLM("Você é Liora, especialista em microlearning estruturado e progressivo.", prompt);
       return JSON.parse(raw);
     }
 
     // --------------------------------------------------------
-    // GERAÇÃO DE SESSÃO — ESTRUTURA HIERÁRQUICA + CONTEXTO - inalterado
+    // GERAÇÃO DE SESSÃO (hierarquia + conexão + resumo)
     // --------------------------------------------------------
-    async function gerarSessao(tema, nivel, numero, nome, sessaoAnterior = null) {
-      const contexto = sessaoAnterior
-        ? `Na sessão anterior o aluno aprendeu sobre "${sessaoAnterior.nome}". Agora avance para "${nome}", mantendo coerência e evitando repetição.`
-        : `Esta é a primeira sessão do tema "${tema}".`;
+    async function gerarSessao(tema, nivel, numero, nome, sessaoAnterior = null, proximaSessao = null) {
+      const contextoAnterior = sessaoAnterior ? `A sessão anterior abordou "${sessaoAnterior}".` : "";
+      const contextoProximo = proximaSessao ? `A próxima sessão será "${proximaSessao}".` : "";
 
       const prompt = `
-${contexto}
-Crie uma sessão estruturada em JSON:
+Gere a sessão ${numero} do tema "${tema}" (nível: ${nivel}).
+${contextoAnterior}
+${contextoProximo}
+A estrutura deve seguir hierarquia didática e coerência entre sessões.
+Retorne JSON puro:
 {
  "titulo":"Sessão ${numero} — ${nome}",
- "objetivo":"clareza sobre o foco da sessão",
+ "objetivo":"clareza sobre o foco e o resultado esperado da sessão",
  "conteudo":{
-   "introducao":"breve introdução ao tópico",
+   "introducao":"breve contextualização que liga com a sessão anterior",
    "conceitos":["conceito 1","conceito 2","conceito 3"],
    "exemplos":["exemplo 1","exemplo 2"],
-   "aplicacoes":["aplicação prática 1","aplicação prática 2"]
+   "aplicacoes":["uso prático 1","uso prático 2"]
  },
  "analogias":["comparação didática com algo cotidiano"],
  "ativacao":["pergunta reflexiva 1","pergunta 2"],
  "quiz":{"pergunta":"?","alternativas":["a","b","c"],"corretaIndex":1,"explicacao":"..."},
- "flashcards":[{"q":"...","a":"..."}]
+ "flashcards":[{"q":"...","a":"..."}],
+ "resumo":["ponto 1","ponto 2","ponto 3"]
 }`;
-      const raw = await callLLM("Você é Liora, tutora especializada em microlearning com continuidade pedagógica.", prompt);
+      const raw = await callLLM("Você é Liora, tutora especializada em microlearning progressivo e contextualizado.", prompt);
       return JSON.parse(raw);
     }
 
     // --------------------------------------------------------
-    // RENDERIZAÇÃO DO PLANO - inalterado
+    // RENDERIZAÇÃO DO PLANO (inalterado)
     // --------------------------------------------------------
     function renderPlanoResumo(plano) {
       els.plano.innerHTML = "";
@@ -174,56 +178,47 @@ Crie uma sessão estruturada em JSON:
     }
 
     // --------------------------------------------------------
-    // RENDERIZAÇÃO DO WIZARD — títulos brancos MAIÚSCULOS + divisores
+    // RENDERIZAÇÃO DO WIZARD — adiciona Resumo rápido
     // --------------------------------------------------------
     function renderWizard() {
       const s = wizard.sessoes[wizard.atual];
       if (!s) return;
 
-      // 🔧 saneia título duplicado "Sessão X — Sessão X — Nome"
-      if (s.titulo) {
-        s.titulo = String(s.titulo).replace(/^Sessão\s*\d+\s*[—-]\s*/i, "");
-        s.titulo = `Sessão ${wizard.atual + 1} — ${s.titulo}`;
-      }
-
-      // 🔄 limpa feedback do quiz ao trocar de sessão
+      // limpa feedback anterior
       els.wizardQuizFeedback.textContent = "";
       els.wizardQuizFeedback.style.opacity = 0;
 
       els.wizardContainer.classList.remove("hidden");
       els.wizardTema.textContent = wizard.tema;
-      els.wizardTitulo.textContent = s.titulo || `Sessão ${wizard.atual + 1}`;
-
+      els.wizardTitulo.textContent = s.titulo;
       els.wizardObjetivo.textContent = s.objetivo;
 
-      // 🧱 Conteúdo hierárquico (cabeçalhos MAIÚSCULOS brancos)
       const c = s.conteudo || {};
       const h = (txt) => `<h5 style="text-transform:uppercase;color:var(--fg);font-weight:700;margin:0 0 6px 0;">${txt}</h5>`;
       const divider = `<hr class="liora-divider">`;
 
       let html = "";
+      if (c.introducao) html += `<div class="liora-section">${h("Introdução")}<p>${c.introducao}</p></div>${divider}`;
+      if (c.conceitos?.length) html += `<div class="liora-section">${h("Conceitos principais")}<ul>${c.conceitos.map(x => `<li>${x}</li>`).join("")}</ul></div>${divider}`;
+      if (c.exemplos?.length) html += `<div class="liora-section">${h("Exemplos")}<ul>${c.exemplos.map(x => `<li>${x}</li>`).join("")}</ul></div>${divider}`;
+      if (c.aplicacoes?.length) html += `<div class="liora-section">${h("Aplicações")}<ul>${c.aplicacoes.map(x => `<li>${x}</li>`).join("")}</ul></div>`;
 
-      if (c.introducao) {
-        html += `<div class="liora-section">${h("Introdução")}<p>${c.introducao}</p></div>${divider}`;
-      }
-      if (Array.isArray(c.conceitos) && c.conceitos.length) {
-        html += `<div class="liora-section">${h("Conceitos principais")}<ul>${c.conceitos.map(x => `<li>${x}</li>`).join("")}</ul></div>${divider}`;
-      }
-      if (Array.isArray(c.exemplos) && c.exemplos.length) {
-        html += `<div class="liora-section">${h("Exemplos")}<ul>${c.exemplos.map(x => `<li>${x}</li>`).join("")}</ul></div>${divider}`;
-      }
-      if (Array.isArray(c.aplicacoes) && c.aplicacoes.length) {
-        html += `<div class="liora-section">${h("Aplicações")}<ul>${c.aplicacoes.map(x => `<li>${x}</li>`).join("")}</ul></div>`;
+      // Resumo rápido
+      if (Array.isArray(s.resumo) && s.resumo.length) {
+        html += `
+        <div class="liora-resumo">
+          <h6 style="text-transform:uppercase;color:var(--brand);font-weight:700;font-size:0.85rem;margin-bottom:6px;">Resumo rápido</h6>
+          <ul>${s.resumo.map(r => `<li>${r}</li>`).join("")}</ul>
+        </div>`;
       }
 
-      // remove divider final, se houver
-      els.wizardConteudo.innerHTML = html.replace(/<hr class="liora-divider">\s*$/, "");
+      els.wizardConteudo.innerHTML = html;
 
-      // Demais blocos (inalterados)
+      // demais blocos
       els.wizardAnalogias.innerHTML = (s.analogias || []).map(a => `<p>${a}</p>`).join("");
       els.wizardAtivacao.innerHTML = (s.ativacao || []).map(q => `<li>${q}</li>`).join("");
 
-      // ✅ Quiz (mantém shuffle + dica após 2 erros)
+      // Quiz
       els.wizardQuiz.innerHTML = "";
       const pergunta = document.createElement("p");
       pergunta.textContent = s.quiz.pergunta;
@@ -233,24 +228,20 @@ Crie uma sessão estruturada em JSON:
         texto: String(alt).replace(/\n/g, " ").replace(/<\/?[^>]+(>|$)/g, ""),
         correta: i === Number(s.quiz.corretaIndex),
       }));
-
-      // Fisher-Yates
       for (let i = alternativas.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [alternativas[i], alternativas[j]] = [alternativas[j], alternativas[i]];
       }
 
       let tentativasErradas = 0;
-
       alternativas.forEach((altObj, i) => {
         const opt = document.createElement("label");
         opt.className = "liora-quiz-option";
-        opt.innerHTML = `<input type="radio" name="quiz" value="${i}"><span class="liora-quiz-option-text">${altObj.texto}</span>`;
+        opt.innerHTML = `<input type="radio" name="quiz" value="${i}"><span>${altObj.texto}</span>`;
         opt.addEventListener("click", () => {
           document.querySelectorAll(".liora-quiz-option").forEach(o => o.classList.remove("selected"));
           opt.classList.add("selected");
           opt.querySelector("input").checked = true;
-
           els.wizardQuizFeedback.style.opacity = 0;
           setTimeout(() => {
             if (altObj.correta) {
@@ -275,12 +266,11 @@ Crie uma sessão estruturada em JSON:
       });
 
       els.wizardFlashcards.innerHTML = (s.flashcards || []).map(f => `<li><b>${f.q}</b>: ${f.a}</li>`).join("");
-
       els.wizardProgressBar.style.width = `${((wizard.atual + 1) / wizard.sessoes.length) * 100}%`;
     }
 
     // --------------------------------------------------------
-    // NAVEGAÇÃO — inalterado
+    // NAVEGAÇÃO (inalterada)
     // --------------------------------------------------------
     els.wizardVoltar.addEventListener("click", () => {
       if (wizard.atual > 0) {
@@ -300,7 +290,7 @@ Crie uma sessão estruturada em JSON:
     });
 
     // --------------------------------------------------------
-    // FLUXOS DE GERAÇÃO — inalterado
+    // FLUXO DE GERAÇÃO (ajustado para contexto entre sessões)
     // --------------------------------------------------------
     async function gerarFluxo(tema, nivel, modo, textoArquivo = null) {
       const btn = modo === "tema" ? els.btnGerar : els.btnGerarUpload;
@@ -313,9 +303,10 @@ Crie uma sessão estruturada em JSON:
         renderPlanoResumo(plano);
 
         for (let i = 0; i < plano.length; i++) {
-          const sessaoAnterior = i > 0 ? plano[i - 1] : null;
+          const anterior = i > 0 ? plano[i - 1].nome : null;
+          const proxima = i < plano.length - 1 ? plano[i + 1].nome : null;
           atualizarStatus(modo, `⏳ Sessão ${i + 1}/${plano.length}: ${plano[i].nome}`, ((i + 1) / plano.length) * 100);
-          const sessao = await gerarSessao(tema, nivel, i + 1, plano[i].nome, sessaoAnterior);
+          const sessao = await gerarSessao(tema, nivel, i + 1, plano[i].nome, anterior, proxima);
           wizard.sessoes.push(sessao);
           saveProgress();
         }
@@ -324,13 +315,15 @@ Crie uma sessão estruturada em JSON:
         renderWizard();
 
       } catch {
-        alert("Erro ao gerar plano.");
+        alert("Erro ao gerar o plano.");
       } finally {
         btn.disabled = false;
       }
     }
 
-    // BOTÕES — inalterado
+    // --------------------------------------------------------
+    // BOTÕES (inalterados)
+    // --------------------------------------------------------
     els.btnGerar.addEventListener("click", async () => {
       const tema = els.inpTema.value.trim();
       const nivel = els.selNivel.value;
@@ -345,7 +338,6 @@ Crie uma sessão estruturada em JSON:
       gerarFluxo(tema, nivel, "upload", await file.text());
     });
 
-    // Atualiza nome do arquivo — inalterado
     els.inpFile.addEventListener("change", (e) => {
       const file = e.target.files?.[0];
       const uploadText = document.getElementById("upload-text");
@@ -354,6 +346,6 @@ Crie uma sessão estruturada em JSON:
       if (spinner) spinner.style.display = "none";
     });
 
-    console.log("🟢 core.js v47 (patch) carregado");
+    console.log("🟢 core.js v48 — conteúdo hierárquico + conexão + resumo carregado com sucesso");
   });
 })();
