@@ -1,17 +1,17 @@
 // ==========================================================
-// 🧠 LIORA — CORE PRINCIPAL (v50)
-// - Tema: igual v47, com conteúdo mais "aula"
-// - Upload: sessões a partir de títulos (1º e 2º nível) do PDF
-// - Cada sessão baseada no texto do tópico correspondente
+// 🧠 LIORA — CORE PRINCIPAL (v51)
+// - Tema: sessões tipo "aula completa"
+// - Upload: IA detecta tópicos do PDF e gera sessões por tópico
+//   (sem transformar AUTOR em capítulo e cobrindo mais o material)
 // ==========================================================
 (function () {
-  console.log("🔵 Inicializando Liora Core v50...");
+  console.log("🔵 Inicializando Liora Core v51...");
 
   document.addEventListener("DOMContentLoaded", () => {
     // --------------------------------------------------------
     // CONFIGURAÇÕES
     // --------------------------------------------------------
-    const MAX_PDF_MB = 12; // limite de tamanho para upload (ajustável)
+    const MAX_PDF_MB = 12; // limite de tamanho do PDF
 
     // --------------------------------------------------------
     // MAPA DE ELEMENTOS
@@ -34,7 +34,7 @@
       btnGerarUpload: document.getElementById("btn-gerar-upload"),
       statusUpload: document.getElementById("status-upload"),
 
-      // plano (lado direito)
+      // plano
       plano: document.getElementById("plano"),
       ctx: document.getElementById("ctx"),
 
@@ -105,7 +105,7 @@
       plano: [],
       sessoes: [],
       atual: 0,
-      unidadesUpload: null, // usado só no modo upload
+      topicosUpload: null, // lista de tópicos vinda da IA
     };
 
     const key = (tema, nivel) => `liora:wizard:${tema.toLowerCase()}::${nivel.toLowerCase()}`;
@@ -125,7 +125,6 @@
       els.painelUpload.classList.toggle("hidden", tema);
       els.modoTema.classList.toggle("selected", tema);
       els.modoUpload.classList.toggle("selected", !tema);
-      // limpa status ao trocar
       atualizarStatus("tema", "");
       atualizarStatus("upload", "");
     }
@@ -250,33 +249,9 @@ Regras importantes:
     }
 
     // --------------------------------------------------------
-    // EXTRAÇÃO DE TÍTULOS DO PDF (1º e 2º NÍVEL)
+    // EXTRAÇÃO DE TEXTO DO PDF (para a IA mapear tópicos)
     // --------------------------------------------------------
-    function ehTitulo(line) {
-      const texto = line.trim();
-      if (!texto) return false;
-      if (texto.length > 120) return false;
-
-      // Padrões tipo "1 Introdução", "2. Conceitos", "3.1 Modelos"
-      const padraoNumerado = /^\d+(\.\d+)?\s+.+/; // 1 e 1.1 (até 2º nível)
-      if (padraoNumerado.test(texto)) return true;
-
-      // Palavras-chave típicas de capítulos
-      if (/^(CAP[ÍI]TULO|CAPITULO|UNIDADE|M[ÓO]DULO|MODULO|SE(C|Ç)ÃO|SECAO)\b/i.test(texto)) {
-        return true;
-      }
-
-      // Título todo em maiúsculas, poucas palavras
-      const soLetras = texto.replace(/[^A-Za-zÁ-Úá-ú]/g, "");
-      if (soLetras && soLetras === soLetras.toUpperCase()) {
-        const palavras = texto.split(/\s+/);
-        if (palavras.length <= 8) return true;
-      }
-
-      return false;
-    }
-
-    async function extrairUnidadesDoPdf(file) {
+    async function extrairTextoDoPdf(file) {
       if (typeof pdfjsLib === "undefined") {
         throw new Error("pdfjsLib não carregado.");
       }
@@ -284,69 +259,90 @@ Regras importantes:
       const buffer = await file.arrayBuffer();
       const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(buffer) }).promise;
 
-      const linhasGlobais = [];
+      let texto = "";
       for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
         const page = await pdf.getPage(pageNum);
         const content = await page.getTextContent();
-        const textoPagina = content.items.map(it => it.str).join("\n");
-        const linhas = textoPagina.split(/\r?\n/);
-        linhas.forEach(l => linhasGlobais.push(l));
+        const pageText = content.items.map(it => it.str).join(" ");
+        texto += pageText + "\n\n";
       }
 
-      const unidades = [];
-      let atual = null;
-
-      for (const rawLine of linhasGlobais) {
-        const line = rawLine.trim();
-        if (!line) continue;
-
-        if (ehTitulo(line)) {
-          // fecha unidade anterior
-          if (atual && atual.texto.length > 0) {
-            unidades.push({
-              titulo: atual.titulo,
-              texto: atual.texto.join(" ")
-            });
-          }
-          // inicia nova
-          atual = { titulo: line, texto: [] };
-        } else if (atual) {
-          atual.texto.push(line);
-        }
+      // simplifica espaços
+      texto = texto.replace(/\s+/g, " ").trim();
+      // corta para evitar contexto gigante (ajustável)
+      const MAX_CHARS = 38000;
+      if (texto.length > MAX_CHARS) {
+        texto = texto.slice(0, MAX_CHARS);
       }
 
-      // última unidade
-      if (atual && atual.texto.length > 0) {
-        unidades.push({
-          titulo: atual.titulo,
-          texto: atual.texto.join(" ")
-        });
-      }
+      return texto;
+    }
 
-      // segurança: limita para não explodir número de sessões
-      const MAX_SESSOES = 16;
-      return unidades.slice(0, MAX_SESSOES);
+    // --------------------------------------------------------
+    // MAPEAMENTO DE TÓPICOS DO PDF COM IA
+    // --------------------------------------------------------
+    async function mapearTopicosComIA(texto, temaGlobal, nivel) {
+      const prompt = `
+Você recebeu o texto de uma apostila em PDF sobre "${temaGlobal}" (nível ${nivel}).
+
+Seu objetivo é IDENTIFICAR os principais tópicos/capítulos de estudo, ignorando:
+- capa
+- nome do autor
+- ficha catalográfica
+- dedicatórias
+- sumário (use-o apenas como pista, não como conteúdo)
+- rodapés e elementos repetidos
+
+TEXTO (trecho consolidado):
+"""${texto}"""
+
+Responda em JSON PURO, sem comentários, no formato exato:
+[
+  {
+    "numero": 1,
+    "nome": "Título claro do tópico 1",
+    "trechoBase": "trecho representativo do conteúdo deste tópico"
+  },
+  {
+    "numero": 2,
+    "nome": "Título claro do tópico 2",
+    "trechoBase": "trecho representativo do conteúdo deste tópico"
+  }
+]
+
+Regras:
+- Máximo de 8 tópicos.
+- Os títulos devem representar capítulos/seções de conteúdo, não o nome do autor.
+- Cada "trechoBase" deve conter apenas texto relacionado àquele tópico (resumo ou seleção do conteúdo),
+  NÃO repita sempre o início da apostila.
+- Cubra o máximo possível do conteúdo da apostila ao distribuir os tópicos.`;
+
+      const raw = await callLLM(
+        "Você é Liora, especialista em analisar apostilas e transformá-las em planos de estudo estruturados.",
+        prompt
+      );
+      return JSON.parse(raw);
     }
 
     // --------------------------------------------------------
     // GERAÇÃO DE SESSÃO (MODO UPLOAD) — A PARTIR DO TÓPICO
     // --------------------------------------------------------
-    async function gerarSessaoDeUpload(temaGlobal, nivel, numero, unidadeAtual, unidadeAnterior) {
-      const tituloTopico = unidadeAtual.titulo || `Parte ${numero}`;
-      const textoBase = (unidadeAtual.texto || "").slice(0, 8000); // corta para evitar excesso
+    async function gerarSessaoDeUpload(temaGlobal, nivel, numero, topicoAtual, topicoAnterior) {
+      const tituloTopico = topicoAtual.nome || `Parte ${numero}`;
+      const textoBase = (topicoAtual.trechoBase || "").slice(0, 8000);
 
-      const contextoAnterior = unidadeAnterior
-        ? `Antes deste tópico, o aluno estudou "${unidadeAnterior.titulo}". Agora aprofunde o tema para "${tituloTopico}", evitando repetição e mantendo coerência.`
+      const contextoAnterior = topicoAnterior
+        ? `Antes deste tópico, o aluno estudou "${topicoAnterior.nome}". Agora aprofunde o tema em "${tituloTopico}", evitando repetição e mantendo coerência.`
         : `Este é o primeiro tópico do material carregado, com título "${tituloTopico}". Introduza o tema de forma clara e acolhedora.`;
 
       const prompt = `
-Você recebeu um trecho de uma apostila em PDF sobre "${temaGlobal}".
-Seu objetivo é transformar esse trecho em uma SESSÃO DE ESTUDO completa, clara e didática.
+Você recebeu um tópico de uma apostila em PDF sobre "${temaGlobal}".
+Seu objetivo é transformar esse tópico em uma SESSÃO DE ESTUDO completa, clara e didática.
 
 TÍTULO DO TÓPICO:
 "${tituloTopico}"
 
-TRECHO DO MATERIAL (não copie literalmente; resuma, reestruture e explique):
+TRECHO BASE (não copie literalmente; resuma, reestruture e explique em linguagem didática):
 """${textoBase}"""
 
 ${contextoAnterior}
@@ -401,7 +397,7 @@ Responda em JSON PURO, sem comentários, no formato exato:
 }
 
 Regras:
-- Use apenas informações coerentes com o trecho fornecido.
+- Use apenas informações coerentes com o trechoBase.
 - Não invente capítulos ou temas que não aparecem no trecho.
 - Linguagem didática, em português do Brasil.
 `;
@@ -453,8 +449,6 @@ Regras:
       els.wizardObjetivo.textContent = s.objetivo;
 
       const c = s.conteudo || {};
-
-      // CONTEÚDO HIERÁRQUICO + RESUMO RÁPIDO
       let htmlConteudo = "";
 
       if (c.introducao) {
@@ -508,7 +502,6 @@ Regras:
 
       els.wizardConteudo.innerHTML = htmlConteudo;
 
-      // Analogias / Ativação
       els.wizardAnalogias.innerHTML = (s.analogias || [])
         .map(a => `<p>${a}</p>`)
         .join("");
@@ -531,7 +524,6 @@ Regras:
             <input type="radio" name="quiz" value="${i}">
             <span class="liora-quiz-option-text">${String(alt)}</span>
           `;
-
           opt.addEventListener("click", () => {
             document
               .querySelectorAll(".liora-quiz-option")
@@ -552,7 +544,6 @@ Regras:
               els.wizardQuizFeedback.style.opacity = 1;
             }, 100);
           });
-
           els.wizardQuiz.appendChild(opt);
         });
       }
@@ -607,7 +598,7 @@ Regras:
 
       try {
         const plano = await gerarPlanoDeSessoes(tema, nivel);
-        wizard = { tema, nivel, plano, sessoes: [], atual: 0, unidadesUpload: null };
+        wizard = { tema, nivel, plano, sessoes: [], atual: 0, topicosUpload: null };
         renderPlanoResumo(plano);
 
         for (let i = 0; i < plano.length; i++) {
@@ -649,34 +640,37 @@ Regras:
     // FLUXO MODO UPLOAD
     // --------------------------------------------------------
     async function gerarFluxoUpload(file, nivel) {
-      // valida tipo
+      // tipo
       if (file.type !== "application/pdf") {
         alert("Nesta versão, a Liora aceita apenas arquivos PDF.");
         return;
       }
 
-      // valida tamanho
+      // tamanho
       const sizeMB = file.size / (1024 * 1024);
       if (sizeMB > MAX_PDF_MB) {
-        alert(`Arquivo muito grande (${sizeMB.toFixed(1)} MB). Tamanho máximo permitido: ${MAX_PDF_MB} MB.`);
+        alert(`Arquivo muito grande (${sizeMB.toFixed(1)} MB). Tamanho máximo: ${MAX_PDF_MB} MB.`);
         return;
       }
 
       els.btnGerarUpload.disabled = true;
-      atualizarStatus("upload", "Lendo estrutura do PDF...", 0);
+      atualizarStatus("upload", "Lendo conteúdo do PDF...", 5);
 
       try {
-        const unidades = await extrairUnidadesDoPdf(file);
+        const texto = await extrairTextoDoPdf(file);
+        atualizarStatus("upload", "Mapeando tópicos com IA...", 15);
 
-        if (!unidades.length) {
-          atualizarStatus("upload", "Não encontrei capítulos ou seções bem definidos no PDF.");
+        const tema = file.name.split(".")[0] || "Material PDF";
+        const topicos = await mapearTopicosComIA(texto, tema, nivel);
+
+        if (!topicos || !topicos.length) {
+          atualizarStatus("upload", "Não foi possível identificar tópicos bem definidos no PDF.");
           return;
         }
 
-        const tema = file.name.split(".")[0] || "Material PDF";
-        const plano = unidades.map((u, idx) => ({
-          numero: idx + 1,
-          nome: u.titulo,
+        const plano = topicos.map(t => ({
+          numero: t.numero,
+          nome: t.nome,
         }));
 
         wizard = {
@@ -685,27 +679,27 @@ Regras:
           plano,
           sessoes: [],
           atual: 0,
-          unidadesUpload: unidades,
+          topicosUpload: topicos,
         };
 
         renderPlanoResumo(plano);
 
-        for (let i = 0; i < unidades.length; i++) {
-          const unidadeAtual = unidades[i];
-          const unidadeAnterior = i > 0 ? unidades[i - 1] : null;
+        for (let i = 0; i < topicos.length; i++) {
+          const topicoAtual = topicos[i];
+          const topicoAnterior = i > 0 ? topicos[i - 1] : null;
 
           atualizarStatus(
             "upload",
-            `Sessão ${i + 1}/${unidades.length}: ${unidadeAtual.titulo}`,
-            ((i + 1) / unidades.length) * 100
+            `Sessão ${i + 1}/${topicos.length}: ${topicoAtual.nome}`,
+            20 + ((i + 1) / topicos.length) * 80
           );
 
           const sessao = await gerarSessaoDeUpload(
             tema,
             nivel,
             i + 1,
-            unidadeAtual,
-            unidadeAnterior
+            topicoAtual,
+            topicoAnterior
           );
           wizard.sessoes.push(sessao);
           saveProgress();
@@ -728,7 +722,7 @@ Regras:
       gerarFluxoUpload(file, nivel);
     });
 
-    // Atualiza nome do arquivo no upload
+    // Atualiza nome do arquivo
     els.inpFile.addEventListener("change", (e) => {
       const file = e.target.files?.[0];
       const uploadText = document.getElementById("upload-text");
@@ -741,6 +735,6 @@ Regras:
       if (spinner) spinner.style.display = "none";
     });
 
-    console.log("🟢 core.js v50 carregado com sucesso");
+    console.log("🟢 core.js v51 carregado com sucesso");
   });
 })();
