@@ -63,33 +63,52 @@
   // ----------------------------------------------
   // AGRUPAR SEÇÕES PEQUENAS PARA EVITAR FRAGMENTAÇÃO
   // ----------------------------------------------
-  function agruparSecoes(secoes) {
-    const agrupadas = [];
-    let buffer = null;
+function agruparSecoes(secoes) {
+  const agrupadas = [];
+  let buffer = null;
 
-    secoes.forEach(sec => {
-      const len = sec.conteudo.length;
+  secoes.forEach((sec, i) => {
+    const len = sec.conteudo.length;
 
-      if (len < 500) {
-        // agrupar
-        if (!buffer)
-          buffer = { titulo: sec.titulo, conteudo: "" };
+    const titulo = sec.titulo.trim();
+    const palavrasTitulo = titulo.split(/\s+/).length;
 
-        buffer.conteudo += "\n" + sec.conteudo;
-      } else {
-        // fecha buffer se existir
-        if (buffer) {
-          agrupadas.push(buffer);
-          buffer = null;
-        }
-        agrupadas.push(sec);
-      }
-    });
+    const ehSubtitulo =
+      !/^(cap[ií]tulo|unidade|aula|m[oó]dulo)\s+\d+/i.test(titulo) &&
+      palavrasTitulo <= 5;
 
-    if (buffer) agrupadas.push(buffer);
+    // Critério 1: conteúdo pequeno → agrupar
+    if (len < 1200) {
+      if (!buffer)
+        buffer = { titulo: sec.titulo, conteudo: "" };
 
-    return agrupadas;
-  }
+      buffer.conteudo += "\n" + sec.conteudo;
+      return;
+    }
+
+    // Critério 2: parece subtítulo → agrupar
+    if (ehSubtitulo) {
+      if (!buffer)
+        buffer = { titulo: sec.titulo, conteudo: "" };
+
+      buffer.conteudo += "\n" + sec.conteudo;
+      return;
+    }
+
+    // Se chegou aqui → secção é realmente grande e deve ser mantida
+    if (buffer) {
+      agrupadas.push(buffer);
+      buffer = null;
+    }
+
+    agrupadas.push(sec);
+  });
+
+  if (buffer) agrupadas.push(buffer);
+
+  return agrupadas;
+}
+
 
   // ----------------------------------------------
   // CONSTRUIR SEÇÕES A PARTIR DOS BLOCOS
