@@ -1,114 +1,104 @@
 // ===============================
-// 🧱 pdf-structure.js
-// Constrói seções { titulo, conteudo } a partir dos blocos do PDF
-// Depende de: LioraPDF.extrairBlocosDoPDF
+// 🧱 pdf-structure.js (v3)
+// Lógica robusta de construção de seções a partir de blocos PDF
 // ===============================
+
 (function () {
-  console.log("🔵 Liora PDF Structure carregado...");
+  console.log("🔵 Liora PDF Structure (v3) carregado...");
 
   /**
-   * Heurística simples para decidir se um bloco parece ser título
-   * @param {Object} bloco
-   * @param {number} limiarFonte
-   * @returns {boolean}
+   * Remove cabeçalhos, rodapés, números de página,
+   * elementos decorativos e blocos irrelevantes.
    */
-  function ehPossivelTitulo(bloco, limiarFonte) {
-    const txt = bloco.text.trim();
+  function filtrarBlocosRuido(blocos) {
+    return blocos.filter(b => {
+      const t = b.text.trim();
 
-    if (bloco.fontSize < limiarFonte) return false;
-    if (txt.length > 120) return false;
-    if (/^[0-9.,;:]+$/.test(txt)) return false;
-    if (/[.!?]$/.test(txt) && txt.length > 60) return false;
+      if (!t) return false;
 
-    const padroesTitulo = [
-      /^cap[ií]tulo\s+\d+/i,
-      /^unidade\s+\d+/i,
-      /^\d+(\.\d+)*\s+/,
-      /^aula\s+\d+/i
-    ];
+      // números soltos (página, elementos gráficos etc.)
+      if (/^\d+$/.test(t)) return false;
 
-    if (padroesTitulo.some(rx => rx.test(txt))) return true;
+      // Página 12 / Page 7
+      if (/^(Página|Page)\s*\d+$/i.test(t)) return false;
 
-    // palavras todas em maiúsculo (com acentos)
-    const semAcento = txt.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-    const letras = semAcento.replace(/[^A-Za-z]/g, "");
-    if (letras && letras === letras.toUpperCase()) return true;
+      // copyright, "Todos os direitos reservados"
+      if (/direitos reservados|copyright/i.test(t)) return false;
 
-    return true;
+      // cabeçalhos comuns
+      if (/sumário|índice|faculdade|universidade|apostila/i.test(t)) return false;
+
+      // rodapés com nome de curso/autor
+      if (t.length < 5 && b.fontSize < 9) return false;
+
+      return true;
+    });
   }
 
   /**
-   * Constrói seções heurísticas a partir de blocos
-   * @param {Array<{page:number,y:number,fontSize:number,text:string}>} blocos
-   * @returns {Array<{titulo:string,conteudo:string}>}
+   * Critério robusto para identificar títulos reais
    */
-  function construirSecoesAPartirDosBlocos(blocos) {
-    if (!blocos || blocos.length === 0) {
-      return [];
-    }
+  function ehTitulo(bloco, medianaFonte) {
+    const txt = bloco.text.trim();
+    if (!txt) return false;
 
-    // Calcula um limiar de fonte baseado na mediana
-    const tamanhos = blocos.map(b => b.fontSize).sort((a, b) => a - b);
-    const mediana = tamanhos[Math.floor(tamanhos.length / 2)] || 12;
-    const limiarFonte = mediana + 1.5; // um pouco acima da mediana
+    const palavras = txt.split(/\s+/).length;
+    const tamanho = txt.length;
 
-    const secoes = [];
-    let secaoAtual = null;
+    // 1) Padrões explícitos de capítulos
+    const regexTitulo = /^(cap[ií]tulo|unidade|aula|m[oó]dulo)\s+\d+/i;
+    if (regexTitulo.test(txt)) return true;
 
-    function iniciarNovaSecao(titulo) {
-      if (secaoAtual && secaoAtual.conteudo.trim()) {
-        secoes.push(secaoAtual);
-      }
-      secaoAtual = {
-        titulo: titulo || "Seção sem título",
-        conteudo: ""
-      };
-    }
+    // 2) Fonte significativamente maior
+    if (bloco.fontSize >= medianaFonte + 4) return true;
 
-    blocos.forEach((bloco, idx) => {
-      const txt = bloco.text.trim();
-      if (!txt) return;
+    // 3) Título curto
+    if (palavras <= 8 && tamanho <= 60 && bloco.fontSize >= medianaFonte + 2) return true;
 
-      const possivelTitulo = ehPossivelTitulo(bloco, limiarFonte);
+    // 4) Posição no topo da página
+    if (bloco.y > 700 && bloco.fontSize >= medianaFonte + 2) return true;
 
-      if (possivelTitulo) {
-        // Se já temos seção aberta e esse título é idêntico ao anterior, ignora
-        if (
-          secaoAtual &&
-          secaoAtual.titulo &&
-          secaoAtual.titulo.trim() === txt &&
-          !secaoAtual.conteudo.trim()
-        ) {
-          return;
-        }
-        iniciarNovaSecao(txt);
+    return false;
+  }
+
+  /**
+   * Agrupamento de seções pequenas (remover fragmentação)
+   */
+  function agruparSecoes(secoes) {
+    const agrupadas = [];
+    let buffer = null;
+
+    secoes.forEach(sec => {
+      const len = sec.conteudo.length;
+
+      if (len < 600) {
+        // juntar no buffer
+        if (!buffer) buffer = { titulo: sec.titulo, conteudo: "" };
+        buffer.conteudo += "\n" + sec.conteudo;
       } else {
-        if (!secaoAtual) {
-          iniciarNovaSecao("Introdução");
+        if (buffer) {
+          agrupadas.push(buffer);
+          buffer = null;
         }
-        secaoAtual.conteudo += (secaoAtual.conteudo ? "\n" : "") + txt;
+        agrupadas.push(sec);
       }
     });
 
-    if (secaoAtual && secaoAtual.conteudo.trim()) {
-      secoes.push(secaoAtual);
-    }
+    if (buffer) agrupadas.push(buffer);
 
-    // Fallback: se por algum motivo deu muito fragmentado, junta tudo em uma seção
-    if (secoes.length === 0) {
-      const textoUnico = blocos.map(b => b.text).join("\n");
-      return [
-        {
-          titulo: "Conteúdo do PDF",
-          conteudo: textoUnico
-        }
-      ];
-    }
-
-    console.log("🧱 Seções heurísticas construídas:", secoes);
-    return secoes;
+    return agrupadas;
   }
 
-  window.LioraPDF = window.LioraPDF || {};
-  window.LioraPDF.construirSecoesAPartirDosBlocos = construirSecoesAPartirDosBlocos;
-})();
+  /**
+   * Constrói seções a partir dos blocos do PDF
+   */
+  function construirSecoesAPartirDosBlocos(blocos) {
+    if (!blocos || blocos.length === 0) {
+      console.warn("⚠️ Nenhum bloco recebido.");
+      return [];
+    }
+
+    // 1) Filtrar ruído
+    const limpos = filtrarBlocosRuido(blocos);
+
+    if (!limp
