@@ -14,30 +14,24 @@
    * @param {Object} [options]
    * @returns {Promise<string>} - conteúdo textual da resposta
    */
-  async function chamarIA(messages, options = {}) {
-    // 🔁 EXEMPLO 1: se você tiver SemanticLiora.chat
-    if (window.SemanticLiora && typeof window.SemanticLiora.chat === "function") {
-      const resp = await window.SemanticLiora.chat({
-        messages,
-        ...options
-      });
-      // adapte conforme o formato real da resposta
-      return resp.content || resp.choices?.[0]?.message?.content || "";
-    }
+  /**
+ * Adaptador para a IA usando o backend da Liora
+ * (usa exatamente a mesma rota que o modo TEMA usa)
+ */
+async function chamarIA(messages, options = {}) {
+  if (typeof window.callLLM === "function") {
+    // Mensagem de system + user concatenada, como no fluxo de TEMA
+    const system = messages.find(m => m.role === "system")?.content || "";
+    const user = messages.find(m => m.role === "user")?.content || "";
 
-    // 🔁 EXEMPLO 2: endpoint próprio (trocar URL e payload)
-    /*
-    const resp = await fetch("/api/liora", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ messages, ...options })
-    });
-    const data = await resp.json();
-    return data.content;
-    */
+    const raw = await window.callLLM(system, user);
 
-    throw new Error("Nenhuma implementação de IA configurada em chamarIA().");
+    // callLLM já retorna apenas output
+    return raw;
   }
+
+  throw new Error("callLLM() não encontrado. Certifique-se de que core.js foi carregado antes.");
+}
 
   /**
    * Gera um mini-outline para cada seção do PDF
