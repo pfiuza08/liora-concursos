@@ -9,57 +9,95 @@
   // ----------------------------------------------
   // REMOVE CABEÇALHO, RODAPÉ, NÚMEROS DE PÁGINA
   // ----------------------------------------------
-  function filtrarBlocosRuido(blocos) {
-    return blocos.filter(b => {
-      const t = b.text.trim();
-      if (!t) return false;
+  //function filtrarBlocosRuido(blocos) {
+ //   return blocos.filter(b => {
+  //    const t = b.text.trim();
+  //    if (!t) return false;
 
       // Números de página simples
-      if (/^\d+$/.test(t)) return false;
+   //   if (/^\d+$/.test(t)) return false;
 
       // Página 12 / Page 12
-      if (/^(Página|Page)\s*\d+$/i.test(t)) return false;
+  //    if (/^(Página|Page)\s*\d+$/i.test(t)) return false;
 
       // Rodapé padrões (copyrights, nome do livro)
-      if (/direitos reservados|copyright/i.test(t)) return false;
+   //   if (/direitos reservados|copyright/i.test(t)) return false;
 
       // Cabeçalhos típicos
-      if (/sumário|índice|conteúdo programático/i.test(t)) return false;
+ //     if (/sumário|índice|conteúdo programático/i.test(t)) return false;
 
       // Linhas muito pequenas com fonte muito baixa
-      if (t.length <= 3 && b.fontSize < 9) return false;
+  //    if (t.length <= 3 && b.fontSize < 9) return false;
 
-      return true;
-    });
-  }
+  //    return true;
+  //  });
+//  }
 
+function filtrarBlocosRuido(blocos) {
+  return blocos.filter(b => {
+    const t = b.text.trim();
+    if (!t) return false;
+
+    // remover apenas número de página
+    if (/^\d+$/.test(t)) return false;
+
+    // remover Página 12
+    if (/^(Página|Page)\s*\d+$/i.test(t)) return false;
+
+    return true; // manter TODO o resto
+  });
+}
+
+
+
+
+  
   // ----------------------------------------------
   // DETECÇÃO ROBUSTA DE TÍTULOS
   // ----------------------------------------------
-  function ehTitulo(bloco, medianaFonte) {
-    const txt = bloco.text.trim();
-    if (!txt) return false;
+//  function ehTitulo(bloco, medianaFonte) {
+//    const txt = bloco.text.trim();
+//    if (!txt) return false;
 
-    const palavras = txt.split(/\s+/).length;
-    const tamanho = txt.length;
+  //  const palavras = txt.split(/\s+/).length;
+  //  const tamanho = txt.length;
 
     // 1) Padrões explícitos fortes de capítulos
-    const regexTitulo = /^(cap[ií]tulo|unidade|aula|m[oó]dulo)\s+\d+/i;
-    if (regexTitulo.test(txt)) return true;
+  //  const regexTitulo = /^(cap[ií]tulo|unidade|aula|m[oó]dulo)\s+\d+/i;
+  //  if (regexTitulo.test(txt)) return true;
 
     // 2) FontSize muito maior que a média
-    if (bloco.fontSize >= medianaFonte + 4) return true;
+  //  if (bloco.fontSize >= medianaFonte + 4) return true;
 
     // 3) Títulos geralmente são curtos
-    if (palavras <= 7 && tamanho <= 60 && bloco.fontSize >= medianaFonte + 2)
-      return true;
+  //  if (palavras <= 7 && tamanho <= 60 && bloco.fontSize >= medianaFonte + 2)
+  //   return true;
 
     // 4) Posição no topo da página (provável título)
-    if (bloco.y > 700 && bloco.fontSize >= medianaFonte + 2) return true;
+   // if (bloco.y > 700 && bloco.fontSize >= medianaFonte + 2) return true;
 
-    return false;
+   // return false;
+ // }
+
+function ehTitulo(bloco, medianaFonte) {
+  const txt = bloco.text.trim();
+  if (!txt) return false;
+
+  // 1) Apenas padrões explícitos — regra principal
+  if (/^(cap[ií]tulo|unidade|aula|m[oó]dulo)\s+\d+/i.test(txt)) {
+    return true;
   }
 
+  // 2) Se estiver no topo e for MUITO curto → subtítulo real
+  const palavras = txt.split(/\s+/).length;
+  if (bloco.y > 720 && palavras <= 4) {
+    return true;
+  }
+
+  return false; // NADA MAIS É TÍTULO
+}
+
+  
   // ----------------------------------------------
   // AGRUPAR SEÇÕES PEQUENAS PARA EVITAR FRAGMENTAÇÃO
   // ----------------------------------------------
