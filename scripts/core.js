@@ -196,6 +196,9 @@
       return json.output;
     }
 
+    // 🔵 Expor para o pipeline PDF
+       window.callLLM = callLLM;
+    
     // --------------------------------------------------------
     // TEMA: PLANO DE SESSÕES
     // --------------------------------------------------------
