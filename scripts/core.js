@@ -673,91 +673,112 @@ Gere APENAS JSON com a estrutura:
       }
     }
 
-    // --------------------------------------------------------
-    // FLUXO: GERAR POR UPLOAD (PDF)
-    // --------------------------------------------------------
-    async function fluxoUpload(file, nivel) {
-      if (!els.btnGerarUpload) return;
-      els.btnGerarUpload.disabled = true;
-      wizard.origem = "upload";
+  // --------------------------------------------------------
+// FLUXO: GERAR POR UPLOAD (PDF) – NOVO PIPELINE COMPLETO
+// --------------------------------------------------------
+async function fluxoUpload(file, nivel) {
+  if (!els.btnGerarUpload) return;
+  els.btnGerarUpload.disabled = true;
+  wizard.origem = "upload";
 
-      try {
-        if (file.type !== "application/pdf") {
-          alert("Por enquanto a Liora lê apenas PDFs.");
-          return;
-        }
-
-        if (file.size > 12 * 1024 * 1024) {
-          alert("Arquivo muito grande (limite: 12 MB).");
-          return;
-        }
-
-        atualizarStatus("upload", "📄 Lendo PDF...", 5);
-
-        const texto = await file.text();
-        const tema = file.name.replace(/\.pdf$/i, "");
-
-        const capitulos = extrairCapitulos(texto);
-
-        if (!capitulos.length) {
-          atualizarStatus("upload", "⚠️ Não foi possível identificar capítulos.", 100);
-          alert("Não foi possível identificar capítulos neste PDF.");
-          return;
-        }
-
-        atualizarStatus("upload", "🧩 Gerando sessões por capítulo...", 10);
-
-        wizard = {
-          tema,
-          nivel,
-          plano: [],
-          sessoes: [],
-          atual: 0,
-          origem: "upload",
-        };
-
-        for (let i = 0; i < capitulos.length; i++) {
-          const cap = capitulos[i];
-
-          atualizarStatus(
-            "upload",
-            `📘 Sessão ${i + 1}/${capitulos.length}: ${cap.titulo}`,
-            ((i + 1) / capitulos.length) * 100
-          );
-
-          let sessao;
-          try {
-            sessao = await gerarSessaoPorCapitulo(cap, i + 1, capitulos.length);
-          } catch (parseErr) {
-            console.error("Erro ao interpretar sessão do capítulo", cap.titulo, parseErr);
-            // pula este capítulo, mas continua o fluxo
-            continue;
-          }
-
-          wizard.plano.push({
-            numero: i + 1,
-            nome: cap.titulo,
-          });
-          wizard.sessoes.push(sessao);
-        }
-
-        if (!wizard.sessoes.length) {
-          atualizarStatus("upload", "⚠️ Não foi possível gerar nenhuma sessão.", 100);
-          alert("A IA não conseguiu gerar sessões a partir deste PDF.");
-          return;
-        }
-
-        atualizarStatus("upload", "✅ Sessões concluídas!", 100);
-        renderPlanoResumo(wizard.plano);
-        renderWizard();
-      } catch (err) {
-        console.error("Erro no fluxoUpload:", err);
-        alert("Erro ao gerar plano a partir do PDF.");
-        atualizarStatus("upload", "⚠️ Erro ao gerar plano.");
-      } finally {
-        els.btnGerarUpload.disabled = false;
-      }
+  try {
+    if (file.type !== "application/pdf") {
+      alert("Por enquanto a Liora lê apenas PDFs.");
+      return;
     }
+
+    if (file.size > 20 * 1024 * 1024) {
+      alert("Arquivo muito grande (limite: 20 MB).");
+      return;
+    }
+
+    atualizarStatus("upload", "📄 Lendo PDF...", 5);
+
+    // 1) Extrai blocos estruturados do PDF
+    const blocos = await window.LioraPDF.extrairBlocosDoPDF(file);
+    atualizarStatus("upload", "🧱 Reconstruindo seções...", 20);
+
+    // 2) Reconstrói seções heurísticas
+    const secoes = window.LioraPDF.construirSecoesAPartirDosBlocos(blocos);
+
+    if (!secoes.length) {
+      atualizarStatus("upload", "⚠️ Não foi possível estruturar o PDF.", 100);
+      alert("Não foi possível identificar seções neste PDF.");
+      return;
+    }
+
+    atualizarStatus("upload", "🧠 Gerando outline de cada seção (IA)...", 40);
+
+    // 3) Outline por seção (IA)
+    const outlines = await window.LioraAI.gerarOutlinesPorSecao(secoes);
+
+    atualizarStatus("upload", "📘 Unificando outline global (IA)...", 60);
+
+    // 4) Outline global
+    const outlineGlobal = await window.LioraAI.unificarOutlines(outlines);
+
+    if (!outlineGlobal.length) {
+      atualizarStatus("upload", "⚠️ Não foi possível montar o outline.", 100);
+      alert("A IA não conseguiu gerar um outline global.");
+      return;
+    }
+
+    atualizarStatus("upload", "🎯 Gerando plano de estudo (IA)...", 80);
+
+    // 5) Gera sessões Liora a partir do outline global
+    const planoIA = await window.LioraAI.gerarPlanoDeEstudoAPartirDoOutline(
+      outlineGlobal,
+      nivel
+    );
+
+    if (!planoIA.sessoes || !planoIA.sessoes.length) {
+      atualizarStatus("upload", "⚠️ Não foi possível gerar sessões.", 100);
+      alert("A IA não retornou sessões válidas.");
+      return;
+    }
+
+    // 6) Transforma resultado em estrutura compatível com o wizard
+    wizard = {
+      tema: file.name.replace(/\.pdf$/i, ""),
+      nivel,
+      plano: planoIA.sessoes.map((s, i) => ({
+        numero: i + 1,
+        nome: s.titulo || `Sessão ${i + 1}`,
+      })),
+      sessoes: planoIA.sessoes,
+      atual: 0,
+      origem: "upload",
+    };
+
+    // Renderiza
+    atualizarStatus("upload", "✅ Sessões concluídas!", 100);
+    renderPlanoResumo(wizard.plano);
+    renderWizard();
+  } catch (err) {
+    console.error("Erro no novo fluxoUpload:", err);
+    alert("Erro ao gerar plano a partir do PDF.");
+    atualizarStatus("upload", "⚠️ Erro ao gerar plano.");
+  } finally {
+    els.btnGerarUpload.disabled = false;
+  }
+}
+
+// --------------------------------------------------------
+// BOTÃO (UPLOAD) — usa o novo fluxo
+// --------------------------------------------------------
+if (els.btnGerarUpload) {
+  els.btnGerarUpload.addEventListener("click", () => {
+    const file = els.inpFile && els.inpFile.files && els.inpFile.files[0];
+    const nivel = els.selNivel ? els.selNivel.value : "iniciante";
+
+    if (!file) {
+      alert("Selecione um arquivo PDF.");
+      return;
+    }
+
+    fluxoUpload(file, nivel);
+  });
+}
 
     // --------------------------------------------------------
     // BOTOES: GERAR (TEMA) E GERAR (UPLOAD)
