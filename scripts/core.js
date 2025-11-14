@@ -1,12 +1,13 @@
 // ==========================================================
-// 🧠 LIORA — CORE v61
-// Tema OU PDF com capítulos → sessões
-// - Tema: plano + sessões com conteúdo hierárquico (aula)
-// - Upload PDF: 1 capítulo → 1 sessão, mantendo fidelidade
+// 🧠 LIORA — CORE v62
+// - Tema: plano + sessões tipo aula completa
+// - Upload PDF: 1 capítulo real → 1 sessão
+// - Parser de JSON robusto (limpa controle / recorta trecho)
+// - Detecção de capítulos menos agressiva (adeus 67 sessões 😅)
 // ==========================================================
 
 (function () {
-  console.log("🔵 Inicializando Liora Core v61...");
+  console.log("🔵 Inicializando Liora Core v62...");
 
   document.addEventListener("DOMContentLoaded", () => {
 
@@ -151,6 +152,35 @@
       return array;
     }
 
+    // Parser de JSON mais robusto para lidar com retorno do LLM
+    function safeJsonParse(raw) {
+      if (!raw || typeof raw !== "string") {
+        throw new Error("JSON vazio ou inválido");
+      }
+
+      // Se vier em bloco ```json ... ```
+      const codeBlockMatch = raw.match(/```json([\s\S]*?)```/i) || raw.match(/```([\s\S]*?)```/);
+      if (codeBlockMatch) {
+        raw = codeBlockMatch[1];
+      }
+
+      // recorta entre primeiro {/[ e último }/]
+      const first = raw.search(/[\{\[]/);
+      const lastBrace = raw.lastIndexOf("}");
+      const lastBracket = raw.lastIndexOf("]");
+      const last = Math.max(lastBrace, lastBracket);
+
+      if (first !== -1 && last !== -1 && last > first) {
+        raw = raw.slice(first, last + 1);
+      }
+
+      // remove caracteres de controle (exceto \n, \r, \t)
+      raw = raw.replace(/[\u0000-\u0008\u000B-\u000C\u000E-\u0019]/g, " ");
+
+      // tenta parsear
+      return JSON.parse(raw);
+    }
+
     // --------------------------------------------------------
     // LLM CALL
     // --------------------------------------------------------
@@ -184,7 +214,7 @@ Retorne JSON puro (sem texto antes ou depois), por exemplo:
         "Você é Liora, especialista em microlearning e design instrucional.",
         prompt
       );
-      return JSON.parse(raw);
+      return safeJsonParse(raw);
     }
 
     // --------------------------------------------------------
@@ -254,7 +284,7 @@ Use APENAS JSON puro, com a seguinte estrutura:
         "Você é Liora, tutora especializada em microlearning. Responda apenas JSON válido.",
         prompt
       );
-      return JSON.parse(raw);
+      return safeJsonParse(raw);
     }
 
     // --------------------------------------------------------
@@ -269,11 +299,20 @@ Use APENAS JSON puro, com a seguinte estrutura:
       const capitulos = [];
       let atual = { titulo: null, conteudo: [] };
 
-      const regexCap =
-        /^(cap[ií]tulo\s+\d+[\s:.-]*.+|cap[ií]tulo\s+\d+|[A-ZÁÉÍÓÚÃÕÇ][^\d\n]{3,80})$/;
+      // regex forte: apenas "Capítulo 1", "CAPÍTULO 2: ..." etc.
+      const regexStrong = /^(cap[ií]tulo\s+\d+[\s:.-]*.*)$/i;
+
+      // regex fallback (mais solto) se o PDF não tiver "Capítulo"
+      const regexFallback =
+        /^(cap[ií]tulo\s+\d+[\s:.-]*.*|cap[ií]tulo\s+\d+)$/i;
+
+      // conta quantas linhas batem com o padrão forte
+      const strongCount = linhas.filter(l => regexStrong.test(l)).length;
+
+      const useRegex = strongCount >= 2 ? regexStrong : regexFallback;
 
       for (const linha of linhas) {
-        if (regexCap.test(linha)) {
+        if (useRegex.test(linha)) {
           if (atual.titulo) capitulos.push({ ...atual });
           atual = { titulo: linha, conteudo: [] };
         } else {
@@ -282,6 +321,12 @@ Use APENAS JSON puro, com a seguinte estrutura:
       }
 
       if (atual.titulo) capitulos.push(atual);
+
+      // limite de segurança: não explodir com dezenas de pseudo-capítulos
+      const MAX_CAPS = 20;
+      if (capitulos.length > MAX_CAPS) {
+        return capitulos.slice(0, MAX_CAPS);
+      }
 
       return capitulos;
     }
@@ -354,7 +399,7 @@ Gere APENAS JSON com a estrutura:
         "Responda SOMENTE JSON válido, sem texto extra.",
         prompt
       );
-      return JSON.parse(raw);
+      return safeJsonParse(raw);
     }
 
     // --------------------------------------------------------
@@ -574,9 +619,9 @@ Gere APENAS JSON com a estrutura:
         }
 
         const plano = await gerarPlanoDeSessoesPorTema(tema, nivel);
+
         wizard = { tema, nivel, plano: [], sessoes: [], atual: 0, origem: "tema" };
 
-        // normalizamos plano (caso venha só string)
         const planoNorm = plano.map((p, i) => ({
           numero: p.numero ?? i + 1,
           nome: p.nome ?? `Sessão ${i + 1}`,
@@ -604,13 +649,12 @@ Gere APENAS JSON com a estrutura:
 
           wizard.sessoes.push(sessao);
 
-          // construir um mini resumo para a próxima sessão
           const c = sessao.conteudo || {};
           const resumoRapido = Array.isArray(c.resumoRapido)
             ? c.resumoRapido.join("; ")
             : "";
           resumoAnterior =
-            sessao.objetivo +
+            (sessao.objetivo || "") +
             ". " +
             (c.introducao || "") +
             (resumoRapido ? " Pontos-chave: " + resumoRapido : "");
@@ -650,7 +694,6 @@ Gere APENAS JSON com a estrutura:
 
         atualizarStatus("upload", "📄 Lendo PDF...", 5);
 
-        // leitura simples (binário como texto) — já vinha funcionando nos testes
         const texto = await file.text();
         const tema = file.name.replace(/\.pdf$/i, "");
 
@@ -682,13 +725,26 @@ Gere APENAS JSON com a estrutura:
             ((i + 1) / capitulos.length) * 100
           );
 
-          const sessao = await gerarSessaoPorCapitulo(cap, i + 1, capitulos.length);
+          let sessao;
+          try {
+            sessao = await gerarSessaoPorCapitulo(cap, i + 1, capitulos.length);
+          } catch (parseErr) {
+            console.error("Erro ao interpretar sessão do capítulo", cap.titulo, parseErr);
+            // pula este capítulo, mas continua o fluxo
+            continue;
+          }
 
           wizard.plano.push({
             numero: i + 1,
             nome: cap.titulo,
           });
           wizard.sessoes.push(sessao);
+        }
+
+        if (!wizard.sessoes.length) {
+          atualizarStatus("upload", "⚠️ Não foi possível gerar nenhuma sessão.", 100);
+          alert("A IA não conseguiu gerar sessões a partir deste PDF.");
+          return;
         }
 
         atualizarStatus("upload", "✅ Sessões concluídas!", 100);
@@ -751,6 +807,6 @@ Gere APENAS JSON com a estrutura:
       });
     }
 
-    console.log("🟢 Liora Core v61 carregado com sucesso");
+    console.log("🟢 Liora Core v62 carregado com sucesso");
   });
 })();
