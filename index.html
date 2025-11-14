@@ -8,20 +8,22 @@
   <!-- Tailwind -->
   <script src="https://cdn.tailwindcss.com"></script>
 
-  <!-- PDF.js -->
+  <!-- PDF.js (MODO SEGURO) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.14.305/pdf.min.js"></script>
   <script>
     pdfjsLib.GlobalWorkerOptions.workerSrc =
       "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.14.305/pdf.worker.min.js";
   </script>
 
-  <link rel="stylesheet" href="/style.css?v=46">
-  
+  <!-- CSS atualizado -->
+  <link rel="stylesheet" href="/style.css?v=60">
 </head>
+
 <body>
 
 <header class="max-w-6xl mx-auto px-6 pt-8">
   <div class="flex justify-between items-center">
+    
     <div class="flex items-center gap-3">
       <div class="w-10 h-10 rounded-2xl bg-[var(--brand)] text-white font-black flex items-center justify-center">
         Li
@@ -33,13 +35,15 @@
     </div>
 
     <button id="btn-theme" class="btn-secondary" style="padding:.3rem .6rem">🌙</button>
+
   </div>
 </header>
 
 <main id="liora-layout" class="liora-grid">
 
-  <!-- ---- ESQUERDA ---- -->
+  <!-- ESQUERDA -->
   <section class="card p-6">
+
     <h2 class="section-title mb-4">Como você deseja estudar?</h2>
 
     <div class="grid grid-cols-2 gap-2 mb-6">
@@ -49,6 +53,7 @@
 
     <!-- PAINEL TEMA -->
     <div id="painel-tema">
+
       <label class="text-sm font-medium">Tema de estudo</label>
       <input id="inp-tema" type="text" placeholder="Ex.: Direito Constitucional — Poder Legislativo" class="mb-3">
 
@@ -60,82 +65,101 @@
       </select>
 
       <button id="btn-gerar" class="btn w-full mt-3">Gerar plano</button>
-      <!-- status unificado (TEMA) -->
+
+      <!-- STATUS -->
       <p id="status" class="text-xs text-[var(--muted)] mt-2"></p>
-      <!-- barra de progresso (TEMA) -->
+
+      <!-- PROGRESSO -->
       <div id="barra-tema" class="liora-progress mt-1" style="width:100%;">
         <div id="barra-tema-fill" class="liora-progress__bar"></div>
       </div>
+
     </div>
 
     <!-- PAINEL UPLOAD -->
     <div id="painel-upload" class="hidden mt-6">
+
       <label class="text-sm font-medium">Envie seu material</label>
 
       <label id="upload-zone" class="upload-zone">
-        <p id="upload-text">Clique ou arraste um arquivo (.txt, .pdf)</p>
+        <p id="upload-text">Clique ou arraste um arquivo (.pdf)</p>
         <div id="upload-spinner"></div>
-        <input id="inp-file" type="file" accept=".pdf,.txt" />
+        <input id="inp-file" type="file" accept="application/pdf" />
       </label>
 
       <button id="btn-gerar-upload" class="btn w-full mt-3">Gerar plano</button>
-      <!-- status unificado (UPLOAD) -->
+
+      <!-- STATUS -->
       <p id="status-upload" class="text-xs text-[var(--muted)] mt-2"></p>
-      <!-- barra de progresso (UPLOAD) -->
+
+      <!-- BARRA UPLOAD -->
       <div id="barra-upload" class="liora-progress mt-1" style="width:100%;">
         <div id="barra-upload-fill" class="liora-progress__bar"></div>
       </div>
+
     </div>
+
   </section>
 
-  <!-- ---- DIREITA ---- -->
+  <!-- DIREITA -->
   <section class="card p-6">
+
     <div class="flex justify-between mb-4">
       <h2 class="section-title">Seu plano de estudo</h2>
       <p id="ctx" class="text-sm text-[var(--muted)]"></p>
     </div>
+
     <div id="plano" class="space-y-3"></div>
+
   </section>
+
 </main>
 
-<!-- ---- WIZARD ---- -->
+
+<!-- WIZARD -->
 <section id="liora-sessoes" class="hidden liora-wizard max-w-6xl mx-auto px-6 pb-10">
+
   <div class="liora-wizard__header flex justify-between items-center mb-4">
+
     <div>
       <h2 id="liora-sessao-titulo" class="text-lg font-bold mb-1"></h2>
       <p id="liora-tema-ativo" class="text-sm text-[var(--muted)]"></p>
     </div>
 
-    <!-- Barra de progresso da sessão -->
     <div class="liora-progress w-52">
       <div id="liora-progress-bar" class="liora-progress__bar"></div>
     </div>
+
   </div>
 
   <div class="liora-card space-y-6 p-6">
+
     <div class="liora-block"><h4>Objetivo</h4><p id="liora-sessao-objetivo"></p></div>
     <div class="liora-block"><h4>Conteúdo</h4><div id="liora-sessao-conteudo"></div></div>
     <div class="liora-block"><h4>Analogias</h4><div id="liora-sessao-analogias"></div></div>
     <div class="liora-block"><h4>Ativação</h4><ul id="liora-sessao-ativacao"></ul></div>
     <div class="liora-block"><h4>Teste rápido</h4><div id="liora-sessao-quiz"></div><p id="liora-sessao-quiz-feedback"></p></div>
     <div class="liora-block"><h4>Flashcards</h4><ul id="liora-sessao-flashcards"></ul></div>
+
   </div>
 
   <div class="liora-wizard__footer flex justify-between mt-6">
     <button id="liora-btn-voltar" class="liora-btn ghost">◀ Voltar</button>
     <button id="liora-btn-proxima" class="liora-btn primary">Próxima sessão ▶</button>
   </div>
+
 </section>
+
 
 <footer class="max-w-6xl mx-auto px-4 pb-10 text-xs text-[var(--muted)] text-center">
   <p>Liora — IA aplicada a estudos. © Intellih</p>
 </footer>
 
-<!-- Scripts (mantendo o comportamento funcional) -->
-<script src="/scripts/semantic.js?v=42"></script>
-<script src="/scripts/core.js?v=42"></script>
+<!-- Scripts (atualizados e compatíveis) -->
+<script src="/scripts/semantic.js?v=60"></script>
+<script src="/scripts/core.js?v=60"></script>
 
-<div id="liora-build-info">Liora v42</div>
+<div id="liora-build-info">Liora v60</div>
 
 </body>
 </html>
