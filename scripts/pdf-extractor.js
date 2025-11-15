@@ -1,43 +1,12 @@
-// ===============================
+// ==========================
 // 📄 pdf-extractor.js
-// Extrai blocos de texto estruturados de um PDF
-// Dependência: pdfjsLib já carregado no HTML
-// ===============================
+// ==========================
 (function () {
   console.log("🔵 Liora PDF Extractor carregado...");
 
-  if (!window.pdfjsLib) {
-    console.warn("⚠️ pdfjsLib não encontrado. Certifique-se de incluir o PDF.js antes deste arquivo.");
-  }
-
-  /**
-   * Lê um arquivo File (input type="file") e devolve um ArrayBuffer
-   * @param {File} file
-   * @returns {Promise<ArrayBuffer>}
-   */
-  function lerArquivoComoArrayBuffer(file) {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onerror = () => reject(reader.error);
-      reader.onload = () => resolve(reader.result);
-      reader.readAsArrayBuffer(file);
-    });
-  }
-
-  /**
-   * Extrai blocos de texto de um PDF com info de posição e tamanho da fonte.
-   * Retorno: [{ page, y, fontSize, text }]
-   * @param {File} file - arquivo PDF vindo do input
-   * @returns {Promise<Array<{page:number,y:number,fontSize:number,text:string}>>}
-   */
-  async function extrairBlocosDoPDF(file) {
-    if (!window.pdfjsLib) {
-      throw new Error("pdfjsLib não está disponível no contexto global.");
-    }
-
-    const data = await lerArquivoComoArrayBuffer(file);
-    const loadingTask = window.pdfjsLib.getDocument({ data });
-    const pdf = await loadingTask.promise;
+  async function extrairBlocos(file) {
+    const typedArray = new Uint8Array(await file.arrayBuffer());
+    const pdf = await pdfjsLib.getDocument({ data: typedArray }).promise;
 
     const blocos = [];
 
@@ -46,33 +15,134 @@
       const content = await page.getTextContent();
 
       content.items.forEach(item => {
-        const str = (item.str || "").trim();
-        if (!str) return;
-
-        const transform = item.transform || [];
-        const fontSize = Math.abs(transform[0] || transform[3] || 12);
-        const y = transform[5] || 0;
-
         blocos.push({
+          text: item.str || "",
+          x: item.transform[4] || 0,
+          y: item.transform[5] || 0,
           page: pageNum,
-          y,
-          fontSize,
-          text: str
+          fontSize: item.height || 0
         });
       });
     }
 
-    // Ordena por página e posição vertical (de cima pra baixo)
-    blocos.sort((a, b) => {
-      if (a.page !== b.page) return a.page - b.page;
-      return b.y - a.y;
-    });
-
-    console.log("📄 Blocos extraídos do PDF:", blocos);
+    console.log("📄 Blocos extraídos do PDF:", blocos.length);
     return blocos;
   }
 
-  // Expor no escopo global
-  window.LioraPDF = window.LioraPDF || {};
-  window.LioraPDF.extrairBlocosDoPDF = extrairBlocosDoPDF;
+  window.LioraPDFExtractor = { extrairBlocos };
+})();
+
+
+// ==========================
+// 📚 pdf-structure.js
+// ==========================
+(function () {
+  console.log("🔵 Liora PDF Structure carregado...");
+
+  function limparTexto(t) {
+    return t.replace(/\s+/g, " ").trim();
+  }
+
+  function construirSecoesAPartirDosBlocos(blocos) {
+    console.log("📦 Recebendo blocos:", blocos.length);
+
+    const secoes = [];
+    let atual = { titulo: null, conteudo: [] };
+
+    blocos.forEach(b => {
+      const t = limparTexto(b.text);
+      if (!t) return;
+
+      const ehTitulo =
+        /^(CAP[IÍ]TULO\s+\d+.*)$/i.test(t) ||
+        /^\d+\.\s+.+/.test(t) ||
+        /^[A-Z].{0,40}$/.test(t) && b.fontSize > 14;
+
+      if (ehTitulo) {
+        if (atual.titulo || atual.conteudo.length) secoes.push(atual);
+        atual = { titulo: t, conteudo: [] };
+      } else {
+        atual.conteudo.push(t);
+      }
+    });
+
+    if (atual.titulo || atual.conteudo.length) secoes.push(atual);
+
+    console.log("🧱 Seções heurísticas construídas:", secoes);
+    return secoes;
+  }
+
+  window.LioraPDF = { construirSecoesAPartirDosBlocos };
+})();
+
+
+// ==========================
+// 🧠 outline-generator.js
+// ==========================
+(function () {
+  console.log("🔵 Liora Outline Generator carregado...");
+
+  async function chamarIA(system, user) {
+    if (!window.callLLM) throw new Error("callLLM() não encontrado");
+    return await window.callLLM(system, user);
+  }
+
+  async function gerarOutlinesPorSecao(secoes, nivel) {
+    const outlines = [];
+
+    for (const sec of secoes) {
+      const prompt = `Analise o seguinte trecho de apostila e descreva os tópicos centrais.
+Retorne JSON assim: {"topicos": ["t1", "t2"]}
+
+TÍTULO: ${sec.titulo}
+
+CONTEÚDO:
+${sec.conteudo.join("\n")}`;
+
+      const raw = await chamarIA(
+        "Você é Liora e retorna sempre JSON válido.",
+        prompt
+      );
+
+      try {
+        const json = JSON.parse(raw);
+        outlines.push(json);
+      } catch {
+        outlines.push({ topicos: [] });
+      }
+    }
+
+    console.log("🧠 Outlines por seção:", outlines);
+    return outlines;
+  }
+
+  function unificarOutlines(listas) {
+    const mapa = new Map();
+    listas.forEach(o => {
+      (o.topicos || []).forEach(t => {
+        mapa.set(t.toLowerCase(), t);
+      });
+    });
+
+    const unificado = Array.from(mapa.values()).map((t, i) => ({
+      numero: i + 1,
+      nome: t
+    }));
+
+    console.log("🧠 Outline unificado:", { outline: unificado });
+    return unificado;
+  }
+
+  async function gerarPlanoEstudo(outline, nivel) {
+    return {
+      nivel,
+      sessoes: outline
+    };
+  }
+
+  window.LioraOutline = {
+    gerarOutlinesPorSecao,
+    unificarOutlines,
+    gerarPlanoEstudo
+  };
 })();
