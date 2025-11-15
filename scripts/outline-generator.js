@@ -62,9 +62,11 @@ ${sec.conteudo.join("\n")}`;
     };
   }
 
-  window.LioraOutline = {
+ window.LioraOutline = {
     gerarOutlinesPorSecao,
     unificarOutlines,
-    gerarPlanoEstudo
-  };
+    gerarPlanoEstudo,
+    gerarPlanoDeEstudo: gerarPlanoEstudo   // alias para compatibilidade com core.js
+};
+
 })();
