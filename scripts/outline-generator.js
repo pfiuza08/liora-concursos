@@ -1,362 +1,162 @@
-// ==========================
-// 🧠 outline-generator.js — Modelo D (6 a 12 sessões)
-// ==========================
+// ==========================================================
+// 🧠 LIORA — OUTLINE GENERATOR v70
+// - Detecta estruturas hierárquicas espontâneas
+// - Zero dependência de área do conhecimento
+// - Compatível com core v70-UPLOAD
+// - Heurísticas fortes para títulos/subtítulos
+// ==========================================================
 
 (function () {
-  console.log("🔵 Liora Outline Generator (Modelo D) carregado...");
+  console.log("🔵 Liora Outline Generator v70 carregado...");
 
-  const MIN_SESSOES = 6;
-  const MAX_SESSOES = 12;
+  // --------------------------------------------------------------
+  // 1. Heurísticas para detecção de títulos e subtítulos
+  // --------------------------------------------------------------
 
-  // --------------------------------------
-  // Util: parser de JSON mais robusto
-  // --------------------------------------
-  function safeJsonParse(raw) {
-    if (!raw || typeof raw !== "string") {
-      throw new Error("Resposta vazia da IA.");
-    }
+  function ehTitulo(bloco) {
+    if (!bloco || !bloco.text) return false;
 
-    // Se vier em bloco ```json ... ```
-    const block =
-      raw.match(/```json([\s\S]*?)```/i) ||
-      raw.match(/```([\s\S]*?)```/i);
-    if (block) {
-      raw = block[1];
-    }
+    const t = bloco.text.trim();
 
-    // recorta do primeiro { até o último }
-    const first = raw.indexOf("{");
-    const last = raw.lastIndexOf("}");
-    if (first !== -1 && last !== -1 && last > first) {
-      raw = raw.slice(first, last + 1);
-    }
+    // Muito curto → geralmente título
+    if (t.length <= 50 && /^[A-ZÁÉÍÓÚÂÊÔÃÕ0-9][^.!?]*$/.test(t))
+      return true;
 
-    // remove caracteres de controle
-    raw = raw.replace(/[\u0000-\u0008\u000B-\u000C\u000E-\u001F]/g, " ");
+    // Começa com número (ex: "1 Introdução", "2.1 Conceitos")
+    if (/^\d+(\.\d+)*\s+/.test(t)) return true;
 
-    return JSON.parse(raw);
+    // Maiúsculas predominantes (mas poucas linhas)
+    if (t === t.toUpperCase() && t.length < 80) return true;
+
+    // Palavras-chaves típicas (mas sem assumir domínio)
+    if (/^(cap(ítulo)?|se(c|ç)ão|parte|módulo)\b/i.test(t))
+      return true;
+
+    return false;
   }
 
-  // --------------------------------------
-  // Chamada à IA via core (window.callLLM)
-  // --------------------------------------
-  async function chamarIA(system, user) {
-    if (typeof window.callLLM !== "function") {
-      throw new Error("callLLM() não encontrado. Certifique-se de que o core.js já carregou.");
-    }
-    const raw = await window.callLLM(system, user);
-    return raw;
+  function nivelDoTitulo(texto) {
+    // Ex: 1 → nível 1
+    // Ex: 1.2 → nível 2
+    // Ex: 1.2.3 → nível 3
+    const m = texto.trim().match(/^(\d+(\.\d+)*)/);
+    if (!m) return 1;
+    return m[1].split(".").length;
   }
 
-  // --------------------------------------
-  // 1) Gerar OUTLINES por seção da apostila
-  //    (cada tópico já carrega um "resumoTexto" do PDF)
-// --------------------------------------
-  async function gerarOutlinesPorSecao(secoes) {
-    const resultados = [];
+  // --------------------------------------------------------------
+  // 2. Construção do Outline
+  // --------------------------------------------------------------
 
-    for (let i = 0; i < secoes.length; i++) {
-      const sec = secoes[i];
-      const titulo = sec.titulo || `Seção ${i + 1}`;
-      const textoBruto = Array.isArray(sec.conteudo)
-        ? sec.conteudo.join("\n")
-        : String(sec.conteudo || "");
+  function gerarEstrutura(secoes) {
+    if (!Array.isArray(secoes)) return [];
 
-      // para não explodir contexto, corta um pouco se for gigante
-      const textoLimitado =
-        textoBruto.length > 4000
-          ? textoBruto.slice(0, 3500) + "\n\n[trecho truncado]"
-          : textoBruto;
+    const raiz = [];
+    const pilha = []; // estrutura hierárquica
 
-      const prompt = `
-Você é Liora, especialista em educação.
+    secoes.forEach((sec) => {
+      const titulo = sec.titulo?.trim() || "";
+      const nivel = nivelDoTitulo(titulo);
 
-Analise o trecho de uma apostila abaixo e identifique de 3 a 8 tópicos centrais de estudo.
-Cada tópico deve vir com um pequeno resumo textual, baseado SOMENTE neste trecho.
+      const item = {
+        titulo,
+        conteudo: sec.texto || "",
+        children: []
+      };
 
-Retorne APENAS JSON válido no formato:
-
-{
-  "topicos": [
-    {
-      "nome": "nome conciso do tópico",
-      "resumoTexto": "explicação objetiva com 2 a 4 frases, baseada no texto",
-      "importancia": 1 a 5
-    }
-  ]
-}
-
-TÍTULO DA SEÇÃO:
-${titulo}
-
-TRECHO DA APOSTILA:
-${textoLimitado}
-`;
-
-      let json;
-      try {
-        const raw = await chamarIA(
-          "Você é Liora. Responda apenas JSON puro, válido.",
-          prompt
-        );
-        json = safeJsonParse(raw);
-      } catch (err) {
-        console.error("Erro ao gerar outline da seção:", titulo, err);
-        json = { topicos: [] };
+      // Se não há pilha → topo do outline
+      if (pilha.length === 0) {
+        pilha.push({ nivel, item });
+        raiz.push(item);
+        return;
       }
 
-      const topicos = Array.isArray(json.topicos) ? json.topicos : [];
-      const normalizados = topicos
-        .filter(t => t && t.nome)
-        .map(t => ({
-          nome: String(t.nome).trim(),
-          resumoTexto: String(t.resumoTexto || "").trim(),
-          importancia: Number.isFinite(Number(t.importancia))
-            ? Number(t.importancia)
-            : 3,
-          secaoTitulo: titulo,
-          secaoIndex: i,
-        }));
+      // Se nível maior → fica como filho do anterior
+      const topo = pilha[pilha.length - 1];
+      if (nivel > topo.nivel) {
+        topo.item.children.push(item);
+        pilha.push({ nivel, item });
+        return;
+      }
 
-      resultados.push({
-        secaoTitulo: titulo,
-        secaoIndex: i,
-        topicos: normalizados,
-      });
-    }
+      // Se nível igual ou menor → subir a pilha até se encaixar
+      while (pilha.length && nivel <= pilha[pilha.length - 1].nivel) {
+        pilha.pop();
+      }
 
-    console.log("🧠 Outlines por seção:", resultados);
-    return resultados;
-  }
-
-  // --------------------------------------
-  // 2) Unificar tópicos em uma lista global
-  //    (mescla duplicados, junta resumos)
-// --------------------------------------
-  function unificarOutlines(outlinesPorSecao) {
-    const mapa = new Map();
-
-    outlinesPorSecao.forEach(sec => {
-      (sec.topicos || []).forEach(t => {
-        const chave = t.nome.toLowerCase();
-        if (!mapa.has(chave)) {
-          mapa.set(chave, {
-            nome: t.nome,
-            importanciaTotal: 0,
-            ocorrencias: 0,
-            resumos: [],
-            secoes: new Set(),
-          });
-        }
-        const ref = mapa.get(chave);
-        ref.importanciaTotal += t.importancia || 3;
-        ref.ocorrencias += 1;
-        if (t.resumoTexto) ref.resumos.push(t.resumoTexto);
-        ref.secoes.add(t.secaoTitulo);
-      });
+      if (!pilha.length) {
+        raiz.push(item);
+        pilha.push({ nivel, item });
+      } else {
+        pilha[pilha.length - 1].item.children.push(item);
+        pilha.push({ nivel, item });
+      }
     });
 
-    const topicosGlobais = Array.from(mapa.values())
-      .map(t => ({
-        nome: t.nome,
-        importanciaMedia: t.importanciaTotal / (t.ocorrencias || 1),
-        textoBase: t.resumos.join("\n\n"),
-        secoes: Array.from(t.secoes),
-      }))
-      // tópicos mais importantes primeiro
-      .sort((a, b) => b.importanciaMedia - a.importanciaMedia);
-
-    console.log("🧠 Outline unificado:", { outline: topicosGlobais });
-    return topicosGlobais;
+    return raiz;
   }
 
-  // --------------------------------------
-  // 3) Agrupar tópicos globais em 6–12 sessões
-  // --------------------------------------
-  function agruparTopicosEmSessoes(topicos) {
-    const total = topicos.length;
-    if (!total) return [];
-
-    // alvo: ~6 tópicos por sessão
-    let numSessoes = Math.round(total / 6);
-    if (numSessoes < MIN_SESSOES) numSessoes = Math.min(MIN_SESSOES, total);
-    if (numSessoes > MAX_SESSOES) numSessoes = MAX_SESSOES;
-
-    const sessoes = [];
-    const base = Math.floor(total / numSessoes);
-    let resto = total % numSessoes;
-
-    let idx = 0;
-    for (let s = 0; s < numSessoes; s++) {
-      const tamanhoGrupo = base + (resto > 0 ? 1 : 0);
-      if (resto > 0) resto--;
-
-      const grupo = topicos.slice(idx, idx + tamanhoGrupo);
-      idx += tamanhoGrupo;
-
-      if (!grupo.length) continue;
-
-      const tituloTopo = grupo[0].nome;
-      const nomesTopicos = grupo.map(g => g.nome);
-      const textoBase = grupo
-        .map(g => g.textoBase || "")
-        .filter(Boolean)
-        .join("\n\n----------------------\n\n");
-
-      sessoes.push({
-        tituloBase: tituloTopo,
-        topicos: nomesTopicos,
-        textoBase: textoBase,
-      });
-    }
-
-    return sessoes;
-  }
-
-  // --------------------------------------
-  // 4) Gerar SESSÕES COMPLETAS a partir das
-  //    sessões planejadas (Modelo D)
-// --------------------------------------
-  async function gerarPlanoDeEstudo(outlineUnificado) {
-    // outlineUnificado aqui é o array de tópicos globais
-    const topicos = Array.isArray(outlineUnificado)
-      ? outlineUnificado
-      : [];
-
-    if (!topicos.length) {
-      console.warn("⚠️ Sem tópicos para montar plano.");
-      return { nivel: null, sessoes: [] };
-    }
-
-    const sessoesPlanejadas = agruparTopicosEmSessoes(topicos);
-
-    const sessoesFinais = [];
-
-    for (let i = 0; i < sessoesPlanejadas.length; i++) {
-      const spec = sessoesPlanejadas[i];
-
-      const tituloSessao = `Sessão ${i + 1} — ${spec.tituloBase}`;
-      const listaTopicos = spec.topicos.join("; ");
-
-      // para segurança, limitar textoBase
-      const textoBaseLimitado =
-        spec.textoBase && spec.textoBase.length > 5000
-          ? spec.textoBase.slice(0, 4500) + "\n\n[trecho truncado]"
-          : (spec.textoBase || "");
-
-      const prompt = `
-Você é Liora, tutora especializada em microlearning.
-
-Com base APENAS no texto da apostila abaixo, monte uma sessão de estudo COMPLETA,
-no formato JSON especificado, SEM adicionar conteúdos externos que não estejam
-no texto. Use a lista de tópicos como guia de organização.
-
-TEXTO BASE (apostila):
-${textoBaseLimitado}
-
-TÓPICOS PARA ESTA SESSÃO:
-${listaTopicos}
-
-RETORNE APENAS JSON VÁLIDO no formato:
-
-{
- "titulo": "${tituloSessao}",
- "objetivo": "objetivo de aprendizagem baseado no texto",
- "conteudo": {
-   "introducao": "2-3 parágrafos contextualizando a sessão, baseados no texto",
-   "conceitos": [
-     "conceito importante, explicado em 2-3 frases, fundamentado no texto",
-     "outro conceito importante, com explicação baseada no trecho",
-     "mais um conceito relevante"
-   ],
-   "exemplos": [
-     "exemplo ou situação descrita ou compatível com o texto",
-     "outro exemplo coerente, mas ainda fiel ao conteúdo"
-   ],
-   "aplicacoes": [
-     "formas de aplicar o que o texto ensina",
-     "situações práticas relacionadas ao conteúdo"
-   ],
-   "resumoRapido": [
-     "ponto-chave 1 da sessão",
-     "ponto-chave 2",
-     "ponto-chave 3"
-   ]
- },
- "analogias": [
-   "uma analogia ou metáfora que ajude a entender um conceito-chave",
-   "outra analogia útil"
- ],
- "ativacao": [
-   "pergunta reflexiva 1 para o aluno",
-   "pergunta reflexiva 2, ligada à prática"
- ],
- "quiz": {
-   "pergunta": "pergunta de múltipla escolha sobre ponto importante do texto",
-   "alternativas": [
-     "alternativa A",
-     "alternativa B",
-     "alternativa C"
-   ],
-   "corretaIndex": 1,
-   "explicacao": "explique por que a alternativa correta está certa, usando o texto"
- },
- "flashcards": [
-   { "q": "pergunta objetiva sobre conceito importante", "a": "resposta direta" },
-   { "q": "outra pergunta de revisão", "a": "resposta direta" }
- ]
-}
-`;
-
-      let sessao;
+  // --------------------------------------------------------------
+  // 3. Interface Pública
+  // --------------------------------------------------------------
+  window.LioraOutline = {
+    /**
+     * Gera outline para cada seção otimizada (por título)
+     */
+    async gerarOutlinesPorSecao(secoes) {
       try {
-        const raw = await chamarIA(
-          "Você é Liora. Responda SOMENTE JSON válido no formato pedido.",
-          prompt
-        );
-        sessao = safeJsonParse(raw);
-      } catch (err) {
-        console.error("Erro ao gerar sessão a partir dos tópicos:", spec, err);
-        // fallback bem simples para não quebrar o fluxo
-        sessao = {
-          titulo: tituloSessao,
-          objetivo: `Compreender os tópicos: ${listaTopicos}.`,
-          conteudo: {
-            introducao:
-              "Sessão gerada parcialmente. Revise e complemente o conteúdo.",
-            conceitos: spec.topicos,
-            exemplos: [],
-            aplicacoes: [],
-            resumoRapido: spec.topicos.slice(0, 3),
-          },
-          analogias: [],
-          ativacao: [],
-          quiz: {
-            pergunta: "",
-            alternativas: [],
-            corretaIndex: 0,
-            explicacao: "",
-          },
-          flashcards: [],
-        };
+        const blocosDeTitulo = secoes.filter((s) => ehTitulo({ text: s.titulo }));
+        return blocosDeTitulo.map((s) => ({
+          titulo: s.titulo,
+          conteudo: s.texto,
+          children: []
+        }));
+      } catch (e) {
+        console.error("Erro em gerarOutlinesPorSecao:", e);
+        return [];
+      }
+    },
+
+    /**
+     * Une vários outlines (lista plana) em um outline hierárquico
+     */
+    async unificarOutlines(lista) {
+      try {
+        const secoesFormatadas = lista.map((o) => ({
+          titulo: o.titulo,
+          texto: o.conteudo,
+        }));
+        return gerarEstrutura(secoesFormatadas);
+      } catch (e) {
+        console.error("Erro ao unificar outlines:", e);
+        return [];
+      }
+    },
+
+    /**
+     * A partir do outline hierárquico final, gera um plano básico
+     * O core aplicará o pipeline D depois
+     */
+    async gerarPlanoDeEstudo(outline) {
+      const sessoes = [];
+
+      function percorrer(nos) {
+        for (const n of nos) {
+          sessoes.push({
+            titulo: n.titulo,
+            objetivo: `Compreender o tópico: ${n.titulo}`,
+            conteudo: {
+              introducao: n.conteudo || "",
+            }
+          });
+          if (n.children?.length) percorrer(n.children);
+        }
       }
 
-      sessoesFinais.push(sessao);
+      percorrer(outline);
+
+      return { sessoes };
     }
-
-    const plano = {
-      nivel: null,
-      sessoes: sessoesFinais,
-    };
-
-    console.log("📘 Plano de estudo (Modelo D):", plano);
-    return plano;
-  }
-
-  // Expor API pública
-  window.LioraOutline = {
-    gerarOutlinesPorSecao,
-    unificarOutlines,
-    gerarPlanoDeEstudo,
   };
+
 })();
