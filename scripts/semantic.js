@@ -1,121 +1,174 @@
-// ==========================================================
-// 🧠 LIORA — SEMANTIC v70.1 (FIX WAIT FOR CORE)
-// - Aguarda callLLM ser carregado pelo core.js
-// - Remove erro de ordem de carregamento
-// ==========================================================
+/// =============================================
+// 🧩 semantic.js — Liora Semantic v2
+// Compatível com Modelo D (outline + sessões IA)
+// =============================================
 
 (function () {
-  console.log("🔵 Liora Semantic v70 carregado (modo de espera)...");
+  console.log("🧩 semantic.js (v2) carregado...");
 
-  function iniciar() {
-    if (!window.callLLM) {
-      console.log("⏳ Aguardando core.js inicializar callLLM...");
-      return false;
-    }
+  // ----------------------------------------------------
+  // OBJETIVO DESTE ARQUIVO
+  // ----------------------------------------------------
+  // Este módulo NÃO gera sessões.
+  // Ele fornece:
+  //  ✓ Classificação de qualidade dos blocos
+  //  ✓ Detecção de ruído
+  //  ✓ Limpeza semântica do texto
+  //  ✓ Priorização de trechos
+  //  ✓ Anti-duplicação de conteúdo
+  //  ✓ Ferramentas auxiliares para o outline-generator.js
+  //
+  // Tudo isso melhora:
+  //  - os tópicos detectados
+  //  - os agrupamentos
+  //  - a coerência do texto-base por sessão
+  //  - a qualidade do conteúdo final
+  // ----------------------------------------------------
 
-    console.log("🟢 Liora Semantic v70 inicializado com sucesso!");
+  const Semantic = {};
 
-    // --------------------------------------------------------
-    // Função auxiliar
-    // --------------------------------------------------------
-    function montarTextoBase(titulo, conteudo) {
-      return `
-Título detectado: ${titulo || "(sem título detectado)"}
+  // ----------------------------------------------------
+  // 1) LIMPEZA DE TEXTO
+  // ----------------------------------------------------
+  Semantic.limparTexto = function (t) {
+    if (!t) return "";
 
-Conteúdo associado:
-${typeof conteudo === "string" ? conteudo : JSON.stringify(conteudo, null, 2)}
+    return String(t)
+      .replace(/\s+/g, " ")
+      .replace(/•/g, "- ")
+      .replace(/̄/g, "")
+      .replace(/[\u0000-\u0008\u000B-\u000C\u000E-\u001F]/g, " ")
+      .trim();
+  };
 
-Observações:
-- Não invente conteúdo.
-- Não adicione informações externas.
-- Todo texto gerado deve ser derivado APENAS do conteúdo acima.
-`.trim();
-    }
+  // ----------------------------------------------------
+  // 2) DETECTAR RUÍDO (linhas inúteis)
+  // ----------------------------------------------------
+  Semantic.ehRuido = function (textoOriginal) {
+    if (!textoOriginal) return true;
 
-    // --------------------------------------------------------
-    // 1. RESUMO DO TÓPICO
-    // --------------------------------------------------------
-    async function gerarResumoTopico(titulo, conteudo) {
-      const base = montarTextoBase(titulo, conteudo);
-      return await callLLM(
-        "Você é um agente pedagógico neutro que resume conteúdo fielmente.",
-        `Gere um resumo claro, conciso e coerente. Não invente nada.\n\n${base}`
-      );
-    }
+    const t = textoOriginal.trim();
 
-    // --------------------------------------------------------
-    // 2. PLANO DE ESTUDO
-    // --------------------------------------------------------
-    async function gerarPlanoDeEstudo(titulo, conteudo) {
-      const base = montarTextoBase(titulo, conteudo);
-      return await callLLM(
-        "Você organiza conteúdo em passos curtos.",
-        `Gere um plano de estudo curto baseado SOMENTE no texto abaixo.\n\n${base}`
-      );
-    }
+    // muito pequeno
+    if (t.length <= 2) return true;
 
-    // --------------------------------------------------------
-    // 3. QUESTÕES
-    // --------------------------------------------------------
-    async function gerarQuestoes(titulo, conteudo) {
-      const base = montarTextoBase(titulo, conteudo);
-      return await callLLM(
-        "Você cria questões apenas com base no texto fornecido.",
-        `Crie questões (3 fáceis, 3 médias, 2 profundas, 1 reflexiva).\n\n${base}`
-      );
-    }
+    // números soltos
+    if (/^[0-9]+$/.test(t)) return true;
 
-    // --------------------------------------------------------
-    // 4. MAPA MENTAL
-    // --------------------------------------------------------
-    async function gerarMapaMental(titulo, conteudo) {
-      const base = montarTextoBase(titulo, conteudo);
-      return await callLLM(
-        "Você converte conteúdo em mapa mental textual.",
-        `Estruture um mapa mental textual derivado do conteúdo.\n\n${base}`
-      );
-    }
+    // rodapé típico
+    if (/página \d+/i.test(t)) return true;
 
-    // --------------------------------------------------------
-    // 5. PLANO DE AULA
-    // --------------------------------------------------------
-    async function gerarPlanoDeAula(titulo, conteudo) {
-      const base = montarTextoBase(titulo, conteudo);
-      return await callLLM(
-        "Você cria planos de aula neutros.",
-        `Transforme o conteúdo abaixo em um plano de aula.\n\n${base}`
-      );
-    }
+    // URLs, e-mails
+    if (/https?:\/\//i.test(t) || /@/i.test(t)) return true;
 
-    // --------------------------------------------------------
-    // 6. MICROLEARNING
-    // --------------------------------------------------------
-    async function gerarMicrolearning(titulo, conteudo) {
-      const base = montarTextoBase(titulo, conteudo);
-      return await callLLM(
-        "Você cria microlearning baseado apenas no texto.",
-        `Crie um microlearning com mini explicação, exemplo e desafio.\n\n${base}`
-      );
-    }
+    // símbolos isolados
+    if (/^[.,;:!?()]+$/.test(t)) return true;
 
-    // Expõe API pública
-    window.LioraSemantic = {
-      gerarResumoTopico,
-      gerarPlanoDeEstudo,
-      gerarQuestoes,
-      gerarMapaMental,
-      gerarPlanoDeAula,
-      gerarMicrolearning,
-    };
+    return false;
+  };
 
-    return true;
-  }
+  // ----------------------------------------------------
+  // 3) PONTUAR BLOCO
+  // ----------------------------------------------------
+  // Quanto mais alto, mais útil para IA.
+  // Baseado em:
+  //  - tamanho
+  //  - densidade de informação
+  //  - complexidade
+  // ----------------------------------------------------
+  Semantic.pontuarBloco = function (texto) {
+    if (!texto) return 0;
 
-  // --------------------------------------------------------
-  // Aguarda o core.js expor window.callLLM
-  // --------------------------------------------------------
-  const intervalo = setInterval(() => {
-    if (iniciar()) clearInterval(intervalo);
-  }, 50);
+    const t = texto.trim();
 
+    // tamanho base
+    let score = Math.min(t.length / 50, 4); // máximo 4
+
+    // presença de palavras-chave técnicas
+    const palavrasTecnicas = [
+      "definição",
+      "conceito",
+      "teorema",
+      "exemplo",
+      "cálculo",
+      "modelo",
+      "método",
+      "procedimento",
+      "propriedade",
+      "aplicação",
+    ];
+
+    palavrasTecnicas.forEach((p) => {
+      if (t.toLowerCase().includes(p)) score += 1;
+    });
+
+    // frases mais longas = geralmente explicativas
+    const frases = t.split(/\.|;|:/).length;
+    if (frases > 3) score += 1;
+
+    // limite superior
+    if (score > 10) score = 10;
+
+    return score;
+  };
+
+  // ----------------------------------------------------
+  // 4) FUNDIR TRECHOS REDUNDANTES
+  // ----------------------------------------------------
+  // Evita que a IA receba conteúdo duplicado.
+  // ----------------------------------------------------
+  Semantic.fundirRedundancias = function (lista) {
+    if (!Array.isArray(lista)) return [];
+
+    const unicos = new Map();
+
+    lista.forEach((t) => {
+      if (!t) return;
+      const chave = t.toLowerCase().slice(0, 60); // início do texto
+      if (!unicos.has(chave)) unicos.set(chave, t);
+    });
+
+    return Array.from(unicos.values());
+  };
+
+  // ----------------------------------------------------
+  // 5) SELECIONAR TRECHOS MAIS FORTES
+  // ----------------------------------------------------
+  // Escolhe os trechos que melhor representam uma seção.
+  // ----------------------------------------------------
+  Semantic.selecionarTrechosFortes = function (linhas, limite = 12) {
+    const avaliados = linhas
+      .map((l) => ({ texto: l, score: Semantic.pontuarBloco(l) }))
+      .filter((x) => x.score > 0)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, limite)
+      .map((x) => x.texto);
+
+    return avaliados;
+  };
+
+  // ----------------------------------------------------
+  // 6) CONSTRUIR TEXTO BASE (para IA)
+  // ----------------------------------------------------
+  // Junta os trechos fortes + remove duplicações.
+  // ----------------------------------------------------
+  Semantic.construirTextoBase = function (linhas) {
+    if (!Array.isArray(linhas)) return "";
+
+    const limpas = linhas
+      .map((t) => Semantic.limparTexto(t))
+      .filter((t) => !Semantic.ehRuido(t));
+
+    const fortes = Semantic.selecionarTrechosFortes(limpas, 18);
+    const unicos = Semantic.fundirRedundancias(fortes);
+
+    return unicos.join("\n\n");
+  };
+
+  // ----------------------------------------------------
+  // EXPOÇÃO GLOBAL
+  // ----------------------------------------------------
+  window.LioraSemantic = Semantic;
+
+  console.log("✔ semantic.js v2 pronto e integrado!");
 })();
