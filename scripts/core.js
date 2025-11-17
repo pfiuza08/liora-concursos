@@ -1,12 +1,10 @@
 // ==========================================================
-// 🧠 LIORA — CORE v70-UPLOAD (base v64)
-// - Mantém TEMA exatamente como está
-// - Otimiza fluxo UPLOAD para PDFs grandes
-// - Usa pdf-extractor + pdf-structure via window.LioraPDF*
-// - Usa outline-generator via window.LioraOutline
-// - Reduz fortemente o número de seções enviadas ao outline
-// - NOVO: Pipeline D (resumo + materiais por sessão)
-// - NOVO: Corrige exibição do nome do arquivo no upload
+// 🧠 LIRA — CORE v70-UPLOAD (base v64 corrigida e expandida)
+// - Fluxo TEMA preservado
+// - Fluxo UPLOAD com Pipeline D completo
+// - Prompts totalmente neutros (agnósticos ao domínio)
+// - Sessões enriquecidas unicamente pelo PDF
+// - Correção do nome do arquivo no upload
 // ==========================================================
 
 (function () {
@@ -32,6 +30,11 @@
       btnGerarUpload: document.getElementById("btn-gerar-upload"),
       statusUpload: document.getElementById("status-upload"),
 
+      // Exibição do nome do arquivo corrigida
+      nomeArquivo: document.getElementById("file-name") 
+                || document.getElementById("upload-file-name")
+                || document.getElementById("nome-arquivo"),
+
       plano: document.getElementById("plano"),
       ctx: document.getElementById("ctx"),
 
@@ -42,8 +45,6 @@
       wizardConteudo: document.getElementById("liora-sessao-conteudo"),
       wizardAnalogias: document.getElementById("liora-sessao-analogias"),
       wizardAtivacao: document.getElementById("liora-sessao-ativacao"),
-      wizardQuiz: document.getElementById("liora-sessao-quiz"),
-      wizardQuizFeedback: document.getElementById("liora-sessao-quiz-feedback"),
       wizardFlashcards: document.getElementById("liora-sessao-flashcards"),
       wizardVoltar: document.getElementById("liora-btn-voltar"),
       wizardProxima: document.getElementById("liora-btn-proxima"),
@@ -65,7 +66,7 @@
     };
 
     // --------------------------------------------------------
-    // THEME
+    // TEMA (tema claro/escuro)
     // --------------------------------------------------------
     (function themeSetup() {
       if (!els.themeBtn) return;
@@ -101,28 +102,21 @@
     }
 
     // --------------------------------------------------------
-    // CORREÇÃO: mostrar nome do arquivo selecionado no upload
+    // CORREÇÃO: mostrar nome do arquivo selecionado
     // --------------------------------------------------------
     if (els.inpFile) {
       els.inpFile.addEventListener("change", () => {
         const file = els.inpFile.files?.[0];
         if (!file) return;
-
-        atualizarStatus("upload", `📄 Arquivo selecionado: ${file.name}`, 0);
-
-        const label =
-          document.getElementById("upload-file-name") ||
-          document.getElementById("file-name") ||
-          document.getElementById("nome-arquivo");
-
-        if (label) {
-          label.textContent = file.name;
+        if (els.nomeArquivo) {
+          els.nomeArquivo.textContent = file.name;
         }
+        atualizarStatus("upload", `📄 Arquivo selecionado: ${file.name}`, 0);
       });
     }
 
     // --------------------------------------------------------
-    // VIEW MODE
+    // MODOS
     // --------------------------------------------------------
     function setMode(mode) {
       if (els.painelTema)
@@ -154,13 +148,10 @@
       if (!json.output) throw new Error("Resposta inválida da IA");
       return json.output;
     }
-
-    // tornar global para outline-generator poder usar
     window.callLLM = callLLM;
 
     // --------------------------------------------------------
-    // RENDER WIZARD
-    // + inclui agora resumo, plano extra, questões, mapa mental, plano de aula e microlearning
+    // RENDER DO WIZARD
     // --------------------------------------------------------
     function renderWizard() {
       const s = wizard.sessoes[wizard.atual];
@@ -169,140 +160,82 @@
       if (els.wizardContainer) els.wizardContainer.classList.remove("hidden");
 
       if (els.wizardTema) els.wizardTema.textContent = wizard.tema || "";
-
       if (els.wizardTitulo) els.wizardTitulo.textContent = s.titulo || "";
       if (els.wizardObjetivo) els.wizardObjetivo.textContent = s.objetivo || "";
 
+      // Renderiza conteúdo estruturado
       if (els.wizardConteudo) {
         const c = s.conteudo || {};
         let html = "";
 
-        if (c.introducao) {
-          html += `
-            <div class="liora-section">
-              <h5>INTRODUÇÃO</h5>
-              <p>${c.introducao}</p>
-            </div>
-            <hr>
-          `;
-        }
+        const sec = (label, content) =>
+          content
+            ? `<div class="liora-section"><h5>${label}</h5>${content}</div><hr>`
+            : "";
 
-        if (c.conceitos) {
-          html += `
-            <div class="liora-section">
-              <h5>CONCEITOS</h5>
-              <ul>${c.conceitos.map((x) => `<li>${x}</li>`).join("")}</ul>
-            </div>
-            <hr>
-          `;
-        }
+        html += sec(
+          "INTRODUÇÃO",
+          c.introducao ? `<p>${c.introducao}</p>` : ""
+        );
 
-        if (c.exemplos) {
-          html += `
-            <div class="liora-section">
-              <h5>EXEMPLOS</h5>
-              <ul>${c.exemplos.map((x) => `<li>${x}</li>`).join("")}</ul>
-            </div>
-            <hr>
-          `;
-        }
+        html += sec(
+          "CONCEITOS",
+          c.conceitos
+            ? `<ul>${c.conceitos.map((x) => `<li>${x}</li>`).join("")}</ul>`
+            : ""
+        );
 
-        if (c.aplicacoes) {
-          html += `
-            <div class="liora-section">
-              <h5>APLICAÇÕES</h5>
-              <ul>${c.aplicacoes.map((x) => `<li>${x}</li>`).join("")}</ul>
-            </div>
-            <hr>
-          `;
-        }
+        html += sec(
+          "EXEMPLOS",
+          c.exemplos
+            ? `<ul>${c.exemplos.map((x) => `<li>${x}</li>`).join("")}</ul>`
+            : ""
+        );
 
-        if (c.resumoRapido) {
-          html += `
-            <div class="liora-section">
-              <h5>RESUMO RÁPIDO</h5>
-              <ul>${c.resumoRapido.map((x) => `<li>${x}</li>`).join("")}</ul>
-            </div>
-          `;
-        }
+        html += sec(
+          "APLICAÇÕES",
+          c.aplicacoes
+            ? `<ul>${c.aplicacoes.map((x) => `<li>${x}</li>`).join("")}</ul>`
+            : ""
+        );
 
-        // 🔹 NOVO: resumo do tópico
-        if (s.resumoTopico) {
-          html += `
-            <hr>
-            <div class="liora-section">
-              <h5>RESUMO DO TÓPICO</h5>
-              <p>${s.resumoTopico}</p>
-            </div>
-          `;
-        }
+        html += sec(
+          "RESUMO RÁPIDO",
+          c.resumoRapido
+            ? `<ul>${c.resumoRapido.map((x) => `<li>${x}</li>`).join("")}</ul>`
+            : ""
+        );
 
-        // 🔹 NOVO: plano de estudo extra
-        if (s.planoEstudoExtra) {
-          html += `
-            <hr>
-            <div class="liora-section">
-              <h5>PLANO DE ESTUDO (Liora)</h5>
-              <pre>${s.planoEstudoExtra}</pre>
-            </div>
-          `;
-        }
+        // Agora o conteúdo extra gerado pelo pipeline
+        if (s.resumoTopico)
+          html += `<div class="liora-section"><h5>RESUMO DO TÓPICO</h5><p>${s.resumoTopico}</p></div><hr>`;
 
-        // 🔹 NOVO: questões
-        if (s.questoes) {
-          html += `
-            <hr>
-            <div class="liora-section">
-              <h5>QUESTÕES PARA PRÁTICA</h5>
-              <pre>${s.questoes}</pre>
-            </div>
-          `;
-        }
+        if (s.planoEstudoExtra)
+          html += `<div class="liora-section"><h5>PLANO DE ESTUDO</h5><pre>${s.planoEstudoExtra}</pre></div><hr>`;
 
-        // 🔹 NOVO: mapa mental textual
-        if (s.mapaMental) {
-          html += `
-            <hr>
-            <div class="liora-section">
-              <h5>MAPA MENTAL (texto)</h5>
-              <pre>${s.mapaMental}</pre>
-            </div>
-          `;
-        }
+        if (s.questoes)
+          html += `<div class="liora-section"><h5>QUESTÕES</h5><pre>${s.questoes}</pre></div><hr>`;
 
-        // 🔹 NOVO: plano de aula
-        if (s.planoAula) {
-          html += `
-            <hr>
-            <div class="liora-section">
-              <h5>PLANO DE AULA</h5>
-              <pre>${s.planoAula}</pre>
-            </div>
-          `;
-        }
+        if (s.mapaMental)
+          html += `<div class="liora-section"><h5>MAPA MENTAL</h5><pre>${s.mapaMental}</pre></div><hr>`;
 
-        // 🔹 NOVO: microlearning
-        if (s.microlearning) {
-          html += `
-            <hr>
-            <div class="liora-section">
-              <h5>MICROLEARNING</h5>
-              <pre>${s.microlearning}</pre>
-            </div>
-          `;
-        }
+        if (s.planoAula)
+          html += `<div class="liora-section"><h5>PLANO DE AULA</h5><pre>${s.planoAula}</pre></div><hr>`;
+
+        if (s.microlearning)
+          html += `<div class="liora-section"><h5>MICROLEARNING</h5><pre>${s.microlearning}</pre></div>`;
 
         els.wizardConteudo.innerHTML = html;
       }
 
       if (els.wizardAnalogias)
         els.wizardAnalogias.innerHTML = (s.analogias || [])
-          .map((a) => `<p>${a}</p>`)
+          .map((x) => `<p>${x}</p>`)
           .join("");
 
       if (els.wizardAtivacao)
         els.wizardAtivacao.innerHTML = (s.ativacao || [])
-          .map((a) => `<li>${a}</li>`)
+          .map((x) => `<li>${x}</li>`)
           .join("");
 
       if (els.wizardFlashcards)
@@ -332,11 +265,10 @@
       });
 
     // --------------------------------------------------------
-    // FLUXO DE TEMA (SEM ALTERAR)
+    // FLUXO TEMA (original mantido)
     // --------------------------------------------------------
     async function fluxoTema(tema, nivel) {
-      alert("Fluxo por tema mantido. Usando sua versão original.");
-      // Aqui você pode plugar a lógica antiga de tema se quiser
+      alert("Fluxo por tema mantido. Use sua lógica original aqui.");
     }
 
     if (els.btnGerar)
@@ -348,147 +280,126 @@
       });
 
     // --------------------------------------------------------
-    // 🔧 OTIMIZAÇÃO DE SEÇÕES PARA OUTLINE
+    // OTIMIZAÇÃO DAS SEÇÕES
     // --------------------------------------------------------
     function otimizarSecoesParaOutline(secoes) {
       if (!Array.isArray(secoes) || secoes.length === 0) return secoes;
 
-      const MAX_SECOES = 35;
+      const MAX = 35;
+      if (secoes.length <= MAX) return secoes;
 
-      if (secoes.length <= MAX_SECOES) {
-        console.log(
-          "✅ Quantidade de seções razoável, sem otimização:",
-          secoes.length
-        );
-        return secoes;
+      const step = secoes.length / MAX;
+      const out = [];
+
+      for (let i = 0; i < MAX; i++) {
+        out.push(secoes[Math.floor(i * step)]);
       }
-
-      const otimizadas = [];
-      const step = secoes.length / MAX_SECOES;
-
-      for (let i = 0; i < MAX_SECOES; i++) {
-        let idx = Math.floor(i * step);
-        if (idx >= secoes.length) idx = secoes.length - 1;
-        otimizadas.push(secoes[idx]);
-      }
-
-      console.log(
-        "🪓 Reduzindo seções para outline:",
-        secoes.length,
-        "→",
-        otimizadas.length
-      );
-      return otimizadas;
+      return out;
     }
 
     // --------------------------------------------------------
-    // 🔥 NOVO: ENRIQUECER SESSÃO COM RESUMO + ITENS Liora
+    // 🔥 PROMPTS NEUTROS — PIPELINE D
     // --------------------------------------------------------
     async function enriquecerSessao(sessao, indice, total, temaGeral) {
       const baseTexto = `
-Tema geral: ${temaGeral || "não informado"}
+Tema geral (retirado do nome do arquivo): ${temaGeral}
 Sessão ${indice} de ${total}
 Título da sessão: ${sessao.titulo || ""}
-Objetivo: ${sessao.objetivo || ""}
-Conteúdo bruto (pode estar estruturado):
+Objetivo identificado: ${sessao.objetivo || ""}
+Conteúdo detectado:
 ${JSON.stringify(sessao.conteudo || {}, null, 2)}
       `.trim();
 
-      // Resumo do tópico
+      // RESUMO DO TÓPICO (neutro)
       try {
         sessao.resumoTopico = await callLLM(
-          "Você é a Liora, tutora de microlearning para alunos de Computação. Gere um resumo claro e conciso do tópico, em português, em até 10 linhas.",
-          `Gere um resumo do tópico abaixo:\n\n${baseTexto}`
-        );
-      } catch (e) {
-        console.error("Erro gerando resumoTopico:", e);
-      }
+          "Você é um agente pedagógico neutro. Não assuma domínio prévio.",
+          `Crie um resumo claro, coerente e fiel ao conteúdo abaixo.
+Não invente. Não acrescente nada que não esteja implícito.
 
-      // Plano de estudo extra
+${baseTexto}`
+        );
+      } catch {}
+
+      // PLANO DE ESTUDO
       try {
         sessao.planoEstudoExtra = await callLLM(
-          "Você é a Liora, especialista em microlearning no estilo Bárbara Oakley.",
-          `Monte um plano de estudo em formato textual para a sessão abaixo.
-Use sessões curtas, objetivos por sessão, sugestões de prática e revisões.
-Retorne em texto estruturado com bullets e etapas.\n\n${baseTexto}`
-        );
-      } catch (e) {
-        console.error("Erro gerando planoEstudoExtra:", e);
-      }
+          "Você organiza conteúdo em etapas de estudo, sem assumir área.",
+          `Crie um plano de estudo curto baseado apenas no texto abaixo.
+Inclua:
+- Objetivo geral
+- 3 a 5 passos curtos
+- Ação prática simples
+- Fechamento rápido
 
-      // Questões
+${baseTexto}`
+        );
+      } catch {}
+
+      // QUESTÕES
       try {
         sessao.questoes = await callLLM(
-          "Você é uma tutora de lógica e matemática para computação.",
+          "Você gera questões baseadas somente no texto recebido.",
           `Crie:
-- 3 questões fáceis,
-- 3 questões de dificuldade média,
-- 2 questões difíceis,
-- 1 questão no estilo concurso/vestibular
-sobre o conteúdo da sessão abaixo.
-Use numeração clara e, ao final, forneça um gabarito resumido.\n\n${baseTexto}`
-        );
-      } catch (e) {
-        console.error("Erro gerando questoes:", e);
-      }
+- 3 questões fáceis
+- 3 intermediárias
+- 2 profundas
+- 1 reflexiva
 
-      // Mapa mental textual
+Gabarito apenas para perguntas objetivas.
+
+${baseTexto}`
+        );
+      } catch {}
+
+      // MAPA MENTAL
       try {
         sessao.mapaMental = await callLLM(
-          "Você cria mapas mentais textuais, hierárquicos e claros.",
-          `Crie um mapa mental textual para o tópico abaixo.
-Use um formato tipo:
-Tópico central >
-  - Ramo 1 >
-      - Subramo
-  - Ramo 2 >
-...\n\n${baseTexto}`
-        );
-      } catch (e) {
-        console.error("Erro gerando mapaMental:", e);
-      }
+          "Você organiza conteúdo em mapa mental textual neutro.",
+          `Crie um mapa mental textual com hierarquia clara.
 
-      // Plano de aula
+${baseTexto}`
+        );
+      } catch {}
+
+      // PLANO DE AULA
       try {
         sessao.planoAula = await callLLM(
-          "Você é professor universitário de matemática aplicada à computação.",
-          `Crie um plano de aula completo para a sessão abaixo, com:
+          "Você organiza conteúdo em forma de aula, sem domínio.",
+          `Crie um plano de aula com:
 - Objetivos
 - Conteúdos
-- Metodologia (explicação, exemplos guiados)
-- Atividades em sala
-- Tarefa para casa
-- Tempo estimado (aula de 50 minutos)
-Retorne em texto estruturado.\n\n${baseTexto}`
-        );
-      } catch (e) {
-        console.error("Erro gerando planoAula:", e);
-      }
+- Explicação progressiva
+- Pequena atividade
+- Encerramento
 
-      // Microlearning
+${baseTexto}`
+        );
+      } catch {}
+
+      // MICROLEARNING
       try {
         sessao.microlearning = await callLLM(
-          "Você é a Liora, agente de microlearning.",
-          `Crie um módulo de microlearning para o tópico abaixo, com:
+          "Você cria microlearning baseado apenas no conteúdo.",
+          `Crie:
 - Mini explicação
-- Microexemplo prático
-- Mini desafio (pergunta) para o aluno pensar
-- Sugestão de aplicação na vida real
-Retorne em formato compacto e bem organizado.\n\n${baseTexto}`
+- Mini exemplo
+- Mini desafio (pergunta)
+- Aplicação prática genérica
+
+${baseTexto}`
         );
-      } catch (e) {
-        console.error("Erro gerando microlearning:", e);
-      }
+      } catch {}
     }
 
     // --------------------------------------------------------
-    // NOVO FLUXO UPLOAD COMPLETO – OTIMIZADO + PIPELINE D
+    // FLUXO UPLOAD COMPLETO + PIPELINE D
     // --------------------------------------------------------
     async function fluxoUpload(file, nivel) {
       if (!els.btnGerarUpload) return;
 
-      wizard.origem = "upload";
       els.btnGerarUpload.disabled = true;
+      wizard.origem = "upload";
 
       try {
         if (
@@ -496,126 +407,88 @@ Retorne em formato compacto e bem organizado.\n\n${baseTexto}`
           !window.LioraPDF ||
           !window.LioraOutline
         ) {
-          throw new Error(
-            "Módulos de PDF não encontrados (LioraPDFExtractor / LioraPDF / LioraOutline)."
-          );
+          throw new Error("Módulos PDF necessários não encontrados.");
         }
 
         atualizarStatus("upload", "📄 Lendo PDF...", 5);
 
-        // 1) Extrair blocos do PDF
+        // 1 — EXTRAÇÃO
         const blocos = await LioraPDFExtractor.extrairBlocos(file);
-        console.log("📄 Blocos extraídos:", blocos?.length || 0);
+        if (!blocos || blocos.length === 0)
+          throw new Error("Nenhum bloco extraído do PDF.");
 
-        if (!Array.isArray(blocos) || blocos.length === 0) {
-          throw new Error("Nenhum bloco foi extraído do PDF.");
-        }
+        atualizarStatus("upload", "🔎 Construindo seções...", 15);
 
-        // 2) Construir SEÇÕES heurísticas
-        console.log("📦 Enviando blocos para LioraPDF:", blocos.length);
+        // 2 — SEÇÕES
         let secoes = LioraPDF.construirSecoesAPartirDosBlocos(blocos);
-        console.log("🧱 Seções heurísticas:", secoes?.length || 0);
 
-        if (!Array.isArray(secoes) || secoes.length === 0) {
-          throw new Error("Nenhuma seção heurística foi construída.");
-        }
-
-        atualizarStatus(
-          "upload",
-          `🧩 Otimizando seções para outline... (${secoes.length})`,
-          20
-        );
-
-        // 3) OTIMIZAR SEÇÕES (REDUZ QUANTIDADE)
+        // 3 — OTIMIZAÇÃO
         const secoesOtim = otimizarSecoesParaOutline(secoes);
-        atualizarStatus(
-          "upload",
-          `🧩 Gerando outline (${secoesOtim.length} seções)...`,
-          35
-        );
+        atualizarStatus("upload", "🧠 Gerando outline...", 30);
 
-        // 4) OUTLINE POR SEÇÃO
+        // 4 — OUTLINE POR SEÇÃO
         const outlines = await LioraOutline.gerarOutlinesPorSecao(secoesOtim);
-        console.log("🧠 Outlines por seção:", outlines);
 
-        atualizarStatus("upload", "🧠 Unificando outlines...", 55);
+        atualizarStatus("upload", "🔗 Unificando tópicos...", 45);
 
-        // 5) OUTLINE UNIFICADO
+        // 5 — OUTLINE UNIFICADO
         const outlineUnico = await LioraOutline.unificarOutlines(outlines);
-        console.log("🧠 Outline unificado:", outlineUnico);
 
-        atualizarStatus("upload", "📚 Montando plano de estudo...", 70);
+        atualizarStatus("upload", "📚 Criando plano de estudo...", 60);
 
-        // 6) PLANO FINAL
-        const planoFinal = await LioraOutline.gerarPlanoDeEstudo(outlineUnico);
-        console.log("📘 Plano final:", planoFinal);
+        // 6 — PLANO DE ESTUDO
+        const plano = await LioraOutline.gerarPlanoDeEstudo(outlineUnico);
+        if (!plano || !Array.isArray(plano.sessoes))
+          throw new Error("Plano inválido.");
 
-        if (!planoFinal || !Array.isArray(planoFinal.sessoes)) {
-          throw new Error("Plano final inválido ou sem sessões.");
-        }
-
-        // Nome básico do tema a partir do arquivo
-        wizard.tema = file.name?.replace(/\.pdf$/i, "") || "PDF enviado";
+        wizard.tema = file.name.replace(/\.pdf$/i, "") || "PDF enviado";
         wizard.nivel = nivel;
 
-        // 7) PIPELINE D: enriquecer cada sessão com resumo + materiais
-        atualizarStatus(
-          "upload",
-          "🧠 Gerando resumos e materiais para cada sessão...",
-          85
-        );
+        atualizarStatus("upload", "✨ Gerando conteúdos pedagógicos...", 80);
 
-        const totalSessoes = planoFinal.sessoes.length;
-        for (let i = 0; i < totalSessoes; i++) {
-          const s = planoFinal.sessoes[i];
-          try {
-            await enriquecerSessao(s, i + 1, totalSessoes, wizard.tema);
-          } catch (e) {
-            console.error("Erro ao enriquecer sessão", i + 1, e);
-          }
+        // 7 — PIPELINE D
+        const total = plano.sessoes.length;
+        for (let i = 0; i < total; i++) {
+          await enriquecerSessao(plano.sessoes[i], i + 1, total, wizard.tema);
         }
 
-        // 8) POPULAR O WIZARD
-        wizard.plano = planoFinal.sessoes.map((s, i) => ({
+        // 8 — ATUALIZA WIZARD
+        wizard.sessoes = plano.sessoes;
+        wizard.plano = plano.sessoes.map((s, i) => ({
           numero: i + 1,
           nome: s.titulo,
         }));
-
-        wizard.sessoes = planoFinal.sessoes;
         wizard.atual = 0;
 
-        atualizarStatus("upload", "✨ Sessões prontas!", 100);
+        atualizarStatus("upload", "🌟 Sessões prontas!", 100);
 
         renderPlanoResumo(wizard.plano);
         renderWizard();
       } catch (err) {
         console.error("Erro no fluxoUpload:", err);
-        atualizarStatus(
-          "upload",
-          "❌ Erro ao processar o PDF. Veja o console para detalhes."
-        );
-        alert(
-          "Ocorreu um erro ao processar o PDF. Abra o console do navegador (F12) e me envie os logs para eu ajustar."
-        );
-      } finally {
-        els.btnGerarUpload.disabled = false;
+        atualizarStatus("upload", "❌ Erro ao processar PDF.");
+        alert("Ocorreu um erro. Veja o console (F12) e me envie o log.");
       }
+
+      els.btnGerarUpload.disabled = false;
     }
 
     if (els.btnGerarUpload)
       els.btnGerarUpload.addEventListener("click", () => {
-        const file = els.inpFile?.files?.[0];
-        const nivel = els.selNivel?.value;
+        const file = els.inpFile.files?.[0];
+        const nivel = els.selNivel.value;
         if (!file) return alert("Selecione um PDF.");
         fluxoUpload(file, nivel);
       });
 
     // --------------------------------------------------------
-    // PLANO RESUMO
+    // CARDS DE SESSÃO
     // --------------------------------------------------------
     function renderPlanoResumo(plano) {
       if (!els.plano) return;
+
       els.plano.innerHTML = "";
+
       plano.forEach((p, i) => {
         const div = document.createElement("div");
         div.className = "liora-card-topico";
