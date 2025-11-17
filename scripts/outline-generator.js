@@ -1,9 +1,10 @@
 // ==========================
-// 🧠 outline-generator.js — Modelo D (6 a 12 sessões)
+// 🧠 outline-generator.js — Modelo D (6 a 12 sessões) v2
+// Usa LioraSemantic para texto-base e gera sessões completas
 // ==========================
 
 (function () {
-  console.log("🔵 Liora Outline Generator (Modelo D) carregado...");
+  console.log("🔵 Liora Outline Generator (Modelo D v2) carregado...");
 
   const MIN_SESSOES = 6;
   const MAX_SESSOES = 12;
@@ -50,7 +51,7 @@
 
   // --------------------------------------
   // 1) Gerar OUTLINES por seção da apostila
-  //    (cada tópico já carrega um "resumoTexto" do PDF)
+  //    (cada tópico com resumoTexto baseado NA apostila)
 // --------------------------------------
   async function gerarOutlinesPorSecao(secoes) {
     const resultados = [];
@@ -58,15 +59,17 @@
     for (let i = 0; i < secoes.length; i++) {
       const sec = secoes[i];
       const titulo = sec.titulo || `Seção ${i + 1}`;
-      const textoBruto = Array.isArray(sec.conteudo)
-        ? sec.conteudo.join("\n")
-        : String(sec.conteudo || "");
+      const linhas = Array.isArray(sec.conteudo) ? sec.conteudo : [String(sec.conteudo || "")];
 
-      // para não explodir contexto, corta um pouco se for gigante
+      // usa o semantic se existir
+      const textoParaOutlines = window.LioraSemantic
+        ? window.LioraSemantic.construirTextoBase(linhas)
+        : linhas.join("\n");
+
       const textoLimitado =
-        textoBruto.length > 4000
-          ? textoBruto.slice(0, 3500) + "\n\n[trecho truncado]"
-          : textoBruto;
+        textoParaOutlines.length > 2500
+          ? textoParaOutlines.slice(0, 2300) + "\n\n[trecho truncado]"
+          : textoParaOutlines;
 
       const prompt = `
 Você é Liora, especialista em educação.
@@ -81,10 +84,12 @@ Retorne APENAS JSON válido no formato:
     {
       "nome": "nome conciso do tópico",
       "resumoTexto": "explicação objetiva com 2 a 4 frases, baseada no texto",
-      "importancia": 1 a 5
+      "importancia": 1
     }
   ]
 }
+
+NÃO invente conteúdo que não esteja sugerido ou implícito no texto.
 
 TÍTULO DA SEÇÃO:
 ${titulo}
@@ -96,7 +101,7 @@ ${textoLimitado}
       let json;
       try {
         const raw = await chamarIA(
-          "Você é Liora. Responda apenas JSON puro, válido.",
+          "Você é Liora e responde APENAS JSON válido.",
           prompt
         );
         json = safeJsonParse(raw);
@@ -131,8 +136,7 @@ ${textoLimitado}
 
   // --------------------------------------
   // 2) Unificar tópicos em uma lista global
-  //    (mescla duplicados, junta resumos)
-// --------------------------------------
+  // --------------------------------------
   function unificarOutlines(outlinesPorSecao) {
     const mapa = new Map();
 
@@ -163,7 +167,6 @@ ${textoLimitado}
         textoBase: t.resumos.join("\n\n"),
         secoes: Array.from(t.secoes),
       }))
-      // tópicos mais importantes primeiro
       .sort((a, b) => b.importanciaMedia - a.importanciaMedia);
 
     console.log("🧠 Outline unificado:", { outline: topicosGlobais });
@@ -177,7 +180,6 @@ ${textoLimitado}
     const total = topicos.length;
     if (!total) return [];
 
-    // alvo: ~6 tópicos por sessão
     let numSessoes = Math.round(total / 6);
     if (numSessoes < MIN_SESSOES) numSessoes = Math.min(MIN_SESSOES, total);
     if (numSessoes > MAX_SESSOES) numSessoes = MAX_SESSOES;
@@ -218,7 +220,6 @@ ${textoLimitado}
   //    sessões planejadas (Modelo D)
 // --------------------------------------
   async function gerarPlanoDeEstudo(outlineUnificado) {
-    // outlineUnificado aqui é o array de tópicos globais
     const topicos = Array.isArray(outlineUnificado)
       ? outlineUnificado
       : [];
@@ -229,7 +230,6 @@ ${textoLimitado}
     }
 
     const sessoesPlanejadas = agruparTopicosEmSessoes(topicos);
-
     const sessoesFinais = [];
 
     for (let i = 0; i < sessoesPlanejadas.length; i++) {
@@ -238,10 +238,9 @@ ${textoLimitado}
       const tituloSessao = `Sessão ${i + 1} — ${spec.tituloBase}`;
       const listaTopicos = spec.topicos.join("; ");
 
-      // para segurança, limitar textoBase
       const textoBaseLimitado =
-        spec.textoBase && spec.textoBase.length > 5000
-          ? spec.textoBase.slice(0, 4500) + "\n\n[trecho truncado]"
+        spec.textoBase && spec.textoBase.length > 2500
+          ? spec.textoBase.slice(0, 2300) + "\n\n[trecho truncado]"
           : (spec.textoBase || "");
 
       const prompt = `
@@ -292,20 +291,26 @@ RETORNE APENAS JSON VÁLIDO no formato:
    "pergunta reflexiva 2, ligada à prática"
  ],
  "quiz": {
-   "pergunta": "pergunta de múltipla escolha sobre ponto importante do texto",
+   "pergunta": "crie UMA pergunta objetiva de múltipla escolha baseada EXCLUSIVAMENTE no texto acima",
    "alternativas": [
-     "alternativa A",
-     "alternativa B",
-     "alternativa C"
+     "uma alternativa correta, baseada no texto",
+     "uma alternativa plausível, mas incorreta",
+     "outra alternativa plausível, mas incorreta"
    ],
-   "corretaIndex": 1,
-   "explicacao": "explique por que a alternativa correta está certa, usando o texto"
+   "corretaIndex": 0,
+   "explicacao": "explique por que a alternativa correta está certa e por que as demais estão erradas, usando SOMENTE o texto fornecido"
  },
  "flashcards": [
    { "q": "pergunta objetiva sobre conceito importante", "a": "resposta direta" },
    { "q": "outra pergunta de revisão", "a": "resposta direta" }
  ]
 }
+
+IMPORTANTE:
+- O objeto "quiz" é OBRIGATÓRIO.
+- "alternativas" deve ter exatamente 3 itens.
+- "corretaIndex" deve ser 0, 1 ou 2.
+- "explicacao" deve fazer referência ao texto-base.
 `;
 
       let sessao;
@@ -317,7 +322,6 @@ RETORNE APENAS JSON VÁLIDO no formato:
         sessao = safeJsonParse(raw);
       } catch (err) {
         console.error("Erro ao gerar sessão a partir dos tópicos:", spec, err);
-        // fallback bem simples para não quebrar o fluxo
         sessao = {
           titulo: tituloSessao,
           objetivo: `Compreender os tópicos: ${listaTopicos}.`,
@@ -358,5 +362,6 @@ RETORNE APENAS JSON VÁLIDO no formato:
     gerarOutlinesPorSecao,
     unificarOutlines,
     gerarPlanoDeEstudo,
+    gerarPlanoEstudo: gerarPlanoDeEstudo, // alias, se em algum lugar usar o nome antigo
   };
 })();
