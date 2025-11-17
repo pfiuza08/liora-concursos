@@ -1,164 +1,174 @@
 // ==========================================================
-// 🧩 semantic.js v39 — Upload + Geração de plano (tema ou arquivo)
+// 🧠 LIORA — SEMANTIC v70
+// - Engine neutra de processamento textual
+// - Não assume domínio (100% agnóstica)
+// - Focada em gerar resumos, planos, microlearning e questões
+// - Usa callLLM() do core v70
 // ==========================================================
-console.log("🧩 semantic.js (v39) carregado");
 
-// ==========================================================
-// 📄 Leitura de arquivos (PDF ou TXT)
-// ==========================================================
-window.processarArquivoUpload = function (file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
+(function () {
+  console.log("🔵 Liora Semantic v70 carregado...");
 
-    reader.onload = async (e) => {
-      try {
-        if (!file.type.includes("pdf")) {
-          window.__liora_upload_text = e.target.result || "";
-          console.log("📘 Arquivo TXT lido com sucesso.");
-          return resolve();
-        }
-
-        // Para PDF → extrair texto
-        const pdfData = new Uint8Array(e.target.result);
-        const pdf = await pdfjsLib.getDocument({ data: pdfData }).promise;
-        let texto = "";
-
-        for (let i = 1; i <= pdf.numPages; i++) {
-          const page = await pdf.getPage(i);
-          const content = await page.getTextContent();
-          texto += content.items.map((t) => t.str).join(" ") + "\n";
-        }
-
-        window.__liora_upload_text = texto;
-        console.log(`📘 PDF lido com ${pdf.numPages} páginas.`);
-        resolve();
-      } catch (err) {
-        console.error("❌ Erro ao processar arquivo:", err);
-        reject(err);
-      }
-    };
-
-    // 🔧 leitura binária universal
-    reader.readAsArrayBuffer(file);
-  });
-};
-
-// ==========================================================
-// 📚 Criação de plano via Tema (sem upload)
-// ==========================================================
-window.generatePlanFromTemaAI = async function (tema, nivel) {
-  const prompt = `
-Você é Liora, especialista em microlearning.
-Crie um PLANO DE ESTUDO completo e progressivo para o tema **"${tema}"**, no nível **${nivel}**.
-
-Formato obrigatório (JSON puro):
-{
-  "tema": "${tema}",
-  "sessoes": [
-    {"numero":1,"nome":"Introdução ao tema"},
-    {"numero":2,"nome":"Fundamentos e conceitos-chave"},
-    {"numero":3,"nome":"Aplicações práticas"},
-    {"numero":4,"nome":"Revisão e avaliação"}
-  ]
-}
-
-Regras:
-- Gere entre **4 e 10 sessões**, com nomes curtos, claros e sequenciais.
-- Não repita prefixos como “Sessão 1 — ...”.
-- As sessões devem evoluir logicamente (do básico ao avançado).
-- Retorne apenas JSON puro, sem texto adicional.
-`;
-
-  console.log("📗 Solicitando plano por tema à IA...");
-  const res = await fetch("/api/liora", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ system: "Você é Liora.", user: prompt }),
-  });
-
-  const json = await res.json();
-  let out = {};
-  try {
-    out = JSON.parse(json.output);
-    out.sessoes = sanitizeSessions(out.sessoes || []);
-  } catch (err) {
-    console.error("❌ Erro ao interpretar plano (tema):", err);
-    throw new Error("Plano em formato inválido (tema)");
-  }
-  console.log(`✅ Plano (tema) criado com ${out.sessoes.length} sessões.`);
-  return out;
-};
-
-// ==========================================================
-// 📚 Criação de plano via Upload (usando texto do PDF/TXT)
-// ==========================================================
-window.generatePlanFromUploadAI = async function (nivel) {
-  const texto = (window.__liora_upload_text || "").slice(0, 140000);
-
-  if (!texto || texto.length < 500) {
-    throw new Error("Texto insuficiente para gerar plano.");
+  if (!window.callLLM) {
+    console.error("❌ ERRO: callLLM não encontrado. Carregue o core antes.");
+    return;
   }
 
-  const prompt = `
-Você é Liora, especialista em microlearning.
-Analise o conteúdo a seguir e crie um PLANO DE ESTUDO estruturado.
-Nível do aluno: ${nivel}
+  // --------------------------------------------------------
+  // Função auxiliar para montagem de prompts
+  // --------------------------------------------------------
+  function montarTextoBase(titulo, conteudo) {
+    return `
+Título detectado: ${titulo || "(sem título detectado)"}
 
-Conteúdo do material:
----
-${texto}
----
+Conteúdo associado:
+${typeof conteudo === "string" ? conteudo : JSON.stringify(conteudo, null, 2)}
 
-Formato obrigatório (JSON puro):
-{
-  "tema": "Tema detectado no texto",
-  "sessoes": [
-    {"numero":1,"nome":"..."},
-    {"numero":2,"nome":"..."}
-  ]
-}
-
-Regras:
-- Gere entre **4 e 12 sessões**, com títulos curtos e coerentes.
-- Evite repetir nomes ou prefixos “Sessão X —”.
-- Agrupe o conteúdo de forma lógica e progressiva.
-- Retorne apenas JSON puro.
-`;
-
-  console.log("📗 Solicitando plano via upload à IA...");
-  const res = await fetch("/api/liora", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ system: "Você é Liora.", user: prompt }),
-  });
-
-  const json = await res.json();
-  let out = {};
-  try {
-    out = JSON.parse(json.output);
-    out.sessoes = sanitizeSessions(out.sessoes || []);
-  } catch (err) {
-    console.error("❌ Erro ao interpretar plano (upload):", err);
-    throw new Error("Plano em formato inválido (upload)");
+Observações:
+- Não invente conteúdo.
+- Não adicione informações externas.
+- Todo texto gerado deve ser derivado APENAS do conteúdo acima.
+`.trim();
   }
 
-  console.log(`✅ Plano (upload) criado com ${out.sessoes.length} sessões.`);
-  return out;
-};
+  // --------------------------------------------------------
+  // 1. RESUMO DO TÓPICO
+  // --------------------------------------------------------
+  async function gerarResumoTopico(titulo, conteudo) {
+    const base = montarTextoBase(titulo, conteudo);
 
-// ==========================================================
-// 🧹 Sanitização de sessões duplicadas e formatação
-// ==========================================================
-function sanitizeSessions(arr) {
-  return (arr || [])
-    .map((s, i) => {
-      const nome = String(s.nome || s.titulo || `Sessão ${i + 1}`)
-        .replace(/^Sessão\s*\d+\s*[—-]\s*/i, "")
-        .replace(/^Sessão\s*\d+\s*[—-]\s*/i, "")
-        .trim();
-      return { numero: s.numero ?? i + 1, nome };
-    })
-    .filter((s) => s.nome && s.nome.length > 1);
-}
+    return await callLLM(
+      "Você é um agente pedagógico neutro que resume conteúdo fielmente.",
+      `
+Gere um resumo claro, conciso e coerente do conteúdo abaixo.
+Não adicione nada. Não extrapole. Não invente.
 
-console.log("✅ semantic.js pronto (v39)");
+${base}
+`
+    );
+  }
+
+  // --------------------------------------------------------
+  // 2. PLANO DE ESTUDO
+  // --------------------------------------------------------
+  async function gerarPlanoDeEstudo(titulo, conteudo) {
+    const base = montarTextoBase(titulo, conteudo);
+
+    return await callLLM(
+      "Você organiza conteúdo em passos de estudo curtos e práticos.",
+      `
+Gere um plano de estudo baseado SOMENTE no conteúdo abaixo.
+Inclua:
+- Objetivo geral (1 frase)
+- 3 a 5 passos práticos curtos
+- Uma pequena ação aplicada (ex: pensar, revisar, reler, registrar)
+- Um fechamento rápido
+
+${base}
+`
+    );
+  }
+
+  // --------------------------------------------------------
+  // 3. QUESTÕES
+  // --------------------------------------------------------
+  async function gerarQuestoes(titulo, conteudo) {
+    const base = montarTextoBase(titulo, conteudo);
+
+    return await callLLM(
+      "Você cria questões derivadas exclusivamente de um texto fornecido.",
+      `
+Crie questões baseadas apenas no conteúdo abaixo:
+- 3 fáceis
+- 3 intermediárias
+- 2 profundas
+- 1 reflexiva (sem gabarito)
+Inclua gabarito apenas para as perguntas objetivas.
+
+${base}
+`
+    );
+  }
+
+  // --------------------------------------------------------
+  // 4. MAPA MENTAL
+  // --------------------------------------------------------
+  async function gerarMapaMental(titulo, conteudo) {
+    const base = montarTextoBase(titulo, conteudo);
+
+    return await callLLM(
+      "Você converte conteúdo em mapa mental textual neutro.",
+      `
+Crie um mapa mental textual com a seguinte estrutura:
+
+Tema >
+  - Subtema >
+      - Detalhes
+  - Subtema >
+      - Detalhes
+
+Não invente conteúdo. Extraia apenas do texto abaixo.
+
+${base}
+`
+    );
+  }
+
+  // --------------------------------------------------------
+  // 5. PLANO DE AULA
+  // --------------------------------------------------------
+  async function gerarPlanoDeAula(titulo, conteudo) {
+    const base = montarTextoBase(titulo, conteudo);
+
+    return await callLLM(
+      "Você estrutura conteúdo em forma de aula sem assumir área.",
+      `
+Transforme o conteúdo abaixo em um plano de aula contendo:
+- Objetivos
+- Conteúdos organizados
+- Explicação progressiva
+- Atividade simples (derivada do texto)
+- Encerramento
+
+Não invente conteúdo.
+
+${base}
+`
+    );
+  }
+
+  // --------------------------------------------------------
+  // 6. MICROLEARNING
+  // --------------------------------------------------------
+  async function gerarMicrolearning(titulo, conteudo) {
+    const base = montarTextoBase(titulo, conteudo);
+
+    return await callLLM(
+      "Você cria microlearning derivado apenas do conteúdo fornecido.",
+      `
+Crie um microlearning contendo:
+- Mini explicação
+- Mini exemplo simples (derivado do texto)
+- Mini desafio (pergunta para pensar)
+- Aplicação prática genérica
+
+Não invente conteúdo.
+
+${base}
+`
+    );
+  }
+
+  // --------------------------------------------------------
+  // API Pública da Liora Semantic
+  // --------------------------------------------------------
+  window.LioraSemantic = {
+    gerarResumoTopico,
+    gerarPlanoDeEstudo,
+    gerarQuestoes,
+    gerarMapaMental,
+    gerarPlanoDeAula,
+    gerarMicrolearning,
+  };
+
+})();
