@@ -1,13 +1,14 @@
 // ==========================================================
-// 🧠 LIORA — CORE v63-UPLOAD
+// 🧠 LIORA — CORE v64-UPLOAD
 // - Mantém TEMA exatamente como está
-// - Substitui apenas o fluxo UPLOAD para usar outline-generator
-// - Integra pdf-extractor + pdf-structure via window.LioraPDF*
-// - Integra outline-generator via window.LioraOutline
+// - Otimiza fluxo UPLOAD para PDFs grandes
+// - Usa pdf-extractor + pdf-structure via window.LioraPDF*
+// - Usa outline-generator via window.LioraOutline
+// - Reduz fortemente o número de seções enviadas ao outline
 // ==========================================================
 
 (function () {
-  console.log("🔵 Inicializando Liora Core v63-UPLOAD...");
+  console.log("🔵 Inicializando Liora Core v64-UPLOAD...");
 
   document.addEventListener("DOMContentLoaded", () => {
 
@@ -58,7 +59,7 @@
       plano: [],
       sessoes: [],
       atual: 0,
-      origem: "tema"
+      origem: "tema",
     };
 
     // --------------------------------------------------------
@@ -77,10 +78,9 @@
       apply(localStorage.getItem("liora_theme") || "dark");
 
       els.themeBtn.addEventListener("click", () => {
-        const newTheme =
-          document.documentElement.classList.contains("light")
-            ? "dark"
-            : "light";
+        const newTheme = document.documentElement.classList.contains("light")
+          ? "dark"
+          : "light";
         apply(newTheme);
       });
     })();
@@ -95,23 +95,27 @@
       const barra = document.getElementById(
         modo === "upload" ? "barra-upload-fill" : "barra-tema-fill"
       );
-      if (barra && progresso !== null)
-        barra.style.width = `${progresso}%`;
+      if (barra && progresso !== null) barra.style.width = `${progresso}%`;
     }
 
     // --------------------------------------------------------
     // VIEW MODE
     // --------------------------------------------------------
     function setMode(mode) {
-      if (els.painelTema) els.painelTema.classList.toggle("hidden", mode !== "tema");
-      if (els.painelUpload) els.painelUpload.classList.toggle("hidden", mode !== "upload");
-      if (els.modoTema) els.modoTema.classList.toggle("selected", mode === "tema");
-      if (els.modoUpload) els.modoUpload.classList.toggle("selected", mode === "upload");
+      if (els.painelTema)
+        els.painelTema.classList.toggle("hidden", mode !== "tema");
+      if (els.painelUpload)
+        els.painelUpload.classList.toggle("hidden", mode !== "upload");
+      if (els.modoTema)
+        els.modoTema.classList.toggle("selected", mode === "tema");
+      if (els.modoUpload)
+        els.modoUpload.classList.toggle("selected", mode === "upload");
     }
     setMode("tema");
 
     if (els.modoTema) els.modoTema.addEventListener("click", () => setMode("tema"));
-    if (els.modoUpload) els.modoUpload.addEventListener("click", () => setMode("upload"));
+    if (els.modoUpload)
+      els.modoUpload.addEventListener("click", () => setMode("upload"));
 
     // --------------------------------------------------------
     // LLM CALL
@@ -140,38 +144,44 @@
 
       if (els.wizardContainer) els.wizardContainer.classList.remove("hidden");
 
+      if (els.wizardTema) els.wizardTema.textContent = wizard.tema || "";
+
       if (els.wizardTitulo) els.wizardTitulo.textContent = s.titulo || "";
       if (els.wizardObjetivo) els.wizardObjetivo.textContent = s.objetivo || "";
 
       if (els.wizardConteudo) {
         const c = s.conteudo || {};
         els.wizardConteudo.innerHTML = `
-          ${c.introducao ? `<div class="liora-section"><h5>INTRODUÇÃO</h5><p>${c.introducao}</p></div><hr>` : ""}
+          ${
+            c.introducao
+              ? `<div class="liora-section"><h5>INTRODUÇÃO</h5><p>${c.introducao}</p></div><hr>`
+              : ""
+          }
           ${
             c.conceitos
               ? `<div class="liora-section"><h5>CONCEITOS</h5><ul>${c.conceitos
-                  .map(x => `<li>${x}</li>`)
+                  .map((x) => `<li>${x}</li>`)
                   .join("")}</ul></div><hr>`
               : ""
           }
           ${
             c.exemplos
               ? `<div class="liora-section"><h5>EXEMPLOS</h5><ul>${c.exemplos
-                  .map(x => `<li>${x}</li>`)
+                  .map((x) => `<li>${x}</li>`)
                   .join("")}</ul></div><hr>`
               : ""
           }
           ${
             c.aplicacoes
               ? `<div class="liora-section"><h5>APLICAÇÕES</h5><ul>${c.aplicacoes
-                  .map(x => `<li>${x}</li>`)
+                  .map((x) => `<li>${x}</li>`)
                   .join("")}</ul></div><hr>`
               : ""
           }
           ${
             c.resumoRapido
               ? `<div class="liora-section"><h5>RESUMO RÁPIDO</h5><ul>${c.resumoRapido
-                  .map(x => `<li>${x}</li>`)
+                  .map((x) => `<li>${x}</li>`)
                   .join("")}</ul></div>`
               : ""
           }
@@ -180,99 +190,173 @@
 
       if (els.wizardAnalogias)
         els.wizardAnalogias.innerHTML = (s.analogias || [])
-          .map(a => `<p>${a}</p>`)
+          .map((a) => `<p>${a}</p>`)
           .join("");
 
       if (els.wizardAtivacao)
         els.wizardAtivacao.innerHTML = (s.ativacao || [])
-          .map(a => `<li>${a}</li>`)
+          .map((a) => `<li>${a}</li>`)
           .join("");
 
       if (els.wizardFlashcards)
         els.wizardFlashcards.innerHTML = (s.flashcards || [])
-          .map(f => `<li><b>${f.q}</b>: ${f.a}</li>`)
+          .map((f) => `<li><b>${f.q}</b>: ${f.a}</li>`)
           .join("");
 
       if (els.wizardProgressBar)
-        els.wizardProgressBar.style.width =
-          `${((wizard.atual + 1) / wizard.sessoes.length) * 100}%`;
+        els.wizardProgressBar.style.width = `${
+          ((wizard.atual + 1) / wizard.sessoes.length) * 100
+        }%`;
     }
 
     // --------------------------------------------------------
     // NAVEGAÇÃO
     // --------------------------------------------------------
-    if (els.wizardVoltar) els.wizardVoltar.addEventListener("click", () => {
-      if (wizard.atual > 0) wizard.atual--;
-      renderWizard();
-    });
+    if (els.wizardVoltar)
+      els.wizardVoltar.addEventListener("click", () => {
+        if (wizard.atual > 0) wizard.atual--;
+        renderWizard();
+      });
 
-    if (els.wizardProxima) els.wizardProxima.addEventListener("click", () => {
-      if (wizard.atual < wizard.sessoes.length - 1) wizard.atual++;
-      renderWizard();
-    });
+    if (els.wizardProxima)
+      els.wizardProxima.addEventListener("click", () => {
+        if (wizard.atual < wizard.sessoes.length - 1) wizard.atual++;
+        renderWizard();
+      });
 
     // --------------------------------------------------------
     // FLUXO DE TEMA (SEM ALTERAR)
     // --------------------------------------------------------
-    // *** Aqui mantive seu fluxo original. ***
-    // *** Não alterei nada do modo TEMA. ***
-
     async function fluxoTema(tema, nivel) {
       alert("Fluxo por tema mantido. Usando sua versão original.");
-      // (Não removi nada, apenas mantive seu comportamento antigo)
+      // Aqui você pode plugar a lógica antiga de tema se quiser
     }
 
     if (els.btnGerar)
       els.btnGerar.addEventListener("click", () => {
-        const tema = els.inpTema.value.trim();
-        const nivel = els.selNivel.value;
+        const tema = (els.inpTema?.value || "").trim();
+        const nivel = els.selNivel?.value;
         if (!tema) return alert("Digite um tema.");
         fluxoTema(tema, nivel);
       });
 
     // --------------------------------------------------------
-    // NOVO FLUXO UPLOAD COMPLETO – USANDO OUTLINE
+    // 🔧 OTIMIZAÇÃO DE SEÇÕES PARA OUTLINE
+    // - Mantém o formato original dos objetos de seção
+    // - Reduz quantidade para evitar timeout em PDFs grandes
+    // --------------------------------------------------------
+    function otimizarSecoesParaOutline(secoes) {
+      if (!Array.isArray(secoes) || secoes.length === 0) return secoes;
+
+      const MAX_SECOES = 35;
+
+      if (secoes.length <= MAX_SECOES) {
+        console.log(
+          "✅ Quantidade de seções razoável, sem otimização:",
+          secoes.length
+        );
+        return secoes;
+      }
+
+      const otimizadas = [];
+      const step = secoes.length / MAX_SECOES;
+
+      for (let i = 0; i < MAX_SECOES; i++) {
+        let idx = Math.floor(i * step);
+        if (idx >= secoes.length) idx = secoes.length - 1;
+        otimizadas.push(secoes[idx]);
+      }
+
+      console.log(
+        "🪓 Reduzindo seções para outline:",
+        secoes.length,
+        "→",
+        otimizadas.length
+      );
+      return otimizadas;
+    }
+
+    // --------------------------------------------------------
+    // NOVO FLUXO UPLOAD COMPLETO – OTIMIZADO
     // --------------------------------------------------------
     async function fluxoUpload(file, nivel) {
       if (!els.btnGerarUpload) return;
-      els.btnGerarUpload.disabled = true;
 
       wizard.origem = "upload";
-      atualizarStatus("upload", "📄 Lendo PDF...", 5);
+      els.btnGerarUpload.disabled = true;
 
       try {
+        if (
+          !window.LioraPDFExtractor ||
+          !window.LioraPDF ||
+          !window.LioraOutline
+        ) {
+          throw new Error(
+            "Módulos de PDF não encontrados (LioraPDFExtractor / LioraPDF / LioraOutline)."
+          );
+        }
+
+        atualizarStatus("upload", "📄 Lendo PDF...", 5);
+
         // 1) Extrair blocos do PDF
         const blocos = await LioraPDFExtractor.extrairBlocos(file);
-        console.log("📄 Blocos extraídos:", blocos);
+        console.log("📄 Blocos extraídos:", blocos?.length || 0);
+
+        if (!Array.isArray(blocos) || blocos.length === 0) {
+          throw new Error("Nenhum bloco foi extraído do PDF.");
+        }
 
         // 2) Construir SEÇÕES heurísticas
-        const secoes = LioraPDF.construirSecoesAPartirDosBlocos(blocos);
-        console.log("🧱 Seções heurísticas:", secoes);
+        console.log("📦 Enviando blocos para LioraPDF:", blocos.length);
+        let secoes = LioraPDF.construirSecoesAPartirDosBlocos(blocos);
+        console.log("🧱 Seções heurísticas:", secoes?.length || 0);
 
-        atualizarStatus("upload", "🧩 Gerando outline...", 30);
+        if (!Array.isArray(secoes) || secoes.length === 0) {
+          throw new Error("Nenhuma seção heurística foi construída.");
+        }
 
-        // 3) OUTLINE POR SEÇÃO
-        const outlines = await LioraOutline.gerarOutlinesPorSecao(secoes);
+        atualizarStatus(
+          "upload",
+          `🧩 Otimizando seções para outline... (${secoes.length})`,
+          20
+        );
+
+        // 3) OTIMIZAR SEÇÕES (REDUZ QUANTIDADE)
+        const secoesOtim = otimizarSecoesParaOutline(secoes);
+        atualizarStatus(
+          "upload",
+          `🧩 Gerando outline (${secoesOtim.length} seções)...`,
+          35
+        );
+
+        // 4) OUTLINE POR SEÇÃO (AGORA com menos seções)
+        const outlines = await LioraOutline.gerarOutlinesPorSecao(secoesOtim);
         console.log("🧠 Outlines por seção:", outlines);
 
-        // 4) OUTLINE UNIFICADO
+        atualizarStatus("upload", "🧠 Unificando outlines...", 55);
+
+        // 5) OUTLINE UNIFICADO
         const outlineUnico = await LioraOutline.unificarOutlines(outlines);
         console.log("🧠 Outline unificado:", outlineUnico);
 
-        atualizarStatus("upload", "📚 Montando plano...", 60);
+        atualizarStatus("upload", "📚 Montando plano de estudo...", 75);
 
-        // 5) PLANO FINAL
+        // 6) PLANO FINAL
         const planoFinal = await LioraOutline.gerarPlanoDeEstudo(outlineUnico);
         console.log("📘 Plano final:", planoFinal);
 
-        // 6) POPULAR O WIZARD
+        if (!planoFinal || !Array.isArray(planoFinal.sessoes)) {
+          throw new Error("Plano final inválido ou sem sessões.");
+        }
+
+        // 7) POPULAR O WIZARD
         wizard.plano = planoFinal.sessoes.map((s, i) => ({
           numero: i + 1,
           nome: s.titulo,
         }));
 
         wizard.sessoes = planoFinal.sessoes;
-        wizard.tema = file.name.replace(/\.pdf$/i, "");
+        wizard.tema = file.name?.replace(/\.pdf$/i, "") || "PDF enviado";
         wizard.nivel = nivel;
         wizard.atual = 0;
 
@@ -280,19 +364,24 @@
 
         renderPlanoResumo(wizard.plano);
         renderWizard();
-
       } catch (err) {
         console.error("Erro no fluxoUpload:", err);
-        atualizarStatus("upload", "❌ Erro no upload.");
+        atualizarStatus(
+          "upload",
+          "❌ Erro ao processar o PDF. Veja o console para detalhes."
+        );
+        alert(
+          "Ocorreu um erro ao processar o PDF. Abra o console do navegador (F12) e me envie os logs para eu ajustar."
+        );
+      } finally {
+        els.btnGerarUpload.disabled = false;
       }
-
-      els.btnGerarUpload.disabled = false;
     }
 
     if (els.btnGerarUpload)
       els.btnGerarUpload.addEventListener("click", () => {
-        const file = els.inpFile.files?.[0];
-        const nivel = els.selNivel.value;
+        const file = els.inpFile?.files?.[0];
+        const nivel = els.selNivel?.value;
         if (!file) return alert("Selecione um PDF.");
         fluxoUpload(file, nivel);
       });
@@ -315,6 +404,6 @@
       });
     }
 
-    console.log("🟢 Liora Core v63-UPLOAD carregado com sucesso");
+    console.log("🟢 Liora Core v64-UPLOAD carregado com sucesso");
   });
 })();
