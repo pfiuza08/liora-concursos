@@ -1,14 +1,19 @@
 // ==========================================================
-// 🧠 LIRA — CORE v70-UPLOAD (base v64 corrigida e expandida)
-// - Fluxo TEMA preservado
-// - Fluxo UPLOAD com Pipeline D completo
-// - Prompts totalmente neutros (agnósticos ao domínio)
-// - Sessões enriquecidas unicamente pelo PDF
-// - Correção do nome do arquivo no upload
+// 🧠 LIORA — CORE v71-UPLOAD
+// - Fluxo TEMA ainda preservado (stub)
+// - Fluxo UPLOAD integrado com:
+//    • pdf-extractor v??
+//    • pdf-structure v71
+//    • outline-generator v70
+//    • semantic v70.1 (LioraSemantic)
+// - Prompts neutros (dominío agnóstico)
+// - Sessões enriquecidas com base no PDF
+// - Nome do arquivo exibido corretamente
+// - Plano base aparece antes do enriquecimento
 // ==========================================================
 
 (function () {
-  console.log("🔵 Inicializando Liora Core v70-UPLOAD...");
+  console.log("🔵 Inicializando Liora Core v71-UPLOAD...");
 
   document.addEventListener("DOMContentLoaded", () => {
 
@@ -30,10 +35,11 @@
       btnGerarUpload: document.getElementById("btn-gerar-upload"),
       statusUpload: document.getElementById("status-upload"),
 
-      // Exibição do nome do arquivo corrigida
-      nomeArquivo: document.getElementById("file-name") 
-                || document.getElementById("upload-file-name")
-                || document.getElementById("nome-arquivo"),
+      // Exibição do nome do arquivo
+      nomeArquivo:
+        document.getElementById("file-name") ||
+        document.getElementById("upload-file-name") ||
+        document.getElementById("nome-arquivo"),
 
       plano: document.getElementById("plano"),
       ctx: document.getElementById("ctx"),
@@ -66,7 +72,7 @@
     };
 
     // --------------------------------------------------------
-    // TEMA (tema claro/escuro)
+    // THEME (claro/escuro)
     // --------------------------------------------------------
     (function themeSetup() {
       if (!els.themeBtn) return;
@@ -89,7 +95,7 @@
     })();
 
     // --------------------------------------------------------
-    // STATUS
+    // STATUS (texto + barra)
     // --------------------------------------------------------
     function atualizarStatus(modo, texto, progresso = null) {
       const target = modo === "upload" ? els.statusUpload : els.status;
@@ -102,7 +108,7 @@
     }
 
     // --------------------------------------------------------
-    // CORREÇÃO: mostrar nome do arquivo selecionado
+    // Nome do arquivo ao selecionar
     // --------------------------------------------------------
     if (els.inpFile) {
       els.inpFile.addEventListener("change", () => {
@@ -116,7 +122,7 @@
     }
 
     // --------------------------------------------------------
-    // MODOS
+    // MODOS (tema / upload)
     // --------------------------------------------------------
     function setMode(mode) {
       if (els.painelTema)
@@ -135,7 +141,7 @@
       els.modoUpload.addEventListener("click", () => setMode("upload"));
 
     // --------------------------------------------------------
-    // LLM CALL
+    // LLM CALL (backend /api/liora)
     // --------------------------------------------------------
     async function callLLM(system, user) {
       const res = await fetch("/api/liora", {
@@ -151,7 +157,7 @@
     window.callLLM = callLLM;
 
     // --------------------------------------------------------
-    // RENDER DO WIZARD
+    // RENDER DO WIZARD (mostra sessão atual)
     // --------------------------------------------------------
     function renderWizard() {
       const s = wizard.sessoes[wizard.atual];
@@ -163,7 +169,6 @@
       if (els.wizardTitulo) els.wizardTitulo.textContent = s.titulo || "";
       if (els.wizardObjetivo) els.wizardObjetivo.textContent = s.objetivo || "";
 
-      // Renderiza conteúdo estruturado
       if (els.wizardConteudo) {
         const c = s.conteudo || {};
         let html = "";
@@ -206,7 +211,7 @@
             : ""
         );
 
-        // Agora o conteúdo extra gerado pelo pipeline
+        // Conteúdos extra do pipeline D (se já existirem)
         if (s.resumoTopico)
           html += `<div class="liora-section"><h5>RESUMO DO TÓPICO</h5><p>${s.resumoTopico}</p></div><hr>`;
 
@@ -243,14 +248,14 @@
           .map((f) => `<li><b>${f.q}</b>: ${f.a}</li>`)
           .join("");
 
-      if (els.wizardProgressBar)
+      if (els.wizardProgressBar && wizard.sessoes.length > 0)
         els.wizardProgressBar.style.width = `${
           ((wizard.atual + 1) / wizard.sessoes.length) * 100
         }%`;
     }
 
     // --------------------------------------------------------
-    // NAVEGAÇÃO
+    // NAVEGAÇÃO DO WIZARD
     // --------------------------------------------------------
     if (els.wizardVoltar)
       els.wizardVoltar.addEventListener("click", () => {
@@ -265,10 +270,10 @@
       });
 
     // --------------------------------------------------------
-    // FLUXO TEMA (original mantido)
+    // FLUXO TEMA (stub, deixamos quieto por enquanto)
     // --------------------------------------------------------
     async function fluxoTema(tema, nivel) {
-      alert("Fluxo por tema mantido. Use sua lógica original aqui.");
+      alert("Fluxo por tema ainda não implementado. Estamos focando no upload.");
     }
 
     if (els.btnGerar)
@@ -280,17 +285,14 @@
       });
 
     // --------------------------------------------------------
-    // OTIMIZAÇÃO DAS SEÇÕES
+    // OTIMIZAÇÃO DAS SEÇÕES (hj, seções v71 já vêm reduzidas)
     // --------------------------------------------------------
     function otimizarSecoesParaOutline(secoes) {
       if (!Array.isArray(secoes) || secoes.length === 0) return secoes;
-
       const MAX = 35;
       if (secoes.length <= MAX) return secoes;
-
       const step = secoes.length / MAX;
       const out = [];
-
       for (let i = 0; i < MAX; i++) {
         out.push(secoes[Math.floor(i * step)]);
       }
@@ -298,98 +300,121 @@
     }
 
     // --------------------------------------------------------
-    // 🔥 PROMPTS NEUTROS — PIPELINE D
+    // PIPELINE D — usando LioraSemantic quando disponível
     // --------------------------------------------------------
     async function enriquecerSessao(sessao, indice, total, temaGeral) {
-      const baseTexto = `
-Tema geral (retirado do nome do arquivo): ${temaGeral}
-Sessão ${indice} de ${total}
-Título da sessão: ${sessao.titulo || ""}
-Objetivo identificado: ${sessao.objetivo || ""}
-Conteúdo detectado:
-${JSON.stringify(sessao.conteudo || {}, null, 2)}
-      `.trim();
+      const conteudoBase =
+        (sessao.conteudo && sessao.conteudo.introducao) ||
+        sessao.conteudo ||
+        sessao.texto ||
+        "";
 
-      // RESUMO DO TÓPICO (neutro)
+      const titulo = sessao.titulo || `Sessão ${indice}`;
+
+      // Se LioraSemantic existir, usamos ela; senão, fallback para callLLM direto
+      const Semantic = window.LioraSemantic || null;
+
+      // RESUMO DO TÓPICO
       try {
-        sessao.resumoTopico = await callLLM(
-          "Você é um agente pedagógico neutro. Não assuma domínio prévio.",
-          `Crie um resumo claro, coerente e fiel ao conteúdo abaixo.
-Não invente. Não acrescente nada que não esteja implícito.
-
-${baseTexto}`
-        );
-      } catch {}
+        if (Semantic && Semantic.gerarResumoTopico) {
+          sessao.resumoTopico = await Semantic.gerarResumoTopico(
+            titulo,
+            conteudoBase
+          );
+        } else {
+          sessao.resumoTopico = await callLLM(
+            "Você é um agente pedagógico neutro. Não assuma domínio prévio.",
+            `Resuma de forma clara e fiel o texto abaixo:\n\n${conteudoBase}`
+          );
+        }
+      } catch (e) {
+        console.error("Erro gerando resumoTopico:", e);
+      }
 
       // PLANO DE ESTUDO
       try {
-        sessao.planoEstudoExtra = await callLLM(
-          "Você organiza conteúdo em etapas de estudo, sem assumir área.",
-          `Crie um plano de estudo curto baseado apenas no texto abaixo.
-Inclua:
-- Objetivo geral
-- 3 a 5 passos curtos
-- Ação prática simples
-- Fechamento rápido
-
-${baseTexto}`
-        );
-      } catch {}
+        if (Semantic && Semantic.gerarPlanoDeEstudo) {
+          sessao.planoEstudoExtra = await Semantic.gerarPlanoDeEstudo(
+            titulo,
+            conteudoBase
+          );
+        } else {
+          sessao.planoEstudoExtra = await callLLM(
+            "Você organiza conteúdo em passos curtos.",
+            `Crie um plano de estudo curto para o texto abaixo:\n\n${conteudoBase}`
+          );
+        }
+      } catch (e) {
+        console.error("Erro gerando planoEstudoExtra:", e);
+      }
 
       // QUESTÕES
       try {
-        sessao.questoes = await callLLM(
-          "Você gera questões baseadas somente no texto recebido.",
-          `Crie:
-- 3 questões fáceis
-- 3 intermediárias
-- 2 profundas
-- 1 reflexiva
-
-Gabarito apenas para perguntas objetivas.
-
-${baseTexto}`
-        );
-      } catch {}
+        if (Semantic && Semantic.gerarQuestoes) {
+          sessao.questoes = await Semantic.gerarQuestoes(
+            titulo,
+            conteudoBase
+          );
+        } else {
+          sessao.questoes = await callLLM(
+            "Você cria questões somente com base no texto dado.",
+            `Crie questões sobre o texto abaixo:\n\n${conteudoBase}`
+          );
+        }
+      } catch (e) {
+        console.error("Erro gerando questoes:", e);
+      }
 
       // MAPA MENTAL
       try {
-        sessao.mapaMental = await callLLM(
-          "Você organiza conteúdo em mapa mental textual neutro.",
-          `Crie um mapa mental textual com hierarquia clara.
-
-${baseTexto}`
-        );
-      } catch {}
+        if (Semantic && Semantic.gerarMapaMental) {
+          sessao.mapaMental = await Semantic.gerarMapaMental(
+            titulo,
+            conteudoBase
+          );
+        } else {
+          sessao.mapaMental = await callLLM(
+            "Você organiza conteúdo em mapa mental textual.",
+            `Crie um mapa mental textual para o texto abaixo:\n\n${conteudoBase}`
+          );
+        }
+      } catch (e) {
+        console.error("Erro gerando mapaMental:", e);
+      }
 
       // PLANO DE AULA
       try {
-        sessao.planoAula = await callLLM(
-          "Você organiza conteúdo em forma de aula, sem domínio.",
-          `Crie um plano de aula com:
-- Objetivos
-- Conteúdos
-- Explicação progressiva
-- Pequena atividade
-- Encerramento
-
-${baseTexto}`
-        );
-      } catch {}
+        if (Semantic && Semantic.gerarPlanoDeAula) {
+          sessao.planoAula = await Semantic.gerarPlanoDeAula(
+            titulo,
+            conteudoBase
+          );
+        } else {
+          sessao.planoAula = await callLLM(
+            "Você cria planos de aula neutros.",
+            `Transforme o conteúdo abaixo em um plano de aula:\n\n${conteudoBase}`
+          );
+        }
+      } catch (e) {
+        console.error("Erro gerando planoAula:", e);
+      }
 
       // MICROLEARNING
       try {
-        sessao.microlearning = await callLLM(
-          "Você cria microlearning baseado apenas no conteúdo.",
-          `Crie:
-- Mini explicação
-- Mini exemplo
-- Mini desafio (pergunta)
-- Aplicação prática genérica
-
-${baseTexto}`
-        );
-      } catch {}
+        if (Semantic && Semantic.gerarMicrolearning) {
+          sessao.microlearning = await Semantic.gerarMicrolearning(
+            titulo,
+            conteudoBase
+          );
+        } else {
+          sessao.microlearning = await callLLM(
+            "Você cria microlearning baseado apenas no texto.",
+            `Crie um microlearning com mini explicação, exemplo e desafio para o texto abaixo:\n\n${conteudoBase}`
+          );
+        }
+      } catch (e) {
+        console.error("Erro gerando microlearning:", e);
+      }
     }
 
     // --------------------------------------------------------
@@ -412,17 +437,19 @@ ${baseTexto}`
 
         atualizarStatus("upload", "📄 Lendo PDF...", 5);
 
-        // 1 — EXTRAÇÃO
+        // 1 — EXTRAÇÃO DE BLOCOS
         const blocos = await LioraPDFExtractor.extrairBlocos(file);
+        console.log("📄 Blocos extraídos:", blocos?.length || 0);
         if (!blocos || blocos.length === 0)
           throw new Error("Nenhum bloco extraído do PDF.");
 
-        atualizarStatus("upload", "🔎 Construindo seções...", 15);
+        atualizarStatus("upload", "🔎 Construindo seções reais...", 15);
 
-        // 2 — SEÇÕES
+        // 2 — SEÇÕES (v71 já retorna 5–15 tópicos reais)
         let secoes = LioraPDF.construirSecoesAPartirDosBlocos(blocos);
+        console.log("📚 Seções reais (v71):", secoes?.length || 0);
 
-        // 3 — OTIMIZAÇÃO
+        // 3 — OTIMIZAÇÃO (aqui provavelmente não faz nada, mas mantemos)
         const secoesOtim = otimizarSecoesParaOutline(secoes);
         atualizarStatus("upload", "🧠 Gerando outline...", 30);
 
@@ -434,40 +461,63 @@ ${baseTexto}`
         // 5 — OUTLINE UNIFICADO
         const outlineUnico = await LioraOutline.unificarOutlines(outlines);
 
-        atualizarStatus("upload", "📚 Criando plano de estudo...", 60);
+        atualizarStatus("upload", "📚 Criando plano de estudo base...", 60);
 
-        // 6 — PLANO DE ESTUDO
+        // 6 — PLANO DE ESTUDO BASE
         const plano = await LioraOutline.gerarPlanoDeEstudo(outlineUnico);
         if (!plano || !Array.isArray(plano.sessoes))
-          throw new Error("Plano inválido.");
+          throw new Error("Plano de estudo inválido (sem sessões).");
+
+        // Normalizar sessões (garantir conteudo.introducao)
+        const sessoesNorm = plano.sessoes.map((s, i) => ({
+          titulo: s.titulo || s.nome || `Sessão ${i + 1}`,
+          objetivo:
+            s.objetivo ||
+            `Compreender o tópico: ${s.titulo || s.nome || `Sessão ${i + 1}`}`,
+          conteudo: s.conteudo || { introducao: s.texto || "" },
+        }));
 
         wizard.tema = file.name.replace(/\.pdf$/i, "") || "PDF enviado";
         wizard.nivel = nivel;
-
-        atualizarStatus("upload", "✨ Gerando conteúdos pedagógicos...", 80);
-
-        // 7 — PIPELINE D
-        const total = plano.sessoes.length;
-        for (let i = 0; i < total; i++) {
-          await enriquecerSessao(plano.sessoes[i], i + 1, total, wizard.tema);
-        }
-
-        // 8 — ATUALIZA WIZARD
-        wizard.sessoes = plano.sessoes;
-        wizard.plano = plano.sessoes.map((s, i) => ({
+        wizard.sessoes = sessoesNorm;
+        wizard.plano = sessoesNorm.map((s, i) => ({
           numero: i + 1,
           nome: s.titulo,
         }));
         wizard.atual = 0;
 
-        atualizarStatus("upload", "🌟 Sessões prontas!", 100);
-
+        // 👉 Já mostra o plano e o wizard ANTES do enriquecimento
+        atualizarStatus(
+          "upload",
+          "✨ Plano base pronto! Gerando materiais adicionais...",
+          70
+        );
         renderPlanoResumo(wizard.plano);
+        renderWizard();
+
+        // 7 — PIPELINE D (enriquecimento por sessão)
+        const total = wizard.sessoes.length;
+        for (let i = 0; i < total; i++) {
+          atualizarStatus(
+            "upload",
+            `🧠 Gerando materiais da sessão ${i + 1} de ${total}...`,
+            70 + Math.round(((i + 1) / total) * 30)
+          );
+          await enriquecerSessao(
+            wizard.sessoes[i],
+            i + 1,
+            total,
+            wizard.tema
+          );
+        }
+
+        atualizarStatus("upload", "🌟 Sessões e materiais prontos!", 100);
+        // Re-render para mostrar conteúdo enriquecido da sessão atual
         renderWizard();
       } catch (err) {
         console.error("Erro no fluxoUpload:", err);
         atualizarStatus("upload", "❌ Erro ao processar PDF.");
-        alert("Ocorreu um erro. Veja o console (F12) e me envie o log.");
+        alert("Ocorreu um erro no processamento do PDF. Veja o console (F12).");
       }
 
       els.btnGerarUpload.disabled = false;
@@ -476,13 +526,13 @@ ${baseTexto}`
     if (els.btnGerarUpload)
       els.btnGerarUpload.addEventListener("click", () => {
         const file = els.inpFile.files?.[0];
-        const nivel = els.selNivel.value;
+        const nivel = els.selNivel?.value;
         if (!file) return alert("Selecione um PDF.");
         fluxoUpload(file, nivel);
       });
 
     // --------------------------------------------------------
-    // CARDS DE SESSÃO
+    // CARDS DE SESSÃO (lista de tópicos / sessões à esquerda)
     // --------------------------------------------------------
     function renderPlanoResumo(plano) {
       if (!els.plano) return;
@@ -501,6 +551,6 @@ ${baseTexto}`
       });
     }
 
-    console.log("🟢 Liora Core v70-UPLOAD carregado com sucesso");
+    console.log("🟢 Liora Core v71-UPLOAD carregado com sucesso");
   });
 })();
