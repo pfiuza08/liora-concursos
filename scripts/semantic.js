@@ -1,29 +1,10 @@
-/// =============================================
-// 🧩 semantic.js — Liora Semantic v2
+// =============================================
+// 🧩 semantic.js — Liora Semantic v40
 // Compatível com Modelo D (outline + sessões IA)
 // =============================================
 
 (function () {
-  console.log("🧩 semantic.js (v2) carregado...");
-
-  // ----------------------------------------------------
-  // OBJETIVO DESTE ARQUIVO
-  // ----------------------------------------------------
-  // Este módulo NÃO gera sessões.
-  // Ele fornece:
-  //  ✓ Classificação de qualidade dos blocos
-  //  ✓ Detecção de ruído
-  //  ✓ Limpeza semântica do texto
-  //  ✓ Priorização de trechos
-  //  ✓ Anti-duplicação de conteúdo
-  //  ✓ Ferramentas auxiliares para o outline-generator.js
-  //
-  // Tudo isso melhora:
-  //  - os tópicos detectados
-  //  - os agrupamentos
-  //  - a coerência do texto-base por sessão
-  //  - a qualidade do conteúdo final
-  // ----------------------------------------------------
+  console.log("🧩 semantic.js (v40) carregado");
 
   const Semantic = {};
 
@@ -56,7 +37,7 @@
     if (/^[0-9]+$/.test(t)) return true;
 
     // rodapé típico
-    if (/página \d+/i.test(t)) return true;
+    if (/p[aá]gina\s+\d+/i.test(t)) return true;
 
     // URLs, e-mails
     if (/https?:\/\//i.test(t) || /@/i.test(t)) return true;
@@ -69,12 +50,7 @@
 
   // ----------------------------------------------------
   // 3) PONTUAR BLOCO
-  // ----------------------------------------------------
-  // Quanto mais alto, mais útil para IA.
-  // Baseado em:
-  //  - tamanho
-  //  - densidade de informação
-  //  - complexidade
+  //    Quanto mais alto, mais útil para IA.
   // ----------------------------------------------------
   Semantic.pontuarBloco = function (texto) {
     if (!texto) return 0;
@@ -115,8 +91,6 @@
   // ----------------------------------------------------
   // 4) FUNDIR TRECHOS REDUNDANTES
   // ----------------------------------------------------
-  // Evita que a IA receba conteúdo duplicado.
-  // ----------------------------------------------------
   Semantic.fundirRedundancias = function (lista) {
     if (!Array.isArray(lista)) return [];
 
@@ -124,7 +98,7 @@
 
     lista.forEach((t) => {
       if (!t) return;
-      const chave = t.toLowerCase().slice(0, 60); // início do texto
+      const chave = t.toLowerCase().slice(0, 80); // início do texto
       if (!unicos.has(chave)) unicos.set(chave, t);
     });
 
@@ -134,9 +108,7 @@
   // ----------------------------------------------------
   // 5) SELECIONAR TRECHOS MAIS FORTES
   // ----------------------------------------------------
-  // Escolhe os trechos que melhor representam uma seção.
-  // ----------------------------------------------------
-  Semantic.selecionarTrechosFortes = function (linhas, limite = 12) {
+  Semantic.selecionarTrechosFortes = function (linhas, limite = 18) {
     const avaliados = linhas
       .map((l) => ({ texto: l, score: Semantic.pontuarBloco(l) }))
       .filter((x) => x.score > 0)
@@ -149,8 +121,6 @@
 
   // ----------------------------------------------------
   // 6) CONSTRUIR TEXTO BASE (para IA)
-  // ----------------------------------------------------
-  // Junta os trechos fortes + remove duplicações.
   // ----------------------------------------------------
   Semantic.construirTextoBase = function (linhas) {
     if (!Array.isArray(linhas)) return "";
@@ -165,10 +135,7 @@
     return unicos.join("\n\n");
   };
 
-  // ----------------------------------------------------
-  // EXPOÇÃO GLOBAL
-  // ----------------------------------------------------
   window.LioraSemantic = Semantic;
 
-  console.log("✔ semantic.js v2 pronto e integrado!");
+  console.log("✅ semantic.js pronto (v40)");
 })();
