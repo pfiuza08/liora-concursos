@@ -1,14 +1,16 @@
 // ==========================================================
-// 🧠 LIORA — CORE v64-UPLOAD
+// 🧠 LIORA — CORE v70-UPLOAD (base v64)
 // - Mantém TEMA exatamente como está
 // - Otimiza fluxo UPLOAD para PDFs grandes
 // - Usa pdf-extractor + pdf-structure via window.LioraPDF*
 // - Usa outline-generator via window.LioraOutline
 // - Reduz fortemente o número de seções enviadas ao outline
+// - NOVO: Pipeline D (resumo + materiais por sessão)
+// - NOVO: Corrige exibição do nome do arquivo no upload
 // ==========================================================
 
 (function () {
-  console.log("🔵 Inicializando Liora Core v64-UPLOAD...");
+  console.log("🔵 Inicializando Liora Core v70-UPLOAD...");
 
   document.addEventListener("DOMContentLoaded", () => {
 
@@ -99,6 +101,27 @@
     }
 
     // --------------------------------------------------------
+    // CORREÇÃO: mostrar nome do arquivo selecionado no upload
+    // --------------------------------------------------------
+    if (els.inpFile) {
+      els.inpFile.addEventListener("change", () => {
+        const file = els.inpFile.files?.[0];
+        if (!file) return;
+
+        atualizarStatus("upload", `📄 Arquivo selecionado: ${file.name}`, 0);
+
+        const label =
+          document.getElementById("upload-file-name") ||
+          document.getElementById("file-name") ||
+          document.getElementById("nome-arquivo");
+
+        if (label) {
+          label.textContent = file.name;
+        }
+      });
+    }
+
+    // --------------------------------------------------------
     // VIEW MODE
     // --------------------------------------------------------
     function setMode(mode) {
@@ -137,6 +160,7 @@
 
     // --------------------------------------------------------
     // RENDER WIZARD
+    // + inclui agora resumo, plano extra, questões, mapa mental, plano de aula e microlearning
     // --------------------------------------------------------
     function renderWizard() {
       const s = wizard.sessoes[wizard.atual];
@@ -151,41 +175,124 @@
 
       if (els.wizardConteudo) {
         const c = s.conteudo || {};
-        els.wizardConteudo.innerHTML = `
-          ${
-            c.introducao
-              ? `<div class="liora-section"><h5>INTRODUÇÃO</h5><p>${c.introducao}</p></div><hr>`
-              : ""
-          }
-          ${
-            c.conceitos
-              ? `<div class="liora-section"><h5>CONCEITOS</h5><ul>${c.conceitos
-                  .map((x) => `<li>${x}</li>`)
-                  .join("")}</ul></div><hr>`
-              : ""
-          }
-          ${
-            c.exemplos
-              ? `<div class="liora-section"><h5>EXEMPLOS</h5><ul>${c.exemplos
-                  .map((x) => `<li>${x}</li>`)
-                  .join("")}</ul></div><hr>`
-              : ""
-          }
-          ${
-            c.aplicacoes
-              ? `<div class="liora-section"><h5>APLICAÇÕES</h5><ul>${c.aplicacoes
-                  .map((x) => `<li>${x}</li>`)
-                  .join("")}</ul></div><hr>`
-              : ""
-          }
-          ${
-            c.resumoRapido
-              ? `<div class="liora-section"><h5>RESUMO RÁPIDO</h5><ul>${c.resumoRapido
-                  .map((x) => `<li>${x}</li>`)
-                  .join("")}</ul></div>`
-              : ""
-          }
-        `;
+        let html = "";
+
+        if (c.introducao) {
+          html += `
+            <div class="liora-section">
+              <h5>INTRODUÇÃO</h5>
+              <p>${c.introducao}</p>
+            </div>
+            <hr>
+          `;
+        }
+
+        if (c.conceitos) {
+          html += `
+            <div class="liora-section">
+              <h5>CONCEITOS</h5>
+              <ul>${c.conceitos.map((x) => `<li>${x}</li>`).join("")}</ul>
+            </div>
+            <hr>
+          `;
+        }
+
+        if (c.exemplos) {
+          html += `
+            <div class="liora-section">
+              <h5>EXEMPLOS</h5>
+              <ul>${c.exemplos.map((x) => `<li>${x}</li>`).join("")}</ul>
+            </div>
+            <hr>
+          `;
+        }
+
+        if (c.aplicacoes) {
+          html += `
+            <div class="liora-section">
+              <h5>APLICAÇÕES</h5>
+              <ul>${c.aplicacoes.map((x) => `<li>${x}</li>`).join("")}</ul>
+            </div>
+            <hr>
+          `;
+        }
+
+        if (c.resumoRapido) {
+          html += `
+            <div class="liora-section">
+              <h5>RESUMO RÁPIDO</h5>
+              <ul>${c.resumoRapido.map((x) => `<li>${x}</li>`).join("")}</ul>
+            </div>
+          `;
+        }
+
+        // 🔹 NOVO: resumo do tópico
+        if (s.resumoTopico) {
+          html += `
+            <hr>
+            <div class="liora-section">
+              <h5>RESUMO DO TÓPICO</h5>
+              <p>${s.resumoTopico}</p>
+            </div>
+          `;
+        }
+
+        // 🔹 NOVO: plano de estudo extra
+        if (s.planoEstudoExtra) {
+          html += `
+            <hr>
+            <div class="liora-section">
+              <h5>PLANO DE ESTUDO (Liora)</h5>
+              <pre>${s.planoEstudoExtra}</pre>
+            </div>
+          `;
+        }
+
+        // 🔹 NOVO: questões
+        if (s.questoes) {
+          html += `
+            <hr>
+            <div class="liora-section">
+              <h5>QUESTÕES PARA PRÁTICA</h5>
+              <pre>${s.questoes}</pre>
+            </div>
+          `;
+        }
+
+        // 🔹 NOVO: mapa mental textual
+        if (s.mapaMental) {
+          html += `
+            <hr>
+            <div class="liora-section">
+              <h5>MAPA MENTAL (texto)</h5>
+              <pre>${s.mapaMental}</pre>
+            </div>
+          `;
+        }
+
+        // 🔹 NOVO: plano de aula
+        if (s.planoAula) {
+          html += `
+            <hr>
+            <div class="liora-section">
+              <h5>PLANO DE AULA</h5>
+              <pre>${s.planoAula}</pre>
+            </div>
+          `;
+        }
+
+        // 🔹 NOVO: microlearning
+        if (s.microlearning) {
+          html += `
+            <hr>
+            <div class="liora-section">
+              <h5>MICROLEARNING</h5>
+              <pre>${s.microlearning}</pre>
+            </div>
+          `;
+        }
+
+        els.wizardConteudo.innerHTML = html;
       }
 
       if (els.wizardAnalogias)
@@ -242,8 +349,6 @@
 
     // --------------------------------------------------------
     // 🔧 OTIMIZAÇÃO DE SEÇÕES PARA OUTLINE
-    // - Mantém o formato original dos objetos de seção
-    // - Reduz quantidade para evitar timeout em PDFs grandes
     // --------------------------------------------------------
     function otimizarSecoesParaOutline(secoes) {
       if (!Array.isArray(secoes) || secoes.length === 0) return secoes;
@@ -277,7 +382,107 @@
     }
 
     // --------------------------------------------------------
-    // NOVO FLUXO UPLOAD COMPLETO – OTIMIZADO
+    // 🔥 NOVO: ENRIQUECER SESSÃO COM RESUMO + ITENS Liora
+    // --------------------------------------------------------
+    async function enriquecerSessao(sessao, indice, total, temaGeral) {
+      const baseTexto = `
+Tema geral: ${temaGeral || "não informado"}
+Sessão ${indice} de ${total}
+Título da sessão: ${sessao.titulo || ""}
+Objetivo: ${sessao.objetivo || ""}
+Conteúdo bruto (pode estar estruturado):
+${JSON.stringify(sessao.conteudo || {}, null, 2)}
+      `.trim();
+
+      // Resumo do tópico
+      try {
+        sessao.resumoTopico = await callLLM(
+          "Você é a Liora, tutora de microlearning para alunos de Computação. Gere um resumo claro e conciso do tópico, em português, em até 10 linhas.",
+          `Gere um resumo do tópico abaixo:\n\n${baseTexto}`
+        );
+      } catch (e) {
+        console.error("Erro gerando resumoTopico:", e);
+      }
+
+      // Plano de estudo extra
+      try {
+        sessao.planoEstudoExtra = await callLLM(
+          "Você é a Liora, especialista em microlearning no estilo Bárbara Oakley.",
+          `Monte um plano de estudo em formato textual para a sessão abaixo.
+Use sessões curtas, objetivos por sessão, sugestões de prática e revisões.
+Retorne em texto estruturado com bullets e etapas.\n\n${baseTexto}`
+        );
+      } catch (e) {
+        console.error("Erro gerando planoEstudoExtra:", e);
+      }
+
+      // Questões
+      try {
+        sessao.questoes = await callLLM(
+          "Você é uma tutora de lógica e matemática para computação.",
+          `Crie:
+- 3 questões fáceis,
+- 3 questões de dificuldade média,
+- 2 questões difíceis,
+- 1 questão no estilo concurso/vestibular
+sobre o conteúdo da sessão abaixo.
+Use numeração clara e, ao final, forneça um gabarito resumido.\n\n${baseTexto}`
+        );
+      } catch (e) {
+        console.error("Erro gerando questoes:", e);
+      }
+
+      // Mapa mental textual
+      try {
+        sessao.mapaMental = await callLLM(
+          "Você cria mapas mentais textuais, hierárquicos e claros.",
+          `Crie um mapa mental textual para o tópico abaixo.
+Use um formato tipo:
+Tópico central >
+  - Ramo 1 >
+      - Subramo
+  - Ramo 2 >
+...\n\n${baseTexto}`
+        );
+      } catch (e) {
+        console.error("Erro gerando mapaMental:", e);
+      }
+
+      // Plano de aula
+      try {
+        sessao.planoAula = await callLLM(
+          "Você é professor universitário de matemática aplicada à computação.",
+          `Crie um plano de aula completo para a sessão abaixo, com:
+- Objetivos
+- Conteúdos
+- Metodologia (explicação, exemplos guiados)
+- Atividades em sala
+- Tarefa para casa
+- Tempo estimado (aula de 50 minutos)
+Retorne em texto estruturado.\n\n${baseTexto}`
+        );
+      } catch (e) {
+        console.error("Erro gerando planoAula:", e);
+      }
+
+      // Microlearning
+      try {
+        sessao.microlearning = await callLLM(
+          "Você é a Liora, agente de microlearning.",
+          `Crie um módulo de microlearning para o tópico abaixo, com:
+- Mini explicação
+- Microexemplo prático
+- Mini desafio (pergunta) para o aluno pensar
+- Sugestão de aplicação na vida real
+Retorne em formato compacto e bem organizado.\n\n${baseTexto}`
+        );
+      } catch (e) {
+        console.error("Erro gerando microlearning:", e);
+      }
+    }
+
+    // --------------------------------------------------------
+    // NOVO FLUXO UPLOAD COMPLETO – OTIMIZADO + PIPELINE D
     // --------------------------------------------------------
     async function fluxoUpload(file, nivel) {
       if (!els.btnGerarUpload) return;
@@ -329,7 +534,7 @@
           35
         );
 
-        // 4) OUTLINE POR SEÇÃO (AGORA com menos seções)
+        // 4) OUTLINE POR SEÇÃO
         const outlines = await LioraOutline.gerarOutlinesPorSecao(secoesOtim);
         console.log("🧠 Outlines por seção:", outlines);
 
@@ -339,7 +544,7 @@
         const outlineUnico = await LioraOutline.unificarOutlines(outlines);
         console.log("🧠 Outline unificado:", outlineUnico);
 
-        atualizarStatus("upload", "📚 Montando plano de estudo...", 75);
+        atualizarStatus("upload", "📚 Montando plano de estudo...", 70);
 
         // 6) PLANO FINAL
         const planoFinal = await LioraOutline.gerarPlanoDeEstudo(outlineUnico);
@@ -349,15 +554,34 @@
           throw new Error("Plano final inválido ou sem sessões.");
         }
 
-        // 7) POPULAR O WIZARD
+        // Nome básico do tema a partir do arquivo
+        wizard.tema = file.name?.replace(/\.pdf$/i, "") || "PDF enviado";
+        wizard.nivel = nivel;
+
+        // 7) PIPELINE D: enriquecer cada sessão com resumo + materiais
+        atualizarStatus(
+          "upload",
+          "🧠 Gerando resumos e materiais para cada sessão...",
+          85
+        );
+
+        const totalSessoes = planoFinal.sessoes.length;
+        for (let i = 0; i < totalSessoes; i++) {
+          const s = planoFinal.sessoes[i];
+          try {
+            await enriquecerSessao(s, i + 1, totalSessoes, wizard.tema);
+          } catch (e) {
+            console.error("Erro ao enriquecer sessão", i + 1, e);
+          }
+        }
+
+        // 8) POPULAR O WIZARD
         wizard.plano = planoFinal.sessoes.map((s, i) => ({
           numero: i + 1,
           nome: s.titulo,
         }));
 
         wizard.sessoes = planoFinal.sessoes;
-        wizard.tema = file.name?.replace(/\.pdf$/i, "") || "PDF enviado";
-        wizard.nivel = nivel;
         wizard.atual = 0;
 
         atualizarStatus("upload", "✨ Sessões prontas!", 100);
@@ -404,6 +628,6 @@
       });
     }
 
-    console.log("🟢 Liora Core v64-UPLOAD carregado com sucesso");
+    console.log("🟢 Liora Core v70-UPLOAD carregado com sucesso");
   });
 })();
