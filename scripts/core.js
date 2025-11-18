@@ -308,13 +308,21 @@ Use APENAS JSON puro, com a seguinte estrutura:
         div.addEventListener("mouseleave", () => div.classList.remove("hovered"));
 
         div.addEventListener("click", () => {
-          wizard.atual = index;
-          renderWizard();
-          window.scrollTo({
-            top: els.wizardContainer.offsetTop - 20,
-            behavior: "smooth",
-          });
-        });
+        // remove active dos outros
+         document.querySelectorAll(".liora-card-topico")
+         .forEach(el => el.classList.remove("active"));
+
+       // marca o atual
+         div.classList.add("active");
+
+        wizard.atual = index;
+        renderWizard();
+        window.scrollTo({
+        top: els.wizardContainer.offsetTop - 20,
+        behavior: "smooth",
+     });
+   });
+
 
         els.plano.appendChild(div);
       });
