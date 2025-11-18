@@ -205,3 +205,114 @@
     flex-direction: column;
   }
 }
+
+/* ============================================================
+   MODAL DE CONFIGURAÇÃO DO SIMULADO
+   ============================================================ */
+
+.sim-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  display: none; /* ativado via JS */
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+}
+
+.sim-modal-backdrop.visible {
+  display: flex;
+}
+
+.sim-modal {
+  background: var(--surface);
+  border-radius: 1rem;
+  padding: 1.5rem 1.75rem;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.45);
+  max-width: 480px;
+  width: 100%;
+}
+
+.sim-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: .75rem;
+}
+
+.sim-modal-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.sim-modal-close {
+  border: none;
+  background: transparent;
+  font-size: 1.2rem;
+  cursor: pointer;
+  color: var(--muted);
+}
+
+.sim-modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: .75rem;
+  font-size: 0.9rem;
+}
+
+.sim-modal-footer {
+  margin-top: 1rem;
+}
+
+/* campos dentro do modal */
+.sim-modal-body label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-bottom: 0.15rem;
+  display: block;
+}
+
+/* ============================================================
+   DASHBOARD / RESUMO ESTATÍSTICO
+   ============================================================ */
+
+.sim-dashboard {
+  margin-top: 2rem;
+  text-align: left;
+}
+
+.sim-dashboard h4 {
+  font-weight: 700;
+  margin-bottom: .5rem;
+}
+
+.sim-dashboard-table {
+  width: 100%;
+  font-size: 0.85rem;
+  border-collapse: collapse;
+  margin-top: .5rem;
+}
+
+.sim-dashboard-table th,
+.sim-dashboard-table td {
+  padding: .35rem .4rem;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+}
+
+.sim-dashboard-table th {
+  font-weight: 600;
+  color: var(--muted);
+}
+
+/* linha de destaque leve */
+.sim-badge {
+  display: inline-block;
+  padding: .15rem .45rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  border: 1px solid var(--border);
+  margin-left: .35rem;
+  opacity: 0.85;
+}
+
