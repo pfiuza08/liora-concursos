@@ -320,3 +320,26 @@ html.light #liora-build-info { background:rgba(255,255,255,0.35); }
   letter-spacing: 0.5px;
 }
 
+/* ==========================================================
+   🟧 LIORA — CARD DO PLANO DE ESTUDO (hover igual ao quiz)
+   ========================================================== */
+
+.liora-card-topico {
+  padding: 12px 14px;
+  border-radius: 10px;
+  transition: background 0.25s ease, border-color 0.25s ease, transform 0.2s ease;
+  border: 1px solid transparent;
+}
+
+.liora-card-topico:hover {
+  background: rgba(196, 75, 4, 0.10); /* var(--brand) com 10% */
+  border-color: var(--brand);
+  transform: translateX(3px);
+}
+
+/* Quando selecionado após clique */
+.liora-card-topico.active {
+  background: rgba(196, 75, 4, 0.18);
+  border-color: var(--brand);
+}
+
