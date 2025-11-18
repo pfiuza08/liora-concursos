@@ -411,3 +411,82 @@
     border-radius: .75rem;
   }
 }
+/* ============================================================
+   BACKDROP UNIVERSAL — MUITO MAIS LIMPO E LEGÍVEL
+   ============================================================ */
+.sim-modal-backdrop {
+  background: rgba(0,0,0,0.88) !important; /* mais escuro */
+  backdrop-filter: blur(4px) !important;  /* desfoca fundo */
+}
+
+
+/* ============================================================
+   TABLET: Layout centralizado e mais confortável
+   Tablets típicos: 641px até ~1024px
+   ============================================================ */
+@media (min-width: 641px) and (max-width: 1024px) {
+
+  .sim-modal-backdrop {
+    align-items: center !important; /* centro vertical */
+    justify-content: center !important; /* centro horizontal */
+    padding-top: 0 !important; /* sem offset */
+  }
+
+  .sim-modal {
+    max-width: 560px;              /* largura elegante para tablets */
+    width: 90%;
+    height: auto;                  /* não precisa fullscreen */
+    max-height: 85vh;              /* evita ultrapassar a tela */
+    padding: 2rem;                 
+    border-radius: 1.25rem;
+    overflow-y: auto;
+    animation: modalFadeInTablet .3s ease-out;
+  }
+
+  @keyframes modalFadeInTablet {
+    from {
+      opacity: 0;
+      transform: translateY(10px) scale(0.97);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+}
+
+
+/* ============================================================
+   MOBILE FULLSCREEN COM OFFSET DE 15vh (já ajustado)
+   ============================================================ */
+@media (max-width: 640px) {
+
+  .sim-modal-backdrop {
+    align-items: flex-start;
+    padding-top: 15vh !important; 
+  }
+
+  .sim-modal {
+    width: 100%;
+    height: calc(100vh - 15vh);
+    max-height: calc(100vh - 15vh);
+
+    border-radius: 1.25rem 1.25rem 0 0;
+    padding: 1.5rem 1.25rem;
+    overflow-y: auto;
+
+    animation: modalSlideUp .28s ease-out;
+  }
+
+  @keyframes modalSlideUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+
