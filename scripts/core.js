@@ -1,14 +1,15 @@
 // ==========================================================
-// 🧠 LIORA — CORE v70-G
+// 🧠 LIORA — CORE v70-G-SIM
 // - Tema: plano + sessões completas (cache localStorage)
 // - Upload: Modelo D (outline + sessões a partir do PDF)
 // - Hover/active nos cards (tema + upload)
 // - Mapa mental básico (tema + upload) com PARSER da string
 //   "A > B > C | D > E ..." vindo da IA
+// - 🔹 Integração mínima: modo "Simulados" (somente troca de painel)
 // ==========================================================
 
 (function () {
-  console.log("🔵 Inicializando Liora Core v70-G...");
+  console.log("🔵 Inicializando Liora Core v70-G-SIM...");
 
   document.addEventListener("DOMContentLoaded", () => {
 
@@ -19,8 +20,13 @@
       // modos
       modoTema: document.getElementById("modo-tema"),
       modoUpload: document.getElementById("modo-upload"),
+      // 🔹 novo modo simulados
+      modoSimulados: document.getElementById("modo-simulados"),
+
       painelTema: document.getElementById("painel-tema"),
       painelUpload: document.getElementById("painel-upload"),
+      // 🔹 novo painel simulados
+      painelSimulados: document.getElementById("painel-simulados"),
 
       // tema
       inpTema: document.getElementById("inp-tema"),
@@ -130,22 +136,35 @@
     }
 
     // --------------------------------------------------------
-    // MODO (TEMA / UPLOAD)
+    // MODO (TEMA / UPLOAD / SIMULADOS)
     // --------------------------------------------------------
     function setMode(mode) {
       const tema = mode === "tema";
+      const upload = mode === "upload";
+      const simulados = mode === "simulados";
+
+      // painéis
       if (els.painelTema)
         els.painelTema.classList.toggle("hidden", !tema);
       if (els.painelUpload)
-        els.painelUpload.classList.toggle("hidden", tema);
+        els.painelUpload.classList.toggle("hidden", !upload);
+      if (els.painelSimulados)
+        els.painelSimulados.classList.toggle("hidden", !simulados);
+
+      // botões
       if (els.modoTema)
         els.modoTema.classList.toggle("selected", tema);
       if (els.modoUpload)
-        els.modoUpload.classList.toggle("selected", !tema);
+        els.modoUpload.classList.toggle("selected", upload);
+      if (els.modoSimulados)
+        els.modoSimulados.classList.toggle("selected", simulados);
     }
 
     if (els.modoTema) els.modoTema.onclick = () => setMode("tema");
     if (els.modoUpload) els.modoUpload.onclick = () => setMode("upload");
+    // 🔹 novo handler: modo simulados
+    if (els.modoSimulados) els.modoSimulados.onclick = () => setMode("simulados");
+
     setMode("tema");
 
     // --------------------------------------------------------
@@ -806,6 +825,6 @@ Use APENAS JSON puro, com a seguinte estrutura:
       });
     }
 
-    console.log("🟢 Liora Core v70-G carregado com sucesso");
+    console.log("🟢 Liora Core v70-G-SIM carregado com sucesso");
   });
 })();
