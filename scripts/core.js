@@ -1,13 +1,14 @@
 // ==========================================================
-// 🧠 LIORA — CORE v70-F
+// 🧠 LIORA — CORE v70-G
 // - Tema: plano + sessões completas (cache localStorage)
 // - Upload: Modelo D (outline + sessões a partir do PDF)
 // - Hover/active nos cards (tema + upload)
-// - Mapa mental básico (tema + upload)
+// - Mapa mental básico (tema + upload) com PARSER da string
+//   "A > B > C | D > E ..." vindo da IA
 // ==========================================================
 
 (function () {
-  console.log("🔵 Inicializando Liora Core v70-F...");
+  console.log("🔵 Inicializando Liora Core v70-G...");
 
   document.addEventListener("DOMContentLoaded", () => {
 
@@ -291,15 +292,50 @@ Use APENAS JSON puro, com a seguinte estrutura:
     }
 
     // --------------------------------------------------------
-    // MAPA MENTAL BÁSICO (string)
+    // MAPA MENTAL BÁSICO (parser + fallback)
     // --------------------------------------------------------
     function construirMapaMental(sessao) {
-      if (!sessao || !sessao.conteudo) return "";
+      if (!sessao) return "";
 
-      const c = sessao.conteudo;
       const titulo = sessao.titulo || "Sessão";
-
       const linhas = [];
+
+      // 1) Tentar usar string de mapa mental vinda da IA
+      let mapaStr = null;
+      if (typeof sessao.mapaMental === "string" && sessao.mapaMental.trim()) {
+        mapaStr = sessao.mapaMental.trim();
+      } else if (typeof sessao.mindmap === "string" && sessao.mindmap.trim()) {
+        mapaStr = sessao.mindmap.trim();
+      }
+
+      if (mapaStr) {
+        // Se a string vier no formato:
+        // "Conjuntos > Definição (...) > ... | Funções > Tipos > ..."
+        // montamos uma árvore textual simples.
+        linhas.push(titulo);
+
+        const blocos = mapaStr.split("|").map(b => b.trim()).filter(Boolean);
+        blocos.forEach((bloco) => {
+          const parts = bloco.split(">").map(p => p.trim()).filter(Boolean);
+          if (!parts.length) return;
+
+          // nível 1
+          linhas.push("├─ " + parts[0]);
+
+          // níveis subsequentes
+          for (let i = 1; i < parts.length; i++) {
+            const isLast = i === parts.length - 1;
+            const prefix = isLast ? "│   └─" : "│   ├─";
+            linhas.push(`${prefix} ${parts[i]}`);
+          }
+        });
+
+        return linhas.join("\n");
+      }
+
+      // 2) Fallback: construir a partir do conteúdo da sessão (como v70-F)
+      const c = sessao.conteudo || {};
+
       linhas.push(titulo);
       linhas.push("├─ Objetivo: " + (sessao.objetivo || "—"));
 
@@ -514,11 +550,11 @@ Use APENAS JSON puro, com a seguinte estrutura:
           .join("");
       }
 
-      // Mapa mental
+      // Mapa mental (com parser)
       if (els.wizardMapa) {
-        const mapa =
-          s.mapaMental || s.mindmap || construirMapaMental(s);
-        els.wizardMapa.textContent = mapa || "Mapa mental gerado a partir desta sessão.";
+        const mapa = construirMapaMental(s);
+        els.wizardMapa.textContent =
+          mapa || "Mapa mental gerado a partir desta sessão.";
       }
 
       if (els.wizardProgressBar && wizard.sessoes.length) {
@@ -770,6 +806,6 @@ Use APENAS JSON puro, com a seguinte estrutura:
       });
     }
 
-    console.log("🟢 Liora Core v70-F carregado com sucesso");
+    console.log("🟢 Liora Core v70-G carregado com sucesso");
   });
 })();
