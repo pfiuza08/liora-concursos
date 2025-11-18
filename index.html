@@ -46,7 +46,6 @@
   <section class="card p-6">
     <h2 class="section-title mb-4">Como você deseja estudar?</h2>
 
-    <!-- MODOs -->
     <div class="grid grid-cols-3 gap-2 mb-6">
       <button id="modo-tema" class="btn-secondary selected">Tema</button>
       <button id="modo-upload" class="btn-secondary">Upload</button>
@@ -104,9 +103,6 @@
        ============================================ -->
   <section id="area-dinamica" class="card p-6">
 
-    <!-- ============================
-         Área do Plano de Estudo (default)
-         ============================ -->
     <div id="area-plano">
       <div class="flex justify-between mb-4">
         <h2 class="section-title">Seu plano de estudo</h2>
@@ -115,12 +111,8 @@
       <div id="plano" class="space-y-3"></div>
     </div>
 
-    <!-- ============================
-         Área do Simulado (substitui todo o conteúdo)
-         ============================ -->
     <div id="area-simulado" class="hidden space-y-6">
 
-      <!-- Timer + Progresso -->
       <div class="flex justify-between items-center">
         <div id="sim-timer" class="sim-timer hidden">00:00</div>
         <div class="sim-progress w-48">
@@ -128,16 +120,13 @@
         </div>
       </div>
 
-      <!-- Questão em si -->
       <div id="sim-questao-container" class="space-y-4"></div>
 
-      <!-- Navegação -->
       <div id="sim-nav" class="sim-nav hidden">
         <button id="sim-btn-voltar" class="sim-btn-nav">◀ Voltar</button>
         <button id="sim-btn-proxima" class="sim-btn-nav sim-btn-next">Próxima ▶</button>
       </div>
 
-      <!-- Resultado Final -->
       <div id="sim-resultado" class="hidden"></div>
     </div>
   </section>
@@ -180,6 +169,90 @@
   <p>Liora — IA aplicada a estudos. © Intellih</p>
 </footer>
 
+<!-- ============================================================
+     SIMULADOS: MODAL COMPLETO
+     ============================================================ -->
+<div id="sim-modal-backdrop" class="sim-modal-backdrop hidden">
+
+  <div class="sim-modal">
+
+    <!-- Cabeçalho -->
+    <div class="sim-modal-header flex justify-between items-center">
+      <h3 class="sim-modal-title">Configurar simulado</h3>
+      <button id="sim-modal-close" class="sim-modal-close">✕</button>
+    </div>
+
+    <!-- Corpo -->
+    <div class="sim-modal-body">
+
+      <!-- BANCA -->
+      <div class="sim-modal-block">
+        <label class="sim-label">Banca</label>
+        <select id="sim-banca" class="sim-input">
+          <option value="fgv">FGV</option>
+          <option value="cespe">CESPE / Cebraspe</option>
+          <option value="fundatec">Fundatec</option>
+          <option value="fec">FEC</option>
+          <option value="quadrix">Quadrix</option>
+        </select>
+      </div>
+
+      <!-- QUANTIDADE DE QUESTÕES -->
+      <div class="sim-modal-block">
+        <label class="sim-label">Quantidade de questões</label>
+        <input id="sim-qtd" type="number" min="5" max="200" value="20" class="sim-input">
+      </div>
+
+      <!-- TEMPO (minutos) -->
+      <div class="sim-modal-block">
+        <label class="sim-label">Tempo de prova (minutos)</label>
+        <input id="sim-tempo" type="number" min="5" max="300" value="30" class="sim-input">
+      </div>
+
+      <!-- MODO DE DIFICULDADE -->
+      <div class="sim-modal-block">
+        <label class="sim-label">Nível de dificuldade</label>
+        <select id="sim-dificuldade-modo" class="sim-input">
+          <option value="padrao">Padrão da banca (recomendado)</option>
+          <option value="equilibrado">Equilibrado (1/3 cada)</option>
+          <option value="personalizado">Personalizado</option>
+        </select>
+      </div>
+
+      <!-- DIFICULDADE PERSONALIZADA -->
+      <div id="sim-dificuldade-custom" class="hidden space-y-3">
+        <div>
+          <label class="sim-label">Fácil (%)</label>
+          <input id="dif-facil" type="number" min="0" max="100" value="30" class="sim-input">
+        </div>
+        <div>
+          <label class="sim-label">Médio (%)</label>
+          <input id="dif-medio" type="number" min="0" max="100" value="50" class="sim-input">
+        </div>
+        <div>
+          <label class="sim-label">Difícil (%)</label>
+          <input id="dif-dificil" type="number" min="0" max="100" value="20" class="sim-input">
+        </div>
+
+        <p id="dif-erro" class="text-red-500 text-sm hidden">
+          A soma deve resultar em 100%.
+        </p>
+      </div>
+
+    </div>
+
+    <!-- Rodapé -->
+    <div class="sim-modal-footer">
+      <button id="sim-modal-iniciar" class="btn-primary w-full">
+        Iniciar simulado
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<!-- ============================================================ -->
+
 <!-- Pipeline Liora -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 
@@ -189,7 +262,7 @@
 <script src="scripts/semantic.js"></script>
 
 <!-- Novo módulo de Simulados -->
-<script src="scripts/simulados.js"></script>
+<script src="scripts/simulados.js?v=3"></script>
 
 <!-- Core principal -->
 <script src="scripts/core.js"></script>
