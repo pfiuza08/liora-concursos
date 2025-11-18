@@ -339,29 +339,28 @@
 }
 
 /* ============================================================
-   AJUSTE MOBILE — OFFSET DE 15vh PARA O MODAL
+   AJUSTE MOBILE — OFFSET DE 12vh PARA O MODAL
    ============================================================ */
 @media (max-width: 640px) {
 
-  /* Backdrop empurra o modal para baixo */
   .sim-modal-backdrop {
     align-items: flex-start;
-    padding-top: 15vh !important;   /* espaço confortável */
-    background: rgba(0,0,0,0.75);
+    padding-top: 12vh !important;  /* novo offset */
   }
 
-  /* Modal ocupa toda a área abaixo do offset */
   .sim-modal {
     width: 100%;
-    height: calc(100vh - 15vh);
-    max-height: calc(100vh - 15vh);
+    height: calc(100vh - 12vh);     /* ajusta a altura */
+    max-height: calc(100vh - 12vh);
 
     border-radius: 1.25rem 1.25rem 0 0;
     padding: 1.5rem 1.25rem;
-
     overflow-y: auto;
+
     animation: modalSlideUp .28s ease-out;
   }
+}
+
 
   /* Header */
   .sim-modal-header {
