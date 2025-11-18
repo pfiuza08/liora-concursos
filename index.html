@@ -15,8 +15,10 @@
       "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.14.305/pdf.worker.min.js";
   </script>
 
-  <!-- CSS principal da Liora -->
+  <!-- CSS principal -->
   <link rel="stylesheet" href="/style.css?v=46">
+  <!-- CSS dos simulados -->
+  <link rel="stylesheet" href="/style-simulados.css?v=1">
 </head>
 <body>
 
@@ -38,11 +40,13 @@
 
 <main id="liora-layout" class="liora-grid">
 
-  <!-- ---- ESQUERDA ---- -->
+  <!-- ============================================
+       ESQUERDA — Seleção de Modo
+       ============================================ -->
   <section class="card p-6">
     <h2 class="section-title mb-4">Como você deseja estudar?</h2>
 
-    <!-- Agora com 3 MODOs: Tema / Upload / Simulados -->
+    <!-- MODOs -->
     <div class="grid grid-cols-3 gap-2 mb-6">
       <button id="modo-tema" class="btn-secondary selected">Tema</button>
       <button id="modo-upload" class="btn-secondary">Upload</button>
@@ -65,7 +69,6 @@
 
       <button id="btn-gerar" class="btn w-full mt-3">Gerar plano</button>
 
-      <!-- status unificado (TEMA) -->
       <p id="status" class="text-xs text-[var(--muted)] mt-2"></p>
 
       <div id="barra-tema" class="liora-progress mt-1 w-full">
@@ -94,143 +97,54 @@
         <div id="barra-upload-fill" class="liora-progress__bar"></div>
       </div>
     </div>
+  </section>
+
+  <!-- ============================================
+       DIREITA — ÁREA DINÂMICA
+       ============================================ -->
+  <section id="area-dinamica" class="card p-6">
 
     <!-- ============================
-         PAINEL — SIMULADOS
+         Área do Plano de Estudo (default)
          ============================ -->
-    <div id="painel-simulados" class="hidden mt-6 space-y-6">
+    <div id="area-plano">
+      <div class="flex justify-between mb-4">
+        <h2 class="section-title">Seu plano de estudo</h2>
+        <p id="ctx" class="text-sm text-[var(--muted)]"></p>
+      </div>
+      <div id="plano" class="space-y-3"></div>
+    </div>
 
-      <div>
-        <h3 class="text-lg font-bold mb-1">Gerar Simulados Inteligentes</h3>
-        <p class="text-sm text-[var(--muted)]">
-          Gere simulados personalizados por banca, tema ou PDF enviado.
-        </p>
+    <!-- ============================
+         Área do Simulado (substitui todo o conteúdo)
+         ============================ -->
+    <div id="area-simulado" class="hidden space-y-6">
+
+      <!-- Timer + Progresso -->
+      <div class="flex justify-between items-center">
+        <div id="sim-timer" class="sim-timer hidden">00:00</div>
+        <div class="sim-progress w-48">
+          <div id="sim-progress-bar" class="sim-progress-fill"></div>
+        </div>
       </div>
 
-      <!-- Cards de escolha -->
-      <div class="grid grid-cols-2 gap-3">
-        <button id="sim-modo-tema"
-          class="bg-[var(--surface)] border border-[var(--border)] rounded-xl p-4 text-left hover:bg-[var(--surface-hover)] transition cursor-pointer">
-          <h4 class="font-semibold mb-1">Por Tema</h4>
-          <p class="text-xs text-[var(--muted)]">Criar questões sobre um tema escolhido.</p>
-        </button>
+      <!-- Questão em si -->
+      <div id="sim-questao-container" class="space-y-4"></div>
 
-        <button id="sim-modo-upload"
-          class="bg-[var(--surface)] border border-[var(--border)] rounded-xl p-4 text-left hover:bg-[var(--surface-hover)] transition cursor-pointer">
-          <h4 class="font-semibold mb-1">Por PDF</h4>
-          <p class="text-xs text-[var(--muted)]">Questões geradas a partir do PDF já enviado.</p>
-        </button>
+      <!-- Navegação -->
+      <div id="sim-nav" class="sim-nav hidden">
+        <button id="sim-btn-voltar" class="sim-btn-nav">◀ Voltar</button>
+        <button id="sim-btn-proxima" class="sim-btn-nav sim-btn-next">Próxima ▶</button>
       </div>
 
-      <!-- SIMULADOS POR TEMA -->
-      <div id="sim-painel-tema" class="hidden space-y-4">
-
-        <div>
-          <label class="text-sm font-medium">Tema</label>
-          <input id="sim-tema" type="text" class="w-full"
-            placeholder="Ex.: Direito Administrativo — Atos Administrativos">
-        </div>
-
-        <div>
-          <label class="text-sm font-medium">Nível</label>
-          <select id="sim-nivel" class="w-full">
-            <option value="basico">Básico</option>
-            <option value="intermediario">Intermediário</option>
-            <option value="avancado">Avançado</option>
-          </select>
-        </div>
-
-        <div>
-          <label class="text-sm font-medium">Banca</label>
-          <select id="sim-banca" class="w-full">
-            <option value="FGV">FGV</option>
-            <option value="CESPE">CESPE / CEBRASPE</option>
-            <option value="VUNESP">VUNESP</option>
-            <option value="FCC">FCC</option>
-          </select>
-        </div>
-
-        <div>
-          <label class="text-sm font-medium">Quantidade de questões</label>
-          <select id="sim-qtd" class="w-full">
-            <option value="5">5 questões</option>
-            <option value="10">10 questões</option>
-            <option value="15">15 questões</option>
-            <option value="20">20 questões</option>
-            <option value="30">30 questões</option>
-          </select>
-        </div>
-
-        <button id="sim-btn-gerar" class="btn w-full mt-2">Gerar simulado</button>
-      </div>
-
-      <!-- SIMULADOS POR UPLOAD -->
-      <div id="sim-painel-upload" class="hidden space-y-4">
-
-        <p class="text-xs text-[var(--muted)]">
-          O simulado será baseado no conteúdo do PDF carregado anteriormente.
-        </p>
-
-        <div class="text-sm bg-[var(--surface)] border border-[var(--border)] p-3 rounded-lg">
-          <strong>Arquivo:</strong>
-          <span id="sim-info-upload">nenhum PDF carregado ainda</span>
-        </div>
-
-        <div>
-          <label class="text-sm font-medium">Nível</label>
-          <select id="sim-nivel-upload" class="w-full">
-            <option value="basico">Básico</option>
-            <option value="intermediario">Intermediário</option>
-            <option value="avancado">Avançado</option>
-          </select>
-        </div>
-
-        <div>
-          <label class="text-sm font-medium">Banca</label>
-          <select id="sim-banca-upload" class="w-full">
-            <option value="FGV">FGV</option>
-            <option value="CESPE">CESPE / CEBRASPE</option>
-            <option value="VUNESP">VUNESP</option>
-            <option value="FCC">FCC</option>
-          </select>
-        </div>
-
-        <div>
-          <label class="text-sm font-medium">Quantidade de questões</label>
-          <select id="sim-qtd-upload" class="w-full">
-            <option value="5">5 questões</option>
-            <option value="10">10 questões</option>
-            <option value="15">15 questões</option>
-            <option value="20">20 questões</option>
-            <option value="30">30 questões</option>
-          </select>
-        </div>
-
-        <button id="sim-btn-gerar-upload" class="btn w-full mt-2">Gerar simulado</button>
-      </div>
-
-      <hr class="my-6 opacity-30">
-
-      <!-- Simulado em execução -->
-      <div id="sim-area" class="space-y-4"></div>
-
-      <!-- Resultado final -->
-      <div id="sim-resultado" class="space-y-6"></div>
-
+      <!-- Resultado Final -->
+      <div id="sim-resultado" class="hidden"></div>
     </div>
   </section>
 
-  <!-- ---- DIREITA ---- -->
-  <section class="card p-6">
-    <div class="flex justify-between mb-4">
-      <h2 class="section-title">Seu plano de estudo</h2>
-      <p id="ctx" class="text-sm text-[var(--muted)]"></p>
-    </div>
-    <div id="plano" class="space-y-3"></div>
-  </section>
 </main>
 
-<!-- ---- WIZARD ---- -->
+<!-- ---- WIZARD (Tema/Upload) ---- -->
 <section id="liora-sessoes" class="hidden liora-wizard max-w-6xl mx-auto px-6 pb-10">
   <div class="liora-wizard__header flex justify-between items-center mb-4">
     <div>
@@ -250,7 +164,6 @@
     <div class="liora-block"><h4>Ativação</h4><ul id="liora-sessao-ativacao"></ul></div>
     <div class="liora-block"><h4>Teste rápido</h4><div id="liora-sessao-quiz"></div><p id="liora-sessao-quiz-feedback"></p></div>
     <div class="liora-block"><h4>Flashcards</h4><ul id="liora-sessao-flashcards"></ul></div>
-
     <div class="liora-block">
       <h4>Mapa Mental</h4>
       <pre id="liora-sessao-mapa" class="liora-mapa-mental"></pre>
@@ -275,13 +188,13 @@
 <script src="scripts/outline-generator.js"></script>
 <script src="scripts/semantic.js"></script>
 
-<!-- Novo módulo de simulados -->
+<!-- Novo módulo de Simulados -->
 <script src="scripts/simulados.js"></script>
 
 <!-- Core principal -->
 <script src="scripts/core.js"></script>
 
-<div id="liora-build-info">Liora v70-G-SIM</div>
+<div id="liora-build-info">Liora v70-G-SIM-FINAL</div>
 
 </body>
 </html>
