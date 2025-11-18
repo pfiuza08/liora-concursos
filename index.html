@@ -75,7 +75,7 @@
       <label id="upload-zone" class="upload-zone">
         <p id="upload-text">Clique ou arraste um arquivo PDF</p>
         <div id="upload-spinner"></div>
-        <!-- 🔹 Somente PDF, como combinamos -->
+        <!-- 🔹 Somente PDF -->
         <input id="inp-file" type="file" accept="application/pdf,.pdf" />
       </label>
 
@@ -107,7 +107,6 @@
       <p id="liora-tema-ativo" class="text-sm text-[var(--muted)]"></p>
     </div>
 
-    <!-- Barra de progresso da sessão -->
     <div class="liora-progress w-52">
       <div id="liora-progress-bar" class="liora-progress__bar"></div>
     </div>
@@ -120,6 +119,12 @@
     <div class="liora-block"><h4>Ativação</h4><ul id="liora-sessao-ativacao"></ul></div>
     <div class="liora-block"><h4>Teste rápido</h4><div id="liora-sessao-quiz"></div><p id="liora-sessao-quiz-feedback"></p></div>
     <div class="liora-block"><h4>Flashcards</h4><ul id="liora-sessao-flashcards"></ul></div>
+
+    <!-- ⭐ NOVO BLOCO: MAPA MENTAL -->
+    <div class="liora-block">
+      <h4>Mapa Mental</h4>
+      <pre id="liora-sessao-mapa" class="liora-mapa-mental"></pre>
+    </div>
   </div>
 
   <div class="liora-wizard__footer flex justify-between mt-6">
@@ -132,21 +137,15 @@
   <p>Liora — IA aplicada a estudos. © Intellih</p>
 </footer>
 
-<!-- PDF.js (carregado antes dos scripts de extração) -->
+<!-- Pipeline Liora -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-
-<!-- Pipeline Liora (upload PDF) -->
 <script src="scripts/pdf-extractor.js"></script>
 <script src="scripts/pdf-structure.js"></script>
 <script src="scripts/outline-generator.js"></script>
-
-<!-- Seu backend de IA -->
-<script src="scripts/semantic.js"></script> 
-  
-<!-- Core principal (tema + wizard + upload) -->
+<script src="scripts/semantic.js"></script>
 <script src="scripts/core.js"></script>
 
-<div id="liora-build-info">Liora v42</div>
+<div id="liora-build-info">Liora v70-E2</div>
 
 </body>
 </html>
