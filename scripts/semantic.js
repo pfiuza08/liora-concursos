@@ -1,10 +1,11 @@
 // =============================================
-// 🧩 semantic.js — Liora Semantic v40
+// 🧩 semantic.js — Liora Semantic v41
 // Compatível com Modelo D (outline + sessões IA)
+// Acrescenta: gerarMapaMental() sem quebrar nada
 // =============================================
 
 (function () {
-  console.log("🧩 semantic.js (v40) carregado");
+  console.log("🧩 semantic.js (v41) carregado");
 
   const Semantic = {};
 
@@ -135,7 +136,48 @@
     return unicos.join("\n\n");
   };
 
+  // ----------------------------------------------------
+  // 7) 🧠 MAPA MENTAL TEXTUAL (básico, não quebra nada)
+  // ----------------------------------------------------
+  Semantic.gerarMapaMental = async function (titulo, textoBase) {
+    if (!window.callLLM) {
+      console.warn("callLLM() indisponível — mapa mental não será gerado.");
+      return "";
+    }
+
+    const prompt = `
+Você é Liora. Gere um mapa mental textual, com no máximo 3 níveis.
+
+FORMATO OBRIGATÓRIO (sem explicações extras):
+
+- ${titulo}
+  - tópico importante
+    - detalhe específico
+  - tópico importante
+    - detalhe específico
+
+Use SOMENTE o conteúdo do texto-base. Não invente conceitos externos.
+
+TEXTO-BASE:
+${textoBase}
+`;
+
+    try {
+      const raw = await window.callLLM(
+        "Você é Liora e responde apenas mapas mentais textuais neste formato.",
+        prompt
+      );
+      return String(raw || "").trim();
+    } catch (err) {
+      console.error("Erro ao gerar mapa mental:", err);
+      return "";
+    }
+  };
+
+  // ----------------------------------------------------
+  // Exporta para o escopo global
+  // ----------------------------------------------------
   window.LioraSemantic = Semantic;
 
-  console.log("✅ semantic.js pronto (v40)");
+  console.log("✅ semantic.js pronto (v41)");
 })();
