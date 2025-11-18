@@ -210,14 +210,19 @@
    MODAL DE CONFIGURAÇÃO DO SIMULADO
    ============================================================ */
 
+/* ============================================================
+   MODAL — AJUSTE PREMIUM
+   ============================================================ */
+
 .sim-modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.6);
-  display: none; /* ativado via JS */
-  align-items: center;
+  background: rgba(0,0,0,0.75); /* mais escuro */
+  display: none;
+  align-items: flex-start;       /* muda de center → flex-start */
   justify-content: center;
-  z-index: 50;
+  padding-top: 6vh;              /* empurra modal para baixo */
+  z-index: 9999;                 /* acima de tudo, inclusive cards */
 }
 
 .sim-modal-backdrop.visible {
@@ -226,50 +231,67 @@
 
 .sim-modal {
   background: var(--surface);
-  border-radius: 1rem;
-  padding: 1.5rem 1.75rem;
-  box-shadow: 0 20px 40px rgba(0,0,0,0.45);
-  max-width: 480px;
+  border-radius: 1.25rem;
+  padding: 2rem 2.5rem;          /* padding mais elegante */
+  box-shadow: 0 28px 60px rgba(0,0,0,0.45);
+  max-width: 680px;              /* AQUI AUMENTA O TAMANHO */
   width: 100%;
+  animation: modalFadeIn .25s ease-out;
 }
 
-.sim-modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: .75rem;
-}
-
+/* Título mais destacado */
 .sim-modal-title {
-  font-size: 1.05rem;
-  font-weight: 700;
+  font-size: 1.25rem;
+  font-weight: 800;
 }
 
+/* Fecha mais suave */
 .sim-modal-close {
   border: none;
   background: transparent;
-  font-size: 1.2rem;
+  font-size: 1.4rem;
   cursor: pointer;
   color: var(--muted);
+  padding: .25rem;
+  border-radius: .5rem;
+}
+.sim-modal-close:hover {
+  background: rgba(255,255,255,0.08);
 }
 
+/* Corpo do modal com espaçamento maior */
 .sim-modal-body {
   display: flex;
   flex-direction: column;
-  gap: .75rem;
-  font-size: 0.9rem;
+  gap: 1.1rem;
+  font-size: 0.95rem;
 }
 
-.sim-modal-footer {
-  margin-top: 1rem;
-}
-
-/* campos dentro do modal */
+/* Campos mais espaçados */
 .sim-modal-body label {
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   font-weight: 600;
-  margin-bottom: 0.15rem;
-  display: block;
+  margin-bottom: 0.25rem;
+}
+
+/* Botão iniciar */
+#sim-modal-iniciar {
+  font-size: 1rem;
+  font-weight: 700;
+  padding: .75rem;
+  border-radius: .75rem;
+}
+
+/* animação */
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 /* ============================================================
@@ -314,5 +336,91 @@
   border: 1px solid var(--border);
   margin-left: .35rem;
   opacity: 0.85;
+}
+
+/* ============================================================
+   MOBILE FULLSCREEN (até 640px)
+   ============================================================ */
+@media (max-width: 640px) {
+
+  /* Backdrop ocupa tudo normal */
+  .sim-modal-backdrop {
+    padding-top: 0;
+    align-items: flex-start;
+  }
+
+  /* Modal vira tela cheia */
+  .sim-modal {
+    width: 100%;
+    height: 100vh;
+    max-width: none;
+    max-height: none;
+
+    border-radius: 0;                     /* sem bordas */
+    padding: 1.5rem;                      /* reduzido */
+    overflow-y: auto;                     /* scroll suave */
+
+    animation: modalSlideUp .25s ease-out;
+  }
+
+  /* Header */
+  .sim-modal-header {
+    padding-top: .25rem;
+    padding-bottom: .75rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .sim-modal-title {
+    font-size: 1.2rem;
+    font-weight: 800;
+  }
+
+  /* Botão fechar maior, mais confortável ao toque */
+  .sim-modal-close {
+    font-size: 1.6rem;
+    padding: .25rem .5rem;
+  }
+
+  /* Inputs e selects maiores para dedo */
+  .sim-modal-body {
+    gap: 1.2rem;
+  }
+
+  .sim-modal-body select,
+  .sim-modal-body input[type="number"],
+  .sim-modal-body input[type="text"] {
+    padding: .65rem .75rem;
+    font-size: 1rem;
+    border-radius: .65rem;
+  }
+
+  /* Footer fixado no final da tela */
+  .sim-modal-footer {
+    position: sticky;
+    bottom: 0;
+    background: var(--surface);
+    padding-top: .75rem;
+    padding-bottom: .75rem;
+    border-top: 1px solid var(--border);
+    margin-top: 1.5rem;
+  }
+
+  #sim-modal-iniciar {
+    font-size: 1.05rem;
+    padding: 1rem;
+    border-radius: .75rem;
+  }
+
+  /* animação mobile */
+  @keyframes modalSlideUp {
+    from {
+      transform: translateY(20px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0px);
+      opacity: 1;
+    }
+  }
 }
 
