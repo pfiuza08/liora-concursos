@@ -1,254 +1,319 @@
 // ==========================================================
-// 🧠 LIORA — SIMULADOS v1
-// - Simulado por Tema ou por PDF
-// - Perfil de banca (FGV, CESPE, VUNESP, FCC...)
-// - Geração de questões fake por template (para testar UX)
-// - Estado: config → questões → respostas → correção
+// 🧠 LIORA — SIMULADOS (MODO MOCK)
+// - Integra com index v70-G-SIM-FINAL
+// - Não usa IA (questões fake para testar UX)
+// - Usa a mesma área da direita do plano de estudo
 // ==========================================================
 
 (function () {
-  console.log("🔵 Liora Simulados v1 carregado...");
+  console.log("🔵 Liora Simulados (mock) carregado...");
 
   document.addEventListener("DOMContentLoaded", () => {
-    // --------------------------------------------------------
-    // ELEMENTOS DA TELA
-    // --------------------------------------------------------
+    // ------------------------------------------------------
+    // ELEMENTOS
+    // ------------------------------------------------------
     const els = {
-      // modos
-      modoTema: document.getElementById("sim-modo-tema"),
-      modoUpload: document.getElementById("sim-modo-upload"),
-      painelTema: document.getElementById("sim-painel-tema"),
-      painelUpload: document.getElementById("sim-painel-upload"),
+      // botões de modo (esquerda)
+      modoTema: document.getElementById("modo-tema"),
+      modoUpload: document.getElementById("modo-upload"),
+      modoSimulados: document.getElementById("modo-simulados"),
 
-      // campos comuns
-      selBanca: document.getElementById("sim-banca"),
-      selQtd: document.getElementById("sim-qtd"),
-      selNivel: document.getElementById("sim-nivel"),
+      // área direita
+      areaPlano: document.getElementById("area-plano"),
+      areaSimulado: document.getElementById("area-simulado"),
 
-      // tema
-      inpTema: document.getElementById("sim-tema"),
-
-      // upload (você pode ligar esse campo ao módulo de PDF)
-      infoUpload: document.getElementById("sim-info-upload"), // pode ser só um textinho com "Baseado no PDF carregado"
-
-      // ação
-      btnGerar: document.getElementById("sim-btn-gerar"),
-
-      // saída
-      areaSimulado: document.getElementById("sim-area"),
-      areaResultado: document.getElementById("sim-resultado"),
+      // simulado (dentro da área direita)
+      timer: document.getElementById("sim-timer"),
+      progressBar: document.getElementById("sim-progress-bar"),
+      questaoContainer: document.getElementById("sim-questao-container"),
+      nav: document.getElementById("sim-nav"),
+      btnVoltar: document.getElementById("sim-btn-voltar"),
+      btnProxima: document.getElementById("sim-btn-proxima"),
+      resultado: document.getElementById("sim-resultado"),
     };
 
-    // Guardar estado do simulado atual
+    // ------------------------------------------------------
+    // ESTADO DO SIMULADO
+    // ------------------------------------------------------
     const estado = {
-      modo: "tema", // "tema" | "upload"
-      config: null,
+      emAndamento: false,
       questoes: [],
       indiceAtual: 0,
-      finalizado: false,
+      banca: "FGV",
+      tema: "",
+      qtd: 5,
+      tempoSegundos: 0,
+      timerId: null,
     };
 
-    // --------------------------------------------------------
-    // PERFIS DE BANCA (templates de estilo)
-    // --------------------------------------------------------
+    // ------------------------------------------------------
+    // HELPERS DE UI
+    // ------------------------------------------------------
+    function mostrarPlano() {
+      if (els.areaPlano) els.areaPlano.classList.remove("hidden");
+      if (els.areaSimulado) els.areaSimulado.classList.add("hidden");
+      limparSimulado();
+    }
+
+    function mostrarSimulado() {
+      if (els.areaPlano) els.areaPlano.classList.add("hidden");
+      if (els.areaSimulado) els.areaSimulado.classList.remove("hidden");
+      prepararTelaConfiguracao();
+    }
+
+    function limparSimulado() {
+      pararTimer();
+      estado.emAndamento = false;
+      estado.questoes = [];
+      estado.indiceAtual = 0;
+      estado.tempoSegundos = 0;
+      if (els.timer) {
+        els.timer.classList.add("hidden");
+        els.timer.textContent = "00:00";
+      }
+      if (els.progressBar) els.progressBar.style.width = "0%";
+      if (els.questaoContainer) els.questaoContainer.innerHTML = "";
+      if (els.nav) els.nav.classList.add("hidden");
+      if (els.resultado) {
+        els.resultado.classList.add("hidden");
+        els.resultado.innerHTML = "";
+      }
+    }
+
+    // ------------------------------------------------------
+    // TIMER
+    // ------------------------------------------------------
+    function formatarTempo(segundos) {
+      const m = Math.floor(segundos / 60);
+      const s = segundos % 60;
+      const mm = m < 10 ? "0" + m : "" + m;
+      const ss = s < 10 ? "0" + s : "" + s;
+      return `${mm}:${ss}`;
+    }
+
+    function iniciarTimer() {
+      pararTimer();
+      estado.tempoSegundos = 0;
+      if (els.timer) {
+        els.timer.classList.remove("hidden");
+        els.timer.textContent = "00:00";
+      }
+      estado.timerId = setInterval(() => {
+        estado.tempoSegundos++;
+        if (els.timer) {
+          els.timer.textContent = formatarTempo(estado.tempoSegundos);
+        }
+      }, 1000);
+    }
+
+    function pararTimer() {
+      if (estado.timerId) {
+        clearInterval(estado.timerId);
+        estado.timerId = null;
+      }
+    }
+
+    // ------------------------------------------------------
+    // GERADOR MOCK DE QUESTÕES
+    // ------------------------------------------------------
     const PERFIS_BANCA = {
       FGV: {
         id: "FGV",
         nome: "FGV",
         estilo: "contextual",
-        alternativas: 5,
-        enunciadoLongo: true,
       },
       CESPE: {
         id: "CESPE",
-        nome: "CESPE/CEBRASPE",
+        nome: "CESPE / CEBRASPE",
         estilo: "certo_errado",
-        alternativas: 2, // "Certo" / "Errado"
-        enunciadoLongo: true,
       },
       VUNESP: {
         id: "VUNESP",
         nome: "VUNESP",
         estilo: "direto",
-        alternativas: 5,
-        enunciadoLongo: false,
       },
       FCC: {
         id: "FCC",
         nome: "FCC",
         estilo: "objetivo",
-        alternativas: 5,
-        enunciadoLongo: false,
       },
     };
 
-    // --------------------------------------------------------
-    // HELPERS
-    // --------------------------------------------------------
-    function alternarModo(modo) {
-      estado.modo = modo;
-
-      if (!els.painelTema || !els.painelUpload) return;
-
-      if (modo === "tema") {
-        els.painelTema.classList.remove("hidden");
-        els.painelUpload.classList.add("hidden");
-        els.modoTema?.classList.add("selected");
-        els.modoUpload?.classList.remove("selected");
-      } else {
-        els.painelTema.classList.add("hidden");
-        els.painelUpload.classList.remove("hidden");
-        els.modoTema?.classList.remove("selected");
-        els.modoUpload?.classList.add("selected");
-      }
-    }
-
     function getPerfilBanca(id) {
-      return PERFIS_BANCA[id] || PERFIS_BANCA["FGV"];
+      return PERFIS_BANCA[id] || PERFIS_BANCA.FGV;
     }
 
-    function montarConfigDoForm() {
-      const bancaId = els.selBanca?.value || "FGV";
-      const qtd = parseInt(els.selQtd?.value || "5", 10) || 5;
-      const nivel = els.selNivel?.value || "basico";
-
-      const perfil = getPerfilBanca(bancaId);
-
-      if (estado.modo === "tema") {
-        const tema = (els.inpTema?.value || "").trim();
-        if (!tema) {
-          alert("Informe um tema para gerar o simulado.");
-          return null;
-        }
-        return {
-          origem: "tema",
-          tema,
-          nivel,
-          banca: perfil,
-          qtd,
-        };
-      } else {
-        // origem upload → posteriormente podemos receber um "outline" do PDF
-        return {
-          origem: "upload",
-          base: "pdf",
-          descricaoBase: els.infoUpload?.textContent || "Baseado no PDF carregado",
-          nivel,
-          banca: perfil,
-          qtd,
-        };
+    function gerarQuestoesMock() {
+      const perfil = getPerfilBanca(estado.banca);
+      const qs = [];
+      for (let i = 0; i < estado.qtd; i++) {
+        qs.push(criarQuestaoMock(perfil, i + 1));
       }
+      return qs;
     }
 
-    // --------------------------------------------------------
-    // GERADOR DE QUESTÕES FAKE (para testes de UX)
-    // Depois, aqui entra a IA de verdade
-    // --------------------------------------------------------
-    function gerarQuestoesFake(config) {
-      const questoes = [];
-      for (let i = 0; i < config.qtd; i++) {
-        questoes.push(criarQuestaoFake(config, i + 1));
-      }
-      return questoes;
-    }
-
-    function criarQuestaoFake(config, indice) {
-      const banca = config.banca;
-      const baseTexto =
-        config.origem === "tema"
-          ? `sobre o tema "${config.tema}"`
-          : `com base no material enviado (PDF)`;
-
-      if (banca.estilo === "certo_errado") {
-        // CESPE
-        const enunciado =
-          `A seguinte afirmação ${baseTexto} está correta para o padrão da banca ${banca.nome}: ` +
-          `“No contexto de ${config.nivel}, considera-se que o candidato deve ser capaz de ` +
-          `interpretar, analisar e julgar assertivas complexas, identificando exceções e detalhes relevantes.”`;
-
+    function criarQuestaoMock(perfil, indice) {
+      const temaUsado = estado.tema || "tema de estudos";
+      if (perfil.estilo === "certo_errado") {
         const correta = Math.random() > 0.5 ? "Certo" : "Errado";
-
         return {
           id: `Q${indice}`,
           indice,
+          banca: perfil.nome,
           tipo: "certo_errado",
-          enunciado,
+          enunciado:
+            `No contexto de ${temaUsado}, julgue o item a seguir, ` +
+            `de acordo com o estilo da banca ${perfil.nome}: ` +
+            `"O candidato deve ser capaz de interpretar, analisar e julgar afirmações detalhadas, ` +
+            `identificando exceções, generalizações e armadilhas semânticas."`,
           alternativas: ["Certo", "Errado"],
-          correta,
-          explicacao:
-            "Questão em estilo CESPE: o foco está em julgar a assertiva como certa ou errada, prestando atenção a termos absolutos, exceções e detalhes semânticos.",
+          corretaIndex: correta === "Certo" ? 0 : 1,
           respostaAluno: null,
         };
       }
 
-      // Demais bancas (objetivas)
-      const enunciadoBaseLongo = `Considerando o que se estuda ${baseTexto}, especialmente no nível ${config.nivel}, ` +
-        `analise a situação hipotética a seguir e, em seguida, responda à questão. ` +
-        `Um candidato se prepara para provas da banca ${banca.nome} e precisa dominar conceitos, aplicações ` +
-        `e relações entre os tópicos abordados em ${baseTexto}.`;
-
-      const enunciadoBaseCurto = `No contexto ${baseTexto}, assinale a alternativa correta.`;
-
-      const enunciado = banca.enunciadoLongo
-        ? `${enunciadoBaseLongo}\n\nCom base nessas informações, assinale a alternativa correta.`
-        : enunciadoBaseCurto;
-
+      // demais bancas → múltipla escolha
       const alternativas = [];
-      const qtdAlt = banca.alternativas || 5;
+      const qtdAlt = 5;
       const idxCorreta = Math.floor(Math.random() * qtdAlt);
 
       for (let i = 0; i < qtdAlt; i++) {
-        const letra = String.fromCharCode(65 + i); // A, B, C, ...
-        const textoAlt =
+        const letra = String.fromCharCode(65 + i); // A, B, C...
+        const texto =
           i === idxCorreta
-            ? `${letra}) Alternativa correta, coerente com o conteúdo ${baseTexto} e compatível com o estilo da banca ${banca.nome}.`
-            : `${letra}) Alternativa incorreta, apresentando erro conceitual, generalização indevida ou detalhe incompatível com o padrão da banca ${banca.nome}.`;
-        alternativas.push(textoAlt);
+            ? `${letra}) Alternativa correta, alinhada ao conteúdo de ${temaUsado} e à abordagem da banca ${perfil.nome}.`
+            : `${letra}) Alternativa incorreta, com erro conceitual, inversão lógica ou detalhe incompatível com o padrão da banca ${perfil.nome}.`;
+        alternativas.push(texto);
       }
 
       return {
         id: `Q${indice}`,
         indice,
+        banca: perfil.nome,
         tipo: "objetiva",
-        enunciado,
+        enunciado:
+          perfil.estilo === "contextual"
+            ? `Considere a situação hipotética relacionada a ${temaUsado}, de acordo com o estilo da banca ${perfil.nome}. ` +
+              `Analise as informações apresentadas e assinale a alternativa correta.`
+            : `Com base nos conhecimentos sobre ${temaUsado}, assinale a alternativa correta conforme o padrão da banca ${perfil.nome}.`,
         alternativas,
-        correta: alternativas[idxCorreta].slice(0, 2), // "A)" , "B)" etc. (poderíamos guardar índice também)
         corretaIndex: idxCorreta,
-        explicacao:
-          "Questão criada em estilo objetivo, simulando o padrão da banca escolhida. Em uma versão com IA, o enunciado e as alternativas seriam baseados em tópicos reais do conteúdo.",
         respostaAluno: null,
       };
     }
 
-    // --------------------------------------------------------
-    // RENDERIZAÇÃO DO SIMULADO
-    // --------------------------------------------------------
-    function renderizarQuestaoAtual() {
-      if (!els.areaSimulado) return;
+    // ------------------------------------------------------
+    // TELA DE CONFIGURAÇÃO INICIAL
+    // ------------------------------------------------------
+    function prepararTelaConfiguracao() {
+      limparSimulado();
+      if (!els.questaoContainer) return;
 
-      els.areaResultado.innerHTML = "";
-      els.areaSimulado.innerHTML = "";
+      els.questaoContainer.innerHTML = `
+        <div class="space-y-4">
+          <h3 class="text-lg font-bold">Configurar simulado</h3>
+          <p class="text-sm text-[var(--muted)]">
+            Escolha a banca, o tema (opcional) e a quantidade de questões para gerar um simulado de teste.
+          </p>
 
-      if (!estado.questoes || estado.questoes.length === 0) {
-        els.areaSimulado.innerHTML = "<p>Nenhum simulado gerado ainda.</p>";
-        return;
+          <div class="grid md:grid-cols-2 gap-4">
+            <div>
+              <label class="text-sm font-medium">Banca</label>
+              <select id="sim-config-banca" class="w-full">
+                <option value="FGV">FGV</option>
+                <option value="CESPE">CESPE / CEBRASPE</option>
+                <option value="VUNESP">VUNESP</option>
+                <option value="FCC">FCC</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="text-sm font-medium">Quantidade de questões</label>
+              <select id="sim-config-qtd" class="w-full">
+                <option value="5">5 questões</option>
+                <option value="10">10 questões</option>
+                <option value="15">15 questões</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label class="text-sm font-medium">Tema (opcional)</label>
+            <input id="sim-config-tema" type="text" class="w-full"
+              placeholder="Ex.: Direito Administrativo — Atos Administrativos">
+          </div>
+
+          <button id="sim-config-gerar" class="btn mt-2 w-full">Iniciar simulado</button>
+        </div>
+      `;
+
+      const btnConfigGerar = document.getElementById("sim-config-gerar");
+      const selBanca = document.getElementById("sim-config-banca");
+      const selQtd = document.getElementById("sim-config-qtd");
+      const inpTema = document.getElementById("sim-config-tema");
+
+      if (btnConfigGerar) {
+        btnConfigGerar.addEventListener("click", () => {
+          estado.banca = selBanca ? selBanca.value || "FGV" : "FGV";
+          const qtdRaw = selQtd ? selQtd.value : "5";
+          const qtd = parseInt(qtdRaw || "5", 10);
+          estado.qtd = isNaN(qtd) ? 5 : qtd;
+          estado.tema = inpTema ? (inpTema.value || "").trim() : "";
+
+          iniciarSimuladoMock();
+        });
       }
+    }
 
-      if (estado.finalizado) {
-        renderizarResultado();
+    // ------------------------------------------------------
+    // INICIAR SIMULADO MOCK
+    // ------------------------------------------------------
+    function iniciarSimuladoMock() {
+      estado.questoes = gerarQuestoesMock();
+      estado.indiceAtual = 0;
+      estado.emAndamento = true;
+      if (els.resultado) {
+        els.resultado.classList.add("hidden");
+        els.resultado.innerHTML = "";
+      }
+      if (els.nav) els.nav.classList.remove("hidden");
+      iniciarTimer();
+      renderizarQuestaoAtual();
+    }
+
+    // ------------------------------------------------------
+    // RENDERIZAÇÃO DA QUESTÃO
+    // ------------------------------------------------------
+    function renderizarQuestaoAtual() {
+      if (!els.questaoContainer) return;
+
+      els.questaoContainer.innerHTML = "";
+
+      if (!estado.questoes.length) {
+        els.questaoContainer.innerHTML =
+          '<p class="sim-loading">Nenhum simulado em andamento.</p>';
+        if (els.nav) els.nav.classList.add("hidden");
         return;
       }
 
       const q = estado.questoes[estado.indiceAtual];
+      const total = estado.questoes.length;
+
+      // Progresso
+      if (els.progressBar) {
+        const pct = ((estado.indiceAtual + 1) / total) * 100;
+        els.progressBar.style.width = pct + "%";
+      }
 
       const wrapper = document.createElement("div");
-      wrapper.className = "sim-questao";
+      wrapper.className = "sim-questao-card space-y-3";
 
+      // header simples
       const header = document.createElement("div");
-      header.className = "sim-questao-header";
+      header.className = "flex justify-between items-center text-xs text-[var(--muted)]";
       header.innerHTML = `
-        <div class="sim-questao-indice">Questão ${q.indice} de ${estado.questoes.length}</div>
-        <div class="sim-questao-banca">${estado.config.banca.nome}</div>
+        <span>Questão ${q.indice} de ${total}</span>
+        <span>${q.banca}</span>
       `;
       wrapper.appendChild(header);
 
@@ -257,62 +322,142 @@
       enu.textContent = q.enunciado;
       wrapper.appendChild(enu);
 
+      // alternativas
       const lista = document.createElement("div");
-      lista.className = "sim-alternativas";
+      lista.className = "space-y-2";
 
       if (q.tipo === "certo_errado") {
-        q.alternativas.forEach((alt) => {
-          const btn = document.createElement("button");
-          btn.type = "button";
-          btn.className =
-            "sim-alt-btn" + (q.respostaAluno === alt ? " sim-alt-selecionada" : "");
-          btn.textContent = alt;
-          btn.addEventListener("click", () => {
-            q.respostaAluno = alt;
-            renderizarQuestaoAtual();
-          });
-          lista.appendChild(btn);
-        });
-      } else {
-        q.alternativas.forEach((altTexto, idx) => {
-          const btn = document.createElement("button");
-          btn.type = "button";
-          btn.className =
-            "sim-alt-btn" +
-            (q.respostaAluno === idx ? " sim-alt-selecionada" : "");
-          btn.textContent = altTexto;
-          btn.addEventListener("click", () => {
+        q.alternativas.forEach((textoAlt, idx) => {
+          const alt = document.createElement("div");
+          alt.className =
+            "sim-alt" + (q.respostaAluno === idx ? " selected" : "");
+          alt.innerHTML = `
+            <div class="sim-radio"></div>
+            <div class="sim-alt-text">${textoAlt}</div>
+          `;
+          alt.addEventListener("click", () => {
             q.respostaAluno = idx;
             renderizarQuestaoAtual();
           });
-          lista.appendChild(btn);
+          lista.appendChild(alt);
+        });
+      } else {
+        q.alternativas.forEach((textoAlt, idx) => {
+          const alt = document.createElement("div");
+          alt.className =
+            "sim-alt" + (q.respostaAluno === idx ? " selected" : "");
+          alt.innerHTML = `
+            <div class="sim-radio"></div>
+            <div class="sim-alt-text">${textoAlt}</div>
+          `;
+          alt.addEventListener("click", () => {
+            q.respostaAluno = idx;
+            renderizarQuestaoAtual();
+          });
+          lista.appendChild(alt);
         });
       }
 
       wrapper.appendChild(lista);
+      els.questaoContainer.appendChild(wrapper);
 
       // Navegação
-      const nav = document.createElement("div");
-      nav.className = "sim-nav";
+      if (els.nav) els.nav.classList.remove("hidden");
+      if (els.btnVoltar) {
+        els.btnVoltar.disabled = estado.indiceAtual === 0;
+      }
+      if (els.btnProxima) {
+        els.btnProxima.textContent =
+          estado.indiceAtual === total - 1 ? "Finalizar simulado ▶" : "Próxima ▶";
+      }
+    }
 
-      const btnAnterior = document.createElement("button");
-      btnAnterior.type = "button";
-      btnAnterior.textContent = "Anterior";
-      btnAnterior.disabled = estado.indiceAtual === 0;
-      btnAnterior.addEventListener("click", () => {
+    // ------------------------------------------------------
+    // FINALIZAÇÃO E RESULTADO
+    // ------------------------------------------------------
+    function finalizarSimulado() {
+      pararTimer();
+      estado.emAndamento = false;
+
+      if (!els.resultado) return;
+
+      const total = estado.questoes.length;
+      let acertos = 0;
+
+      estado.questoes.forEach((q) => {
+        if (q.respostaAluno == null) return;
+        if (q.respostaAluno === q.corretaIndex) acertos++;
+      });
+
+      const perc = total ? Math.round((acertos / total) * 100) : 0;
+
+      els.resultado.classList.remove("hidden");
+      els.resultado.innerHTML = "";
+
+      const card = document.createElement("div");
+      card.className = "sim-resultado-card";
+
+      card.innerHTML = `
+        <div class="sim-resultado-titulo">Resultado do simulado</div>
+        <div class="sim-score">${perc}%</div>
+        <p><strong>Acertos:</strong> ${acertos} de ${total}</p>
+        <p><strong>Banca:</strong> ${getPerfilBanca(estado.banca).nome}</p>
+        <p><strong>Tema:</strong> ${estado.tema || "Não informado"}</p>
+        <p><strong>Tempo:</strong> ${formatarTempo(estado.tempoSegundos)}</p>
+        <p class="sim-feedback">
+          Use este resultado apenas para testar a experiência do simulado. 
+          Em produção, as questões serão geradas com base na IA e no seu material de estudo.
+        </p>
+      `;
+
+      els.resultado.appendChild(card);
+
+      // Lista de questões
+      const lista = document.createElement("ul");
+      lista.className = "sim-lista-resultados";
+
+      estado.questoes.forEach((q) => {
+        const li = document.createElement("li");
+        li.className = "sim-resultado-item";
+
+        const respAluno =
+          q.respostaAluno == null ? "Não respondida" : q.alternativas[q.respostaAluno];
+        const respCorreta = q.alternativas[q.corretaIndex];
+
+        const acertou =
+          q.respostaAluno != null && q.respostaAluno === q.corretaIndex;
+
+        li.innerHTML = `
+          <h4>Questão ${q.indice}</h4>
+          <p class="text-xs text-[var(--muted)] mb-1">${q.enunciado}</p>
+          <p><strong>Sua resposta:</strong> ${respAluno}</p>
+          <p><strong>Gabarito:</strong> ${respCorreta}</p>
+          <p class="${acertou ? "correta" : "errada"} mt-1">
+            ${acertou ? "Acertou" : "Errou"}
+          </p>
+        `;
+
+        lista.appendChild(li);
+      });
+
+      els.resultado.appendChild(lista);
+    }
+
+    // ------------------------------------------------------
+    // EVENTOS DE NAVEGAÇÃO
+    // ------------------------------------------------------
+    if (els.btnVoltar) {
+      els.btnVoltar.addEventListener("click", () => {
         if (estado.indiceAtual > 0) {
           estado.indiceAtual--;
           renderizarQuestaoAtual();
         }
       });
+    }
 
-      const btnProxima = document.createElement("button");
-      btnProxima.type = "button";
-      btnProxima.textContent =
-        estado.indiceAtual === estado.questoes.length - 1
-          ? "Finalizar simulado"
-          : "Próxima";
-      btnProxima.addEventListener("click", () => {
+    if (els.btnProxima) {
+      els.btnProxima.addEventListener("click", () => {
+        if (!estado.questoes.length) return;
         if (estado.indiceAtual < estado.questoes.length - 1) {
           estado.indiceAtual++;
           renderizarQuestaoAtual();
@@ -320,135 +465,33 @@
           finalizarSimulado();
         }
       });
-
-      nav.appendChild(btnAnterior);
-      nav.appendChild(btnProxima);
-
-      wrapper.appendChild(nav);
-
-      els.areaSimulado.appendChild(wrapper);
     }
 
-    // --------------------------------------------------------
-    // FINALIZAÇÃO E RESULTADO
-    // --------------------------------------------------------
-    function finalizarSimulado() {
-      estado.finalizado = true;
-      renderizarResultado();
-    }
-
-    function renderizarResultado() {
-      if (!els.areaResultado || !estado.questoes.length) return;
-
-      els.areaSimulado.innerHTML = "";
-
-      let acertos = 0;
-
-      estado.questoes.forEach((q) => {
-        if (q.tipo === "certo_errado") {
-          if (q.respostaAluno === q.correta) acertos++;
-        } else {
-          if (q.respostaAluno === q.corretaIndex) acertos++;
-        }
+    // ------------------------------------------------------
+    // INTEGRAÇÃO COM OS MODOS DA LIORA
+    // (não interfere no core, apenas controla a área direita)
+    // ------------------------------------------------------
+    if (els.modoSimulados) {
+      els.modoSimulados.addEventListener("click", () => {
+        mostrarSimulado();
       });
+    }
 
-      const total = estado.questoes.length;
-      const perc = Math.round((acertos / total) * 100);
-
-      const resumo = document.createElement("div");
-      resumo.className = "sim-resumo";
-
-      resumo.innerHTML = `
-        <h3>Resultado do simulado (${estado.config.banca.nome})</h3>
-        <p><strong>Acertos:</strong> ${acertos} de ${total} (${perc}%)</p>
-        <p><strong>Nível:</strong> ${estado.config.nivel}</p>
-        <p><strong>Origem:</strong> ${
-          estado.config.origem === "tema"
-            ? `Tema: "${estado.config.tema}"`
-            : `Base: ${estado.config.descricaoBase}`
-        }</p>
-      `;
-
-      // Lista comentada de questões
-      const lista = document.createElement("div");
-      lista.className = "sim-lista-questoes";
-
-      estado.questoes.forEach((q) => {
-        const bloco = document.createElement("div");
-        bloco.className = "sim-questao-resumo";
-
-        let respostaAlunoTexto;
-        let corretaTexto;
-
-        if (q.tipo === "certo_errado") {
-          respostaAlunoTexto = q.respostaAluno || "Não respondida";
-          corretaTexto = q.correta;
-        } else {
-          respostaAlunoTexto =
-            q.respostaAluno == null
-              ? "Não respondida"
-              : q.alternativas[q.respostaAluno];
-          corretaTexto = q.alternativas[q.corretaIndex];
-        }
-
-        const acertou =
-          q.tipo === "certo_errado"
-            ? q.respostaAluno === q.correta
-            : q.respostaAluno === q.corretaIndex;
-
-        bloco.innerHTML = `
-          <div class="sim-questao-resumo-header">
-            <span>Questão ${q.indice}</span>
-            <span class="${
-              acertou ? "sim-acerto" : "sim-erro"
-            }">${acertou ? "Acertou" : "Errou"}</span>
-          </div>
-          <p class="sim-enunciado-resumo">${q.enunciado}</p>
-          <p><strong>Sua resposta:</strong> ${respostaAlunoTexto}</p>
-          <p><strong>Gabarito:</strong> ${corretaTexto}</p>
-          <p class="sim-explicacao"><strong>Comentário:</strong> ${
-            q.explicacao
-          }</p>
-        `;
-        lista.appendChild(bloco);
+    if (els.modoTema) {
+      els.modoTema.addEventListener("click", () => {
+        mostrarPlano();
       });
-
-      els.areaResultado.innerHTML = "";
-      els.areaResultado.appendChild(resumo);
-      els.areaResultado.appendChild(lista);
     }
 
-    // --------------------------------------------------------
-    // AÇÃO PRINCIPAL: GERAR SIMULADO
-    // --------------------------------------------------------
-    function gerarSimulado() {
-      const config = montarConfigDoForm();
-      if (!config) return;
-
-      console.log("🧪 Gerando simulado com config:", config);
-
-      // Aqui, por enquanto, usamos o gerador fake.
-      // No futuro: chamar backend/IA passando (config + tópicos/outline do PDF, etc.)
-      const questoes = gerarQuestoesFake(config);
-
-      estado.config = config;
-      estado.questoes = questoes;
-      estado.indiceAtual = 0;
-      estado.finalizado = false;
-
-      renderizarQuestaoAtual();
+    if (els.modoUpload) {
+      els.modoUpload.addEventListener("click", () => {
+        mostrarPlano();
+      });
     }
 
-    // --------------------------------------------------------
-    // EVENTOS
-    // --------------------------------------------------------
-    els.modoTema?.addEventListener("click", () => alternarModo("tema"));
-    els.modoUpload?.addEventListener("click", () => alternarModo("upload"));
-    els.btnGerar?.addEventListener("click", gerarSimulado);
+    // estado inicial
+    mostrarPlano();
 
-    // modo inicial
-    alternarModo("tema");
-
-    console.log("🟢 Liora Simulados v1 inicializado com sucesso.");
+    console.log("🟢 Liora Simulados (mock) inicializado com sucesso.");
   });
 })();
