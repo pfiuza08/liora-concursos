@@ -46,11 +46,12 @@
   <section class="card p-6">
     <h2 class="section-title mb-4">Como você deseja estudar?</h2>
 
-    <div class="grid grid-cols-3 gap-2 mb-6">
-      <button id="modo-tema" class="btn-secondary selected">Tema</button>
-      <button id="modo-upload" class="btn-secondary">Upload</button>
-      <button id="modo-simulados" class="btn-secondary">Simulados</button>
-    </div>
+   <div class="grid grid-cols-4 gap-2 mb-6">
+     <button id="modo-tema" class="btn-secondary selected">Tema</button>
+     <button id="modo-upload" class="btn-secondary">Upload</button>
+     <button id="modo-simulados" class="btn-secondary">Simulados</button>
+     <button id="modo-dashboard" class="btn-secondary">Minha evolução</button>
+   </div>
 
     <!-- PAINEL TEMA -->
     <div id="painel-tema">
@@ -94,37 +95,56 @@
   <!-- ============================
        DIREITA — ÁREA DINÂMICA
        ============================ -->
-  <section id="area-dinamica" class="card p-6">
+ <section id="area-dinamica" class="card p-6">
 
-    <!-- PLANO -->
-    <div id="area-plano">
-      <div class="flex justify-between mb-4">
-        <h2 class="section-title">Seu plano de estudo</h2>
-        <p id="ctx" class="text-sm text-[var(--muted)]"></p>
+  <div id="area-plano">
+    <div class="flex justify-between mb-4">
+      <h2 class="section-title">Seu plano de estudo</h2>
+      <p id="ctx" class="text-sm text-[var(--muted)]"></p>
+    </div>
+    <div id="plano" class="space-y-3"></div>
+  </div>
+
+  <div id="area-simulado" class="hidden space-y-6">
+    <div class="flex justify-between items-center">
+      <div id="sim-timer" class="sim-timer hidden">00:00</div>
+      <div class="sim-progress w-48">
+        <div id="sim-progress-bar" class="sim-progress-fill"></div>
       </div>
-      <div id="plano" class="space-y-3"></div>
     </div>
 
-    <!-- SIMULADO -->
-    <div id="area-simulado" class="hidden space-y-6">
+    <div id="sim-questao-container" class="space-y-4"></div>
 
-      <div class="flex justify-between items-center">
-        <div id="sim-timer" class="sim-timer hidden">00:00</div>
-        <div class="sim-progress w-48">
-          <div id="sim-progress-bar" class="sim-progress-fill"></div>
-        </div>
-      </div>
-
-      <div id="sim-questao-container" class="space-y-4"></div>
-
-      <div id="sim-nav" class="sim-nav hidden">
-        <button id="sim-btn-voltar" class="sim-btn-nav">◀ Voltar</button>
-        <button id="sim-btn-proxima" class="sim-btn-nav sim-btn-next">Próxima ▶</button>
-      </div>
-
-      <div id="sim-resultado" class="hidden"></div>
+    <div id="sim-nav" class="sim-nav hidden">
+      <button id="sim-btn-voltar" class="sim-btn-nav">◀ Voltar</button>
+      <button id="sim-btn-proxima" class="sim-btn-nav sim-btn-next">Próxima ▶</button>
     </div>
-  </section>
+
+    <div id="sim-resultado" class="hidden"></div>
+  </div>
+
+  <!-- NOVO: Área Dashboard -->
+  <div id="area-dashboard" class="hidden space-y-6">
+    <div class="flex justify-between mb-4 items-center">
+      <h2 class="section-title">Minha evolução</h2>
+      <p class="text-sm text-[var(--muted)]">
+        Visão geral dos seus simulados neste dispositivo.
+      </p>
+    </div>
+
+    <div id="dash-resumo" class="grid gap-3 md:grid-cols-3 text-sm">
+      <!-- preenchido via JS -->
+    </div>
+
+    <div id="dash-bancas" class="mt-4">
+      <!-- preenchido via JS -->
+    </div>
+
+    <div id="dash-ultimos" class="mt-4">
+      <!-- preenchido via JS -->
+    </div>
+  </div>
+</section>
 </main>
 
 <!-- ============================
@@ -218,6 +238,8 @@
 <script src="scripts/semantic.js"></script>
 
 <script src="scripts/simulados.js?v=3"></script>
+<!-- Dashboard / Área do aluno -->
+<script src="scripts/dashboard.js?v=1"></script>
 <script src="scripts/core.js"></script>
 
 <div id="liora-build-info">Liora v70-G-SIM-FINAL</div>
