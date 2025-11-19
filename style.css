@@ -301,3 +301,33 @@ input:focus, select:focus {
   backdrop-filter:blur(4px);
   transition:opacity .3s ease;
 }
+
+/* ============================================
+   🔘 BOTÕES (ajuste para textos longos)
+   ============================================ */
+
+.btn-secondary {
+  background: transparent;
+  border: 1px solid var(--stroke);
+  color: var(--fg);
+  padding: .7rem 1rem;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: .2s ease;
+  white-space: nowrap;        /* impede quebra estranha */
+  min-width: 120px;           /* garante espaço mínimo */
+  text-align: center;         /* centraliza */
+}
+
+.btn-secondary.selected {
+  background: var(--brand);
+  color: #fff;
+  border-color: var(--brand) !important;
+}
+
+/* Ajuste específico para botões maiores */
+#modo-simulados,
+#modo-dashboard {
+  min-width: 150px;
+}
