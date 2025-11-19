@@ -1,16 +1,11 @@
 // ==============================================================
-// 🧠 LIORA — SIMULADOS v9 (Mock Avançado + Dashboard + Histórico)
-// - Compatível com o modal estático do index (IDs conferidos)
-// - Modal abre/fecha corretamente (botão e clique fora)
-// - Mock avançado por banca + dificuldade
-// - Badge de dificuldade com ícone e pill translúcida
-// - Dashboard por nível (fácil/médio/difícil)
-// - Gabarito completo
-// - Histórico salvo em localStorage
+// 🧠 LIORA — SIMULADOS v10
+// - Base: v9 (mock avançado, dashboard, gabarito, histórico)
+// - NOVO: bloco de "Histórico recente" renderizado no resultado
 // ==============================================================
 
 (function () {
-  console.log("🔵 Liora Simulados v9 (mock avançado) carregado...");
+  console.log("🔵 Liora Simulados v10 (mock avançado + histórico visual) carregado...");
 
   document.addEventListener("DOMContentLoaded", () => {
     // ------------------------------------------------------
@@ -340,7 +335,6 @@
       if (els.areaSimulado) els.areaSimulado.classList.remove("hidden");
     }
 
-    // Caso o usuário troque para Tema/Upload, garantimos voltar ao plano
     if (els.modoTema) {
       els.modoTema.addEventListener("click", () => {
         mostrarPlano();
@@ -369,7 +363,6 @@
       const q = estado.questoes[estado.indiceAtual];
       els.questaoContainer.innerHTML = "";
 
-      // header
       const header = document.createElement("div");
       header.className =
         "flex justify-between items-center text-xs text-[var(--muted)] mb-3";
@@ -382,13 +375,11 @@
       `;
       els.questaoContainer.appendChild(header);
 
-      // enunciado
       const p = document.createElement("p");
       p.className = "sim-enunciado mb-3 whitespace-pre-line";
       p.textContent = q.enunciado;
       els.questaoContainer.appendChild(p);
 
-      // alternativas
       q.alternativas.forEach((alt, idx) => {
         const div = document.createElement("div");
         div.className =
@@ -424,7 +415,72 @@
     }
 
     // ------------------------------------------------------
-    // FINALIZAR SIMULADO (com dashboard + gabarito + histórico)
+    // HISTÓRICO VISUAL (mini dashboard)
+    // ------------------------------------------------------
+    function renderHistoricoResumo() {
+      if (!els.resultado) return;
+
+      const hist = carregarHistorico();
+      if (!hist || !hist.length) return;
+
+      const ultimos = hist.slice(-5).reverse(); // últimos 5, do mais recente para o mais antigo
+
+      const bloco = document.createElement("div");
+      bloco.className = "sim-resultado-card";
+      bloco.style.marginTop = "1rem";
+
+      let rows = "";
+      ultimos.forEach((item) => {
+        const date = new Date(item.dataISO);
+        const dataFmt = date.toLocaleDateString("pt-BR", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "2-digit",
+        });
+        const horaFmt = date.toLocaleTimeString("pt-BR", {
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+
+        rows += `
+          <tr>
+            <td>${dataFmt} ${horaFmt}</td>
+            <td>${item.banca}</td>
+            <td>${item.tema || "—"}</td>
+            <td>${item.qtd}</td>
+            <td>${item.perc}%</td>
+          </tr>
+        `;
+      });
+
+      bloco.innerHTML = `
+        <div class="sim-resultado-titulo">Histórico recente de simulados</div>
+        <p class="text-xs text-[var(--muted)] mb-2">
+          Últimas tentativas realizadas neste dispositivo.
+        </p>
+        <div class="overflow-x-auto">
+          <table class="sim-dashboard-table">
+            <thead>
+              <tr>
+                <th style="min-width: 90px;">Data</th>
+                <th style="min-width: 60px;">Banca</th>
+                <th style="min-width: 120px;">Tema</th>
+                <th style="min-width: 60px;">Qtd</th>
+                <th style="min-width: 50px;">%</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rows}
+            </tbody>
+          </table>
+        </div>
+      `;
+
+      els.resultado.appendChild(bloco);
+    }
+
+    // ------------------------------------------------------
+    // FINALIZAR SIMULADO
     // ------------------------------------------------------
     function finalizarSimulado(porTempo = false) {
       pararTimer();
@@ -465,12 +521,10 @@
       );
       const tempoUsadoFmt = formatarTempo(tempoUsadoSeg);
 
-      // limpar áreas
       els.questaoContainer.innerHTML = "";
       els.resultado.innerHTML = "";
       els.nav.classList.add("hidden");
 
-      // CARD PRINCIPAL DE RESULTADO
       const card = document.createElement("div");
       card.className = "sim-resultado-card";
 
@@ -493,7 +547,6 @@
 
       els.resultado.appendChild(card);
 
-      // DASHBOARD POR NÍVEL DE DIFICULDADE
       const dash = document.createElement("div");
       dash.className = "sim-dashboard";
 
@@ -541,7 +594,6 @@
 
       els.resultado.appendChild(dash);
 
-      // LISTA DE QUESTÕES (GABARITO)
       const lista = document.createElement("ul");
       lista.className = "sim-lista-resultados";
 
@@ -577,7 +629,7 @@
       els.resultado.classList.remove("hidden");
 
       // salvar no histórico
-      salvarNoHistorico({
+      const resumo = {
         dataISO: new Date().toISOString(),
         banca: estado.banca,
         tema: estado.tema,
@@ -586,11 +638,15 @@
         perc,
         tempoSeg: tempoUsadoSeg,
         statsPorNiveis,
-      });
+      };
+      salvarNoHistorico(resumo);
+
+      // renderizar bloco de histórico recente logo abaixo
+      renderHistoricoResumo();
     }
 
     // ------------------------------------------------------
-    // EVENTOS DE NAVEGAÇÃO (voltar / próxima)
+    // EVENTOS DE NAVEGAÇÃO
     // ------------------------------------------------------
     if (els.btnVoltar) {
       els.btnVoltar.addEventListener("click", () => {
@@ -618,7 +674,6 @@
     // ------------------------------------------------------
     if (els.modalIniciar) {
       els.modalIniciar.addEventListener("click", () => {
-        // aplicar configurações do modal
         estado.banca = els.selBanca ? els.selBanca.value || "FGV" : "FGV";
         estado.qtd = els.selQtd ? Number(els.selQtd.value || "20") : 20;
         estado.tempoProvaMin = els.selTempo
@@ -632,7 +687,6 @@
         fecharModal();
         mostrarSimulado();
 
-        // reset estado de prova
         estado.questoes = gerarQuestoesMock();
         estado.indiceAtual = 0;
         if (els.resultado) {
@@ -645,7 +699,6 @@
       });
     }
 
-    // ------------------------------------------------------
-    console.log("🟢 Liora Simulados v9 inicializado com sucesso.");
+    console.log("🟢 Liora Simulados v10 inicializado com sucesso.");
   });
 })();
