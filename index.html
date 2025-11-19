@@ -198,6 +198,73 @@
 </div>
 
 <!-- ============================
+     WIZARD — SESSÕES (TEMA / UPLOAD)
+     ============================ -->
+<section id="liora-sessoes" class="hidden liora-wizard max-w-6xl mx-auto px-6 pb-10">
+
+  <!-- Cabeçalho -->
+  <div class="liora-wizard__header flex justify-between items-center mb-4">
+    <div>
+      <h2 id="liora-sessao-titulo" class="text-lg font-bold mb-1"></h2>
+      <p id="liora-tema-ativo" class="text-sm text-[var(--muted)]"></p>
+    </div>
+
+    <div class="liora-progress w-52">
+      <div id="liora-progress-bar" class="liora-progress__bar"></div>
+    </div>
+  </div>
+
+  <!-- Conteúdo principal -->
+  <div class="liora-card space-y-6 p-6">
+
+    <div class="liora-block">
+      <h4>Objetivo</h4>
+      <p id="liora-sessao-objetivo"></p>
+    </div>
+
+    <div class="liora-block">
+      <h4>Conteúdo</h4>
+      <div id="liora-sessao-conteudo"></div>
+    </div>
+
+    <div class="liora-block">
+      <h4>Analogias</h4>
+      <div id="liora-sessao-analogias"></div>
+    </div>
+
+    <div class="liora-block">
+      <h4>Ativação</h4>
+      <ul id="liora-sessao-ativacao"></ul>
+    </div>
+
+    <div class="liora-block">
+      <h4>Teste rápido</h4>
+      <div id="liora-sessao-quiz"></div>
+      <p id="liora-sessao-quiz-feedback"></p>
+    </div>
+
+    <div class="liora-block">
+      <h4>Flashcards</h4>
+      <ul id="liora-sessao-flashcards"></ul>
+    </div>
+
+    <div class="liora-block">
+      <h4>Mapa Mental</h4>
+      <pre id="liora-sessao-mapa" class="liora-mapa-mental"></pre>
+    </div>
+
+  </div>
+
+  <!-- Rodapé -->
+  <div class="liora-wizard__footer flex justify-between mt-6">
+    <button id="liora-btn-voltar" class="liora-btn ghost">◀ Voltar</button>
+    <button id="liora-btn-proxima" class="liora-btn primary">Próxima sessão ▶</button>
+  </div>
+
+</section>
+
+  
+<!-- ============================
      SCRIPTS
      ============================ -->
 <script src="scripts/pdf-extractor.js"></script>
