@@ -13,9 +13,6 @@
   --bgCard:#151515;
   --bgHover:#1d1d1d;
   --border:#252525;
-
-  --brand-soft: rgba(196,75,4,0.12);
-  --brand-soft-strong: rgba(196,75,4,0.22);
 }
 
 html.light, body.light {
@@ -29,9 +26,6 @@ html.light, body.light {
   --bgCard:#ffffff;
   --bgHover:#f3f2ef;
   --border:#e0ddd8;
-
-  --brand-soft: rgba(244,162,97,0.18);
-  --brand-soft-strong: rgba(244,162,97,0.26);
 }
 
 /* ==========================================================
@@ -45,6 +39,7 @@ html, body {
   font-family:"Inter", sans-serif;
   line-height:1.6;
   transition:background .3s ease, color .3s ease;
+  overflow-x:hidden;
 }
 
 /* ==========================================================
@@ -69,10 +64,11 @@ html, body {
   border-radius:1rem;
   padding:20px;
   box-shadow:var(--shadow);
+  overflow:hidden;
 }
 
 /* ==========================================================
-   🔘 BOTÕES (GERAL)
+   🔘 BOTÕES
 ========================================================== */
 .btn, .btn-secondary, .liora-btn {
   border-radius:12px;
@@ -80,59 +76,38 @@ html, body {
   font-weight:600;
   cursor:pointer;
   transition:.2s ease;
+  white-space:nowrap;
 }
 
 .btn {
   background:var(--brand);
   color:#fff;
 }
-.btn:hover {
-  filter:brightness(1.15);
-}
+.btn:hover { filter:brightness(1.15); }
 
-/* ==========================================================
-   🔘 BOTÕES DOS MODOS (Tema / Upload / Simulados / Dashboard)
-   ========================================================== */
-#modo-tema, #modo-upload, #modo-simulados, #modo-dashboard {
-  font-size:0.9rem;
-  padding:.55rem .85rem;
-  background:var(--bgCard);
-  color:var(--fg);
-  border:1px solid var(--stroke);
-  border-radius:12px;
-  transition:.2s ease;
-}
-
-#modo-tema:hover,
-#modo-upload:hover,
-#modo-simulados:hover,
-#modo-dashboard:hover {
-  background:var(--bgHover);
-}
-
-#modo-tema.selected,
-#modo-upload.selected,
-#modo-simulados.selected,
-#modo-dashboard.selected {
-  background:var(--brand);
-  color:white;
-  border-color:var(--brand);
-  box-shadow:0 0 12px rgba(196,75,4,0.55);
-  transform:translateY(-1px);
-}
-
-/* ==========================================================
-   🔘 BOTÃO SECUNDÁRIO (genérico)
-========================================================== */
 .btn-secondary {
   background:transparent;
   border:1px solid var(--stroke);
   color:var(--fg);
 }
-.btn-secondary.selected {
+
+.btn-secondary.selected{
   background:var(--brand);
   color:#fff;
   border-color:var(--brand)!important;
+}
+
+/* Correção dos botões de modo */
+.modo-btn {
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  min-height:48px;
+  text-align:center;
+  font-size:.92rem;
+  padding:0 .4rem;
+  white-space:normal;
+  line-height:1.2;
 }
 
 /* ==========================================================
@@ -147,7 +122,6 @@ input, select {
   color:var(--fg);
   font-size:0.95rem;
 }
-
 input:focus, select:focus {
   outline:none;
   border-color:var(--brand);
@@ -171,49 +145,29 @@ input:focus, select:focus {
   position:relative;
   transition:.3s ease;
 }
+.upload-zone:hover{ border-color:var(--brand); background:rgba(196,75,4,.15); }
+.upload-zone input{ position:absolute; inset:0; opacity:0; cursor:pointer; }
 
-.upload-zone:hover {
-  border-color:var(--brand);
-  background:var(--brand-soft);
-}
-
-/* loader */
 #upload-spinner {
   display:none;
   border:3px solid var(--stroke);
   border-top:3px solid var(--brand);
   border-radius:50%;
-  width:26px;
-  height:26px;
+  width:26px; height:26px;
   animation:spin 1s linear infinite;
 }
 
-/* ==========================================================
-   🔄 PROGRESS BAR
-========================================================== */
-.progress-bar {
-  margin-top:8px;
-  width:100%;
-  height:8px;
-  background:var(--stroke);
-  border-radius:999px;
-  overflow:hidden;
-}
-.progress-bar-fill {
-  width:0%;
-  height:100%;
-  background:var(--brand);
-  transition:width .4s ease;
-}
+@keyframes spin { to { transform:rotate(360deg); } }
 
 /* ==========================================================
-   🧠 WIZARD
+   🔄 STATUS + PROGRESS
 ========================================================== */
 .liora-progress {
   height:8px;
-  width:180px;
+  width:100%;
   background:var(--stroke);
   border-radius:999px;
+  overflow:hidden;
 }
 .liora-progress__bar {
   height:100%;
@@ -224,60 +178,136 @@ input:focus, select:focus {
 }
 
 /* ==========================================================
-   🧩 SEÇÕES DO PLANO / TOPICS
+   🧠 WIZARD / SESSÕES
 ========================================================== */
+#liora-sessoes {
+  margin-top:32px;
+  display:block;
+}
+
+.liora-section {
+  margin-bottom:30px;
+}
+
+.liora-section h4 {
+  color:var(--brand);
+  font-size:1.05rem;
+  font-weight:700;
+  text-transform:uppercase;
+  margin-bottom:8px;
+}
+
+.liora-section p {
+  font-size:0.95rem;
+  margin-bottom:10px;
+  color:var(--fg);
+}
+
+/* ==========================================================
+   🎯 QUIZ — FIX DEFINITIVO
+========================================================== */
+
+#liora-sessao-quiz {
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+  margin-top:12px;
+}
+
+#liora-sessao-quiz p {
+  margin-bottom:8px;
+  color:var(--fg);
+  font-size:0.95rem;
+}
+
+/* cartão da alternativa */
+.liora-quiz-option {
+  display:flex;
+  align-items:flex-start;
+  gap:12px;
+  padding:12px 16px;
+  border-radius:10px;
+  border:1px solid var(--stroke);
+  background:var(--bgCard);
+  cursor:pointer;
+  transition:.25s ease;
+  width:100%;
+  max-width:720px;
+  word-break:break-word;
+  white-space:normal;
+}
+
+.liora-quiz-option:hover {
+  background:var(--bgHover);
+  border-color:var(--brand);
+  transform:translateY(-1px);
+}
+
+.liora-quiz-option.selected {
+  background:var(--brand);
+  border-color:var(--brand)!important;
+  color:#fff;
+  box-shadow:0 0 10px rgba(196,75,4,0.45);
+  transform:translateY(-2px);
+}
+
+.liora-quiz-option input[type="radio"] {
+  width:18px;
+  height:18px;
+  accent-color:var(--brand);
+  cursor:pointer;
+}
+
+.liora-quiz-option .liora-quiz-option-text {
+  flex:1;
+  font-size:0.97rem;
+  line-height:1.45;
+  color:inherit;
+}
+
+/* ==========================================================
+   📘 CARDS DO PLANO
+========================================================== */
+
 .liora-card-topico {
-  padding: 12px 14px;
-  border-radius: 10px;
-  background: var(--bgCard);
-  border: 1px solid var(--stroke);
-  color: var(--fg);
-  transition: all .25s ease;
+  padding:13px 15px;
+  border-radius:10px;
+  border:1px solid var(--stroke);
+  background:var(--bgCard);
+  transition:.2s ease;
 }
 
 .liora-card-topico:hover {
-  background: var(--bgHover);
-  border-color: var(--brand);
-  transform: translateX(4px);
-  box-shadow: 0 4px 8px rgba(0,0,0,0.25);
+  background:var(--bgHover);
+  border-color:var(--brand);
+  transform:translateX(4px);
 }
 
 .liora-card-topico.active {
-  background: var(--brand-soft-strong);
-  border-color: var(--brand);
+  background:rgba(196,75,4,0.20);
+  border-color:var(--brand);
   transform:translateX(4px);
-  box-shadow:0 0 0 1px var(--brand);
 }
 
 /* ==========================================================
    🧠 MAPA MENTAL
 ========================================================== */
+
 .liora-mapa-mental {
-  background: var(--bgCard);
-  border: 1px solid var(--stroke);
-  padding: 16px 18px;
-  border-radius: 12px;
-  font-family: "Fira Code", monospace;
-  font-size: 0.85rem;
-  white-space: pre-wrap;
-  word-break: break-word;
-  overflow-x: auto;
-  color: var(--fg);
-  margin-top: 20px;
-  box-shadow: inset 0 0 4px rgba(0,0,0,0.25);
+  background:var(--bgCard);
+  border:1px solid var(--stroke);
+  padding:16px 18px;
+  border-radius:12px;
+  font-family:"Fira Code","Courier New",monospace;
+  font-size:0.85rem;
+  white-space:pre-wrap;
+  word-break:break-word;
+  overflow-x:auto;
+  color:var(--fg);
+  box-shadow:inset 0 0 4px rgba(0,0,0,0.25);
 }
 
-.liora-mapa-mental h5 {
-  margin-bottom: 8px;
-  font-size: 0.95rem;
-  font-weight:700;
-  text-transform:uppercase;
-  color:var(--brand);
-}
-
-/* ==========================================================
-   📱 RESPONSIVIDADE
-========================================================== */
+/* Responsivo */
 @media(max-width:640px){
   .liora-mapa-mental {
     font-size:0.80rem;
@@ -286,7 +316,7 @@ input:focus, select:focus {
 }
 
 /* ==========================================================
-   📄 BUILD TAG
+   📄 BUILD INFO
 ========================================================== */
 #liora-build-info {
   position:fixed;
@@ -296,106 +326,13 @@ input:focus, select:focus {
   opacity:0.45;
   padding:4px 8px;
   border-radius:6px;
-  pointer-events:none;
   background:rgba(0,0,0,0.15);
   backdrop-filter:blur(4px);
-  transition:opacity .3s ease;
+  pointer-events:none;
+  user-select:none;
+  transition:.3s ease;
 }
-
-/* ============================================================
-   🔘 BOTÕES DO MENU LATERAL — Ajuste para caber textos longos
-   ============================================================ */
-
-#modo-tema,
-#modo-upload,
-#modo-simulados,
-#modo-dashboard {
-  font-size: 0.85rem;          /* reduz suavemente a fonte */
-  padding: 0.55rem 0.6rem;     /* reduz padding para caber melhor */
-  white-space: normal !important; /* permite quebrar linha */
-  line-height: 1.1;            /* compacta o texto */
-  text-align: center;          /* centraliza */
-  height: auto;                /* garante ajuste natural */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 46px;            /* altura mínima agradável */
+html.light #liora-build-info {
+  background:rgba(255,255,255,0.35);
 }
-
-/* Corrige botão selecionado */
-#modo-tema.selected,
-#modo-upload.selected,
-#modo-simulados.selected,
-#modo-dashboard.selected {
-  background: var(--brand) !important;
-  color: #fff !important;
-  border-color: var(--brand) !important;
-}
-/* ==========================================================
-   ✅ QUIZ — estilo completo e corrigido (v70-G-SIM-FINAL)
-   ========================================================== */
-
-#liora-sessao-quiz p {
-  margin-bottom: 10px;
-  font-size: 1rem;
-  line-height: 1.55;
-  color: var(--fg);
-}
-
-/* Container das alternativas */
-.liora-quiz-option {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 12px 16px;
-  border: 1px solid var(--stroke);
-  background: var(--bgCard);
-  border-radius: 10px;
-  cursor: pointer;
-  transition: all .25s ease;
-  word-break: break-word;
-  white-space: normal;
-}
-
-.liora-quiz-option:hover {
-  background: var(--bgHover);
-  border-color: var(--brand);
-  transform: translateY(-1px);
-}
-
-.liora-quiz-option.selected {
-  background: var(--brand);
-  border-color: var(--brand) !important;
-  color: #fff;
-  box-shadow: 0 0 10px rgba(196, 75, 4, 0.45);
-  transform: translateY(-2px);
-}
-
-/* Bolinha do rádio */
-.liora-quiz-option input[type="radio"] {
-  flex-shrink: 0;
-  margin-top: 3px;
-  accent-color: var(--brand);
-  cursor: pointer;
-}
-
-/* Texto da alternativa */
-.liora-quiz-option-text {
-  flex: 1;
-  line-height: 1.45;
-  font-size: 0.97rem;
-}
-
-/* Espaço entre alternativas */
-#liora-sessao-quiz .liora-quiz-option + .liora-quiz-option {
-  margin-top: 10px;
-}
-
-/* Feedback */
-#liora-sessao-quiz-feedback {
-  margin-top: 10px;
-  font-size: 0.95rem;
-  opacity: 0;
-  transition: opacity .35s ease;
-}
-
+#liora-build-info:hover { opacity:1; }
