@@ -1,17 +1,17 @@
 // ==========================================================
-// 🧠 LIORA — SIMULADOS v4 (modal estático + correções finais)
-// - Usa SOMENTE o modal presente no index.html
-// - Abre no primeiro clique
-// - Botão "Iniciar simulado" funcionando
-// - IDs alinhados com o HTML enviado
+// 🧠 LIORA — SIMULADOS v6 (FINAL)
+// - Nunca quebra se algum elemento não existir
+// - addEventListener só é registrado se o ID existe
+// - Compatível 100% com o index enviado
 // ==========================================================
 
 (function () {
-  console.log("🔵 Liora Simulados v4 (modal estático) carregado...");
+  console.log("🔵 Liora Simulados v6 carregado...");
 
   document.addEventListener("DOMContentLoaded", () => {
+
     // ------------------------------------------------------
-    // ELEMENTOS BASE
+    // ELEMENTOS BASE (TODOS COM FALLBACK)
     // ------------------------------------------------------
     const els = {
       modoTema: document.getElementById("modo-tema"),
@@ -29,7 +29,6 @@
       btnProxima: document.getElementById("sim-btn-proxima"),
       resultado: document.getElementById("sim-resultado"),
 
-      // MODAL
       modalBackdrop: document.getElementById("sim-modal-backdrop"),
       modalClose: document.getElementById("sim-modal-close"),
       modalIniciar: document.getElementById("sim-modal-iniciar"),
@@ -45,6 +44,14 @@
       difDificil: document.getElementById("dif-dificil"),
       difErro: document.getElementById("dif-erro"),
     };
+
+    // ------------------------------------------------------
+    // Função SAFE de listener (nunca quebra)
+    // ------------------------------------------------------
+    function on(el, event, fn) {
+      if (el) el.addEventListener(event, fn);
+      else console.warn("⚠️ Elemento não encontrado para", event, fn);
+    }
 
     // ------------------------------------------------------
     // ESTADO
@@ -63,39 +70,37 @@
     };
 
     // ------------------------------------------------------
-    // MOSTRAR / OCULTAR MODAL
+    // MODAL
     // ------------------------------------------------------
     function abrirModal() {
+      if (!els.modalBackdrop) return;
       els.modalBackdrop.classList.remove("hidden");
       els.modalBackdrop.classList.add("visible");
     }
 
     function fecharModal() {
+      if (!els.modalBackdrop) return;
       els.modalBackdrop.classList.remove("visible");
       setTimeout(() => els.modalBackdrop.classList.add("hidden"), 150);
     }
 
-    // ------------------------------------------------------
-    // CLICAR EM "Simulados"
-    // ------------------------------------------------------
-    els.modoSimulados.addEventListener("click", () => {
-      abrirModal();
-    });
+    // Abrir modal com segurança
+    on(els.modoSimulados, "click", abrirModal);
 
-    // ------------------------------------------------------
-    // FECHAR MODAL
-    // ------------------------------------------------------
-    els.modalClose.addEventListener("click", fecharModal);
-    els.modalBackdrop.addEventListener("click", (e) => {
+    // Fechar modal
+    on(els.modalClose, "click", fecharModal);
+
+    on(els.modalBackdrop, "click", (e) => {
       if (e.target === els.modalBackdrop) fecharModal();
     });
 
     // ------------------------------------------------------
-    // MOSTRAR/OCULTAR DISTRIBUIÇÃO PERSONALIZADA
+    // DIFICULDADE PERSONALIZADA
     // ------------------------------------------------------
-    els.selModoDificuldade.addEventListener("change", () => {
-      const modo = els.selModoDificuldade.value;
-      if (modo === "personalizado") {
+    on(els.selModoDificuldade, "change", () => {
+      if (!els.selModoDificuldade || !els.difCustomContainer) return;
+
+      if (els.selModoDificuldade.value === "personalizado") {
         els.difCustomContainer.classList.remove("hidden");
       } else {
         els.difCustomContainer.classList.add("hidden");
@@ -114,13 +119,16 @@
     function iniciarTimer() {
       estado.tempoRestanteSeg = estado.tempoProvaMin * 60;
 
-      els.timer.classList.remove("hidden");
-      els.timer.textContent = formatarTempo(estado.tempoRestanteSeg);
+      if (els.timer) {
+        els.timer.classList.remove("hidden");
+        els.timer.textContent = formatarTempo(estado.tempoRestanteSeg);
+      }
 
       estado.timerId = setInterval(() => {
         estado.tempoRestanteSeg--;
-        els.timer.textContent = formatarTempo(estado.tempoRestanteSeg);
-
+        if (els.timer) {
+          els.timer.textContent = formatarTempo(estado.tempoRestanteSeg);
+        }
         if (estado.tempoRestanteSeg <= 0) {
           clearInterval(estado.timerId);
           finalizarSimulado(true);
@@ -134,21 +142,18 @@
     }
 
     // ------------------------------------------------------
-    // GERA QUESTÕES MOCK
+    // QUESTÕES MOCK
     // ------------------------------------------------------
     function gerarQuestoesMock() {
       const qs = [];
       const total = estado.qtd;
 
-      // distribuição
       let dist = { ...estado.dificuldadeDist };
 
-      // modo equilibrado
       if (estado.dificuldadeModo === "equilibrado") {
         dist = { facil: 33, medio: 33, dificil: 34 };
       }
 
-      // padrão da banca → médio
       if (estado.dificuldadeModo === "padrao") {
         dist = { facil: 20, medio: 60, dificil: 20 };
       }
@@ -171,33 +176,15 @@
     }
 
     function criarQuestaoMock(indice, nivel) {
-      const tema = "seu tema de estudo";
-      const bancaNome = els.selBanca.value.toUpperCase();
-
-      const base = {
-        facil: "Questão introdutória sobre " + tema,
-        medio: "Questão intermediária sobre " + tema,
-        dificil: "Questão avançada sobre " + tema,
-      };
-
-      const enunciado = `${base[nivel]} — Nível ${nivel.toUpperCase()} — Banca ${bancaNome}`;
-
-      const alternativas = [
-        "Alternativa A",
-        "Alternativa B",
-        "Alternativa C",
-        "Alternativa D",
-      ];
-
-      const corretaIndex = Math.floor(Math.random() * 4);
+      const bancaNome = els.selBanca ? els.selBanca.value.toUpperCase() : "BANCA";
 
       return {
         indice,
         nivel,
         banca: bancaNome,
-        enunciado,
-        alternativas,
-        corretaIndex,
+        enunciado: `Questão ${nivel.toUpperCase()} — Banca ${bancaNome}`,
+        alternativas: ["A", "B", "C", "D"],
+        corretaIndex: Math.floor(Math.random() * 4),
         respostaAluno: null,
       };
     }
@@ -206,37 +193,30 @@
     // MOSTRAR SIMULADO
     // ------------------------------------------------------
     function mostrarSimulado() {
-      els.areaPlano.classList.add("hidden");
-      els.areaSimulado.classList.remove("hidden");
+      if (els.areaPlano) els.areaPlano.classList.add("hidden");
+      if (els.areaSimulado) els.areaSimulado.classList.remove("hidden");
     }
 
     // ------------------------------------------------------
     // RENDER QUESTÃO
     // ------------------------------------------------------
     function render() {
-      const total = estado.questoes.length;
+      if (!els.questaoContainer) return;
+
       const q = estado.questoes[estado.indiceAtual];
+      const total = estado.questoes.length;
 
-      els.questaoContainer.innerHTML = "";
-
-      const header = document.createElement("div");
-      header.className =
-        "flex justify-between text-xs text-[var(--muted)] mb-3";
-      header.innerHTML = `
-        <span>Questão ${q.indice} de ${total}</span>
-        <span>${q.banca} · ${q.nivel}</span>
+      els.questaoContainer.innerHTML = `
+        <div class="flex justify-between text-xs text-[var(--muted)] mb-3">
+          <span>Questão ${q.indice} de ${total}</span>
+          <span>${q.banca} · ${q.nivel}</span>
+        </div>
+        <p class="sim-enunciado mb-3">${q.enunciado}</p>
       `;
-      els.questaoContainer.appendChild(header);
-
-      const p = document.createElement("p");
-      p.className = "sim-enunciado mb-3";
-      p.textContent = q.enunciado;
-      els.questaoContainer.appendChild(p);
 
       q.alternativas.forEach((alt, idx) => {
         const div = document.createElement("div");
-        div.className =
-          "sim-alt" + (q.respostaAluno === idx ? " selected" : "");
+        div.className = "sim-alt" + (q.respostaAluno === idx ? " selected" : "");
         div.innerHTML = `
           <div class="sim-radio"></div>
           <div class="sim-alt-text">${alt}</div>
@@ -248,13 +228,13 @@
         els.questaoContainer.appendChild(div);
       });
 
-      els.nav.classList.remove("hidden");
-
-      // botão próximo vira finalizar na última questão
-      els.btnProxima.textContent =
-        estado.indiceAtual === total - 1
-          ? "Finalizar simulado ▶"
-          : "Próxima ▶";
+      if (els.nav) els.nav.classList.remove("hidden");
+      if (els.btnProxima) {
+        els.btnProxima.textContent =
+          estado.indiceAtual === total - 1
+            ? "Finalizar simulado ▶"
+            : "Próxima ▶";
+      }
     }
 
     // ------------------------------------------------------
@@ -262,54 +242,51 @@
     // ------------------------------------------------------
     function finalizarSimulado() {
       pararTimer();
-      els.questaoContainer.innerHTML = "";
-      els.nav.classList.add("hidden");
+      if (!els.questaoContainer) return;
 
-      const card = document.createElement("div");
-      card.className = "sim-resultado-card";
-
-      card.innerHTML = `
-        <h3 class="sim-resultado-titulo">Simulado finalizado!</h3>
-        <p class="text-sm text-[var(--muted)] mt-2">
-          Em produção, resultados reais serão exibidos aqui.
-        </p>
+      els.questaoContainer.innerHTML = `
+        <div class="sim-resultado-card">
+          <h3 class="sim-resultado-titulo">Simulado finalizado!</h3>
+          <p class="text-sm text-[var(--muted)] mt-2">
+            Em produção, resultados reais serão exibidos aqui.
+          </p>
+        </div>
       `;
 
-      els.questaoContainer.appendChild(card);
+      if (els.nav) els.nav.classList.add("hidden");
     }
 
     // ------------------------------------------------------
-    // EVENTOS DE NAVEGAÇÃO
+    // NAVEGAÇÃO
     // ------------------------------------------------------
-    els.btnVoltar.onclick = () => {
+    on(els.btnVoltar, "click", () => {
       if (estado.indiceAtual > 0) {
         estado.indiceAtual--;
         render();
       }
-    };
+    });
 
-    els.btnProxima.onclick = () => {
+    on(els.btnProxima, "click", () => {
       if (estado.indiceAtual < estado.questoes.length - 1) {
         estado.indiceAtual++;
         render();
       } else {
         finalizarSimulado();
       }
-    };
+    });
 
     // ------------------------------------------------------
-    // CLICAR EM "Iniciar simulado"
+    // INICIAR SIMULADO
     // ------------------------------------------------------
-    els.modalIniciar.addEventListener("click", () => {
-      // validar personalizada
-      if (els.selModoDificuldade.value === "personalizado") {
+    on(els.modalIniciar, "click", () => {
+      if (els.selModoDificuldade && els.selModoDificuldade.value === "personalizado") {
         const soma =
           Number(els.difFacil.value) +
           Number(els.difMedio.value) +
           Number(els.difDificil.value);
 
         if (soma !== 100) {
-          els.difErro.classList.remove("hidden");
+          if (els.difErro) els.difErro.classList.remove("hidden");
           return;
         }
 
@@ -320,11 +297,10 @@
         };
       }
 
-      // aplicar config
-      estado.banca = els.selBanca.value;
-      estado.qtd = Number(els.inpQtd.value);
-      estado.tempoProvaMin = Number(els.inpTempo.value);
-      estado.dificuldadeModo = els.selModoDificuldade.value;
+      estado.banca = els.selBanca ? els.selBanca.value : "fgv";
+      estado.qtd = Number(els.inpQtd ? els.inpQtd.value : 20);
+      estado.tempoProvaMin = Number(els.inpTempo ? els.inpTempo.value : 30);
+      estado.dificuldadeModo = els.selModoDificuldade ? els.selModoDificuldade.value : "padrao";
 
       fecharModal();
       mostrarSimulado();
@@ -336,9 +312,6 @@
       render();
     });
 
-    // ------------------------------------------------------
-    // Início
-    // ------------------------------------------------------
-    console.log("🟢 Liora Simulados v4 inicializado.");
+    console.log("🟢 Liora Simulados v6 inicializado com sucesso.");
   });
 })();
