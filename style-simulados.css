@@ -3,7 +3,7 @@
    ============================================================ */
 
 :root {
-  /* se já existirem em style.css, estes são apenas fallback */
+  /* fallback */
   --surface: #111318;
   --surface-soft: #181b22;
   --border: #252835;
@@ -12,7 +12,7 @@
   --text: #f5f5f7;
 }
 
-/* Botão primário (caso não exista ainda) */
+/* Botão primário */
 .btn-primary {
   display: inline-flex;
   align-items: center;
@@ -58,7 +58,6 @@
   box-shadow: 0 0 0 1px rgba(196,75,4,0.35);
 }
 
-/* Labels do modal e blocos */
 .sim-label {
   font-size: 0.8rem;
   font-weight: 600;
@@ -73,7 +72,7 @@
 }
 
 /* ============================================================
-   ÁREA DO SIMULADO (layout dentro do card da direita)
+   ÁREA DO SIMULADO (DENTRO DO CARD DIREITO)
    ============================================================ */
 
 .sim-timer {
@@ -102,7 +101,7 @@
   transition: width 0.2s ease-out;
 }
 
-/* Card da questão */
+/* Cartão da questão */
 .sim-questao-card {
   background: rgba(0,0,0,0.45);
   border-radius: 1rem;
@@ -161,7 +160,7 @@
   color: var(--text);
 }
 
-/* Navegação do simulado */
+/* Navegação */
 .sim-nav {
   display: flex;
   justify-content: space-between;
@@ -199,7 +198,7 @@
 }
 
 /* ============================================================
-   RESULTADO / DASHBOARD DENTRO DO CARD DE SIMULADO
+   RESULTADO / DASHBOARD
    ============================================================ */
 
 .sim-resultado-card {
@@ -229,7 +228,6 @@
   margin-top: 0.55rem;
 }
 
-/* Tabela / Dashboard por dificuldade */
 .sim-dashboard {
   margin-top: 1.5rem;
 }
@@ -257,7 +255,6 @@
   color: var(--muted);
 }
 
-/* Lista de questões no resultado */
 .sim-lista-resultados {
   margin-top: 1.2rem;
   list-style: none;
@@ -294,7 +291,7 @@
 }
 
 /* ============================================================
-   MODAL — BACKDROP E CONTAINER (DESKTOP BASE)
+   MODAL — BACKDROP + CONTAINER (CORRIGIDO)
    ============================================================ */
 
 .sim-modal-backdrop {
@@ -306,10 +303,14 @@
   background: rgba(0,0,0,0.88);
   backdrop-filter: blur(4px);
   z-index: 9999;
+
+  /* ESSENCIAL para permitir/impedir cliques */
+  pointer-events: none;
 }
 
 .sim-modal-backdrop.visible {
   display: flex;
+  pointer-events: auto;
 }
 
 .sim-modal {
@@ -321,6 +322,9 @@
   width: 100%;
   color: var(--text);
   animation: modalFadeIn 0.24s ease-out;
+
+  /* ESSENCIAL — garante clique mesmo se backdrop tiver layers */
+  z-index: 10000;
 }
 
 /* Header do modal */
@@ -355,7 +359,7 @@
   font-size: 0.9rem;
 }
 
-/* Rodapé do modal */
+/* Rodapé */
 .sim-modal-footer {
   margin-top: 1.2rem;
 }
@@ -372,16 +376,12 @@
   }
 }
 
-/* Mensagem de erro de soma de % */
-#dif-erro {
-  margin-top: 0.1rem;
-}
-
 /* ============================================================
-   RESPONSIVO — TABLET (641px a 1024px)
+   RESPONSIVO — TABLET
    ============================================================ */
 
 @media (min-width: 641px) and (max-width: 1024px) {
+
   .sim-modal-backdrop {
     align-items: center !important;
     justify-content: center !important;
@@ -412,14 +412,14 @@
 }
 
 /* ============================================================
-   RESPONSIVO — MOBILE (até 640px)
+   RESPONSIVO — MOBILE
    ============================================================ */
 
 @media (max-width: 640px) {
 
   .sim-modal-backdrop {
     align-items: flex-start;
-    padding-top: 12vh !important; /* offset final escolhido */
+    padding-top: 12vh !important;
   }
 
   .sim-modal {
