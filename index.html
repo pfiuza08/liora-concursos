@@ -46,12 +46,13 @@
   <section class="card p-6">
     <h2 class="section-title mb-4">Como você deseja estudar?</h2>
 
-   <div class="grid grid-cols-4 gap-2 mb-6">
-     <button id="modo-tema" class="btn-secondary selected">Tema</button>
-     <button id="modo-upload" class="btn-secondary">Upload</button>
-     <button id="modo-simulados" class="btn-secondary">Simulados</button>
-     <button id="modo-dashboard" class="btn-secondary">Minha evolução</button>
-   </div>
+    <!-- BOTÕES DE MODO (corrigido: seleção exclusiva + estilo) -->
+    <div class="grid grid-cols-4 gap-2 mb-6">
+      <button id="modo-tema" class="btn-secondary modo-btn selected">Tema</button>
+      <button id="modo-upload" class="btn-secondary modo-btn">Upload</button>
+      <button id="modo-simulados" class="btn-secondary modo-btn">Simulados</button>
+      <button id="modo-dashboard" class="btn-secondary modo-btn">Minha evolução</button>
+    </div>
 
     <!-- PAINEL TEMA -->
     <div id="painel-tema">
@@ -76,7 +77,6 @@
     <!-- PAINEL UPLOAD -->
     <div id="painel-upload" class="hidden mt-6">
       <label class="text-sm font-medium">Envie seu material</label>
-
       <label id="upload-zone" class="upload-zone">
         <p id="upload-text">Clique ou arraste um arquivo PDF</p>
         <div id="upload-spinner"></div>
@@ -95,86 +95,61 @@
   <!-- ============================
        DIREITA — ÁREA DINÂMICA
        ============================ -->
- <section id="area-dinamica" class="card p-6">
+  <section id="area-dinamica" class="card p-6">
 
-  <div id="area-plano">
-    <div class="flex justify-between mb-4">
-      <h2 class="section-title">Seu plano de estudo</h2>
-      <p id="ctx" class="text-sm text-[var(--muted)]"></p>
-    </div>
-    <div id="plano" class="space-y-3"></div>
-  </div>
-
-  <div id="area-simulado" class="hidden space-y-6">
-    <div class="flex justify-between items-center">
-      <div id="sim-timer" class="sim-timer hidden">00:00</div>
-      <div class="sim-progress w-48">
-        <div id="sim-progress-bar" class="sim-progress-fill"></div>
+    <!-- PLANO DE ESTUDO -->
+    <div id="area-plano">
+      <div class="flex justify-between mb-4">
+        <h2 class="section-title">Seu plano de estudo</h2>
+        <p id="ctx" class="text-sm text-[var(--muted)]"></p>
       </div>
+      <div id="plano" class="space-y-3"></div>
     </div>
 
-    <div id="sim-questao-container" class="space-y-4"></div>
+    <!-- SIMULADO -->
+    <div id="area-simulado" class="hidden space-y-6">
+      <div class="flex justify-between items-center">
+        <div id="sim-timer" class="sim-timer hidden">00:00</div>
+        <div class="sim-progress w-48">
+          <div id="sim-progress-bar" class="sim-progress-fill"></div>
+        </div>
+      </div>
 
-    <div id="sim-nav" class="sim-nav hidden">
-      <button id="sim-btn-voltar" class="sim-btn-nav">◀ Voltar</button>
-      <button id="sim-btn-proxima" class="sim-btn-nav sim-btn-next">Próxima ▶</button>
+      <div id="sim-questao-container" class="space-y-4"></div>
+
+      <div id="sim-nav" class="sim-nav hidden">
+        <button id="sim-btn-voltar" class="sim-btn-nav">◀ Voltar</button>
+        <button id="sim-btn-proxima" class="sim-btn-nav sim-btn-next">Próxima ▶</button>
+      </div>
+
+      <div id="sim-resultado" class="hidden"></div>
     </div>
 
-    <div id="sim-resultado" class="hidden"></div>
-  </div>
+    <!-- DASHBOARD -->
+    <div id="area-dashboard" class="hidden space-y-6">
+      <div class="flex justify-between mb-4 items-center">
+        <h2 class="section-title">Minha evolução</h2>
+        <p class="text-sm text-[var(--muted)]">Visão geral dos seus simulados neste dispositivo.</p>
+      </div>
 
-  <!-- NOVO: Área Dashboard -->
-  <div id="area-dashboard" class="hidden space-y-6">
-    <div class="flex justify-between mb-4 items-center">
-      <h2 class="section-title">Minha evolução</h2>
-      <p class="text-sm text-[var(--muted)]">
-        Visão geral dos seus simulados neste dispositivo.
-      </p>
+      <div id="dash-resumo" class="grid gap-3 md:grid-cols-3 text-sm"></div>
+      <div id="dash-bancas" class="mt-4"></div>
+      <div id="dash-ultimos" class="mt-4"></div>
     </div>
-
-    <div id="dash-resumo" class="grid gap-3 md:grid-cols-3 text-sm">
-      <!-- preenchido via JS -->
-    </div>
-
-    <div id="dash-bancas" class="mt-4">
-      <!-- preenchido via JS -->
-    </div>
-
-    <div id="dash-ultimos" class="mt-4">
-      <!-- preenchido via JS -->
-    </div>
-  </div>
-</section>
+  </section>
 </main>
 
 <!-- ============================
-     WIZARD (TEMA / UPLOAD)
+     SIMULADOS: MODAL
      ============================ -->
-<section id="liora-sessoes" class="hidden liora-wizard max-w-6xl mx-auto px-6 pb-10">
-  <!-- (mantido igual — não alterado) -->
-</section>
-
-<footer class="max-w-6xl mx-auto px-4 pb-10 text-xs text-[var(--muted)] text-center">
-  <p>Liora — IA aplicada a estudos. © Intellih</p>
-</footer>
-
-<!-- ============================================================
-     SIMULADOS: MODAL COMPLETO (CORRIGIDO)
-     ============================================================ -->
 <div id="sim-modal-backdrop" class="sim-modal-backdrop hidden">
-
   <div class="sim-modal">
-
-    <!-- Cabeçalho -->
     <div class="sim-modal-header flex justify-between items-center">
       <h3 class="sim-modal-title">Configurar simulado</h3>
       <button id="sim-modal-close-btn" class="sim-modal-close">✕</button>
     </div>
 
-    <!-- Corpo -->
     <div class="sim-modal-body">
-
-      <!-- BANCA -->
       <div class="sim-modal-block">
         <label class="sim-label">Banca</label>
         <select id="sim-modal-banca" class="sim-input">
@@ -187,19 +162,16 @@
         </select>
       </div>
 
-      <!-- QUANTIDADE DE QUESTÕES -->
       <div class="sim-modal-block">
         <label class="sim-label">Quantidade de questões</label>
         <input id="sim-modal-qtd" type="number" min="5" max="200" value="20" class="sim-input">
       </div>
 
-      <!-- TEMPO (minutos) -->
       <div class="sim-modal-block">
         <label class="sim-label">Tempo de prova (minutos)</label>
         <input id="sim-modal-tempo" type="number" min="5" max="300" value="30" class="sim-input">
       </div>
 
-      <!-- MODO DE DIFICULDADE -->
       <div class="sim-modal-block">
         <label class="sim-label">Nível de dificuldade</label>
         <select id="sim-modal-dificuldade" class="sim-input">
@@ -210,22 +182,18 @@
         </select>
       </div>
 
-      <!-- CAMPO EXTRA: TEMA -->
       <div class="sim-modal-block">
         <label class="sim-label">Tema (opcional)</label>
         <input id="sim-modal-tema" type="text" class="sim-input"
           placeholder="Ex.: Direito Constitucional — Poder Legislativo">
       </div>
-
     </div>
 
-    <!-- Rodapé -->
     <div class="sim-modal-footer">
       <button id="sim-modal-iniciar" class="btn-primary w-full">
         Iniciar simulado
       </button>
     </div>
-
   </div>
 </div>
 
@@ -238,7 +206,6 @@
 <script src="scripts/semantic.js"></script>
 
 <script src="scripts/simulados.js?v=3"></script>
-<!-- Dashboard / Área do aluno -->
 <script src="scripts/dashboard.js?v=1"></script>
 <script src="scripts/core.js"></script>
 
