@@ -336,3 +336,71 @@ html.light #liora-build-info {
   background:rgba(255,255,255,0.35);
 }
 #liora-build-info:hover { opacity:1; }
+
+/* ===============================
+   LIORA — WIZARD DE SESSÕES
+   =============================== */
+
+.liora-wizard-card {
+  background: rgba(0,0,0,0.45);
+  border: 1px solid rgba(255,255,255,0.08);
+  padding: 1.5rem;
+  border-radius: 1rem;
+  color: var(--text);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+}
+
+.liora-wizard-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
+
+.liora-wizard-section {
+  margin-top: 1.4rem;
+}
+
+.liora-wizard-section h5 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--brand);
+  margin-bottom: 0.3rem;
+}
+
+.liora-wizard-section ul {
+  margin-left: 1rem;
+  list-style: disc;
+}
+
+.liora-wizard-section li {
+  margin-bottom: 0.3rem;
+}
+
+.liora-mapa-mental {
+  white-space: pre-wrap;
+  font-size: 0.85rem;
+  background: rgba(0,0,0,0.25);
+  border-radius: 0.75rem;
+  padding: 0.75rem;
+}
+
+.liora-quiz-feedback {
+  margin-top: .5rem;
+  font-size: .85rem;
+  opacity: 0;
+  transition: opacity .3s ease;
+}
+
+.liora-progress {
+  height: 7px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.liora-progress__bar {
+  height: 100%;
+  width: 0%;
+  background: var(--brand);
+  transition: width .3s ease;
+}
