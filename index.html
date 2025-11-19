@@ -139,21 +139,24 @@
 </footer>
 
 <!-- ============================================================
-     MODAL DE SIMULADO — CORRIGIDO (COMPATÍVEL 100%)
+     SIMULADOS: MODAL COMPLETO (CORRIGIDO)
      ============================================================ -->
 <div id="sim-modal-backdrop" class="sim-modal-backdrop hidden">
 
   <div class="sim-modal">
 
+    <!-- Cabeçalho -->
     <div class="sim-modal-header flex justify-between items-center">
       <h3 class="sim-modal-title">Configurar simulado</h3>
       <button id="sim-modal-close-btn" class="sim-modal-close">✕</button>
     </div>
 
+    <!-- Corpo -->
     <div class="sim-modal-body">
 
+      <!-- BANCA -->
       <div class="sim-modal-block">
-        <label>Banca</label>
+        <label class="sim-label">Banca</label>
         <select id="sim-modal-banca" class="sim-input">
           <option value="FGV">FGV</option>
           <option value="CESPE">CESPE / Cebraspe</option>
@@ -164,42 +167,43 @@
         </select>
       </div>
 
+      <!-- QUANTIDADE DE QUESTÕES -->
       <div class="sim-modal-block">
-        <label>Quantidade de questões</label>
-        <select id="sim-modal-qtd" class="sim-input">
-          <option value="5">5</option>
-          <option value="10">10</option>
-          <option value="20">20</option>
-          <option value="30">30</option>
-          <option value="50">50</option>
-        </select>
+        <label class="sim-label">Quantidade de questões</label>
+        <input id="sim-modal-qtd" type="number" min="5" max="200" value="20" class="sim-input">
       </div>
 
+      <!-- TEMPO (minutos) -->
       <div class="sim-modal-block">
-        <label>Tempo de prova (minutos)</label>
-        <input id="sim-modal-tempo" type="number" min="5" max="300" value="60" class="sim-input">
+        <label class="sim-label">Tempo de prova (minutos)</label>
+        <input id="sim-modal-tempo" type="number" min="5" max="300" value="30" class="sim-input">
       </div>
 
+      <!-- MODO DE DIFICULDADE -->
       <div class="sim-modal-block">
-        <label>Nível de dificuldade</label>
+        <label class="sim-label">Nível de dificuldade</label>
         <select id="sim-modal-dificuldade" class="sim-input">
-          <option value="misturado">Padrão da banca (recomendado)</option>
+          <option value="misturado">Misturar níveis (recomendado)</option>
           <option value="facil">Somente fácil</option>
           <option value="medio">Somente médio</option>
           <option value="dificil">Somente difícil</option>
         </select>
       </div>
 
+      <!-- CAMPO EXTRA: TEMA -->
       <div class="sim-modal-block">
-        <label>Tema (opcional)</label>
+        <label class="sim-label">Tema (opcional)</label>
         <input id="sim-modal-tema" type="text" class="sim-input"
-               placeholder="Ex.: Direito Constitucional — Poder Legislativo">
+          placeholder="Ex.: Direito Constitucional — Poder Legislativo">
       </div>
 
     </div>
 
+    <!-- Rodapé -->
     <div class="sim-modal-footer">
-      <button id="sim-modal-iniciar" class="btn-primary w-full">Iniciar simulado</button>
+      <button id="sim-modal-iniciar" class="btn-primary w-full">
+        Iniciar simulado
+      </button>
     </div>
 
   </div>
