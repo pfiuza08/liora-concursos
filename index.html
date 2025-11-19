@@ -96,8 +96,8 @@
        ============================ -->
   <section id="area-dinamica" class="card p-6">
 
-    <!-- PLANO DE ESTUDO -->
-    <div id="area-plano">
+    <!-- PLANO DE ESTUDO (AGORA INICIA ESCONDIDO) -->
+    <div id="area-plano" class="hidden">
       <div class="flex justify-between mb-4">
         <h2 class="section-title">Seu plano de estudo</h2>
         <p id="ctx" class="text-sm text-[var(--muted)]"></p>
@@ -105,76 +105,36 @@
       <div id="plano" class="space-y-3"></div>
     </div>
 
-    <!-- ============================================
-         WIZARD DE SESSÕES (ÚNICO BLOCO CORRETO)
-         ============================================ -->
-    <div id="liora-sessoes" class="hidden mt-10 space-y-6">
-
-      <h3 id="liora-tema-ativo" class="text-xl font-bold mb-4"></h3>
-
-      <div class="liora-wizard-card space-y-6">
-
-        <h4 id="liora-sessao-titulo" class="liora-wizard-title"></h4>
-
-        <div class="liora-wizard-section">
-          <h5>Objetivo</h5>
-          <p id="liora-sessao-objetivo"></p>
-        </div>
-
-        <div class="liora-wizard-section">
-          <h5>Conteúdo</h5>
-          <div id="liora-sessao-conteudo"></div>
-        </div>
-
-        <div class="liora-wizard-section">
-          <h5>Analogias</h5>
-          <div id="liora-sessao-analogias"></div>
-        </div>
-
-        <div class="liora-wizard-section">
-          <h5>Ativação</h5>
-          <ul id="liora-sessao-ativacao"></ul>
-        </div>
-
-        <div class="liora-wizard-section">
-          <h5>Teste rápido</h5>
-          <div id="liora-sessao-quiz"></div>
-          <p id="liora-sessao-quiz-feedback" class="liora-quiz-feedback"></p>
-        </div>
-
-        <div class="liora-wizard-section">
-          <h5>Flashcards</h5>
-          <ul id="liora-sessoes-flashcards"></ul>
-        </div>
-
-        <div class="liora-wizard-section">
-          <h5>Mapa Mental</h5>
-          <pre id="liora-sessao-mapa" class="liora-mapa-mental"></pre>
-        </div>
-
-      </div>
-
-      <div class="flex justify-between mt-6">
-        <button id="liora-btn-voltar" class="btn-secondary">◀ Voltar</button>
-        <button id="liora-btn-proxima" class="btn-primary">Próxima sessão ▶</button>
-      </div>
-
-      <div class="liora-progress mt-4">
-        <div id="liora-progress-bar" class="liora-progress__bar"></div>
-      </div>
-
-    </div>
-
     <!-- SIMULADO -->
     <div id="area-simulado" class="hidden space-y-6">
-      ...
+      <div class="flex justify-between items-center">
+        <div id="sim-timer" class="sim-timer hidden">00:00</div>
+        <div class="sim-progress w-48">
+          <div id="sim-progress-bar" class="sim-progress-fill"></div>
+        </div>
+      </div>
+
+      <div id="sim-questao-container" class="space-y-4"></div>
+
+      <div id="sim-nav" class="sim-nav hidden">
+        <button id="sim-btn-voltar" class="sim-btn-nav">◀ Voltar</button>
+        <button id="sim-btn-proxima" class="sim-btn-nav sim-btn-next">Próxima ▶</button>
+      </div>
+
+      <div id="sim-resultado" class="hidden"></div>
     </div>
 
     <!-- DASHBOARD -->
     <div id="area-dashboard" class="hidden space-y-6">
-      ...
-    </div>
+      <div class="flex justify-between mb-4 items-center">
+        <h2 class="section-title">Minha evolução</h2>
+        <p class="text-sm text-[var(--muted)]">Visão geral dos seus simulados neste dispositivo.</p>
+      </div>
 
+      <div id="dash-resumo" class="grid gap-3 md:grid-cols-3 text-sm"></div>
+      <div id="dash-bancas" class="mt-4"></div>
+      <div id="dash-ultimos" class="mt-4"></div>
+    </div>
   </section>
 </main>
 
@@ -182,21 +142,129 @@
      SIMULADOS: MODAL
      ============================ -->
 <div id="sim-modal-backdrop" class="sim-modal-backdrop hidden">
-  ...
+  <div class="sim-modal">
+    <div class="sim-modal-header flex justify-between items-center">
+      <h3 class="sim-modal-title">Configurar simulado</h3>
+      <button id="sim-modal-close-btn" class="sim-modal-close">✕</button>
+    </div>
+
+    <div class="sim-modal-body">
+      <div class="sim-modal-block">
+        <label class="sim-label">Banca</label>
+        <select id="sim-modal-banca" class="sim-input">
+          <option value="FGV">FGV</option>
+          <option value="CESPE">CESPE / Cebraspe</option>
+          <option value="VUNESP">VUNESP</option>
+          <option value="FCC">FCC</option>
+          <option value="QUADRIX">Quadrix</option>
+          <option value="IBFC">IBFC</option>
+        </select>
+      </div>
+
+      <div class="sim-modal-block">
+        <label class="sim-label">Quantidade de questões</label>
+        <input id="sim-modal-qtd" type="number" min="5" max="200" value="20" class="sim-input">
+      </div>
+
+      <div class="sim-modal-block">
+        <label class="sim-label">Tempo de prova (minutos)</label>
+        <input id="sim-modal-tempo" type="number" min="5" max="300" value="30" class="sim-input">
+      </div>
+
+      <div class="sim-modal-block">
+        <label class="sim-label">Nível de dificuldade</label>
+        <select id="sim-modal-dificuldade" class="sim-input">
+          <option value="misturado">Misturar níveis (recomendado)</option>
+          <option value="facil">Somente fácil</option>
+          <option value="medio">Somente médio</option>
+          <option value="dificil">Somente difícil</option>
+        </select>
+      </div>
+
+      <div class="sim-modal-block">
+        <label class="sim-label">Tema (opcional)</label>
+        <input id="sim-modal-tema" type="text" class="sim-input"
+          placeholder="Ex.: Direito Constitucional — Poder Legislativo">
+      </div>
+    </div>
+
+    <div class="sim-modal-footer">
+      <button id="sim-modal-iniciar" class="btn-primary w-full">
+        Iniciar simulado
+      </button>
+    </div>
+  </div>
 </div>
 
 <!-- ============================
-     ⚠️ AQUI FOI REMOVIDO:
-     (SEÇÃO DUPLICADA DO WIZARD)
+     WIZARD — SESSÕES (ÚNICA VERSÃO)
      ============================ -->
+<section id="liora-sessoes" class="hidden liora-wizard max-w-6xl mx-auto px-6 pb-10">
 
-<!-- ============================
-     SCRIPTS
-     ============================ -->
+  <div class="liora-wizard__header flex justify-between items-center mb-4">
+    <div>
+      <h2 id="liora-sessao-titulo" class="text-lg font-bold mb-1"></h2>
+      <p id="liora-tema-ativo" class="text-sm text-[var(--muted)]"></p>
+    </div>
+
+    <div class="liora-progress w-52">
+      <div id="liora-progress-bar" class="liora-progress__bar"></div>
+    </div>
+  </div>
+
+  <div class="liora-card space-y-6 p-6">
+
+    <div class="liora-block">
+      <h4>Objetivo</h4>
+      <p id="liora-sessao-objetivo"></p>
+    </div>
+
+    <div class="liora-block">
+      <h4>Conteúdo</h4>
+      <div id="liora-sessao-conteudo"></div>
+    </div>
+
+    <div class="liora-block">
+      <h4>Analogias</h4>
+      <div id="liora-sessao-analogias"></div>
+    </div>
+
+    <div class="liora-block">
+      <h4>Ativação</h4>
+      <ul id="liora-sessao-ativacao"></ul>
+    </div>
+
+    <div class="liora-block">
+      <h4>Teste rápido</h4>
+      <div id="liora-sessao-quiz"></div>
+      <p id="liora-sessao-quiz-feedback"></p>
+    </div>
+
+    <div class="liora-block">
+      <h4>Flashcards</h4>
+      <ul id="liora-sessao-flashcards"></ul>
+    </div>
+
+    <div class="liora-block">
+      <h4>Mapa Mental</h4>
+      <pre id="liora-sessao-mapa" class="liora-mapa-mental"></pre>
+    </div>
+
+  </div>
+
+  <div class="liora-wizard__footer flex justify-between mt-6">
+    <button id="liora-btn-voltar" class="liora-btn ghost">◀ Voltar</button>
+    <button id="liora-btn-proxima" class="liora-btn primary">Próxima sessão ▶</button>
+  </div>
+
+</section>
+
+<!-- SCRIPTS -->
 <script src="scripts/pdf-extractor.js"></script>
 <script src="scripts/pdf-structure.js"></script>
 <script src="scripts/outline-generator.js"></script>
 <script src="scripts/semantic.js"></script>
+
 <script src="scripts/simulados.js?v=3"></script>
 <script src="scripts/dashboard.js?v=1"></script>
 <script src="scripts/core.js"></script>
