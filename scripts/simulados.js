@@ -331,9 +331,14 @@
     }
 
     function mostrarSimulado() {
-      if (els.areaPlano) els.areaPlano.classList.add("hidden");
-      if (els.areaSimulado) els.areaSimulado.classList.remove("hidden");
-    }
+       if (els.areaPlano) els.areaPlano.classList.add("hidden");
+       if (els.areaSimulado) els.areaSimulado.classList.remove("hidden");
+
+       const areaDashboard = document.getElementById("area-dashboard");
+       const btnDashboard = document.getElementById("modo-dashboard");
+       if (areaDashboard) areaDashboard.classList.add("hidden");
+       if (btnDashboard) btnDashboard.classList.remove("selected");
+     }
 
     if (els.modoTema) {
       els.modoTema.addEventListener("click", () => {
