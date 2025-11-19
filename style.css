@@ -302,32 +302,33 @@ input:focus, select:focus {
   transition:opacity .3s ease;
 }
 
-/* ============================================
-   🔘 BOTÕES (ajuste para textos longos)
-   ============================================ */
+/* ============================================================
+   🔘 BOTÕES DO MENU LATERAL — Ajuste para caber textos longos
+   ============================================================ */
 
-.btn-secondary {
-  background: transparent;
-  border: 1px solid var(--stroke);
-  color: var(--fg);
-  padding: .7rem 1rem;
-  border-radius: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: .2s ease;
-  white-space: nowrap;        /* impede quebra estranha */
-  min-width: 120px;           /* garante espaço mínimo */
-  text-align: center;         /* centraliza */
+#modo-tema,
+#modo-upload,
+#modo-simulados,
+#modo-dashboard {
+  font-size: 0.85rem;          /* reduz suavemente a fonte */
+  padding: 0.55rem 0.6rem;     /* reduz padding para caber melhor */
+  white-space: normal !important; /* permite quebrar linha */
+  line-height: 1.1;            /* compacta o texto */
+  text-align: center;          /* centraliza */
+  height: auto;                /* garante ajuste natural */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 46px;            /* altura mínima agradável */
 }
 
-.btn-secondary.selected {
-  background: var(--brand);
-  color: #fff;
+/* Corrige botão selecionado */
+#modo-tema.selected,
+#modo-upload.selected,
+#modo-simulados.selected,
+#modo-dashboard.selected {
+  background: var(--brand) !important;
+  color: #fff !important;
   border-color: var(--brand) !important;
 }
 
-/* Ajuste específico para botões maiores */
-#modo-simulados,
-#modo-dashboard {
-  min-width: 150px;
-}
