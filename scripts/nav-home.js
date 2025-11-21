@@ -1,8 +1,5 @@
 // ==========================================================
-// 🧠 LIORA — HOME COMERCIAL (APP LAYOUT FINAL)
-// - HOME tela cheia
-// - Workspace único (liora-app)
-// - Alternância entre: Tema, Upload, Simulados, Dashboard
+// 🧠 LIORA — HOME COMERCIAL (APP LAYOUT FINAL + FAB HOME)
 // ==========================================================
 (function () {
   document.addEventListener("DOMContentLoaded", () => {
@@ -15,6 +12,9 @@
     const homeUpload = document.getElementById("home-upload");
     const homeSimulados = document.getElementById("home-simulados");
     const homeDashboard = document.getElementById("home-dashboard");
+
+    // FAB de retorno ao início
+    const fabHome = document.getElementById("fab-home");
 
     // Painéis do workspace
     const painelEstudo = document.getElementById("painel-estudo");
@@ -35,6 +35,7 @@
       homeUpload,
       homeSimulados,
       homeDashboard,
+      fabHome,
       painelEstudo,
       painelTema,
       painelUpload,
@@ -66,12 +67,16 @@
     function mostrarHome() {
       home.style.display = "flex";
       app.style.display = "none";
+      fabHome.style.display = "none";
       esconderTudo();
+      viewTitle.textContent = "";
+      viewSubtitle.textContent = "";
     }
 
     function mostrarWorkspace() {
       home.style.display = "none";
       app.style.display = "block";
+      fabHome.style.display = "inline-flex";
     }
 
     function entrarTema() {
@@ -115,16 +120,19 @@
       esconderTudo();
 
       viewTitle.textContent = "Minha evolução";
-      viewSubtitle.textContent = "Resumo dos seus simulados e desempenho neste dispositivo.";
+      viewSubtitle.textContent = "Histórico e estatísticas dos seus simulados.";
 
       areaDashboard.style.display = "block";
     }
 
-    // Ligações
+    // Ligações HOME
     homeTema.addEventListener("click", entrarTema);
     homeUpload.addEventListener("click", entrarUpload);
     homeSimulados.addEventListener("click", entrarSimulados);
     homeDashboard.addEventListener("click", entrarDashboard);
+
+    // FAB "Início"
+    fabHome.addEventListener("click", mostrarHome);
 
     // Estado inicial
     mostrarHome();
