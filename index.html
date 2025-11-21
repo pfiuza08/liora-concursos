@@ -40,10 +40,10 @@
 
 <main id="liora-layout" class="liora-grid">
 
- <!-- ============================
-       HOME — ESCOLHA INICIAL
-       ============================ -->
-  <div id="liora-home" class="card mx-auto p-10 text-center space-y-8 max-w-xl">
+<!-- ============================
+     HOME — ESCOLHA INICIAL
+     ============================ -->
+<div id="liora-home" class="card mx-auto p-10 text-center space-y-8 max-w-xl">
 
   <h2 class="text-xl font-semibold tracking-tight text-[var(--fg)]">
     O que você deseja fazer hoje?
@@ -83,174 +83,169 @@
 
 </div>
 
-
-
   
-  <!-- ============================
-       ESQUERDA — MODO DE ESTUDO
-       ============================ -->
-  <section class="card p-6">
-    <h2 class="section-title mb-4">Como você deseja estudar?</h2>
+<!-- ============================
+     ESQUERDA — MODO DE ESTUDO
+     ============================ -->
+<section class="card p-6">
 
-      <!-- GRUPO PRINCIPAL: ESTUDO x AVALIAÇÃO -->
-    <div class="grid grid-cols-2 gap-2 mb-4">
-      <button id="grupo-estudo" class="btn-secondary grupo-btn selected">📘 Estudar</button>
-      <button id="grupo-avaliacao" class="btn-secondary grupo-btn">📝 Avaliar</button>
+  <!-- GRUPOS E SUBMODOS (mantidos) -->
+  <div class="grid grid-cols-2 gap-2 mb-4">
+    <button id="grupo-estudo" class="btn-secondary grupo-btn selected">📘 Estudar</button>
+    <button id="grupo-avaliacao" class="btn-secondary grupo-btn">📝 Avaliar</button>
+  </div>
+
+  <div id="bloco-estudo" class="grid grid-cols-2 gap-2 mb-6">
+    <button id="modo-tema" class="btn-secondary modo-btn selected">Tema</button>
+    <button id="modo-upload" class="btn-secondary modo-btn">Upload</button>
+  </div>
+
+  <div id="bloco-avaliacao" class="grid grid-cols-2 gap-2 mb-6 hidden">
+    <button id="modo-simulados" class="btn-secondary modo-btn">Simulados</button>
+    <button id="modo-dashboard" class="btn-secondary modo-btn">Minha evolução</button>
+  </div>
+
+  <!-- PAINEL TEMA -->
+  <div id="painel-tema">
+    <label class="text-sm font-medium">Tema de estudo</label>
+    <input id="inp-tema" type="text" placeholder="Ex.: Direito Constitucional — Poder Legislativo" class="mb-3 w-full">
+
+    <label class="text-sm font-medium">Nível de conhecimento</label>
+    <select id="sel-nivel" class="w-full">
+      <option value="iniciante">Iniciante</option>
+      <option value="intermediario">Intermediário</option>
+      <option value="avancado">Avançado</option>
+    </select>
+
+    <button id="btn-gerar" class="btn w-full mt-3">Gerar plano</button>
+
+    <p id="status" class="text-xs text-[var(--muted)] mt-2"></p>
+    <div id="barra-tema" class="liora-progress mt-1 w-full">
+      <div id="barra-tema-fill" class="liora-progress__bar"></div>
     </div>
+  </div>
 
-    <!-- SUBMODOS DE ESTUDO (TEMA / UPLOAD) -->
-    <div id="bloco-estudo" class="grid grid-cols-2 gap-2 mb-6">
-      <button id="modo-tema" class="btn-secondary modo-btn selected">Tema</button>
-      <button id="modo-upload" class="btn-secondary modo-btn">Upload</button>
+  <!-- PAINEL UPLOAD -->
+  <div id="painel-upload" class="hidden mt-6">
+    <label class="text-sm font-medium">Envie seu material</label>
+    <label id="upload-zone" class="upload-zone">
+      <p id="upload-text">Clique ou arraste um arquivo PDF</p>
+      <div id="upload-spinner"></div>
+      <input id="inp-file" type="file" accept="application/pdf,.pdf" />
+    </label>
+
+    <button id="btn-gerar-upload" class="btn w-full mt-3">Gerar plano</button>
+
+    <p id="status-upload" class="text-xs text-[var(--muted)] mt-2"></p>
+    <div id="barra-upload" class="liora-progress mt-1 w-full">
+      <div id="barra-upload-fill" class="liora-progress__bar"></div>
     </div>
+  </div>
 
-    <!-- SUBMODOS DE AVALIAÇÃO (SIMULADOS / DASHBOARD) -->
-    <div id="bloco-avaliacao" class="grid grid-cols-2 gap-2 mb-6 hidden">
-      <button id="modo-simulados" class="btn-secondary modo-btn">Simulados</button>
-      <button id="modo-dashboard" class="btn-secondary modo-btn">Minha evolução</button>
+</section>
+
+<!-- ============================
+     DIREITA — ÁREA DINÂMICA (LIMPA)
+     ============================ -->
+<section id="area-dinamica" class="card p-6">
+
+  <!-- PLANO DE ESTUDO -->
+  <div id="area-plano">
+    <div class="flex justify-between mb-4">
+      <h2 class="section-title">Seu plano de estudo</h2>
+      <p id="ctx" class="text-sm text-[var(--muted)]"></p>
     </div>
+    <div id="plano" class="space-y-3"></div>
+  </div>
 
+  <!-- WIZARD -->
+  <div id="liora-sessoes" class="hidden mt-10">
 
-    <!-- PAINEL TEMA -->
-    <div id="painel-tema">
-      <label class="text-sm font-medium">Tema de estudo</label>
-      <input id="inp-tema" type="text" placeholder="Ex.: Direito Constitucional — Poder Legislativo" class="mb-3 w-full">
+    <h3 id="liora-tema-ativo" class="text-xl font-bold mb-4"></h3>
 
-      <label class="text-sm font-medium">Nível de conhecimento</label>
-      <select id="sel-nivel" class="w-full">
-        <option value="iniciante">Iniciante</option>
-        <option value="intermediario">Intermediário</option>
-        <option value="avancado">Avançado</option>
-      </select>
+    <div class="liora-wizard-card">
+      <h4 id="liora-sessao-titulo" class="liora-wizard-title"></h4>
 
-      <button id="btn-gerar" class="btn w-full mt-3">Gerar plano</button>
+      <div class="liora-wizard-section">
+        <h5>Objetivo</h5>
+        <p id="liora-sessao-objetivo"></p>
+      </div>
 
-      <p id="status" class="text-xs text-[var(--muted)] mt-2"></p>
-      <div id="barra-tema" class="liora-progress mt-1 w-full">
-        <div id="barra-tema-fill" class="liora-progress__bar"></div>
+      <div class="liora-wizard-section">
+        <h5>Conteúdo</h5>
+        <div id="liora-sessao-conteudo"></div>
+      </div>
+
+      <div class="liora-wizard-section">
+        <h5>Analogias</h5>
+        <div id="liora-sessao-analogias"></div>
+      </div>
+
+      <div class="liora-wizard-section">
+        <h5>Ativação</h5>
+        <ul id="liora-sessao-ativacao"></ul>
+      </div>
+
+      <div class="liora-wizard-section">
+        <h5>Teste rápido</h5>
+        <div id="liora-sessao-quiz"></div>
+        <p id="liora-sessao-quiz-feedback" class="liora-quiz-feedback"></p>
+      </div>
+
+      <div class="liora-wizard-section">
+        <h5>Flashcards</h5>
+        <ul id="liora-sessao-flashcards"></ul>
+      </div>
+
+      <div class="liora-wizard-section">
+        <h5>Mapa Mental</h5>
+        <pre id="liora-sessao-mapa" class="liora-mapa-mental"></pre>
       </div>
     </div>
 
-    <!-- PAINEL UPLOAD -->
-    <div id="painel-upload" class="hidden mt-6">
-      <label class="text-sm font-medium">Envie seu material</label>
-      <label id="upload-zone" class="upload-zone">
-        <p id="upload-text">Clique ou arraste um arquivo PDF</p>
-        <div id="upload-spinner"></div>
-        <input id="inp-file" type="file" accept="application/pdf,.pdf" />
-      </label>
-
-      <button id="btn-gerar-upload" class="btn w-full mt-3">Gerar plano</button>
-
-      <p id="status-upload" class="text-xs text-[var(--muted)] mt-2"></p>
-      <div id="barra-upload" class="liora-progress mt-1 w-full">
-        <div id="barra-upload-fill" class="liora-progress__bar"></div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ============================
-       DIREITA — ÁREA DINÂMICA
-       ============================ -->
-  <section id="area-dinamica" class="card p-6">
-
-    <!-- PLANO DE ESTUDO -->
-    <div id="area-plano">
-      <div class="flex justify-between mb-4">
-        <h2 class="section-title">Seu plano de estudo</h2>
-        <p id="ctx" class="text-sm text-[var(--muted)]"></p>
-      </div>
-      <div id="plano" class="space-y-3"></div>
+    <div class="liora-wizard-nav mt-6 flex justify-between">
+      <button id="liora-btn-voltar" class="btn-secondary">◀ Voltar</button>
+      <button id="liora-btn-proxima" class="btn-primary">Próxima sessão ▶</button>
     </div>
 
-    <!-- ============================================
-         WIZARD DE SESSÕES (ÚNICO E CORRETO)
-         ============================================ -->
-    <div id="liora-sessoes" class="hidden mt-10">
-
-      <h3 id="liora-tema-ativo" class="text-xl font-bold mb-4"></h3>
-
-      <div class="liora-wizard-card">
-        <h4 id="liora-sessao-titulo" class="liora-wizard-title"></h4>
-
-        <div class="liora-wizard-section">
-          <h5>Objetivo</h5>
-          <p id="liora-sessao-objetivo"></p>
-        </div>
-
-        <div class="liora-wizard-section">
-          <h5>Conteúdo</h5>
-          <div id="liora-sessao-conteudo"></div>
-        </div>
-
-        <div class="liora-wizard-section">
-          <h5>Analogias</h5>
-          <div id="liora-sessao-analogias"></div>
-        </div>
-
-        <div class="liora-wizard-section">
-          <h5>Ativação</h5>
-          <ul id="liora-sessao-ativacao"></ul>
-        </div>
-
-        <div class="liora-wizard-section">
-          <h5>Teste rápido</h5>
-          <div id="liora-sessao-quiz"></div>
-          <p id="liora-sessao-quiz-feedback" class="liora-quiz-feedback"></p>
-        </div>
-
-        <div class="liora-wizard-section">
-          <h5>Flashcards</h5>
-          <ul id="liora-sessao-flashcards"></ul>
-        </div>
-
-        <div class="liora-wizard-section">
-          <h5>Mapa Mental</h5>
-          <pre id="liora-sessao-mapa" class="liora-mapa-mental"></pre>
-        </div>
-      </div>
-
-      <div class="liora-wizard-nav mt-6 flex justify-between">
-        <button id="liora-btn-voltar" class="btn-secondary">◀ Voltar</button>
-        <button id="liora-btn-proxima" class="btn-primary">Próxima sessão ▶</button>
-      </div>
-
-      <div class="liora-progress mt-4">
-        <div id="liora-progress-bar" class="liora-progress__bar"></div>
-      </div>
-    </div>
-    
-    <!-- SIMULADO -->
-    <div id="area-simulado" class="hidden space-y-6">
-      <div class="flex justify-between items-center">
-        <div id="sim-timer" class="sim-timer hidden">00:00</div>
-        <div class="sim-progress w-48">
-          <div id="sim-progress-bar" class="sim-progress-fill"></div>
-        </div>
-      </div>
-
-      <div id="sim-questao-container" class="space-y-4"></div>
-
-      <div id="sim-nav" class="sim-nav hidden">
-        <button id="sim-btn-voltar" class="sim-btn-nav">◀ Voltar</button>
-        <button id="sim-btn-proxima" class="sim-btn-nav sim-btn-next">Próxima ▶</button>
-      </div>
-
-      <div id="sim-resultado" class="hidden"></div>
+    <div class="liora-progress mt-4">
+      <div id="liora-progress-bar" class="liora-progress__bar"></div>
     </div>
 
-    <!-- DASHBOARD -->
-    <div id="area-dashboard" class="hidden space-y-6">
-      <div class="flex justify-between mb-4 items-center">
-        <h2 class="section-title">Minha evolução</h2>
-        <p class="text-sm text-[var(--muted)]">Visão geral dos seus simulados neste dispositivo.</p>
-      </div>
+  </div>
 
-      <div id="dash-resumo" class="grid gap-3 md:grid-cols-3 text-sm"></div>
-      <div id="dash-bancas" class="mt-4"></div>
-      <div id="dash-ultimos" class="mt-4"></div>
+  <!-- SIMULADO -->
+  <div id="area-simulado" class="hidden space-y-6">
+    <div class="flex justify-between items-center">
+      <div id="sim-timer" class="sim-timer hidden">00:00</div>
+      <div class="sim-progress w-48">
+        <div id="sim-progress-bar" class="sim-progress-fill"></div>
+      </div>
     </div>
-  </section>
+
+    <div id="sim-questao-container" class="space-y-4"></div>
+
+    <div id="sim-nav" class="sim-nav hidden">
+      <button id="sim-btn-voltar" class="sim-btn-nav">◀ Voltar</button>
+      <button id="sim-btn-proxima" class="sim-btn-nav sim-btn-next">Próxima ▶</button>
+    </div>
+
+    <div id="sim-resultado" class="hidden"></div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div id="area-dashboard" class="hidden space-y-6">
+    <div class="flex justify-between mb-4 items-center">
+      <h2 class="section-title">Minha evolução</h2>
+      <p class="text-sm text-[var(--muted)]">Visão geral dos seus simulados neste dispositivo.</p>
+    </div>
+
+    <div id="dash-resumo" class="grid gap-3 md:grid-cols-3 text-sm"></div>
+    <div id="dash-bancas" class="mt-4"></div>
+    <div id="dash-ultimos" class="mt-4"></div>
+  </div>
+
+</section>
 </main>
 
 <!-- ============================
