@@ -46,13 +46,24 @@
   <section class="card p-6">
     <h2 class="section-title mb-4">Como você deseja estudar?</h2>
 
-    <!-- BOTÕES DE MODO -->
-    <div class="grid grid-cols-4 gap-2 mb-6">
+      <!-- GRUPO PRINCIPAL: ESTUDO x AVALIAÇÃO -->
+    <div class="grid grid-cols-2 gap-2 mb-4">
+      <button id="grupo-estudo" class="btn-secondary grupo-btn selected">📘 Estudar</button>
+      <button id="grupo-avaliacao" class="btn-secondary grupo-btn">📝 Avaliar</button>
+    </div>
+
+    <!-- SUBMODOS DE ESTUDO (TEMA / UPLOAD) -->
+    <div id="bloco-estudo" class="grid grid-cols-2 gap-2 mb-6">
       <button id="modo-tema" class="btn-secondary modo-btn selected">Tema</button>
       <button id="modo-upload" class="btn-secondary modo-btn">Upload</button>
+    </div>
+
+    <!-- SUBMODOS DE AVALIAÇÃO (SIMULADOS / DASHBOARD) -->
+    <div id="bloco-avaliacao" class="grid grid-cols-2 gap-2 mb-6 hidden">
       <button id="modo-simulados" class="btn-secondary modo-btn">Simulados</button>
       <button id="modo-dashboard" class="btn-secondary modo-btn">Minha evolução</button>
     </div>
+
 
     <!-- PAINEL TEMA -->
     <div id="painel-tema">
