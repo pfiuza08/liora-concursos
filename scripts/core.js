@@ -1,15 +1,14 @@
 // ==========================================================
-// 🧠 LIORA — CORE v70-G-SIM
+// 🧠 LIORA — CORE v70-G-SIM (REBUILD)
+// Compatível com o index atual:
 // - Tema: plano + sessões completas (cache localStorage)
 // - Upload: Modelo D (outline + sessões a partir do PDF)
-// - Hover/active nos cards (tema + upload)
-// - Mapa mental básico (tema + upload) com PARSER da string
-//   "A > B > C | D > E ..." vindo da IA
-// - 🔹 Integração mínima: modo "Simulados" (somente troca de painel)
+// - Wizard em <section id="liora-sessoes"> (fora do card direito)
+// - Simulados / Dashboard controlados por modo
 // ==========================================================
 
 (function () {
-  console.log("🔵 Inicializando Liora Core v70-G-SIM...");
+  console.log("🔵 Inicializando Liora Core v70-G-SIM-REBUILD...");
 
   document.addEventListener("DOMContentLoaded", () => {
 
@@ -17,16 +16,20 @@
     // ELEMENTOS
     // --------------------------------------------------------
     const els = {
-      // modos
+      // modos (botões à esquerda)
       modoTema: document.getElementById("modo-tema"),
       modoUpload: document.getElementById("modo-upload"),
-      // 🔹 novo modo simulados
       modoSimulados: document.getElementById("modo-simulados"),
+      modoDashboard: document.getElementById("modo-dashboard"),
 
+      // painéis da esquerda
       painelTema: document.getElementById("painel-tema"),
       painelUpload: document.getElementById("painel-upload"),
-      // 🔹 novo painel simulados
-      painelSimulados: document.getElementById("painel-simulados"),
+
+      // áreas da direita
+      areaPlano: document.getElementById("area-plano"),
+      areaSimulado: document.getElementById("area-simulado"),
+      areaDashboard: document.getElementById("area-dashboard"),
 
       // tema
       inpTema: document.getElementById("inp-tema"),
@@ -39,11 +42,11 @@
       btnGerarUpload: document.getElementById("btn-gerar-upload"),
       statusUpload: document.getElementById("status-upload"),
 
-      // painel plano
+      // painel plano (lista de sessões)
       plano: document.getElementById("plano"),
       ctx: document.getElementById("ctx"),
 
-      // wizard
+      // wizard (section fora do card direito)
       wizardContainer: document.getElementById("liora-sessoes"),
       wizardTema: document.getElementById("liora-tema-ativo"),
       wizardTitulo: document.getElementById("liora-sessao-titulo"),
@@ -62,6 +65,12 @@
       // tema claro/escuro
       themeBtn: document.getElementById("btn-theme"),
     };
+
+    // placeholder inicial no painel de plano
+    if (els.plano) {
+      els.plano.innerHTML =
+        '<p class="text-sm text-[var(--muted)]">Gere um plano de estudo (por tema ou upload) para ver as sessões aqui.</p>';
+    }
 
     // --------------------------------------------------------
     // ESTADO GLOBAL
@@ -136,35 +145,47 @@
     }
 
     // --------------------------------------------------------
-    // MODO (TEMA / UPLOAD / SIMULADOS)
+    // MODO (TEMA / UPLOAD / SIMULADOS / DASHBOARD)
     // --------------------------------------------------------
     function setMode(mode) {
       const tema = mode === "tema";
       const upload = mode === "upload";
       const simulados = mode === "simulados";
+      const dashboard = mode === "dashboard";
+      const temaOuUpload = tema || upload;
 
-      // painéis
-      if (els.painelTema)
-        els.painelTema.classList.toggle("hidden", !tema);
-      if (els.painelUpload)
-        els.painelUpload.classList.toggle("hidden", !upload);
-      if (els.painelSimulados)
-        els.painelSimulados.classList.toggle("hidden", !simulados);
+      // painéis da esquerda
+      if (els.painelTema) els.painelTema.classList.toggle("hidden", !tema);
+      if (els.painelUpload) els.painelUpload.classList.toggle("hidden", !upload);
 
-      // botões
-      if (els.modoTema)
-        els.modoTema.classList.toggle("selected", tema);
-      if (els.modoUpload)
-        els.modoUpload.classList.toggle("selected", upload);
-      if (els.modoSimulados)
-        els.modoSimulados.classList.toggle("selected", simulados);
+      // áreas da direita
+      if (els.areaPlano) els.areaPlano.classList.toggle("hidden", !temaOuUpload);
+      if (els.areaSimulado) els.areaSimulado.classList.toggle("hidden", !simulados);
+      if (els.areaDashboard) els.areaDashboard.classList.toggle("hidden", !dashboard);
+
+      // wizard: só aparece em Tema/Upload E se já houver sessões
+      if (els.wizardContainer) {
+        if (temaOuUpload && wizard.sessoes && wizard.sessoes.length) {
+          els.wizardContainer.classList.remove("hidden");
+        } else {
+          els.wizardContainer.classList.add("hidden");
+        }
+      }
+
+      // seleção visual dos botões de modo
+      if (els.modoTema) els.modoTema.classList.toggle("selected", tema);
+      if (els.modoUpload) els.modoUpload.classList.toggle("selected", upload);
+      if (els.modoSimulados) els.modoSimulados.classList.toggle("selected", simulados);
+      if (els.modoDashboard) els.modoDashboard.classList.toggle("selected", dashboard);
     }
 
+    // handlers dos botões de modo
     if (els.modoTema) els.modoTema.onclick = () => setMode("tema");
     if (els.modoUpload) els.modoUpload.onclick = () => setMode("upload");
-    // 🔹 novo handler: modo simulados
     if (els.modoSimulados) els.modoSimulados.onclick = () => setMode("simulados");
+    if (els.modoDashboard) els.modoDashboard.onclick = () => setMode("dashboard");
 
+    // modo inicial
     setMode("tema");
 
     // --------------------------------------------------------
@@ -328,9 +349,6 @@ Use APENAS JSON puro, com a seguinte estrutura:
       }
 
       if (mapaStr) {
-        // Se a string vier no formato:
-        // "Conjuntos > Definição (...) > ... | Funções > Tipos > ..."
-        // montamos uma árvore textual simples.
         linhas.push(titulo);
 
         const blocos = mapaStr.split("|").map(b => b.trim()).filter(Boolean);
@@ -338,10 +356,8 @@ Use APENAS JSON puro, com a seguinte estrutura:
           const parts = bloco.split(">").map(p => p.trim()).filter(Boolean);
           if (!parts.length) return;
 
-          // nível 1
           linhas.push("├─ " + parts[0]);
 
-          // níveis subsequentes
           for (let i = 1; i < parts.length; i++) {
             const isLast = i === parts.length - 1;
             const prefix = isLast ? "│   └─" : "│   ├─";
@@ -352,7 +368,7 @@ Use APENAS JSON puro, com a seguinte estrutura:
         return linhas.join("\n");
       }
 
-      // 2) Fallback: construir a partir do conteúdo da sessão (como v70-F)
+      // 2) Fallback: construir a partir do conteúdo da sessão
       const c = sessao.conteudo || {};
 
       linhas.push(titulo);
@@ -443,6 +459,9 @@ Use APENAS JSON puro, com a seguinte estrutura:
     function renderWizard() {
       const s = wizard.sessoes[wizard.atual];
       if (!s) return;
+
+      // garantir que o wizard só aparece em Tema/Upload
+      setMode("tema");
 
       if (els.wizardQuizFeedback) {
         els.wizardQuizFeedback.textContent = "";
@@ -618,6 +637,9 @@ Use APENAS JSON puro, com a seguinte estrutura:
       if (!els.btnGerar) return;
       els.btnGerar.disabled = true;
       wizard.origem = "tema";
+
+      // sempre volta para modo Tema e “limpa” visões de sim/dashboard
+      setMode("tema");
       atualizarStatus("tema", "🧩 Criando plano...", 0);
 
       try {
@@ -694,6 +716,9 @@ Use APENAS JSON puro, com a seguinte estrutura:
       if (!els.btnGerarUpload) return;
       els.btnGerarUpload.disabled = true;
       wizard.origem = "upload";
+
+      // volta para modo Tema/Upload para evitar mistura com simulados/dashboard
+      setMode("upload");
 
       try {
         if (file.type !== "application/pdf") {
@@ -825,6 +850,6 @@ Use APENAS JSON puro, com a seguinte estrutura:
       });
     }
 
-    console.log("🟢 Liora Core v70-G-SIM carregado com sucesso");
+    console.log("🟢 Liora Core v70-G-SIM-REBUILD carregado com sucesso");
   });
 })();
