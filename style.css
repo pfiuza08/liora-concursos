@@ -110,6 +110,29 @@ html, body {
   line-height:1.2;
 }
 
+.liora-fab-home {
+  position: fixed;
+  left: 1.5rem;
+  bottom: 1.5rem;
+  padding: 0.4rem 0.9rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  background: var(--surface-elevated, #111);
+  color: var(--fg, #fff);
+  border: 1px solid var(--border-subtle, #333);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+  cursor: pointer;
+  display: none; /* só aparece fora da home */
+  z-index: 40;
+}
+
+.liora-fab-home:hover {
+  transform: translateY(-1px);
+  transition: transform 120ms ease;
+}
+
+
+
 /* ==========================================================
    ✏️ INPUTS
 ========================================================== */
