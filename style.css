@@ -404,3 +404,9 @@ html.light #liora-build-info {
   background: var(--brand);
   transition: width .3s ease;
 }
+
+.btn-secondary:hover {
+  transform: translateY(-1px);
+  transition: 120ms ease;
+}
+
