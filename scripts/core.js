@@ -802,19 +802,3 @@ Use APENAS JSON puro, com a seguinte estrutura:
     console.log("🟢 Liora Core v70-COMMERCIAL-SYNC carregado com sucesso");
   });
 })();
-
-// DEBUG — rastrear quem exibe o wizard
-const wizard = document.getElementById("liora-sessoes");
-if (wizard) {
-  const observer = new MutationObserver((mutations) => {
-    mutations.forEach(m => {
-      if (m.attributeName === "class") {
-        console.log("🟥 Wizard mudou visibilidade:", wizard.className, 
-          " -> Stack:", new Error().stack);
-      }
-    });
-  });
-
-  observer.observe(wizard, { attributes: true });
-}
-
