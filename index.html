@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Liora — Plano de Estudo Inteligente</title>
 
-  <!-- Tailwind -->
+  <!-- Tailwind (ok temporariamente; ajustar na build final) -->
   <script src="https://cdn.tailwindcss.com"></script>
 
   <!-- PDF.js -->
@@ -15,8 +15,8 @@
       "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.14.305/pdf.worker.min.js";
   </script>
 
-  <!-- CSS principal -->
-  <link rel="stylesheet" href="/style.css?v=47">
+  <!-- CSS Principal -->
+  <link rel="stylesheet" href="/style.css?v=50">
   <link rel="stylesheet" href="/style-simulados.css?v=3">
 </head>
 
@@ -38,11 +38,11 @@
   </div>
 </header>
 
-<main id="liora-layout" class="max-w-6xl mx-auto px-6 pt-8 pb-12">
+<main id="liora-layout" class="max-w-6xl mx-auto px-6 pt-8 pb-16">
 
-  <!-- ============================
+  <!-- ========================================================
        HOME — FULLSCREEN
-       ============================ -->
+       ======================================================== -->
   <section id="liora-home"
            class="min-h-[60vh] flex flex-col items-center justify-center text-center space-y-10">
 
@@ -75,14 +75,14 @@
 
   </section>
 
-  <!-- =====================================================
-       APP — WORKSPACE ÚNICO (SEM CARD, SEM COLUNA ESQUERDA)
-       ===================================================== -->
+  <!-- ========================================================
+       APP — WORKSPACE ÚNICO
+       ======================================================== -->
   <section id="liora-app" class="space-y-10 hidden">
 
     <!-- HEADER DO WORKSPACE -->
     <div class="space-y-1">
-      <h2 id="liora-view-title" class="section-title">Título</h2>
+      <h2 id="liora-view-title" class="section-title"></h2>
       <p id="liora-view-subtitle" class="text-sm text-[var(--muted)]"></p>
     </div>
 
@@ -90,7 +90,7 @@
     <!-- =====================================================
          ESTUDO — TEMA / UPLOAD
          ===================================================== -->
-    <div id="painel-estudo" class="space-y-8">
+    <div id="painel-estudo" class="space-y-8 hidden">
 
       <!-- PAINEL TEMA -->
       <div id="painel-tema" class="space-y-3 hidden">
@@ -134,7 +134,7 @@
 
 
     <!-- =====================================================
-         PLANO DE ESTUDO + WIZARD
+         PLANO DE ESTUDO
          ===================================================== -->
     <div id="area-plano" class="space-y-6 hidden">
       <div class="flex justify-between items-baseline">
@@ -144,6 +144,10 @@
       <div id="plano" class="space-y-4"></div>
     </div>
 
+
+    <!-- =====================================================
+         WIZARD DE SESSÕES
+         ===================================================== -->
     <div id="liora-sessoes" class="hidden space-y-6">
       <h3 id="liora-tema-ativo" class="text-lg font-semibold"></h3>
 
@@ -199,7 +203,7 @@
          ===================================================== -->
     <div id="area-simulado" class="hidden space-y-8">
       <p class="text-sm text-[var(--muted)] max-w-xl">
-        Clique no botão no canto inferior direito para configurar seu simulado.
+        Use o botão inferior direito para configurar seu simulado.
       </p>
 
       <div class="flex justify-between items-center">
@@ -227,9 +231,7 @@
 
       <div class="flex justify-between items-center">
         <h3 class="section-title">Minha evolução</h3>
-        <p class="text-sm text-[var(--muted)]">
-          Histórico dos seus simulados neste dispositivo.
-        </p>
+        <p class="text-sm text-[var(--muted)]">Resumo dos seus simulados.</p>
       </div>
 
       <p id="dash-empty" class="text-sm text-[var(--muted)]">
@@ -245,15 +247,15 @@
 </main>
 
 
-<!-- ============================
-     BOTÃO FLUTUANTE “INÍCIO”
-     ============================ -->
+<!-- =====================================================
+     BOTÃO FLUTUANTE "INÍCIO"
+     ===================================================== -->
 <button id="fab-home" class="liora-fab-home">⬅ Início</button>
 
 
-<!-- ============================
+<!-- =====================================================
      MODAL DE SIMULADOS
-     ============================ -->
+     ===================================================== -->
 <div id="sim-modal-backdrop" class="sim-modal-backdrop hidden">
   <div class="sim-modal">
     <div class="sim-modal-header flex justify-between items-center">
@@ -262,10 +264,11 @@
     </div>
 
     <div class="sim-modal-body">
+
       <label class="sim-label">Banca</label>
       <select id="sim-modal-banca" class="sim-input">
         <option value="FGV">FGV</option>
-        <option value="CESPE">CESPE / Cebraspe</option>
+        <option value="CESPE">Cebraspe / CESPE</option>
         <option value="VUNESP">VUNESP</option>
         <option value="FCC">FCC</option>
         <option value="QUADRIX">Quadrix</option>
@@ -275,12 +278,12 @@
       <label class="sim-label">Quantidade</label>
       <input id="sim-modal-qtd" type="number" value="20" class="sim-input">
 
-      <label class="sim-label">Tempo (min)</label>
+      <label class="sim-label">Tempo (minutos)</label>
       <input id="sim-modal-tempo" type="number" value="30" class="sim-input">
 
       <label class="sim-label">Dificuldade</label>
       <select id="sim-modal-dificuldade" class="sim-input">
-        <option value="misturado">Misturar</option>
+        <option value="misturado">Misturado</option>
         <option value="facil">Fácil</option>
         <option value="medio">Médio</option>
         <option value="dificil">Difícil</option>
@@ -288,6 +291,7 @@
 
       <label class="sim-label">Tema (opcional)</label>
       <input id="sim-modal-tema" type="text" class="sim-input">
+
     </div>
 
     <div class="sim-modal-footer">
@@ -297,19 +301,18 @@
 </div>
 
 
-<!-- ============================
+<!-- =====================================================
      SCRIPTS
-     ============================ -->
+     ===================================================== -->
 <script src="scripts/pdf-extractor.js"></script>
 <script src="scripts/pdf-structure.js"></script>
 <script src="scripts/outline-generator.js"></script>
 <script src="scripts/semantic.js"></script>
-<script src="scripts/simulados.js?v=3"></script>
+<script src="scripts/simulados.js?v=10"></script>
 <script src="scripts/dashboard.js?v=1"></script>
-<script src="scripts/nav-home.js?v=5"></script>
+<script src="scripts/nav-home.js?v=6"></script>
 <script src="scripts/core.js?v=70"></script>
 
-<div id="liora-build-info">Liora v70-COMMERCIAL-APP-FINAL</div>
-
+<div id="liora-build-info">Liora v70-COMMERCIAL</div>
 </body>
 </html>
