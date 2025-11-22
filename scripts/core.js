@@ -1,17 +1,17 @@
 // ==========================================================
-// 🧠 LIORA — CORE v70-COMMERCIAL
-// Compatível com o index atual:
+// 🧠 LIORA — CORE v70-COMMERCIAL-SYNC
+// - Compatível com index.html atual (workspace único)
 // - Tema: plano + sessões completas (cache localStorage)
 // - Upload: Modelo D (outline + sessões a partir do PDF)
-// - Wizard em <section id="liora-sessoes">
-// - NÃO mexe em Simulados / Dashboard (nav-home cuida disso)
+// - Wizard em <div id="liora-sessoes"> (fora do painel de plano)
+// - NÃO controla modos (Tema/Upload/Simulados/Dashboard) — isso é do nav-home
+// - Exponde window.lioraWizardShouldShow() para a navegação
 // ==========================================================
 
 (function () {
-  console.log("🔵 Inicializando Liora Core v70-COMMERCIAL...");
+  console.log("🔵 Inicializando Liora Core v70-COMMERCIAL-SYNC...");
 
   document.addEventListener("DOMContentLoaded", () => {
-
     // --------------------------------------------------------
     // ELEMENTOS
     // --------------------------------------------------------
@@ -20,55 +20,59 @@
       inpTema: document.getElementById("inp-tema"),
       selNivel: document.getElementById("sel-nivel"),
       btnGerar: document.getElementById("btn-gerar"),
-      statusTema: document.getElementById("status"),
-      barraTemaFill: document.getElementById("barra-tema-fill"),
+      status: document.getElementById("status"),
 
       // upload
       inpFile: document.getElementById("inp-file"),
       btnGerarUpload: document.getElementById("btn-gerar-upload"),
       statusUpload: document.getElementById("status-upload"),
-      barraUploadFill: document.getElementById("barra-upload-fill"),
-      uploadText: document.getElementById("upload-text"),
-      uploadSpinner: document.getElementById("upload-spinner"),
 
-      // área de plano
+      // barra de progresso
+      barraTemaFill: document.getElementById("barra-tema-fill"),
+      barraUploadFill: document.getElementById("barra-upload-fill"),
+
+      // painel plano (lista de sessões)
       areaPlano: document.getElementById("area-plano"),
       plano: document.getElementById("plano"),
       ctx: document.getElementById("ctx"),
 
-      // wizard (sessões)
-      wizard: document.getElementById("liora-sessoes"),
-      wTema: document.getElementById("liora-tema-ativo"),
-      wTitulo: document.getElementById("liora-sessao-titulo"),
-      wObjetivo: document.getElementById("liora-sessao-objetivo"),
-      wConteudo: document.getElementById("liora-sessao-conteudo"),
-      wAnalogias: document.getElementById("liora-sessao-analogias"),
-      wAtivacao: document.getElementById("liora-sessao-ativacao"),
-      wQuiz: document.getElementById("liora-sessao-quiz"),
-      wQuizFeedback: document.getElementById("liora-sessao-quiz-feedback"),
-      wFlashcards: document.getElementById("liora-sessao-flashcards"),
-      wMapa: document.getElementById("liora-sessao-mapa"),
-      wVoltar: document.getElementById("liora-btn-voltar"),
-      wProxima: document.getElementById("liora-btn-proxima"),
-      wBar: document.getElementById("liora-progress-bar"),
+      // wizard (section fora do painel de plano)
+      wizardContainer: document.getElementById("liora-sessoes"),
+      wizardTema: document.getElementById("liora-tema-ativo"),
+      wizardTitulo: document.getElementById("liora-sessao-titulo"),
+      wizardObjetivo: document.getElementById("liora-sessao-objetivo"),
+      wizardConteudo: document.getElementById("liora-sessao-conteudo"),
+      wizardAnalogias: document.getElementById("liora-sessao-analogias"),
+      wizardAtivacao: document.getElementById("liora-sessao-ativacao"),
+      wizardQuiz: document.getElementById("liora-sessao-quiz"),
+      wizardQuizFeedback: document.getElementById("liora-sessao-quiz-feedback"),
+      wizardFlashcards: document.getElementById("liora-sessao-flashcards"),
+      wizardMapa: document.getElementById("liora-sessao-mapa"),
+      wizardVoltar: document.getElementById("liora-btn-voltar"),
+      wizardProxima: document.getElementById("liora-btn-proxima"),
+      wizardProgressBar: document.getElementById("liora-progress-bar"),
 
       // tema claro/escuro
       themeBtn: document.getElementById("btn-theme"),
+
+      // upload UX
+      uploadText: document.getElementById("upload-text"),
+      uploadSpinner: document.getElementById("upload-spinner"),
     };
 
-    // placeholder inicial na área de plano
+    // mensagem inicial no plano
     if (els.plano) {
       els.plano.innerHTML =
         '<p class="text-sm text-[var(--muted)]">Gere um plano de estudo (por tema ou upload) para ver as sessões aqui.</p>';
     }
 
-    // garantir wizard escondido ao iniciar
-    if (els.wizard) {
-      els.wizard.classList.add("hidden");
+    // garante wizard escondido de partida
+    if (els.wizardContainer) {
+      els.wizardContainer.classList.add("hidden");
     }
 
     // --------------------------------------------------------
-    // ESTADO GLOBAL DO WIZARD
+    // ESTADO
     // --------------------------------------------------------
     let wizard = {
       tema: null,
@@ -82,27 +86,30 @@
     const key = (tema, nivel) =>
       `liora:wizard:${tema.toLowerCase()}::${(nivel || "").toLowerCase()}`;
 
-    function saveProgress() {
+    const saveProgress = () => {
       if (!wizard.tema || !wizard.nivel) return;
       try {
         localStorage.setItem(key(wizard.tema, wizard.nivel), JSON.stringify(wizard));
       } catch (e) {
         console.warn("⚠️ Não foi possível salvar no localStorage", e);
       }
-    }
+    };
 
-    function loadProgress(tema, nivel) {
+    const loadProgress = (tema, nivel) => {
       try {
-        const raw = localStorage.getItem(key(tema, nivel));
-        if (!raw) return null;
-        return JSON.parse(raw);
+        return JSON.parse(localStorage.getItem(key(tema, nivel)) || "null");
       } catch {
         return null;
       }
-    }
+    };
+
+    // Expor para nav-home saber se pode mostrar o wizard
+    window.lioraWizardShouldShow = function () {
+      return !!(wizard && wizard.sessoes && wizard.sessoes.length);
+    };
 
     // --------------------------------------------------------
-    // 🌗 TEMA (LIGHT / DARK)
+    // 🌗 THEME (LIGHT / DARK)
     // --------------------------------------------------------
     (function themeSetup() {
       const btn = els.themeBtn;
@@ -128,15 +135,15 @@
     })();
 
     // --------------------------------------------------------
-    // STATUS + BARRAS DE PROGRESSO
+    // STATUS + BARRAS
     // --------------------------------------------------------
     function atualizarStatus(modo, texto, progresso = null) {
-      const statusEl = modo === "tema" ? els.statusTema : els.statusUpload;
-      if (statusEl) statusEl.textContent = texto || "";
+      const statusEl = modo === "tema" ? els.status : els.statusUpload;
+      if (statusEl) statusEl.textContent = texto;
 
-      const barraEl = modo === "tema" ? els.barraTemaFill : els.barraUploadFill;
-      if (barraEl && progresso !== null) {
-        barraEl.style.width = `${progresso}%`;
+      const barra = modo === "tema" ? els.barraTemaFill : els.barraUploadFill;
+      if (barra && progresso !== null) {
+        barra.style.width = `${progresso}%`;
       }
     }
 
@@ -157,11 +164,12 @@
         throw new Error("JSON vazio ou inválido");
       }
 
-      // tentar extrair bloco ```json ... ```
       const block =
         raw.match(/```json([\s\S]*?)```/i) ||
         raw.match(/```([\s\S]*?)```/i);
-      if (block) raw = block[1];
+      if (block) {
+        raw = block[1];
+      }
 
       const first = raw.search(/[\{\[]/);
       const lastBrace = raw.lastIndexOf("}");
@@ -175,9 +183,6 @@
       return JSON.parse(raw);
     }
 
-    // --------------------------------------------------------
-    // LLM CALL (exposto global)
-    // --------------------------------------------------------
     async function callLLM(system, user) {
       const res = await fetch("/api/liora", {
         method: "POST",
@@ -192,105 +197,15 @@
     window.callLLM = callLLM;
 
     // --------------------------------------------------------
-    // GERAÇÃO DO PLANO POR TEMA (lista de sessões)
-    // --------------------------------------------------------
-    async function gerarPlanoDeSessoesPorTema(tema, nivel) {
-      const prompt = `
-Crie um plano de estudo em sessões para o tema "${tema}" (nível: ${nivel}).
-Retorne JSON puro (sem texto antes ou depois), por exemplo:
-
-[
-  {"numero":1, "nome":"Fundamentos do tema"},
-  {"numero":2, "nome":"Conceitos intermediários"},
-  {"numero":3, "nome":"Aplicações práticas"}
-]`;
-
-      const raw = await callLLM(
-        "Você é Liora, especialista em microlearning e design instrucional.",
-        prompt
-      );
-      return safeJsonParse(raw);
-    }
-
-    // --------------------------------------------------------
-    // GERAÇÃO DE UMA SESSÃO COMPLETA
-    // --------------------------------------------------------
-    async function gerarSessaoPorTema(tema, nivel, numero, nome, sessaoAnteriorResumo = null) {
-      const contextoAnterior = sessaoAnteriorResumo
-        ? `Na sessão anterior, o aluno estudou: ${sessaoAnteriorResumo}. Agora avance para "${nome}" de forma coerente, sem repetir o que já foi visto.`
-        : `Esta é a primeira sessão do tema "${tema}". Apresente o conteúdo de forma introdutória, mas consistente.`;
-
-      const prompt = `
-${contextoAnterior}
-
-Crie uma sessão de estudo completa e bem detalhada para o tema "${tema}", sessão ${numero}, com foco em "${nome}".
-
-Use APENAS JSON puro, com a seguinte estrutura:
-
-{
- "titulo": "Sessão ${numero} — ${nome}",
- "objetivo": "descrição clara do objetivo de aprendizagem da sessão",
- "conteudo": {
-   "introducao": "texto corrido, 2 a 3 parágrafos, contextualizando o assunto desta sessão",
-   "conceitos": [
-     "conceito 1 explicado em 2 a 3 frases, com profundidade",
-     "conceito 2 explicado em 2 a 3 frases",
-     "conceito 3 explicado em 2 a 3 frases"
-   ],
-   "exemplos": [
-     "exemplo aplicado ao contexto profissional ou acadêmico",
-     "outro exemplo prático que ajude a fixar o conteúdo"
-   ],
-   "aplicacoes": [
-     "como o aluno pode aplicar o conteúdo desta sessão na prática",
-     "uma situação realista onde o conhecimento desta sessão é essencial"
-   ],
-   "resumoRapido": [
-     "ponto-chave 1 da sessão",
-     "ponto-chave 2",
-     "ponto-chave 3"
-   ]
- },
- "analogias": [
-   "uma analogia com algo do cotidiano para facilitar a compreensão",
-   "outra analogia ou metáfora útil"
- ],
- "ativacao": [
-   "pergunta reflexiva 1 que estimule o aluno a pensar no que acabou de ler",
-   "pergunta 2, mais aplicada ao dia a dia"
- ],
- "quiz": {
-   "pergunta": "pergunta de múltipla escolha relacionada a um ponto importante desta sessão",
-   "alternativas": [
-     "alternativa A",
-     "alternativa B",
-     "alternativa C"
-   ],
-   "corretaIndex": 1,
-   "explicacao": "explique por que a alternativa correta está certa e as demais não estão"
- },
- "flashcards": [
-   {"q": "pergunta objetiva sobre um conceito importante", "a": "resposta direta"},
-   {"q": "outra pergunta de revisão rápida", "a": "resposta direta"}
- ]
-}`;
-
-      const raw = await callLLM(
-        "Você é Liora, tutora especializada em microlearning. Responda apenas JSON válido.",
-        prompt
-      );
-      return safeJsonParse(raw);
-    }
-
-    // --------------------------------------------------------
-    // MAPA MENTAL BÁSICO
+    // MAPA MENTAL
     // --------------------------------------------------------
     function construirMapaMental(sessao) {
       if (!sessao) return "";
+
       const titulo = sessao.titulo || "Sessão";
       const linhas = [];
-
       let mapaStr = null;
+
       if (typeof sessao.mapaMental === "string" && sessao.mapaMental.trim()) {
         mapaStr = sessao.mapaMental.trim();
       } else if (typeof sessao.mindmap === "string" && sessao.mindmap.trim()) {
@@ -299,12 +214,14 @@ Use APENAS JSON puro, com a seguinte estrutura:
 
       if (mapaStr) {
         linhas.push(titulo);
+
         const blocos = mapaStr.split("|").map(b => b.trim()).filter(Boolean);
-        blocos.forEach(bloco => {
+        blocos.forEach((bloco) => {
           const parts = bloco.split(">").map(p => p.trim()).filter(Boolean);
           if (!parts.length) return;
 
           linhas.push("├─ " + parts[0]);
+
           for (let i = 1; i < parts.length; i++) {
             const isLast = i === parts.length - 1;
             const prefix = isLast ? "│   └─" : "│   ├─";
@@ -315,13 +232,14 @@ Use APENAS JSON puro, com a seguinte estrutura:
         return linhas.join("\n");
       }
 
-      // fallback baseado no conteúdo
       const c = sessao.conteudo || {};
 
       linhas.push(titulo);
       linhas.push("├─ Objetivo: " + (sessao.objetivo || "—"));
 
-      if (c.introducao) linhas.push("├─ Introdução");
+      if (c.introducao) {
+        linhas.push("├─ Introdução");
+      }
 
       if (Array.isArray(c.conceitos) && c.conceitos.length) {
         linhas.push("├─ Conceitos");
@@ -372,6 +290,7 @@ Use APENAS JSON puro, com a seguinte estrutura:
         div.className = "liora-card-topico";
         div.style.cursor = "pointer";
         div.dataset.index = index;
+
         div.textContent = p.titulo || p.nome || `Sessão ${index + 1}`;
 
         div.addEventListener("mouseenter", () => div.classList.add("hovered"));
@@ -386,10 +305,9 @@ Use APENAS JSON puro, com a seguinte estrutura:
 
           wizard.atual = index;
           renderWizard();
-
-          if (els.wizard) {
+          if (els.wizardContainer) {
             window.scrollTo({
-              top: els.wizard.offsetTop - 20,
+              top: els.wizardContainer.offsetTop - 20,
               behavior: "smooth",
             });
           }
@@ -403,29 +321,35 @@ Use APENAS JSON puro, com a seguinte estrutura:
     // RENDERIZAÇÃO DO WIZARD
     // --------------------------------------------------------
     function renderWizard() {
-      if (!els.wizard) return;
+      if (!els.wizardContainer) return;
 
+      // se não há sessões, garantimos que o box fique escondido
       if (!wizard.sessoes || !wizard.sessoes.length) {
-        els.wizard.classList.add("hidden");
+        els.wizardContainer.classList.add("hidden");
         return;
       }
 
       const s = wizard.sessoes[wizard.atual];
       if (!s) {
-        els.wizard.classList.add("hidden");
+        els.wizardContainer.classList.add("hidden");
         return;
       }
 
-      // agora sim: exibe o wizard
-      els.wizard.classList.remove("hidden");
+      // Agora sim: pode mostrar
+      els.wizardContainer.classList.remove("hidden");
 
-      if (els.wTema) els.wTema.textContent = wizard.tema || "";
-      if (els.wTitulo) els.wTitulo.textContent = s.titulo || "";
-      if (els.wObjetivo) els.wObjetivo.textContent = s.objetivo || "";
+      if (els.wizardQuizFeedback) {
+        els.wizardQuizFeedback.textContent = "";
+        els.wizardQuizFeedback.style.opacity = 0;
+      }
+
+      if (els.wizardTema) els.wizardTema.textContent = wizard.tema || "";
+      if (els.wizardTitulo) els.wizardTitulo.textContent = s.titulo || "";
+      if (els.wizardObjetivo) els.wizardObjetivo.textContent = s.objetivo || "";
 
       const c = s.conteudo || {};
-      if (els.wConteudo) {
-        els.wConteudo.innerHTML = `
+      if (els.wizardConteudo) {
+        els.wizardConteudo.innerHTML = `
           ${c.introducao ? `
           <div class="liora-section">
             <h5>INTRODUÇÃO</h5>
@@ -462,26 +386,25 @@ Use APENAS JSON puro, com a seguinte estrutura:
         `;
       }
 
-      if (els.wAnalogias) {
-        els.wAnalogias.innerHTML = (s.analogias || [])
+      if (els.wizardAnalogias) {
+        els.wizardAnalogias.innerHTML = (s.analogias || [])
           .map(a => `<p>${a}</p>`)
           .join("");
       }
 
-      if (els.wAtivacao) {
-        els.wAtivacao.innerHTML = (s.ativacao || [])
+      if (els.wizardAtivacao) {
+        els.wizardAtivacao.innerHTML = (s.ativacao || [])
           .map(q => `<li>${q}</li>`)
           .join("");
       }
 
-      // Quiz
-      if (els.wQuiz) {
-        els.wQuiz.innerHTML = "";
+      if (els.wizardQuiz) {
+        els.wizardQuiz.innerHTML = "";
         const q = s.quiz || {};
         if (q.pergunta) {
           const pergunta = document.createElement("p");
           pergunta.textContent = q.pergunta;
-          els.wQuiz.appendChild(pergunta);
+          els.wizardQuiz.appendChild(pergunta);
         }
 
         const alternativas = Array.isArray(q.alternativas)
@@ -494,11 +417,6 @@ Use APENAS JSON puro, com a seguinte estrutura:
               }))
             )
           : [];
-
-        if (els.wQuizFeedback) {
-          els.wQuizFeedback.textContent = "";
-          els.wQuizFeedback.style.opacity = 0;
-        }
 
         alternativas.forEach((altObj, idx) => {
           const opt = document.createElement("label");
@@ -516,40 +434,41 @@ Use APENAS JSON puro, com a seguinte estrutura:
             opt.classList.add("selected");
             opt.querySelector("input").checked = true;
 
-            if (!els.wQuizFeedback) return;
-            els.wQuizFeedback.style.opacity = 0;
+            if (!els.wizardQuizFeedback) return;
+            els.wizardQuizFeedback.style.opacity = 0;
 
             setTimeout(() => {
               if (altObj.correta) {
-                els.wQuizFeedback.textContent =
+                els.wizardQuizFeedback.textContent =
                   `✅ Correto! ${q.explicacao || ""}`;
-                els.wQuizFeedback.style.color = "var(--brand)";
+                els.wizardQuizFeedback.style.color = "var(--brand)";
               } else {
-                els.wQuizFeedback.textContent = "❌ Tente novamente.";
-                els.wQuizFeedback.style.color = "var(--muted)";
+                els.wizardQuizFeedback.textContent = "❌ Tente novamente.";
+                els.wizardQuizFeedback.style.color = "var(--muted)";
               }
-              els.wQuizFeedback.style.transition = "opacity .4s ease";
-              els.wQuizFeedback.style.opacity = 1;
+              els.wizardQuizFeedback.style.transition = "opacity .4s ease";
+              els.wizardQuizFeedback.style.opacity = 1;
             }, 120);
           });
 
-          els.wQuiz.appendChild(opt);
+          els.wizardQuiz.appendChild(opt);
         });
       }
 
-      if (els.wFlashcards) {
-        els.wFlashcards.innerHTML = (s.flashcards || [])
+      if (els.wizardFlashcards) {
+        els.wizardFlashcards.innerHTML = (s.flashcards || [])
           .map(f => `<li><b>${f.q}</b>: ${f.a}</li>`)
           .join("");
       }
 
-      if (els.wMapa) {
+      if (els.wizardMapa) {
         const mapa = construirMapaMental(s);
-        els.wMapa.textContent = mapa || "Mapa mental gerado a partir desta sessão.";
+        els.wizardMapa.textContent =
+          mapa || "Mapa mental gerado a partir desta sessão.";
       }
 
-      if (els.wBar && wizard.sessoes.length) {
-        els.wBar.style.width =
+      if (els.wizardProgressBar && wizard.sessoes.length) {
+        els.wizardProgressBar.style.width =
           `${((wizard.atual + 1) / wizard.sessoes.length) * 100}%`;
       }
     }
@@ -557,8 +476,8 @@ Use APENAS JSON puro, com a seguinte estrutura:
     // --------------------------------------------------------
     // NAVEGAÇÃO DO WIZARD
     // --------------------------------------------------------
-    if (els.wVoltar) {
-      els.wVoltar.addEventListener("click", () => {
+    if (els.wizardVoltar) {
+      els.wizardVoltar.addEventListener("click", () => {
         if (wizard.atual > 0) {
           wizard.atual--;
           renderWizard();
@@ -567,8 +486,8 @@ Use APENAS JSON puro, com a seguinte estrutura:
       });
     }
 
-    if (els.wProxima) {
-      els.wProxima.addEventListener("click", () => {
+    if (els.wizardProxima) {
+      els.wizardProxima.addEventListener("click", () => {
         if (wizard.atual < wizard.sessoes.length - 1) {
           wizard.atual++;
           renderWizard();
@@ -584,8 +503,92 @@ Use APENAS JSON puro, com a seguinte estrutura:
     }
 
     // --------------------------------------------------------
-    // FLUXO: GERAR POR TEMA
+    // TEMA: PLANO E SESSÕES
     // --------------------------------------------------------
+    async function gerarPlanoDeSessoesPorTema(tema, nivel) {
+      const prompt = `
+Crie um plano de estudo em sessões para o tema "${tema}" (nível: ${nivel}).
+Retorne JSON puro, por exemplo:
+[
+  {"numero":1, "nome":"Fundamentos do tema"},
+  {"numero":2, "nome":"Conceitos intermediários"},
+  {"numero":3, "nome":"Aplicações práticas"}
+]`;
+
+      const raw = await callLLM(
+        "Você é Liora, especialista em microlearning e design instrucional.",
+        prompt
+      );
+      return safeJsonParse(raw);
+    }
+
+    async function gerarSessaoPorTema(tema, nivel, numero, nome, sessaoAnteriorResumo = null) {
+      const contextoAnterior = sessaoAnteriorResumo
+        ? `Na sessão anterior, o aluno estudou: ${sessaoAnteriorResumo}. Agora avance para "${nome}" sem repetir o que já foi visto.`
+        : `Esta é a primeira sessão do tema "${tema}". Apresente o conteúdo de forma introdutória, mas consistente.`;
+
+      const prompt = `
+${contextoAnterior}
+
+Crie uma sessão de estudo completa para o tema "${tema}", sessão ${numero}, com foco em "${nome}".
+
+Use APENAS JSON puro, com a seguinte estrutura:
+
+{
+ "titulo": "Sessão ${numero} — ${nome}",
+ "objetivo": "descrição clara do objetivo de aprendizagem da sessão",
+ "conteudo": {
+   "introducao": "2 a 3 parágrafos contextualizando o assunto desta sessão",
+   "conceitos": [
+     "conceito 1 explicado em 2 a 3 frases",
+     "conceito 2 explicado em 2 a 3 frases",
+     "conceito 3 explicado em 2 a 3 frases"
+   ],
+   "exemplos": [
+     "exemplo aplicado ao contexto profissional ou acadêmico",
+     "outro exemplo prático"
+   ],
+   "aplicacoes": [
+     "como o aluno pode aplicar o conteúdo desta sessão na prática",
+     "situação realista onde este conhecimento é essencial"
+   ],
+   "resumoRapido": [
+     "ponto-chave 1",
+     "ponto-chave 2",
+     "ponto-chave 3"
+   ]
+ },
+ "analogias": [
+   "uma analogia com algo do cotidiano",
+   "outra metáfora útil"
+ ],
+ "ativacao": [
+   "pergunta reflexiva 1",
+   "pergunta 2 mais aplicada"
+ ],
+ "quiz": {
+   "pergunta": "pergunta de múltipla escolha importante",
+   "alternativas": [
+     "alternativa A",
+     "alternativa B",
+     "alternativa C"
+   ],
+   "corretaIndex": 1,
+   "explicacao": "explique por que a alternativa correta está certa e as demais não estão"
+ },
+ "flashcards": [
+   {"q": "pergunta objetiva sobre um conceito importante", "a": "resposta direta"},
+   {"q": "outra pergunta de revisão rápida", "a": "resposta direta"}
+ ]
+}`;
+
+      const raw = await callLLM(
+        "Você é Liora, tutora especializada em microlearning. Responda apenas JSON válido.",
+        prompt
+      );
+      return safeJsonParse(raw);
+    }
+
     async function fluxoTema(tema, nivel) {
       if (!els.btnGerar) return;
       els.btnGerar.disabled = true;
@@ -597,7 +600,6 @@ Use APENAS JSON puro, com a seguinte estrutura:
         const cached = loadProgress(tema, nivel);
         if (cached && cached.sessoes && cached.sessoes.length) {
           wizard = cached;
-          if (els.ctx) els.ctx.textContent = `Tema: ${tema} (${nivel})`;
           renderPlanoResumo(wizard.plano);
           renderWizard();
           atualizarStatus("tema", "✅ Plano carregado do histórico.", 100);
@@ -615,8 +617,6 @@ Use APENAS JSON puro, com a seguinte estrutura:
         wizard.plano = planoNorm.map(p => ({
           titulo: `Sessão ${p.numero} — ${p.nome}`,
         }));
-
-        if (els.ctx) els.ctx.textContent = `Tema: ${tema} (${nivel})`;
         renderPlanoResumo(wizard.plano);
 
         let resumoAnterior = null;
@@ -664,7 +664,7 @@ Use APENAS JSON puro, com a seguinte estrutura:
     }
 
     // --------------------------------------------------------
-    // FLUXO: GERAR POR UPLOAD (Modelo D)
+    // UPLOAD (Modelo D)
     // --------------------------------------------------------
     async function fluxoUpload(file, nivel) {
       if (!els.btnGerarUpload) return;
@@ -741,7 +741,6 @@ Use APENAS JSON puro, com a seguinte estrutura:
           origem: "upload",
         };
 
-        if (els.ctx) els.ctx.textContent = `PDF: ${wizard.tema}`;
         atualizarStatus("upload", "✅ Sessões concluídas!", 100);
         renderPlanoResumo(wizard.plano);
         renderWizard();
@@ -755,7 +754,7 @@ Use APENAS JSON puro, com a seguinte estrutura:
     }
 
     // --------------------------------------------------------
-    // BOTÕES: GERAR (TEMA) E GERAR (UPLOAD)
+    // BOTÕES
     // --------------------------------------------------------
     if (els.btnGerar) {
       els.btnGerar.addEventListener("click", () => {
@@ -794,12 +793,12 @@ Use APENAS JSON puro, com a seguinte estrutura:
         if (els.uploadText) {
           els.uploadText.textContent = file
             ? `Selecionado: ${file.name}`
-            : "Clique ou arraste um PDF";
+            : "Clique ou arraste um arquivo PDF";
         }
         if (els.uploadSpinner) els.uploadSpinner.style.display = "none";
       });
     }
 
-    console.log("🟢 Liora Core v70-COMMERCIAL carregado com sucesso");
+    console.log("🟢 Liora Core v70-COMMERCIAL-SYNC carregado com sucesso");
   });
 })();
