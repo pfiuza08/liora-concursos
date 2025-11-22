@@ -1,11 +1,11 @@
 // ==========================================================
 // 🧠 LIORA — HOME COMERCIAL (APP LAYOUT FINAL + FAB HOME)
-// CORRIGIDO — v3
+// v4 — SINCRONIZADO COM CORE
 // - Home fullscreen
 // - Workspace único (#liora-app)
 // - Navegação: Tema, Upload, Simulados, Dashboard
-// - Wizard só aparece se houver sessões
-// - Painéis Tema/Upload SEM apresentar wizard antes da hora
+// - Wizard só aparece quando o core gerar sessões
+// - Botão flutuante "⬅ Início"
 // ==========================================================
 (function () {
   document.addEventListener("DOMContentLoaded", () => {
@@ -33,15 +33,12 @@
     const areaSimulado = document.getElementById("area-simulado");
     const areaDashboard = document.getElementById("area-dashboard");
 
-    // Wizard — precisa existir, mas NÃO deve aparecer sem sessões
-    const wizardContainer = document.getElementById("liora-sessoes");
-
     // Títulos superiores
     const viewTitle = document.getElementById("liora-view-title");
     const viewSubtitle = document.getElementById("liora-view-subtitle");
 
     // ---------------------------
-    // SANIDADE: checar elementos
+    // SANIDADE
     // ---------------------------
     const required = {
       home,
@@ -72,7 +69,6 @@
     // ==========================================================
     // FUNÇÕES UTILITÁRIAS
     // ==========================================================
-
     function esconderTudo() {
       painelEstudo.classList.add("hidden");
       painelTema.classList.add("hidden");
@@ -80,9 +76,7 @@
       areaPlano.classList.add("hidden");
       areaSimulado.classList.add("hidden");
       areaDashboard.classList.add("hidden");
-
-      // Wizard NUNCA aparece aqui
-      wizardContainer.classList.add("hidden");
+      areaSessoes.classList.add("hidden"); // wizard SEMPRE some na troca de modo
     }
 
     function mostrarHome() {
@@ -101,23 +95,25 @@
     }
 
     // ==========================================================
-    // ENTRAR EM CADA MODO — corrigido para NÃO mostrar wizard
+    // ENTRAR EM CADA MODO
+    // (wizard é controlado apenas pelo core.js)
     // ==========================================================
-
     function entrarTema() {
       mostrarWorkspace();
       esconderTudo();
 
       viewTitle.textContent = "Estudo por tema";
-      viewSubtitle.textContent = "Monte um plano de estudo personalizado a partir de um assunto.";
+      viewSubtitle.textContent =
+        "Monte um plano de estudo personalizado a partir de um assunto.";
 
       painelEstudo.classList.remove("hidden");
       painelTema.classList.remove("hidden");
       areaPlano.classList.remove("hidden");
 
-      // Wizard só aparece se o core disser que há sessões
-      if (window.lioraWizardTemSessoes && window.lioraWizardTemSessoes()) {
-        wizardContainer.classList.remove("hidden");
+      // NÃO mostramos o wizard aqui.
+      // O core.js vai mostrar quando existirem sessões.
+      if (window.lioraWizardShouldShow && window.lioraWizardShouldShow()) {
+        areaSessoes.classList.remove("hidden");
       }
     }
 
@@ -126,14 +122,15 @@
       esconderTudo();
 
       viewTitle.textContent = "Estudo a partir de PDF";
-      viewSubtitle.textContent = "Envie um material em PDF para gerar um plano de estudo.";
+      viewSubtitle.textContent =
+        "Envie um material em PDF para gerar um plano de estudo.";
 
       painelEstudo.classList.remove("hidden");
       painelUpload.classList.remove("hidden");
       areaPlano.classList.remove("hidden");
 
-      if (window.lioraWizardTemSessoes && window.lioraWizardTemSessoes()) {
-        wizardContainer.classList.remove("hidden");
+      if (window.lioraWizardShouldShow && window.lioraWizardShouldShow()) {
+        areaSessoes.classList.remove("hidden");
       }
     }
 
@@ -142,7 +139,8 @@
       esconderTudo();
 
       viewTitle.textContent = "Simulados";
-      viewSubtitle.textContent = "Monte provas com perfil de banca, quantidade de questões e tempo de prova.";
+      viewSubtitle.textContent =
+        "Monte provas com perfil de banca, quantidade de questões e tempo de prova.";
 
       areaSimulado.classList.remove("hidden");
     }
@@ -152,7 +150,8 @@
       esconderTudo();
 
       viewTitle.textContent = "Minha evolução";
-      viewSubtitle.textContent = "Resumo dos seus simulados e desempenho neste dispositivo.";
+      viewSubtitle.textContent =
+        "Resumo dos seus simulados e desempenho neste dispositivo.";
 
       areaDashboard.classList.remove("hidden");
 
@@ -162,9 +161,8 @@
     }
 
     // ==========================================================
-    // LIGAÇÕES HOME
+    // LIGAÇÕES
     // ==========================================================
-
     homeTema.addEventListener("click", entrarTema);
     homeUpload.addEventListener("click", entrarUpload);
     homeSimulados.addEventListener("click", entrarSimulados);
