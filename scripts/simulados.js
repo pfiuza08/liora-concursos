@@ -1,27 +1,20 @@
 // ==============================================================
-// 🧠 LIORA — SIMULADOS v10
-// - Base: v9 (mock avançado, dashboard, gabarito, histórico)
-// - NOVO: bloco de "Histórico recente" renderizado no resultado
+// 🧠 LIORA — SIMULADOS v11
+// - Integrado ao layout comercial (sem modo-simulados no menu)
+// - Modal é aberto via botão dentro da própria área de simulados
+// - Mantém mock avançado + histórico em localStorage
 // ==============================================================
 
 (function () {
-  console.log("🔵 Liora Simulados v10 (mock avançado + histórico visual) carregado...");
+  console.log("🔵 Liora Simulados v11 (layout comercial) carregado...");
 
   document.addEventListener("DOMContentLoaded", () => {
     // ------------------------------------------------------
     // ELEMENTOS
     // ------------------------------------------------------
     const els = {
-      // modos
-      modoSimulados: document.getElementById("modo-simulados"),
-      modoTema: document.getElementById("modo-tema"),
-      modoUpload: document.getElementById("modo-upload"),
-
-      // áreas
-      areaPlano: document.getElementById("area-plano"),
       areaSimulado: document.getElementById("area-simulado"),
 
-      // simulado
       questaoContainer: document.getElementById("sim-questao-container"),
       nav: document.getElementById("sim-nav"),
       btnVoltar: document.getElementById("sim-btn-voltar"),
@@ -42,8 +35,9 @@
       inpTema: document.getElementById("sim-modal-tema"),
     };
 
-    if (!els.modoSimulados || !els.modalBackdrop) {
-      console.warn("⚠️ Elementos principais de simulados não encontrados.");
+    // Se não tem área-simulado ou modal, aborta
+    if (!els.areaSimulado || !els.modalBackdrop || !els.questaoContainer) {
+      console.warn("⚠️ Simulados: elementos principais não encontrados no DOM.");
       return;
     }
 
@@ -57,7 +51,7 @@
       indiceAtual: 0,
       banca: "FGV",
       qtd: 20,
-      dificuldade: "misturado", // misturado | facil | medio | dificil
+      dificuldade: "misturado",
       tempoProvaMin: 30,
       tempoRestanteSeg: 0,
       tema: "",
@@ -100,8 +94,6 @@
       els.modalBackdrop.style.display = "none";
     }
 
-    els.modoSimulados.addEventListener("click", abrirModal);
-
     if (els.modalClose) {
       els.modalClose.addEventListener("click", fecharModal);
     }
@@ -110,13 +102,36 @@
       if (e.target === els.modalBackdrop) fecharModal();
     });
 
+    // Criar um botão de ação primária dentro da área de simulados (se ainda não existir)
+    (function ensureConfigButton() {
+      const existing = document.getElementById("sim-abrir-config");
+      if (existing) return;
+
+      const btn = document.createElement("button");
+      btn.id = "sim-abrir-config";
+      btn.className = "btn-primary";
+      btn.style.marginTop = "0.5rem";
+      btn.textContent = "Configurar novo simulado";
+      btn.addEventListener("click", abrirModal);
+
+      // Insere no topo da área de simulados, logo após o parágrafo
+      const pIntro = els.areaSimulado.querySelector("p");
+      if (pIntro && pIntro.parentNode === els.areaSimulado) {
+        pIntro.insertAdjacentElement("afterend", btn);
+      } else {
+        els.areaSimulado.prepend(btn);
+      }
+    })();
+
     // ------------------------------------------------------
     // TIMER
     // ------------------------------------------------------
     function formatarTempo(seg) {
       const m = Math.floor(seg / 60);
       const s = seg % 60;
-      return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
+      return `${m.toString().padStart(2, "0")}:${s
+        .toString()
+        .padStart(2, "0")}`;
     }
 
     function iniciarTimer() {
@@ -130,7 +145,9 @@
       estado.timerId = setInterval(() => {
         estado.tempoRestanteSeg--;
         if (els.timer) {
-          els.timer.textContent = formatarTempo(Math.max(estado.tempoRestanteSeg, 0));
+          els.timer.textContent = formatarTempo(
+            Math.max(estado.tempoRestanteSeg, 0)
+          );
         }
 
         if (estado.tempoRestanteSeg <= 0) {
@@ -146,7 +163,7 @@
     }
 
     // ------------------------------------------------------
-    // PERFIS DE BANCA (mock avançado)
+    // PERFIS DE BANCA (mock)
     // ------------------------------------------------------
     const PERFIS = {
       FGV: {
@@ -186,7 +203,7 @@
     }
 
     // ------------------------------------------------------
-    // BADGE DE DIFICULDADE (🟢 / 🟡 / 🔴) — pill translúcida
+    // BADGE DIFICULDADE
     // ------------------------------------------------------
     function formatarNivelBadge(nivel) {
       let emoji = "🟢";
@@ -228,7 +245,7 @@
     }
 
     // ------------------------------------------------------
-    // GERA QUESTÕES (mock avançado)
+    // GERA QUESTÕES (mock)
     // ------------------------------------------------------
     function gerarQuestoesMock() {
       const perfil = getPerfil(estado.banca);
@@ -268,7 +285,6 @@
           ? "Médio"
           : "Difícil";
 
-      // Cebraspe / C/E
       if (perfil.estilo === "certo_errado") {
         const afirmacaoBase =
           nivel === "facil"
@@ -291,7 +307,6 @@
         };
       }
 
-      // Outras bancas: múltipla escolha contextual
       const intro =
         nivel === "facil"
           ? `Questão introdutória sobre ${tema}, exigindo compreensão básica e identificação direta de conceito.`
@@ -320,35 +335,6 @@
         corretaIndex: correta,
         respostaAluno: null,
       };
-    }
-
-    // ------------------------------------------------------
-    // MOSTRAR / ESCONDER ÁREAS
-    // ------------------------------------------------------
-    function mostrarPlano() {
-      if (els.areaPlano) els.areaPlano.classList.remove("hidden");
-      if (els.areaSimulado) els.areaSimulado.classList.add("hidden");
-    }
-
-    function mostrarSimulado() {
-       if (els.areaPlano) els.areaPlano.classList.add("hidden");
-       if (els.areaSimulado) els.areaSimulado.classList.remove("hidden");
-
-       const areaDashboard = document.getElementById("area-dashboard");
-       const btnDashboard = document.getElementById("modo-dashboard");
-       if (areaDashboard) areaDashboard.classList.add("hidden");
-       if (btnDashboard) btnDashboard.classList.remove("selected");
-     }
-
-    if (els.modoTema) {
-      els.modoTema.addEventListener("click", () => {
-        mostrarPlano();
-      });
-    }
-    if (els.modoUpload) {
-      els.modoUpload.addEventListener("click", () => {
-        mostrarPlano();
-      });
     }
 
     // ------------------------------------------------------
@@ -420,7 +406,7 @@
     }
 
     // ------------------------------------------------------
-    // HISTÓRICO VISUAL (mini dashboard)
+    // HISTÓRICO VISUAL (mini dashboard no resultado)
     // ------------------------------------------------------
     function renderHistoricoResumo() {
       if (!els.resultado) return;
@@ -428,7 +414,7 @@
       const hist = carregarHistorico();
       if (!hist || !hist.length) return;
 
-      const ultimos = hist.slice(-5).reverse(); // últimos 5, do mais recente para o mais antigo
+      const ultimos = hist.slice(-5).reverse();
 
       const bloco = document.createElement("div");
       bloco.className = "sim-resultado-card";
@@ -633,7 +619,6 @@
       els.resultado.appendChild(lista);
       els.resultado.classList.remove("hidden");
 
-      // salvar no histórico
       const resumo = {
         dataISO: new Date().toISOString(),
         banca: estado.banca,
@@ -646,12 +631,11 @@
       };
       salvarNoHistorico(resumo);
 
-      // renderizar bloco de histórico recente logo abaixo
       renderHistoricoResumo();
     }
 
     // ------------------------------------------------------
-    // EVENTOS DE NAVEGAÇÃO
+    // EVENTOS DE NAVEGAÇÃO ENTRE QUESTÕES
     // ------------------------------------------------------
     if (els.btnVoltar) {
       els.btnVoltar.addEventListener("click", () => {
@@ -690,7 +674,6 @@
         estado.tema = els.inpTema ? (els.inpTema.value || "").trim() : "";
 
         fecharModal();
-        mostrarSimulado();
 
         estado.questoes = gerarQuestoesMock();
         estado.indiceAtual = 0;
@@ -704,6 +687,6 @@
       });
     }
 
-    console.log("🟢 Liora Simulados v10 inicializado com sucesso.");
+    console.log("🟢 Liora Simulados v11 inicializado com sucesso.");
   });
 })();
