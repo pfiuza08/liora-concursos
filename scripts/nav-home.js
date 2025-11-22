@@ -1,17 +1,13 @@
 // ==========================================================
-// 🧠 LIORA — HOME COMERCIAL (APP LAYOUT FINAL + FAB HOME)
-// v4 — SINCRONIZADO COM CORE
+// 🧠 LIORA — HOME COMERCIAL (APP LAYOUT FINAL + FAB HOME) v7
 // - Home fullscreen
 // - Workspace único (#liora-app)
 // - Navegação: Tema, Upload, Simulados, Dashboard
-// - Wizard só aparece quando o core gerar sessões
-// - Botão flutuante "⬅ Início"
+// - Wizard (#liora-sessoes) só é exibido pelo core.js
+//   depois que existirem sessões
 // ==========================================================
 (function () {
   document.addEventListener("DOMContentLoaded", () => {
-    // ---------------------------
-    // ELEMENTOS PRINCIPAIS
-    // ---------------------------
     const home = document.getElementById("liora-home");
     const app = document.getElementById("liora-app");
 
@@ -33,13 +29,9 @@
     const areaSimulado = document.getElementById("area-simulado");
     const areaDashboard = document.getElementById("area-dashboard");
 
-    // Títulos superiores
     const viewTitle = document.getElementById("liora-view-title");
     const viewSubtitle = document.getElementById("liora-view-subtitle");
 
-    // ---------------------------
-    // SANIDADE
-    // ---------------------------
     const required = {
       home,
       app,
@@ -66,9 +58,9 @@
       }
     }
 
-    // ==========================================================
-    // FUNÇÕES UTILITÁRIAS
-    // ==========================================================
+    // ------------------------------------------------------
+    // Helpers
+    // ------------------------------------------------------
     function esconderTudo() {
       painelEstudo.classList.add("hidden");
       painelTema.classList.add("hidden");
@@ -76,13 +68,16 @@
       areaPlano.classList.add("hidden");
       areaSimulado.classList.add("hidden");
       areaDashboard.classList.add("hidden");
-      areaSessoes.classList.add("hidden"); // wizard SEMPRE some na troca de modo
+
+      // 👇 Wizard SEMPRE some quando trocamos de tela
+      areaSessoes.classList.add("hidden");
     }
 
     function mostrarHome() {
       home.style.display = "flex";
       app.style.display = "none";
       fabHome.style.display = "none";
+
       esconderTudo();
       viewTitle.textContent = "";
       viewSubtitle.textContent = "";
@@ -94,10 +89,9 @@
       fabHome.style.display = "inline-flex";
     }
 
-    // ==========================================================
-    // ENTRAR EM CADA MODO
-    // (wizard é controlado apenas pelo core.js)
-    // ==========================================================
+    // ------------------------------------------------------
+    // Entrar em cada modo
+    // ------------------------------------------------------
     function entrarTema() {
       mostrarWorkspace();
       esconderTudo();
@@ -110,11 +104,8 @@
       painelTema.classList.remove("hidden");
       areaPlano.classList.remove("hidden");
 
-      // NÃO mostramos o wizard aqui.
-      // O core.js vai mostrar quando existirem sessões.
-      if (window.lioraWizardShouldShow && window.lioraWizardShouldShow()) {
-        areaSessoes.classList.remove("hidden");
-      }
+      // ❌ NÃO mostramos o wizard aqui.
+      // Ele só será exibido pelo core.js quando as sessões existirem.
     }
 
     function entrarUpload() {
@@ -128,10 +119,6 @@
       painelEstudo.classList.remove("hidden");
       painelUpload.classList.remove("hidden");
       areaPlano.classList.remove("hidden");
-
-      if (window.lioraWizardShouldShow && window.lioraWizardShouldShow()) {
-        areaSessoes.classList.remove("hidden");
-      }
     }
 
     function entrarSimulados() {
@@ -160,9 +147,9 @@
       }
     }
 
-    // ==========================================================
-    // LIGAÇÕES
-    // ==========================================================
+    // ------------------------------------------------------
+    // Ligações
+    // ------------------------------------------------------
     homeTema.addEventListener("click", entrarTema);
     homeUpload.addEventListener("click", entrarUpload);
     homeSimulados.addEventListener("click", entrarSimulados);
