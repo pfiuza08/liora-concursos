@@ -1,9 +1,12 @@
 // ==========================================================
 // 🧠 LIORA — HOME COMERCIAL (APP LAYOUT FINAL + FAB HOME)
+// - Home fullscreen
+// - Workspace único (#liora-app)
+// - Navegação: Tema, Upload, Simulados, Dashboard
+// - Botão flutuante "⬅ Início"
 // ==========================================================
 (function () {
   document.addEventListener("DOMContentLoaded", () => {
-
     const home = document.getElementById("liora-home");
     const app = document.getElementById("liora-app");
 
@@ -13,7 +16,7 @@
     const homeSimulados = document.getElementById("home-simulados");
     const homeDashboard = document.getElementById("home-dashboard");
 
-    // FAB de retorno ao início
+    // FAB "Início"
     const fabHome = document.getElementById("fab-home");
 
     // Painéis do workspace
@@ -55,13 +58,13 @@
     }
 
     function esconderTudo() {
-      painelEstudo.style.display = "none";
-      painelTema.style.display = "none";
-      painelUpload.style.display = "none";
-      areaPlano.style.display = "none";
-      areaSessoes.style.display = "none";
-      areaSimulado.style.display = "none";
-      areaDashboard.style.display = "none";
+      painelEstudo.classList.add("hidden");
+      painelTema.classList.add("hidden");
+      painelUpload.classList.add("hidden");
+      areaPlano.classList.add("hidden");
+      areaSessoes.classList.add("hidden");
+      areaSimulado.classList.add("hidden");
+      areaDashboard.classList.add("hidden");
     }
 
     function mostrarHome() {
@@ -84,12 +87,13 @@
       esconderTudo();
 
       viewTitle.textContent = "Estudo por tema";
-      viewSubtitle.textContent = "Monte um plano de estudo personalizado a partir de um assunto.";
+      viewSubtitle.textContent =
+        "Monte um plano de estudo personalizado a partir de um assunto.";
 
-      painelEstudo.style.display = "block";
-      painelTema.style.display = "block";
-      areaPlano.style.display = "block";
-      if (areaSessoes) areaSessoes.style.display = "block";
+      painelEstudo.classList.remove("hidden");
+      painelTema.classList.remove("hidden");
+      areaPlano.classList.remove("hidden");
+      areaSessoes.classList.remove("hidden");
     }
 
     function entrarUpload() {
@@ -97,12 +101,13 @@
       esconderTudo();
 
       viewTitle.textContent = "Estudo a partir de PDF";
-      viewSubtitle.textContent = "Envie um material em PDF para gerar um plano de estudo.";
+      viewSubtitle.textContent =
+        "Envie um material em PDF para gerar um plano de estudo.";
 
-      painelEstudo.style.display = "block";
-      painelUpload.style.display = "block";
-      areaPlano.style.display = "block";
-      if (areaSessoes) areaSessoes.style.display = "block";
+      painelEstudo.classList.remove("hidden");
+      painelUpload.classList.remove("hidden");
+      areaPlano.classList.remove("hidden");
+      areaSessoes.classList.remove("hidden");
     }
 
     function entrarSimulados() {
@@ -110,9 +115,10 @@
       esconderTudo();
 
       viewTitle.textContent = "Simulados";
-      viewSubtitle.textContent = "Monte provas com perfil de banca e acompanhe seu desempenho.";
+      viewSubtitle.textContent =
+        "Monte provas com perfil de banca, quantidade de questões e tempo de prova.";
 
-      areaSimulado.style.display = "block";
+      areaSimulado.classList.remove("hidden");
     }
 
     function entrarDashboard() {
@@ -120,9 +126,15 @@
       esconderTudo();
 
       viewTitle.textContent = "Minha evolução";
-      viewSubtitle.textContent = "Histórico e estatísticas dos seus simulados.";
+      viewSubtitle.textContent =
+        "Resumo dos seus simulados e desempenho neste dispositivo.";
 
-      areaDashboard.style.display = "block";
+      areaDashboard.classList.remove("hidden");
+
+      // força o dashboard a redesenhar quando entrar
+      if (window.lioraRenderDashboard) {
+        window.lioraRenderDashboard();
+      }
     }
 
     // Ligações HOME
