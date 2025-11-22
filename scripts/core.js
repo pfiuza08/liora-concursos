@@ -176,39 +176,88 @@
     // --------------------------------------------------------
     // RENDER WIZARD
     // --------------------------------------------------------
-    function renderWizard() {
-      if (!wizard.sessoes.length) {
-        els.wizard.classList.add("hidden");
-        return;
+   function renderWizard() {
+  // 1) Se NÃO houver sessões: esconder tudo e sair
+  if (!wizard.sessoes || !wizard.sessoes.length) {
+    if (els.wizardContainer) els.wizardContainer.classList.add("hidden");
+    return;
+  }
+
+  // 2) Garantir que estamos em modo Tema/Upload (wizard só existe nesses modos)
+  setMode(wizard.origem === "upload" ? "upload" : "tema");
+
+  // 3) Mostrar o wizard
+  if (els.wizardContainer) els.wizardContainer.classList.remove("hidden");
+
+  const s = wizard.sessoes[wizard.atual];
+  if (!s) return;
+
+  // Título, objetivo, etc.
+  if (els.wTema) els.wTema.textContent = wizard.tema || "";
+  if (els.wTitulo) els.wTitulo.textContent = s.titulo || "";
+  if (els.wObjetivo) els.wObjetivo.textContent = s.objetivo || "";
+
+  // Conteúdo
+  const c = s.conteudo || {};
+  if (els.wConteudo) {
+    els.wConteudo.innerHTML = `
+      ${c.introducao ? `<p>${c.introducao}</p>` : ""}
+      ${
+        Array.isArray(c.conceitos)
+          ? `<ul>${c.conceitos.map(x => `<li>${x}</li>`).join("")}</ul>`
+          : ""
       }
+      ${
+        Array.isArray(c.exemplos)
+          ? `<h5>Exemplos:</h5><ul>${c.exemplos.map(x => `<li>${x}</li>`).join("")}</ul>`
+          : ""
+      }
+      ${
+        Array.isArray(c.aplicacoes)
+          ? `<h5>Aplicações:</h5><ul>${c.aplicacoes.map(x => `<li>${x}</li>`).join("")}</ul>`
+          : ""
+      }
+      ${
+        Array.isArray(c.resumoRapido)
+          ? `<h5>Resumo rápido:</h5><ul>${c.resumoRapido.map(x => `<li>${x}</li>`).join("")}</ul>`
+          : ""
+      }
+    `;
+  }
 
-      els.wizard.classList.remove("hidden");
+  // Analogias
+  if (els.wAnalogias) {
+    els.wAnalogias.innerHTML = (s.analogias || [])
+      .map(a => `<p>${a}</p>`)
+      .join("");
+  }
 
-      const s = wizard.sessoes[wizard.atual];
+  // Ativação
+  if (els.wAtivacao) {
+    els.wAtivacao.innerHTML = (s.ativacao || [])
+      .map(q => `<li>${q}</li>`)
+      .join("");
+  }
 
-      els.wTema.textContent = wizard.tema;
-      els.wTitulo.textContent = s.titulo;
-      els.wObjetivo.textContent = s.objetivo;
+  // Flashcards
+  if (els.wFlashcards) {
+    els.wFlashcards.innerHTML = (s.flashcards || [])
+      .map(f => `<li><b>${f.q}</b>: ${f.a}</li>`)
+      .join("");
+  }
 
-      const c = s.conteudo || {};
-      els.wConteudo.innerHTML = `
-        ${c.introducao ? `<p>${c.introducao}</p>` : ""}
-        ${Array.isArray(c.conceitos) ? `<ul>${c.conceitos.map(x => `<li>${x}</li>`).join("")}</ul>` : ""}
-      `;
+  // Mapa mental
+  if (els.wMapa) {
+    const mapa = construirMapaMental(s);
+    els.wMapa.textContent = mapa || "";
+  }
 
-      els.wAnalogias.innerHTML = (s.analogias || []).map(x => `<p>${x}</p>`).join("");
-      els.wAtivacao.innerHTML = (s.ativacao || []).map(x => `<li>${x}</li>`).join("");
-
-      els.wFlashcards.innerHTML = (s.flashcards || [])
-        .map(f => `<li><b>${f.q}:</b> ${f.a}</li>`).join("");
-
-      // mapa
-      els.wMapa.textContent = JSON.stringify(s.mapaMental || "", null, 2);
-
-      // barra
-      els.wBar.style.width =
-        `${((wizard.atual + 1) / wizard.sessoes.length) * 100}%`;
-    }
+  // Barra de progresso
+  if (els.wBar) {
+    els.wBar.style.width =
+      `${((wizard.atual + 1) / wizard.sessoes.length) * 100}%`;
+  }
+}
 
     // --------------------------------------------------------
     // NAVEGAÇÃO WIZARD
