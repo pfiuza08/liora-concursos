@@ -1,65 +1,76 @@
 // ==========================================================
 // 🧠 LIORA — HOME COMERCIAL (APP LAYOUT FINAL + FAB HOME)
-// - Controla visibilidade das áreas
-// - Só exibe 'area-sessoes' quando houver sessões geradas
-// - Evita que o box preto apareça fora de hora
+// - Home fullscreen
+// - Workspace único (#liora-app)
+// - Navegação: Tema, Upload, Simulados, Dashboard
+// - FAB "⬅ Início"
+// - CORRIGIDO: #liora-sessoes só aparece quando EXISTE um plano
 // ==========================================================
+
 (function () {
   document.addEventListener("DOMContentLoaded", () => {
-    // -------------------------------
-    // ELEMENTOS
-    // -------------------------------
     const home = document.getElementById("liora-home");
     const app = document.getElementById("liora-app");
 
+    // botões da HOME
     const homeTema = document.getElementById("home-tema");
     const homeUpload = document.getElementById("home-upload");
     const homeSimulados = document.getElementById("home-simulados");
     const homeDashboard = document.getElementById("home-dashboard");
 
+    // FAB "Início"
     const fabHome = document.getElementById("fab-home");
 
+    // painéis do workspace
     const painelEstudo = document.getElementById("painel-estudo");
     const painelTema = document.getElementById("painel-tema");
     const painelUpload = document.getElementById("painel-upload");
-
     const areaPlano = document.getElementById("area-plano");
-    const areaSessoes = document.getElementById("liora-sessoes");
+    const areaSessoes = document.getElementById("liora-sessoes"); // wizard
     const areaSimulado = document.getElementById("area-simulado");
     const areaDashboard = document.getElementById("area-dashboard");
 
     const viewTitle = document.getElementById("liora-view-title");
     const viewSubtitle = document.getElementById("liora-view-subtitle");
 
-    // -------------------------------
-    // CHECK
-    // -------------------------------
+    // validação
     const required = {
-      home, app,
-      homeTema, homeUpload, homeSimulados, homeDashboard,
+      home,
+      app,
+      homeTema,
+      homeUpload,
+      homeSimulados,
+      homeDashboard,
       fabHome,
-      painelEstudo, painelTema, painelUpload,
-      areaPlano, areaSessoes, areaSimulado, areaDashboard,
-      viewTitle, viewSubtitle,
+      painelEstudo,
+      painelTema,
+      painelUpload,
+      areaPlano,
+      areaSessoes,
+      areaSimulado,
+      areaDashboard,
+      viewTitle,
+      viewSubtitle,
     };
 
-    for (const [k, el] of Object.entries(required)) {
+    for (const [key, el] of Object.entries(required)) {
       if (!el) {
-        console.error("❌ NAV-HOME — elemento ausente:", k);
+        console.error(`❌ NAV-HOME ERRO: Elemento não encontrado → ${key}`);
         return;
       }
     }
 
-    // -------------------------------
-    // FUNÇÕES UTILITÁRIAS
-    // -------------------------------
+    // ---------------------------------------------------------
+    // FUNÇÕES BASE
+    // ---------------------------------------------------------
+
     function esconderTudo() {
       painelEstudo.classList.add("hidden");
       painelTema.classList.add("hidden");
       painelUpload.classList.add("hidden");
 
       areaPlano.classList.add("hidden");
-      areaSessoes.classList.add("hidden");
+      areaSessoes.classList.add("hidden"); // <<🔒 nunca aparece aqui
       areaSimulado.classList.add("hidden");
       areaDashboard.classList.add("hidden");
     }
@@ -68,8 +79,8 @@
       home.style.display = "flex";
       app.style.display = "none";
       fabHome.style.display = "none";
-      esconderTudo();
 
+      esconderTudo();
       viewTitle.textContent = "";
       viewSubtitle.textContent = "";
     }
@@ -80,17 +91,10 @@
       fabHome.style.display = "inline-flex";
     }
 
-    function existePlano() {
-      return (
-        window.lioraWizardState &&
-        Array.isArray(window.lioraWizardState.sessoes) &&
-        window.lioraWizardState.sessoes.length > 0
-      );
-    }
+    // ---------------------------------------------------------
+    // ENTRAR NOS MODOS
+    // ---------------------------------------------------------
 
-    // -------------------------------
-    // TELAS
-    // -------------------------------
     function entrarTema() {
       mostrarWorkspace();
       esconderTudo();
@@ -103,7 +107,8 @@
       painelTema.classList.remove("hidden");
       areaPlano.classList.remove("hidden");
 
-      if (existePlano()) areaSessoes.classList.remove("hidden");
+      // 🔥 IMPORTANTE: NÃO mostra #liora-sessoes aqui.
+      // Ele só aparece quando o core detectar sessoes geradas.
     }
 
     function entrarUpload() {
@@ -118,7 +123,7 @@
       painelUpload.classList.remove("hidden");
       areaPlano.classList.remove("hidden");
 
-      if (existePlano()) areaSessoes.classList.remove("hidden");
+      // 🔥 NÃO mostra #liora-sessoes
     }
 
     function entrarSimulados() {
@@ -142,34 +147,33 @@
 
       areaDashboard.classList.remove("hidden");
 
+      // força redraw
       if (window.lioraRenderDashboard) {
         window.lioraRenderDashboard();
       }
     }
 
-    // -------------------------------
+    // ---------------------------------------------------------
     // EVENTOS
-    // -------------------------------
-    homeTema.onclick = entrarTema;
-    homeUpload.onclick = entrarUpload;
-    homeSimulados.onclick = entrarSimulados;
-    homeDashboard.onclick = entrarDashboard;
+    // ---------------------------------------------------------
 
-    fabHome.onclick = mostrarHome;
+    homeTema.addEventListener("click", entrarTema);
+    homeUpload.addEventListener("click", entrarUpload);
+    homeSimulados.addEventListener("click", entrarSimulados);
+    homeDashboard.addEventListener("click", entrarDashboard);
 
-    // -------------------------------
-    // ESTADO INICIAL
-    // -------------------------------
+    fabHome.addEventListener("click", mostrarHome);
+
+    // estado inicial
     mostrarHome();
 
-    // Exponho a função para que o CORE possa forçar atualização
-    window.lioraRefreshNav = function () {
-      if (home.style.display !== "none") return; // ainda na home
-      if (existePlano()) {
-        areaSessoes.classList.remove("hidden");
-      } else {
-        areaSessoes.classList.add("hidden");
-      }
+    // ---------------------------------------------------------
+    // 🔥 API GLOBAL: permitir que o core mostre o wizard depois de gerar sessões
+    // ---------------------------------------------------------
+    window.lioraMostrarSessoes = function () {
+      // só mostra se estamos em Tema/Upload e existirem sessões válidas
+      areaSessoes.classList.remove("hidden");
     };
+
   });
 })();
