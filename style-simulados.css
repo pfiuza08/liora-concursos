@@ -588,3 +588,43 @@ html.light .liora-fab-home {
   border-color: #cccccc !important;
   color: #1a1a1a !important;
 }
+
+/* ============================================================
+   FAB DO SIMULADO — COMERCIAL
+   ============================================================ */
+
+.sim-fab {
+  position: fixed;
+  right: 1.5rem;
+  bottom: 1.5rem;
+  width: 54px;
+  height: 54px;
+  border-radius: 999px;
+  font-size: 1.4rem;
+  font-weight: 700;
+  background: var(--brand);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  z-index: 50;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: 180ms ease;
+}
+
+.sim-fab:hover {
+  transform: translateY(-3px);
+  filter: brightness(1.1);
+}
+
+/* Tema Claro */
+html.light .sim-fab {
+  background: #ffffffdd;
+  border: 1px solid #cfcfcf;
+  color: #1e1e1e;
+}
+html.light .sim-fab:hover {
+  background: #ffffff;
+}
