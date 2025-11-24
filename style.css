@@ -452,3 +452,43 @@ html.light #liora-build-info {
   transition: transform 120ms ease;
 }
 
+/* ==========================================================
+   🛠 CORREÇÃO DO BOTÃO INÍCIO (FAB)
+========================================================== */
+
+.liora-fab-home {
+  background: var(--card); /* passa a seguir o tema */
+  color: var(--fg) !important; /* texto sempre visível */
+  border: 1px solid var(--stroke);
+}
+html.light .liora-fab-home {
+  background: #ffffffdd;
+  color: #1e1e1e !important;
+  border-color: #d0cdc8;
+}
+
+/* ==========================================================
+   🧪 BOTÃO GERAR SIMULADO
+========================================================== */
+
+#btn-gerar-simulado {
+  background: var(--brand);
+  color: #fff;
+  padding: 0.75rem 1.2rem;
+  border-radius: 10px;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 1rem;
+  display: inline-block;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.25);
+  transition: .2s ease;
+}
+#btn-gerar-simulado:hover {
+  filter: brightness(1.15);
+  transform: translateY(-2px);
+}
+#btn-gerar-simulado:active {
+  transform: translateY(0px);
+}
+
