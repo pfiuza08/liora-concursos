@@ -514,22 +514,34 @@
       const card = document.createElement("div");
       card.className = "sim-resultado-card";
 
-      card.innerHTML = `
-        <div class="sim-resultado-titulo">Resultado do simulado</div>
-        <div class="sim-score">${perc}%</div>
-        <p><strong>Acertos:</strong> ${acertos} de ${total}</p>
-        <p><strong>Respondidas:</strong> ${respondidas} de ${total}</p>
-        <p><strong>Banca:</strong> ${estado.banca}</p>
-        <p><strong>Tema:</strong> ${estado.tema || "Não informado"}</p>
-        <p><strong>Tempo utilizado:</strong> ${tempoUsadoFmt} ${
+     card.innerHTML = `
+      <div class="sim-resultado-titulo">Resultado do simulado</div>
+      <div class="sim-score">${perc}%</div>
+
+      <p><strong>Acertos:</strong> ${acertos} de ${total}</p>
+      <p><strong>Respondidas:</strong> ${respondidas} de ${total}</p>
+      <p><strong>Banca:</strong> ${estado.banca}</p>
+      <p><strong>Tema:</strong> ${estado.tema || "Não informado"}</p>
+      <p><strong>Tempo utilizado:</strong> ${tempoUsadoFmt} ${
         porTempo ? "(prova encerrada por tempo)" : ""
       }</p>
-        <p class="sim-feedback">
-          Este resultado é gerado em modo de simulação (mock). Em produção, as questões,
-          estatísticas e insights serão personalizados pela IA a partir do seu histórico de estudo
-          e materiais enviados.
-        </p>
-      `;
+    
+      <p class="sim-feedback">
+        Nesta versão beta da Liora, as questões são geradas em modo de simulação.
+        Em breve, seus simulados serão personalizados com base no seu histórico real
+        de estudo e nos materiais que você enviar.
+      </p>
+    
+      <div class="mt-4 flex flex-wrap gap-2">
+        <button type="button" class="btn-secondary sim-btn-refazer" id="sim-refazer">
+          Fazer outro simulado
+        </button>
+        <button type="button" class="btn-primary sim-btn-dashboard" id="sim-ir-dashboard">
+          Ver minha evolução
+        </button>
+      </div>
+    `;
+
 
       els.resultado.appendChild(card);
 
@@ -613,6 +625,26 @@
 
       els.resultado.appendChild(lista);
       els.resultado.classList.remove("hidden");
+
+      // ======================================================
+      // BOTÕES DA TELA DE RESULTADO — handlers
+      // ======================================================
+      const btnRefazer = document.getElementById("sim-refazer");
+      if (btnRefazer) {
+        btnRefazer.onclick = () => {
+          window.location.reload();
+        };
+      }
+      
+      const btnDash = document.getElementById("sim-ir-dashboard");
+      if (btnDash && window.homeDashboard) {
+        btnDash.onclick = () => {
+          window.homeDashboard();
+        };
+      } else if (btnDash) {
+        btnDash.onclick = () => window.location.reload();
+      }
+
 
       // salvar no histórico
       const resumo = {
