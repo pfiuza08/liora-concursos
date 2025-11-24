@@ -44,18 +44,16 @@
       return;
     }
 
-    // Botão de configurar simulado (injetado no layout)
-    let btnConfig = document.getElementById("sim-open-config");
-    if (!btnConfig) {
-      btnConfig = document.createElement("button");
-      btnConfig.id = "sim-open-config";
-      btnConfig.className = "btn-secondary sim-config-btn";
-      btnConfig.style.marginBottom = "0.75rem";
-      btnConfig.textContent = "Configurar simulado";
-      els.areaSimulado.insertBefore(btnConfig, els.areaSimulado.firstChild);
-    }
+      // 📌 FAB comercial do simulador
+      const fabSim = document.getElementById("sim-fab");
+      
+      if (fabSim) {
+        fabSim.addEventListener("click", abrirModal);
+      } else {
+        console.warn("⚠️ FAB de simulados não encontrado: #sim-fab");
+      }
 
-    // ------------------------------------------------------
+       // ------------------------------------------------------
     // ESTADO
     // ------------------------------------------------------
     const HIST_KEY = "liora:simulados:historico";
