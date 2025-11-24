@@ -6,13 +6,21 @@
   /* fallback dark */
   --surface: #111318;
   --surface-soft: #181b22;
+  --border: #252835;/* ============================================================
+   LIORA — SIMULADOS (estilos gerais base)
+   ============================================================ */
+
+:root {
+  /* fallback (tema escuro) */
+  --surface: #111318;
+  --surface-soft: #181b22;
   --border: #252835;
   --muted: #a0a3b5;
   --brand: #c44b04;
   --text: #f5f5f7;
 }
 
-/* Botão primário */
+/* Botão primário (reutilizável) */
 .btn-primary {
   display: inline-flex;
   align-items: center;
@@ -72,7 +80,7 @@
 }
 
 /* ============================================================
-   ÁREA DO SIMULADO (DENTRO DO CARD DIREITO)
+   ÁREA DO SIMULADO (CARD DIREITO)
    ============================================================ */
 
 .sim-timer {
@@ -115,6 +123,20 @@
   line-height: 1.6;
   color: var(--text);
   margin-top: 0.35rem;
+  white-space: pre-line;
+}
+
+/* Destaques dentro do enunciado (sublinhar / marcar) */
+.sim-enunciado u {
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+}
+
+.sim-enunciado mark {
+  background: rgba(250,204,21,0.18);
+  padding: 0 2px;
+  border-radius: 3px;
 }
 
 /* Alternativas */
@@ -127,6 +149,7 @@
   border: 1px solid var(--border);
   cursor: pointer;
   transition: background 0.12s ease, border-color 0.12s ease, transform 0.08s ease;
+  margin-top: 0.35rem;
 }
 
 .sim-alt:hover {
@@ -209,130 +232,25 @@
   border: 1px solid rgba(255,255,255,0.06);
 }
 
-.sim-resultado-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  margin-bottom: 0.75rem;
-}
-
-.sim-score-badge {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-}
-
-.sim-score-label {
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--muted);
-}
-
-.sim-score {
-  font-size: 2.1rem;
-  font-weight: 800;
-  margin-top: 0.1rem;
-  color: #f97316;
-}
-
 .sim-resultado-titulo {
   font-weight: 700;
   font-size: 1rem;
   margin-bottom: 0.35rem;
 }
 
-.sim-resultado-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit,minmax(140px,1fr));
-  gap: 0.6rem;
-  margin-top: 0.5rem;
-}
-
-.sim-resultado-item {
-  display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
-}
-
-.sim-resultado-item-label {
-  font-size: 0.75rem;
-  color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.sim-resultado-item-value {
-  font-size: 0.9rem;
-  font-weight: 600;
-}
-
-.sim-resultado-tag {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 0.65rem;
-  text-transform: uppercase;
-  padding: 2px 8px;
-  border-radius: 999px;
-  background: rgba(248,113,113,0.16);
-  color: #fecaca;
-  margin-left: 0.4rem;
-}
-
-.sim-resultado-resumo {
-  margin-top: 0.9rem;
-  font-size: 0.85rem;
-  color: var(--muted);
-}
-
-.sim-resultado-resumo h4 {
-  font-size: 0.9rem;
-  font-weight: 700;
-  margin-bottom: 0.25rem;
-  color: var(--text);
-}
-
-.sim-resultado-cta {
-  margin-top: 1rem;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.6rem;
-}
-
-/* lista de questões na revisão */
-.sim-lista-resultados {
-  margin-top: 1.2rem;
-  list-style: none;
-  padding-left: 0;
-  max-height: 360px;
-  overflow-y: auto;
-  scrollbar-width: thin;
-}
-
-.sim-resultado-item h4 {
-  font-size: 0.9rem;
-  font-weight: 600;
-  margin-bottom: 0.35rem;
-}
-
-.sim-resultado-item p {
-  font-size: 0.82rem;
-  margin-bottom: 0.15rem;
-}
-
-.sim-resultado-item .correta {
-  color: #22c55e;
-  font-weight: 600;
-}
-
-.sim-resultado-item .errada {
+.sim-score {
+  font-size: 2.1rem;
+  font-weight: 800;
+  margin: 0.1rem 0 0.4rem;
   color: #f97316;
-  font-weight: 600;
 }
 
-/* Tabela mini-dashboard */
+.sim-feedback {
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin-top: 0.55rem;
+}
+
 .sim-dashboard {
   margin-top: 1.5rem;
 }
@@ -358,6 +276,41 @@
 .sim-dashboard-table th {
   font-weight: 600;
   color: var(--muted);
+}
+
+.sim-lista-resultados {
+  margin-top: 1.2rem;
+  list-style: none;
+  padding-left: 0;
+  max-height: 360px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+.sim-resultado-item {
+  padding: 0.7rem 0;
+  border-bottom: 1px dashed rgba(255,255,255,0.06);
+}
+
+.sim-resultado-item h4 {
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-bottom: 0.35rem;
+}
+
+.sim-resultado-item p {
+  font-size: 0.82rem;
+  margin-bottom: 0.15rem;
+}
+
+.sim-resultado-item .correta {
+  color: #22c55e;
+  font-weight: 600;
+}
+
+.sim-resultado-item .errada {
+  color: #f97316;
+  font-weight: 600;
 }
 
 /* ============================================================
@@ -443,7 +396,111 @@
 }
 
 /* ============================================================
-   FAB DO SIMULADO — COMERCIAL
+   SELETOR DE IA (C) — chips no modal
+   ============================================================ */
+
+.sim-ia-row {
+  margin-top: 0.4rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.sim-ia-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.sim-ia-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.sim-ia-option {
+  padding: 0.25rem 0.7rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  border: 1px solid var(--border);
+  background: rgba(0,0,0,0.4);
+  color: var(--text);
+  cursor: pointer;
+  transition: background 0.12s ease, border-color 0.12s ease, transform 0.08s ease, box-shadow 0.12s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.sim-ia-option span.emoji {
+  font-size: 0.95rem;
+}
+
+.sim-ia-option:hover {
+  background: rgba(255,255,255,0.06);
+  border-color: rgba(255,255,255,0.4);
+  transform: translateY(-0.5px);
+}
+
+.sim-ia-option.active {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: #fff;
+  box-shadow: 0 0 0 1px rgba(196,75,4,0.4);
+  transform: translateY(-1px);
+}
+
+/* ============================================================
+   BADGES DE IA (D) — em questões / resultados
+   ============================================================ */
+
+.sim-ia-badges {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  align-items: center;
+}
+
+.sim-ia-badge {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.16);
+  background: rgba(255,255,255,0.06);
+  color: var(--muted);
+}
+
+.sim-ia-badge--banca {
+  border-color: rgba(59,130,246,0.45);
+  background: rgba(37,99,235,0.16);
+  color: #bfdbfe;
+}
+
+.sim-ia-badge--explica {
+  border-color: rgba(16,185,129,0.45);
+  background: rgba(5,150,105,0.18);
+  color: #bbf7d0;
+}
+
+.sim-ia-badge--reforco {
+  border-color: rgba(249,115,22,0.5);
+  background: rgba(234,88,12,0.18);
+  color: #fed7aa;
+}
+
+.sim-ia-badge--historico {
+  border-color: rgba(168,85,247,0.5);
+  background: rgba(147,51,234,0.18);
+  color: #e9d5ff;
+}
+
+/* ============================================================
+   FAB DO SIMULADO — botão flutuante ⚙
    ============================================================ */
 
 .sim-fab {
@@ -461,7 +518,7 @@
   cursor: pointer;
   z-index: 50;
   box-shadow: 0 10px 30px rgba(0,0,0,0.35);
-  display: none; /* controlado via JS (nav-home) */
+  display: none; /* controlado via JS/nav-home */
   align-items: center;
   justify-content: center;
   transition: 180ms ease;
@@ -471,120 +528,6 @@
 .sim-fab:hover {
   transform: translateY(-3px);
   filter: brightness(1.1);
-}
-
-/* ============================================================
-   TEMA CLARO — AJUSTES PARA SIMULADOS
-   ============================================================ */
-
-html.light {
-  --surface: #ffffff;
-  --surface-soft: #f3f3f3;
-  --border: #d4d4d4;
-  --text: #1a1a1a;
-  --muted: #6b6b6b;
-}
-
-/* Timer */
-html.light .sim-timer {
-  background: #ffffffdd;
-  border-color: #d4d4d4;
-  color: #c44b04;
-}
-
-/* Progresso */
-html.light .sim-progress {
-  background: rgba(0,0,0,0.08);
-}
-
-/* Cards de questão */
-html.light .sim-questao-card {
-  background: #ffffff;
-  border: 1px solid #e5e5e5;
-  box-shadow: 0 10px 24px rgba(0,0,0,0.08);
-}
-
-html.light .sim-enunciado,
-html.light .sim-alt-text {
-  color: #1a1a1a;
-}
-
-/* Alternativas */
-html.light .sim-alt {
-  background: #fafafa;
-  border-color: #d4d4d4;
-}
-html.light .sim-alt:hover {
-  background: #f0f0f0;
-  border-color: #bdbdbd;
-}
-html.light .sim-alt.selected {
-  background: rgba(196,75,4,0.12);
-  border-color: var(--brand);
-  box-shadow: 0 0 0 1px rgba(196,75,4,0.25);
-}
-html.light .sim-alt .sim-radio {
-  border-color: #3a3a3a;
-}
-
-/* Botões de navegação */
-html.light .sim-btn-nav {
-  background: #ffffff;
-  color: #1a1a1a;
-  border-color: #d4d4d4;
-}
-html.light .sim-btn-nav:hover {
-  background: #f3f3f3;
-}
-
-/* Modal */
-html.light .sim-modal {
-  background: #ffffff;
-  color: #1a1a1a;
-}
-html.light .sim-modal-header {
-  border-color: #d4d4d4;
-}
-html.light .sim-modal-close {
-  color: #6b6b6b;
-}
-html.light .sim-modal-close:hover {
-  background: rgba(0,0,0,0.08);
-}
-html.light .sim-input {
-  background: #ffffff;
-  border-color: #d4d4d4;
-  color: #1a1a1a;
-}
-html.light .sim-input:focus {
-  border-color: #c44b04;
-  box-shadow: 0 0 0 1px rgba(196,75,4,0.4);
-}
-html.light .sim-label {
-  color: #1a1a1a;
-}
-
-/* Resultado / dashboard tema claro */
-html.light .sim-resultado-card {
-  background: #ffffff;
-  border-color: #e5e5e5;
-}
-html.light .sim-resultado-resumo {
-  color: #4b4b4b;
-}
-html.light .sim-dashboard-table th,
-html.light .sim-dashboard-table td {
-  border-color: #e5e5e5;
-}
-
-/* FAB da engrenagem */
-html.light .sim-fab {
-  background: #ffffffdd;
-  border: 1px solid #cfcfcf;
-  color: #1e1e1e;
-}
-html.light .sim-fab:hover {
-  background: #ffffff;
 }
 
 /* ============================================================
@@ -694,4 +637,155 @@ html.light .sim-fab:hover {
       transform: translateY(0);
     }
   }
+}
+
+/* ============================================================
+   TEMA CLARO — overrides
+   ============================================================ */
+
+html.light {
+  --surface: #ffffff;
+  --surface-soft: #f3f3f3;
+  --border: #d4d4d4;
+  --text: #1a1a1a;
+  --muted: #6b6b6b;
+}
+
+/* Timer */
+html.light .sim-timer {
+  background: #ffffffdd;
+  border-color: #d4d4d4;
+  color: #c44b04;
+}
+
+/* Progresso */
+html.light .sim-progress {
+  background: rgba(0,0,0,0.08);
+}
+
+/* Card de questão */
+html.light .sim-questao-card {
+  background: #ffffff;
+  border: 1px solid #e5e5e5;
+  box-shadow: 0 10px 24px rgba(0,0,0,0.08);
+}
+
+html.light .sim-enunciado,
+html.light .sim-alt-text {
+  color: #1a1a1a;
+}
+
+/* Alternativas */
+html.light .sim-alt {
+  background: #fafafa;
+  border-color: #d4d4d4;
+}
+html.light .sim-alt:hover {
+  background: #f0f0f0;
+  border-color: #bdbdbd;
+}
+html.light .sim-alt.selected {
+  background: rgba(196,75,4,0.12);
+  border-color: var(--brand);
+  box-shadow: 0 0 0 1px rgba(196,75,4,0.25);
+}
+html.light .sim-alt .sim-radio {
+  border-color: #3a3a3a;
+}
+
+/* Navegação / botões */
+html.light .sim-btn-nav {
+  background: #ffffff;
+  color: #1a1a1a;
+  border-color: #d4d4d4;
+}
+html.light .sim-btn-nav:hover {
+  background: #f3f3f3;
+}
+
+/* Modal */
+html.light .sim-modal {
+  background: #ffffff;
+  color: #1a1a1a;
+}
+html.light .sim-modal-header {
+  border-color: #d4d4d4;
+}
+html.light .sim-modal-close {
+  color: #6b6b6b;
+}
+html.light .sim-modal-close:hover {
+  background: rgba(0,0,0,0.08);
+}
+html.light .sim-input {
+  background: #ffffff;
+  border-color: #d4d4d4;
+  color: #1a1a1a;
+}
+html.light .sim-input:focus {
+  border-color: #c44b04;
+  box-shadow: 0 0 0 1px rgba(196,75,4,0.4);
+}
+html.light .sim-label {
+  color: #1a1a1a;
+}
+
+/* Resultado / histórico */
+html.light .sim-resultado-card {
+  background: #ffffff;
+  border-color: #e5e5e5;
+}
+
+html.light .sim-dashboard-table th {
+  color: #6b6b6b;
+}
+
+/* FAB Simulado */
+html.light .sim-fab {
+  background: #ffffffdd;
+  border: 1px solid #cfcfcf;
+  color: #1e1e1e;
+}
+html.light .sim-fab:hover {
+  background: #ffffff;
+}
+
+/* Seletor de IA */
+html.light .sim-ia-option {
+  background: #fafafa;
+  border-color: #d4d4d4;
+  color: #1a1a1a;
+}
+html.light .sim-ia-option:hover {
+  background: #f1f1f1;
+}
+html.light .sim-ia-option.active {
+  color: #ffffff;
+}
+
+/* Badges de IA */
+html.light .sim-ia-badge {
+  background: #f5f5f5;
+  border-color: #d4d4d4;
+  color: #6b6b6b;
+}
+html.light .sim-ia-badge--banca {
+  background: #e0edff;
+  border-color: #93c5fd;
+  color: #1d4ed8;
+}
+html.light .sim-ia-badge--explica {
+  background: #dcfce7;
+  border-color: #4ade80;
+  color: #047857;
+}
+html.light .sim-ia-badge--reforco {
+  background: #ffedd5;
+  border-color: #fdba74;
+  color: #9a3412;
+}
+html.light .sim-ia-badge--historico {
+  background: #f3e8ff;
+  border-color: #c4b5fd;
+  color: #6d28d9;
 }
