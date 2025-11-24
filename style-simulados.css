@@ -3,7 +3,7 @@
    ============================================================ */
 
 :root {
-  /* fallback */
+  /* fallback para o módulo de simulados */
   --surface: #111318;
   --surface-soft: #181b22;
   --border: #252835;
@@ -127,6 +127,7 @@
   border: 1px solid var(--border);
   cursor: pointer;
   transition: background 0.12s ease, border-color 0.12s ease, transform 0.08s ease;
+  margin-bottom: 0.4rem;
 }
 
 .sim-alt:hover {
@@ -218,7 +219,7 @@
 .sim-score {
   font-size: 2.1rem;
   font-weight: 800;
-  margin: 0.1rem 0 0.4rem;
+  margin: 0.3rem 0 0.6rem;
   color: #f97316;
 }
 
@@ -291,7 +292,7 @@
 }
 
 /* ============================================================
-   MODAL — BACKDROP + CONTAINER (CORRIGIDO)
+   MODAL — BACKDROP + CONTAINER
    ============================================================ */
 
 .sim-modal-backdrop {
@@ -303,8 +304,6 @@
   background: rgba(0,0,0,0.88);
   backdrop-filter: blur(4px);
   z-index: 9999;
-
-  /* ESSENCIAL para permitir/impedir cliques */
   pointer-events: none;
 }
 
@@ -322,8 +321,6 @@
   width: 100%;
   color: var(--text);
   animation: modalFadeIn 0.24s ease-out;
-
-  /* ESSENCIAL — garante clique mesmo se backdrop tiver layers */
   z-index: 10000;
 }
 
@@ -484,6 +481,7 @@
     }
   }
 }
+
 /* ============================================================
    🔆 TEMA CLARO — AJUSTES PARA SIMULADOS
    ============================================================ */
@@ -575,18 +573,17 @@ html.light .sim-label {
   color: #1a1a1a;
 }
 
-/* FAB da engrenagem */
-html.light #sim-fab {
-  background: #ffffffdd;
-  border: 1px solid #cccccc;
-  color: #1a1a1a;
+/* Resultado / listas em tema claro */
+html.light .sim-resultado-card {
+  background: #ffffff;
+  border-color: #e0e0e0;
 }
-
-/* FAB Início */
-html.light .liora-fab-home {
-  background: #ffffffdd !important;
-  border-color: #cccccc !important;
-  color: #1a1a1a !important;
+html.light .sim-dashboard-table td,
+html.light .sim-dashboard-table th {
+  border-color: #e0e0e0;
+}
+html.light .sim-lista-resultados .sim-resultado-item {
+  border-bottom-color: #e0e0e0;
 }
 
 /* ============================================================
@@ -612,6 +609,7 @@ html.light .liora-fab-home {
   align-items: center;
   justify-content: center;
   transition: 180ms ease;
+  pointer-events: auto !important;
 }
 
 .sim-fab:hover {
@@ -619,7 +617,7 @@ html.light .liora-fab-home {
   filter: brightness(1.1);
 }
 
-/* Tema Claro */
+/* Tema Claro para FAB */
 html.light .sim-fab {
   background: #ffffffdd;
   border: 1px solid #cfcfcf;
