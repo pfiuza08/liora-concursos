@@ -484,3 +484,107 @@
     }
   }
 }
+/* ============================================================
+   🔆 TEMA CLARO — AJUSTES PARA SIMULADOS
+   ============================================================ */
+
+html.light {
+  --surface: #ffffff;
+  --surface-soft: #f3f3f3;
+  --border: #d4d4d4;
+  --text: #1a1a1a;
+  --muted: #6b6b6b;
+}
+
+/* Timer */
+html.light .sim-timer {
+  background: #ffffffdd;
+  border-color: #d4d4d4;
+  color: #c44b04;
+}
+
+/* Progresso */
+html.light .sim-progress {
+  background: rgba(0,0,0,0.08);
+}
+
+/* Cards de questão */
+html.light .sim-questao-card {
+  background: #ffffff;
+  border: 1px solid #e5e5e5;
+  box-shadow: 0 10px 24px rgba(0,0,0,0.08);
+}
+
+html.light .sim-enunciado,
+html.light .sim-alt-text {
+  color: #1a1a1a;
+}
+
+/* Alternativas */
+html.light .sim-alt {
+  background: #fafafa;
+  border-color: #d4d4d4;
+}
+html.light .sim-alt:hover {
+  background: #f0f0f0;
+  border-color: #bdbdbd;
+}
+html.light .sim-alt.selected {
+  background: rgba(196,75,4,0.12);
+  border-color: var(--brand);
+  box-shadow: 0 0 0 1px rgba(196,75,4,0.25);
+}
+html.light .sim-alt .sim-radio {
+  border-color: #3a3a3a;
+}
+
+/* Botões de navegação */
+html.light .sim-btn-nav {
+  background: #ffffff;
+  color: #1a1a1a;
+  border-color: #d4d4d4;
+}
+html.light .sim-btn-nav:hover {
+  background: #f3f3f3;
+}
+
+/* Modal */
+html.light .sim-modal {
+  background: #ffffff;
+  color: #1a1a1a;
+}
+html.light .sim-modal-header {
+  border-color: #d4d4d4;
+}
+html.light .sim-modal-close {
+  color: #6b6b6b;
+}
+html.light .sim-modal-close:hover {
+  background: rgba(0,0,0,0.08);
+}
+html.light .sim-input {
+  background: #ffffff;
+  border-color: #d4d4d4;
+  color: #1a1a1a;
+}
+html.light .sim-input:focus {
+  border-color: #c44b04;
+  box-shadow: 0 0 0 1px rgba(196,75,4,0.4);
+}
+html.light .sim-label {
+  color: #1a1a1a;
+}
+
+/* FAB da engrenagem */
+html.light #sim-fab {
+  background: #ffffffdd;
+  border: 1px solid #cccccc;
+  color: #1a1a1a;
+}
+
+/* FAB Início */
+html.light .liora-fab-home {
+  background: #ffffffdd !important;
+  border-color: #cccccc !important;
+  color: #1a1a1a !important;
+}
