@@ -515,16 +515,56 @@
       card.className = "sim-resultado-card";
 
      card.innerHTML = `
-      <div class="sim-resultado-titulo">Resultado do simulado</div>
-      <div class="sim-score">${perc}%</div>
-
-      <p><strong>Acertos:</strong> ${acertos} de ${total}</p>
-      <p><strong>Respondidas:</strong> ${respondidas} de ${total}</p>
-      <p><strong>Banca:</strong> ${estado.banca}</p>
-      <p><strong>Tema:</strong> ${estado.tema || "Não informado"}</p>
-      <p><strong>Tempo utilizado:</strong> ${tempoUsadoFmt} ${
-        porTempo ? "(prova encerrada por tempo)" : ""
+        <div class="sim-resultado-header">
+          <div>
+            <div class="sim-resultado-titulo">Resultado do simulado</div>
+            <p class="text-xs text-[var(--muted)]">
+              ${estado.banca} · ${
+        estado.tema && estado.tema.trim()
+          ? estado.tema
+          : "Tema não informado"
       }</p>
+          </div>
+          <div class="sim-score-badge">
+            <span class="sim-score-label">Desempenho</span>
+            <span class="sim-score">${perc}%</span>
+          </div>
+        </div>
+      
+        <div class="sim-resultado-grid">
+          <div class="sim-resultado-item">
+            <span class="sim-resultado-item-label">Acertos</span>
+            <span class="sim-resultado-item-value">${acertos} de ${total}</span>
+          </div>
+          <div class="sim-resultado-item">
+            <span class="sim-resultado-item-label">Questões respondidas</span>
+            <span class="sim-resultado-item-value">${respondidas} de ${total}</span>
+          </div>
+          <div class="sim-resultado-item">
+            <span class="sim-resultado-item-label">Tempo utilizado</span>
+            <span class="sim-resultado-item-value">
+              ${tempoUsadoFmt} ${
+        porTempo ? "<span class='sim-resultado-tag'>Encerrado por tempo</span>" : ""
+      }
+            </span>
+          </div>
+        </div>
+      
+        <div class="sim-resultado-resumo">
+          <h4>Resumo rápido</h4>
+          <p>
+            Este simulado foi gerado em modo de demonstração. Em breve, a Liora vai usar
+            seu histórico real de estudo para ajustar o nível de dificuldade, selecionar
+            questões mais alinhadas ao seu objetivo e sugerir revisões focadas.
+          </p>
+        </div>
+      
+        <div class="sim-resultado-cta">
+          <button id="sim-refazer" class="btn-secondary">Fazer outro simulado</button>
+          <button id="sim-ir-dashboard" class="btn-primary">Ver meu desempenho</button>
+        </div>
+      `;
+
     
       <p class="sim-feedback">
         Nesta versão beta da Liora, as questões são geradas em modo de simulação.
