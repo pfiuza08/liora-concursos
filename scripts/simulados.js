@@ -1,14 +1,12 @@
 // ==============================================================
-// 🧠 LIORA — SIMULADOS v13-COMMERCIAL
-// - Gera simulados mock por banca / dificuldade / tema
-// - Timer, barra de progresso, navegação entre questões
-// - Resultado completo + lista de questões + histórico recente
-// - Salva histórico em localStorage (compatível com Dashboard)
-// - Usa FAB #sim-fab (apenas no modo "Simulados")
+// 🧠 LIORA — SIMULADOS v20 (IA REAL + fallback seguro)
+// - IA gera questões reais baseadas em banca + tema + dificuldade
+// - Fallback automático para mock caso a IA falhe
+// - Timer, progresso, navegação, histórico, dashboard
 // ==============================================================
 
 (function () {
-  console.log("🔵 Liora Simulados v13-COMMERCIAL carregado...");
+  console.log("🔵 Liora Simulados v20 (IA real) carregado...");
 
   document.addEventListener("DOMContentLoaded", () => {
     // ------------------------------------------------------
@@ -38,18 +36,33 @@
       inpTema: document.getElementById("sim-modal-tema"),
     };
 
-    const fabSim = document.getElementById("sim-fab");
+    if (!els.areaSimulado) return;
 
-    // sanity check
-    if (!els.areaSimulado || !els.modalBackdrop || !els.modalIniciar) {
-      console.warn("⚠️ Simulados: elementos principais não encontrados.");
-      return;
-    }
+    // ------------------------------------------------------
+    // BOTÃO "CONFIGURAR" (aparece apenas dentro de Simulados)
+    // ------------------------------------------------------
+    let btnConfig = document.getElementById("sim-open-config");
 
-    // Garante que o FAB não aparece ativo na carga inicial (evita flicker)
-    if (fabSim) {
-      fabSim.style.display = "none";
+    function ensureConfigButtonVisible() {
+      if (!btnConfig) {
+        btnConfig = document.createElement("button");
+        btnConfig.id = "sim-open-config";
+        btnConfig.className = "btn-secondary sim-config-btn";
+        btnConfig.style.marginBottom = "0.75rem";
+        btnConfig.textContent = "Configurar simulado";
+        els.areaSimulado.insertBefore(btnConfig, els.areaSimulado.firstChild);
+      }
+      btnConfig.style.display = "none"; // NÃO aparece na carga inicial
     }
+    ensureConfigButtonVisible();
+
+    // controlado pelo nav-home → quando usuário clica "Simulados"
+    window.showSimFab = () => {
+      if (btnConfig) btnConfig.style.display = "inline-flex";
+    };
+    window.hideSimFab = () => {
+      if (btnConfig) btnConfig.style.display = "none";
+    };
 
     // ------------------------------------------------------
     // ESTADO
@@ -61,7 +74,7 @@
       indiceAtual: 0,
       banca: "FGV",
       qtd: 20,
-      dificuldade: "misturado", // misturado | facil | medio | dificil
+      dificuldade: "misturado",
       tempoProvaMin: 30,
       tempoRestanteSeg: 0,
       tema: "",
@@ -74,9 +87,7 @@
     function carregarHistorico() {
       try {
         const raw = localStorage.getItem(HIST_KEY);
-        if (!raw) return [];
-        const parsed = JSON.parse(raw);
-        return Array.isArray(parsed) ? parsed : [];
+        return raw ? JSON.parse(raw) : [];
       } catch {
         return [];
       }
@@ -85,40 +96,26 @@
     function salvarNoHistorico(resumo) {
       const hist = carregarHistorico();
       hist.push(resumo);
-      try {
-        localStorage.setItem(HIST_KEY, JSON.stringify(hist));
-      } catch (e) {
-        console.warn("⚠️ Não foi possível salvar histórico de simulados", e);
-      }
+      localStorage.setItem(HIST_KEY, JSON.stringify(hist));
     }
 
     // ------------------------------------------------------
-    // MODAL — abrir / fechar
+    // MODAL
     // ------------------------------------------------------
     function abrirModal() {
       els.modalBackdrop.classList.add("visible");
       els.modalBackdrop.style.display = "flex";
     }
-
     function fecharModal() {
       els.modalBackdrop.classList.remove("visible");
       els.modalBackdrop.style.display = "none";
     }
 
-    if (fabSim) {
-      fabSim.addEventListener("click", (e) => {
-        e.stopPropagation();
-        abrirModal();
-      });
-    }
-
-    if (els.modalClose) {
-      els.modalClose.addEventListener("click", fecharModal);
-    }
-
-    els.modalBackdrop.addEventListener("click", (e) => {
+    if (btnConfig) btnConfig.onclick = abrirModal;
+    if (els.modalClose) els.modalClose.onclick = fecharModal;
+    els.modalBackdrop.onclick = (e) => {
       if (e.target === els.modalBackdrop) fecharModal();
-    });
+    };
 
     // ------------------------------------------------------
     // TIMER
@@ -126,26 +123,18 @@
     function formatarTempo(seg) {
       const m = Math.floor(seg / 60);
       const s = seg % 60;
-      return `${m.toString().padStart(2, "0")}:${s
-        .toString()
-        .padStart(2, "0")}`;
+      return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
     }
 
     function iniciarTimer() {
       estado.tempoRestanteSeg = estado.tempoProvaMin * 60;
 
-      if (els.timer) {
-        els.timer.classList.remove("hidden");
-        els.timer.textContent = formatarTempo(estado.tempoRestanteSeg);
-      }
+      els.timer.classList.remove("hidden");
+      els.timer.textContent = formatarTempo(estado.tempoRestanteSeg);
 
       estado.timerId = setInterval(() => {
         estado.tempoRestanteSeg--;
-        if (els.timer) {
-          els.timer.textContent = formatarTempo(
-            Math.max(estado.tempoRestanteSeg, 0)
-          );
-        }
+        els.timer.textContent = formatarTempo(Math.max(estado.tempoRestanteSeg, 0));
 
         if (estado.tempoRestanteSeg <= 0) {
           pararTimer();
@@ -160,176 +149,66 @@
     }
 
     // ------------------------------------------------------
-    // PERFIS DE BANCA (mock avançado)
+    // IA → gerar questões reais
     // ------------------------------------------------------
-    const PERFIS = {
-      FGV: {
-        estilo: "contextual",
-        texto:
-          "A banca FGV costuma explorar textos mais longos, com interpretação fina e pegadinhas conceituais.",
-      },
-      CESPE: {
-        estilo: "certo_errado",
-        texto:
-          "A banca Cebraspe (CESPE) trabalha com itens de certo/errado, privilegiando literalidade técnica e coerência lógica.",
-      },
-      VUNESP: {
-        estilo: "objetiva",
-        texto:
-          "A banca Vunesp tende a trazer questões objetivas mais diretas, mas com detalhe conceitual importante.",
-      },
-      FCC: {
-        estilo: "objetiva",
-        texto:
-          "A banca FCC combina objetividade com foco em classificações, conceitos formais e exceções de norma.",
-      },
-      QUADRIX: {
-        estilo: "objetiva",
-        texto:
-          "A banca Quadrix mistura literalidade com cenários práticos, cobrando conceitos aplicados.",
-      },
-      IBFC: {
-        estilo: "objetiva",
-        texto:
-          "A banca IBFC costuma variar entre questões diretas e enunciados com contexto resumido.",
-      },
-    };
+    async function gerarQuestoesIA() {
+      const prompt = `
+Gere ${estado.qtd} questões de ${estado.banca}, dificuldade ${estado.dificuldade},
+tema: "${estado.tema || "geral"}".
 
-    function getPerfil(banca) {
-      return PERFIS[banca] || PERFIS["FGV"];
-    }
+Formato JSON puro:
+[
+  {
+    "enunciado": "texto",
+    "alternativas": ["A", "B", "C", "D"],
+    "corretaIndex": 2,
+    "nivel": "facil|medio|dificil"
+  }
+]
+`;
 
-    // ------------------------------------------------------
-    // BADGE DE DIFICULDADE (pílula visual)
-    // ------------------------------------------------------
-    function formatarNivelBadge(nivel) {
-      let emoji = "🟢";
-      let label = "Fácil";
-      let bg = "rgba(34,197,94,0.18)";
-      let color = "rgb(187,247,208)";
+      try {
+        const res = await fetch("/api/liora", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            system: "Você é Liora, geradora de questões de concurso.",
+            user: prompt,
+          }),
+        });
 
-      if (nivel === "medio") {
-        emoji = "🟡";
-        label = "Médio";
-        bg = "rgba(250,204,21,0.18)";
-        color = "rgb(254,240,138)";
-      } else if (nivel === "dificil") {
-        emoji = "🔴";
-        label = "Difícil";
-        bg = "rgba(248,113,113,0.2)";
-        color = "rgb(254,202,202)";
+        const json = await res.json();
+        if (!json.output) throw new Error("IA sem output");
+
+        const parsed = JSON.parse(
+          json.output.match(/```json([\s\S]*?)```/)?.[1] ||
+            json.output.match(/```([\s\S]*?)```/)?.[1] ||
+            json.output
+        );
+
+        if (!Array.isArray(parsed) || parsed.length === 0)
+          throw new Error("IA retornou inválido");
+
+        return parsed;
+      } catch (e) {
+        console.warn("⚠️ IA falhou → fallback para mock", e);
+        return null;
       }
-
-      return `
-        <span
-          style="
-            display:inline-flex;
-            align-items:center;
-            gap:4px;
-            padding:2px 10px;
-            border-radius:999px;
-            font-size:0.75rem;
-            font-weight:600;
-            background:${bg};
-            color:${color};
-            border:1px solid rgba(255,255,255,0.08);
-          "
-        >
-          <span>${emoji}</span>
-          <span>${label}</span>
-        </span>
-      `;
     }
 
     // ------------------------------------------------------
-    // GERA QUESTÕES (mock avançado)
+    // MOCK (fallback)
     // ------------------------------------------------------
-    function criarQuestaoMock(indice, nivel, perfil) {
-      const tema = estado.tema || "o tema escolhido";
-
-      const dificuldadeLabel =
-        nivel === "facil" ? "Fácil" : nivel === "medio" ? "Médio" : "Difícil";
-
-      // Cebraspe / C/E
-      if (perfil.estilo === "certo_errado") {
-        const afirmacaoBase =
-          nivel === "facil"
-            ? `No contexto introdutório de ${tema}, considere a seguinte afirmação.`
-            : nivel === "medio"
-            ? `Em nível intermediário de ${tema}, avalie o seguinte enunciado.`
-            : `Em nível avançado de ${tema}, julgue o item a seguir, típico da banca Cebraspe.`;
-
-        const enunciado = `${perfil.texto}\n\n${afirmacaoBase}\nA afirmação acima está correta? (Nível ${dificuldadeLabel})`;
-
-        return {
-          indice,
-          nivel,
-          banca: estado.banca,
-          tipo: "certo_errado",
-          enunciado,
-          alternativas: ["Certo", "Errado"],
-          corretaIndex: Math.random() > 0.5 ? 0 : 1,
-          respostaAluno: null,
-        };
-      }
-
-      // Outras bancas: múltipla escolha contextual
-      const intro =
-        nivel === "facil"
-          ? `Questão introdutória sobre ${tema}, exigindo compreensão básica e identificação direta de conceito.`
-          : nivel === "medio"
-          ? `Questão intermediária sobre ${tema}, explorando associação entre conceitos e interpretação moderada.`
-          : `Questão avançada sobre ${tema}, típica de revisão de alto nível, com foco em detalhes e exceções.`;
-
-      const enunciado = `${perfil.texto}\n\n${intro}\nAssinale a alternativa correta, de acordo com o padrão da banca ${estado.banca}. (Nível ${dificuldadeLabel})`;
-
-      const alternativas = [
-        `A) Alternativa alinhada ao gabarito oficial, apresentando a interpretação correta de ${tema}.`,
-        `B) Alternativa com erro conceitual direto ou inversão simples de ideia.`,
-        `C) Alternativa parcialmente correta, mas com omissão ou generalização indevida.`,
-        `D) Alternativa com pegadinha típica da banca, usando termos como "sempre", "nunca" ou "apenas".`,
-      ];
-
-      const correta = Math.floor(Math.random() * 4);
-
-      return {
-        indice,
-        nivel,
-        banca: estado.banca,
-        tipo: "objetiva",
-        enunciado,
-        alternativas,
-        corretaIndex: correta,
-        respostaAluno: null,
-      };
-    }
-
-    function gerarQuestoesMock() {
-      const perfil = getPerfil(estado.banca);
+    function gerarMock() {
       const qs = [];
-      const total = estado.qtd;
-
-      const qtdPorNivel = { facil: 0, medio: 0, dificil: 0 };
-
-      if (estado.dificuldade === "misturado") {
-        qtdPorNivel.facil = Math.floor(total * 0.3);
-        qtdPorNivel.medio = Math.floor(total * 0.4);
-        qtdPorNivel.dificil =
-          total - qtdPorNivel.facil - qtdPorNivel.medio;
-      } else {
-        qtdPorNivel[estado.dificuldade] = total;
+      for (let i = 0; i < estado.qtd; i++) {
+        qs.push({
+          enunciado: `Questão mock ${i + 1} sobre ${estado.tema}.`,
+          alternativas: ["A", "B", "C", "D"],
+          corretaIndex: Math.floor(Math.random() * 4),
+          nivel: "medio",
+        });
       }
-
-      function add(n, nivel) {
-        for (let i = 0; i < n; i++) {
-          qs.push(criarQuestaoMock(qs.length + 1, nivel, perfil));
-        }
-      }
-
-      add(qtdPorNivel.facil, "facil");
-      add(qtdPorNivel.medio, "medio");
-      add(qtdPorNivel.dificil, "dificil");
-
       return qs;
     }
 
@@ -337,30 +216,17 @@
     // RENDERIZAR QUESTÃO
     // ------------------------------------------------------
     function render() {
-      if (!els.questaoContainer) return;
-
       const total = estado.questoes.length;
-      if (!total) {
-        els.questaoContainer.innerHTML =
-          '<p class="text-sm text-[var(--muted)]">Nenhum simulado em andamento. Use o botão <b>⚙</b> no canto inferior direito para configurar.</p>';
-        if (els.nav) els.nav.classList.add("hidden");
-        if (els.progressBar) els.progressBar.style.width = "0%";
-        if (els.timer) els.timer.classList.add("hidden");
-        return;
-      }
-
       const q = estado.questoes[estado.indiceAtual];
+
       els.questaoContainer.innerHTML = "";
 
       const header = document.createElement("div");
       header.className =
         "flex justify-between items-center text-xs text-[var(--muted)] mb-3";
-
-      const nivelBadge = formatarNivelBadge(q.nivel);
-
       header.innerHTML = `
-        <span>Questão ${q.indice} de ${total}</span>
-        <span>${q.banca} · ${nivelBadge}</span>
+        <span>Questão ${estado.indiceAtual + 1} de ${total}</span>
+        <span>${estado.banca} · ${q.nivel || "—"}</span>
       `;
       els.questaoContainer.appendChild(header);
 
@@ -384,369 +250,127 @@
         els.questaoContainer.appendChild(div);
       });
 
-      if (els.nav) els.nav.classList.remove("hidden");
+      els.nav.classList.remove("hidden");
 
-      if (els.btnProxima) {
-        els.btnProxima.textContent =
-          estado.indiceAtual === total - 1
-            ? "Finalizar simulado ▶"
-            : "Próxima ▶";
-      }
+      els.btnProxima.textContent =
+        estado.indiceAtual === total - 1
+          ? "Finalizar simulado ▶"
+          : "Próxima ▶";
 
-      if (els.btnVoltar) {
-        els.btnVoltar.disabled = estado.indiceAtual === 0;
-      }
-
-      if (els.progressBar) {
-        els.progressBar.style.width =
-          ((estado.indiceAtual + 1) / total) * 100 + "%";
-      }
+      els.btnVoltar.disabled = estado.indiceAtual === 0;
+      els.progressBar.style.width =
+        ((estado.indiceAtual + 1) / total) * 100 + "%";
     }
 
     // ------------------------------------------------------
-    // HISTÓRICO VISUAL (mini dashboard no fim do resultado)
-    // ------------------------------------------------------
-    function renderHistoricoResumo() {
-      if (!els.resultado) return;
-
-      const hist = carregarHistorico();
-      if (!hist || !hist.length) return;
-
-      const ultimos = hist.slice(-5).reverse(); // últimos 5, do mais recente
-
-      const bloco = document.createElement("div");
-      bloco.className = "sim-resultado-card";
-      bloco.style.marginTop = "1rem";
-
-      let rows = "";
-      ultimos.forEach((item) => {
-        const date = new Date(item.dataISO);
-        const dataFmt = date.toLocaleDateString("pt-BR", {
-          day: "2-digit",
-          month: "2-digit",
-          year: "2-digit",
-        });
-        const horaFmt = date.toLocaleTimeString("pt-BR", {
-          hour: "2-digit",
-          minute: "2-digit",
-        });
-
-        rows += `
-          <tr>
-            <td>${dataFmt} ${horaFmt}</td>
-            <td>${item.banca}</td>
-            <td>${item.tema || "—"}</td>
-            <td>${item.qtd}</td>
-            <td>${item.perc}%</td>
-          </tr>
-        `;
-      });
-
-      bloco.innerHTML = `
-        <div class="sim-resultado-titulo">Histórico recente de simulados</div>
-        <p class="text-xs text-[var(--muted)] mb-2">
-          Últimas tentativas realizadas neste dispositivo.
-        </p>
-        <div class="overflow-x-auto">
-          <table class="sim-dashboard-table">
-            <thead>
-              <tr>
-                <th style="min-width: 90px;">Data</th>
-                <th style="min-width: 60px;">Banca</th>
-                <th style="min-width: 120px;">Tema</th>
-                <th style="min-width: 60px;">Qtd</th>
-                <th style="min-width: 50px;">%</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${rows}
-            </tbody>
-          </table>
-        </div>
-      `;
-
-      els.resultado.appendChild(bloco);
-    }
-
-    // ------------------------------------------------------
-    // FINALIZAR SIMULADO
+    // FINALIZAR
     // ------------------------------------------------------
     function finalizarSimulado(porTempo = false) {
       pararTimer();
-
-      if (!els.resultado || !els.questaoContainer) return;
 
       const total = estado.questoes.length;
       let acertos = 0;
       let respondidas = 0;
 
-      const statsPorNiveis = {
-        facil: { total: 0, acertos: 0 },
-        medio: { total: 0, acertos: 0 },
-        dificil: { total: 0, acertos: 0 },
-      };
-
       estado.questoes.forEach((q) => {
-        const nivel = q.nivel || "medio";
-        if (!statsPorNiveis[nivel]) {
-          statsPorNiveis[nivel] = { total: 0, acertos: 0 };
-        }
-        statsPorNiveis[nivel].total++;
-
         if (q.respostaAluno != null) {
           respondidas++;
-          if (q.respostaAluno === q.corretaIndex) {
-            acertos++;
-            statsPorNiveis[nivel].acertos++;
-          }
+          if (q.respostaAluno === q.corretaIndex) acertos++;
         }
       });
 
-      const perc = total ? Math.round((acertos / total) * 100) : 0;
-      const tempoTotalSeg = estado.tempoProvaMin * 60;
-      const tempoUsadoSeg = Math.max(
-        0,
-        tempoTotalSeg - Math.max(estado.tempoRestanteSeg, 0)
-      );
-      const tempoUsadoFmt = formatarTempo(tempoUsadoSeg);
+      const perc = Math.round((acertos / total) * 100);
 
       els.questaoContainer.innerHTML = "";
       els.resultado.innerHTML = "";
-      if (els.nav) els.nav.classList.add("hidden");
-      if (els.timer) els.timer.classList.add("hidden");
-      if (els.progressBar) els.progressBar.style.width = "100%";
+      els.nav.classList.add("hidden");
 
       const card = document.createElement("div");
       card.className = "sim-resultado-card";
 
       card.innerHTML = `
         <div class="sim-resultado-titulo">Resultado do simulado</div>
-        <p class="text-xs text-[var(--muted)] mb-2">
-          ${estado.banca} · ${
-        estado.tema && estado.tema.trim()
-          ? estado.tema
-          : "Tema não informado"
-      }
-        </p>
+        <div class="sim-score">${perc}%</div>
 
-        <div>
-          <div class="sim-score">${perc}%</div>
-          <p class="text-xs text-[var(--muted)]">
-            Você acertou <strong>${acertos}</strong> de <strong>${total}</strong> questões.
-          </p>
-          <p class="text-xs text-[var(--muted)]">
-            Questões respondidas: <strong>${respondidas}</strong> de <strong>${total}</strong>.
-          </p>
-          <p class="text-xs text-[var(--muted)]">
-            Tempo utilizado: <strong>${tempoUsadoFmt}</strong>
-            ${
-              porTempo
-                ? "<span class='sim-resultado-tag'> · Encerrado por tempo</span>"
-                : ""
-            }
-          </p>
-        </div>
+        <p>Acertos: ${acertos} de ${total}</p>
+        <p>Respondidas: ${respondidas} de ${total}</p>
+        <p>${
+          porTempo ? "⚠️ Encerrado por tempo" : "Tempo finalizado"
+        }</p>
 
-        <p class="sim-feedback">
-          Nesta versão beta da Liora, as questões são geradas em modo de simulação.
-          Em breve, seus simulados serão personalizados com base no seu histórico real
-          de estudo e nos materiais que você enviar.
-        </p>
-
-        <div class="mt-4 flex flex-wrap gap-2">
-          <button type="button" class="btn-secondary" id="sim-refazer">
-            Fazer outro simulado
-          </button>
-          <button type="button" class="btn-primary" id="sim-ir-dashboard">
-            Ver meu desempenho
-          </button>
+        <div class="mt-4 flex gap-2">
+          <button id="sim-refazer" class="btn-secondary">Fazer outro</button>
+          <button id="sim-ir-dashboard" class="btn-primary">Dashboard</button>
         </div>
       `;
 
       els.resultado.appendChild(card);
-
-      // Dashboard por nível
-      const dash = document.createElement("div");
-      dash.className = "sim-dashboard";
-
-      function linhaNivel(nivel, label) {
-        const st = statsPorNiveis[nivel];
-        if (!st || !st.total) {
-          return `
-            <tr>
-              <td>${label}</td>
-              <td>—</td>
-              <td>0</td>
-              <td>—</td>
-            </tr>
-          `;
-        }
-        const p = Math.round((st.acertos / st.total) * 100);
-        return `
-          <tr>
-            <td>${label}</td>
-            <td>${st.acertos}</td>
-            <td>${st.total}</td>
-            <td>${p}%</td>
-          </tr>
-        `;
-      }
-
-      dash.innerHTML = `
-        <h4>Desempenho por nível de dificuldade</h4>
-        <table class="sim-dashboard-table">
-          <thead>
-            <tr>
-              <th>Nível</th>
-              <th>Acertos</th>
-              <th>Total</th>
-              <th>%</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${linhaNivel("facil", "Fácil")}
-            ${linhaNivel("medio", "Médio")}
-            ${linhaNivel("dificil", "Difícil")}
-          </tbody>
-        </table>
-      `;
-
-      els.resultado.appendChild(dash);
-
-      // Lista detalhada de questões
-      const lista = document.createElement("ul");
-      lista.className = "sim-lista-resultados";
-
-      estado.questoes.forEach((q) => {
-        const li = document.createElement("li");
-        li.className = "sim-resultado-item";
-
-        const respAluno =
-          q.respostaAluno == null
-            ? "Não respondida"
-            : q.alternativas[q.respostaAluno];
-        const respCorreta = q.alternativas[q.corretaIndex];
-
-        const acertou =
-          q.respostaAluno != null && q.respostaAluno === q.corretaIndex;
-
-        const badge = formatarNivelBadge(q.nivel);
-
-        li.innerHTML = `
-          <h4>Questão ${q.indice} — ${badge}</h4>
-          <p class="text-xs text-[var(--muted)] mb-1 whitespace-pre-line">${q.enunciado}</p>
-          <p><strong>Sua resposta:</strong> ${respAluno}</p>
-          <p><strong>Gabarito:</strong> ${respCorreta}</p>
-          <p class="${acertou ? "correta" : "errada"} mt-1">
-            ${acertou ? "Acertou" : "Errou"}
-          </p>
-        `;
-
-        lista.appendChild(li);
-      });
-
-      els.resultado.appendChild(lista);
       els.resultado.classList.remove("hidden");
 
-      // BOTÕES DA TELA DE RESULTADO
-      const btnRefazer = document.getElementById("sim-refazer");
-      if (btnRefazer) {
-        btnRefazer.onclick = () => {
-          // Reseta estado e volta para mensagem inicial
-          estado.questoes = [];
-          estado.indiceAtual = 0;
-          els.resultado.innerHTML = "";
-          render();
-          // reabre modal para nova configuração
-          abrirModal();
-        };
-      }
+      document.getElementById("sim-refazer").onclick = () => location.reload();
+      document.getElementById("sim-ir-dashboard").onclick = () =>
+        window.homeDashboard();
 
-      const btnDash = document.getElementById("sim-ir-dashboard");
-      if (btnDash) {
-        if (window.homeDashboard) {
-          btnDash.onclick = () => {
-            window.homeDashboard();
-          };
-        } else {
-          btnDash.onclick = () => window.location.reload();
-        }
-      }
-
-      // salvar no histórico
-      const resumo = {
+      salvarNoHistorico({
         dataISO: new Date().toISOString(),
         banca: estado.banca,
         tema: estado.tema,
         qtd: total,
         acertos,
         perc,
-        tempoSeg: tempoUsadoSeg,
-        statsPorNiveis,
-      };
-      salvarNoHistorico(resumo);
-
-      // bloco de histórico recente
-      renderHistoricoResumo();
-    }
-
-    // ------------------------------------------------------
-    // EVENTOS DE NAVEGAÇÃO
-    // ------------------------------------------------------
-    if (els.btnVoltar) {
-      els.btnVoltar.addEventListener("click", () => {
-        if (estado.indiceAtual > 0) {
-          estado.indiceAtual--;
-          render();
-        }
-      });
-    }
-
-    if (els.btnProxima) {
-      els.btnProxima.addEventListener("click", () => {
-        if (!estado.questoes.length) return;
-        if (estado.indiceAtual < estado.questoes.length - 1) {
-          estado.indiceAtual++;
-          render();
-        } else {
-          finalizarSimulado(false);
-        }
       });
     }
 
     // ------------------------------------------------------
-    // INICIAR SIMULADO (botão do modal)
+    // NAVEGAÇÃO
     // ------------------------------------------------------
-    if (els.modalIniciar) {
-      els.modalIniciar.addEventListener("click", () => {
-        estado.banca = els.selBanca ? els.selBanca.value || "FGV" : "FGV";
-        estado.qtd = els.selQtd ? Number(els.selQtd.value || "20") : 20;
-        estado.tempoProvaMin = els.selTempo
-          ? Number(els.selTempo.value || "30")
-          : 30;
-        estado.dificuldade = els.selDificuldade
-          ? els.selDificuldade.value || "misturado"
-          : "misturado";
-        estado.tema = els.inpTema ? (els.inpTema.value || "").trim() : "";
-
-        fecharModal();
-
-        // limpa resultado anterior
-        if (els.resultado) {
-          els.resultado.classList.add("hidden");
-          els.resultado.innerHTML = "";
-        }
-
-        estado.questoes = gerarQuestoesMock();
-        estado.indiceAtual = 0;
-        iniciarTimer();
+    els.btnVoltar.onclick = () => {
+      if (estado.indiceAtual > 0) {
+        estado.indiceAtual--;
         render();
-      });
-    }
+      }
+    };
 
-    // Estado inicial do painel de simulado
-    render();
+    els.btnProxima.onclick = () => {
+      if (estado.indiceAtual < estado.questoes.length - 1) {
+        estado.indiceAtual++;
+        render();
+      } else {
+        finalizarSimulado(false);
+      }
+    };
 
-    console.log("🟢 Liora Simulados v13-COMMERCIAL inicializado com sucesso.");
+    // ------------------------------------------------------
+    // INICIAR (IA + fallback)
+    // ------------------------------------------------------
+    els.modalIniciar.onclick = async () => {
+      estado.banca = els.selBanca.value;
+      estado.qtd = Number(els.selQtd.value);
+      estado.tempoProvaMin = Number(els.selTempo.value);
+      estado.dificuldade = els.selDificuldade.value;
+      estado.tema = els.inpTema.value.trim();
+
+      fecharModal();
+
+      els.resultado.classList.add("hidden");
+      els.resultado.innerHTML = "";
+
+      // IA primeiro
+      let qs = await gerarQuestoesIA();
+      if (!qs) qs = gerarMock();
+
+      estado.questoes = qs.map((q, i) => ({
+        indice: i + 1,
+        enunciado: q.enunciado,
+        alternativas: q.alternativas,
+        corretaIndex: q.corretaIndex,
+        nivel: q.nivel || "medio",
+        respostaAluno: null,
+      }));
+
+      estado.indiceAtual = 0;
+      iniciarTimer();
+      render();
+    };
   });
 })();
