@@ -1,119 +1,151 @@
-// =============================================================
-// 🏠 NAV-HOME v7 — Navegação Comercial Completa
-// - Tema / Upload / Simulados / Dashboard
-// - Controla FAB Home
-// - Controla FAB de Simulados
-// - Controla o workspace
-// =============================================================
+// ==========================================================
+// 🧭 LIORA — NAV-HOME v70-COMMERCIAL-SYNC
+// Controla:
+// - Home → Tema / Upload / Simulados / Dashboard
+// - Mostra/esconde painéis
+// - Mostra/esconde FAB Início
+// - Mostra/esconde FAB de simulado
+// ==========================================================
 
-document.addEventListener("DOMContentLoaded", () => {
+(function () {
+  console.log("🔵 nav-home.js (v70-COMMERCIAL-SYNC) carregado...");
 
-  // ELEMENTOS
-  const home = document.getElementById("liora-home");
-  const app = document.getElementById("liora-app");
-  const areaSimulado = document.getElementById("area-simulado");
-  const areaDashboard = document.getElementById("area-dashboard");
-  const painelEstudo = document.getElementById("painel-estudo");
-  const painelTema = document.getElementById("painel-tema");
-  const painelUpload = document.getElementById("painel-upload");
+  document.addEventListener("DOMContentLoaded", () => {
+    // ------------------------------------------------------
+    // ELEMENTOS
+    // ------------------------------------------------------
+    const home = document.getElementById("liora-home");
+    const app = document.getElementById("liora-app");
 
-  const btnHomeTema = document.getElementById("home-tema");
-  const btnHomeUpload = document.getElementById("home-upload");
-  const btnHomeSim = document.getElementById("home-simulados");
-  const btnHomeDash = document.getElementById("home-dashboard");
+    const painelEstudo = document.getElementById("painel-estudo");
+    const painelTema = document.getElementById("painel-tema");
+    const painelUpload = document.getElementById("painel-upload");
 
-  const fabHome = document.getElementById("fab-home");
+    const areaSimulado = document.getElementById("area-simulado");
+    const areaDashboard = document.getElementById("area-dashboard");
 
-  // FAB simulados (declarado no simulados.js)
-  const showSimFab = window.showSimFab;
-  const hideSimFab = window.hideSimFab;
+    const fabHome = document.getElementById("fab-home");
+    const fabSim = document.getElementById("sim-fab");
 
-  // --------------------------------------
-  // FUNÇÕES UTILITÁRIAS
-  // --------------------------------------
-  function showHome() {
-    home.classList.remove("hidden");
-    app.classList.add("hidden");
-    hideSimFab();
-    fabHome.style.display = "none";
-  }
+    const btnHomeTema = document.getElementById("home-tema");
+    const btnHomeUpload = document.getElementById("home-upload");
+    const btnHomeSimulados = document.getElementById("home-simulados");
+    const btnHomeDashboard = document.getElementById("home-dashboard");
 
-  function showApp() {
-    home.classList.add("hidden");
-    app.classList.remove("hidden");
-    fabHome.style.display = "flex";
-  }
+    // ------------------------------------------------------
+    // FUNÇÕES GLOBAIS
+    // ------------------------------------------------------
+    window.showSimFab = () => {
+      if (fabSim) fabSim.style.display = "flex";
+    };
 
-  function hideAllPanels() {
-    painelEstudo.classList.add("hidden");
-    painelTema.classList.add("hidden");
-    painelUpload.classList.add("hidden");
-    areaSimulado.classList.add("hidden");
-    areaDashboard.classList.add("hidden");
-  }
+    window.hideSimFab = () => {
+      if (fabSim) fabSim.style.display = "none";
+    };
 
-  // --------------------------------------
-  // HOME → TEMA
-  // --------------------------------------
-  btnHomeTema.addEventListener("click", () => {
-    hideAllPanels();
-    showApp();
+    window.showFabHome = () => {
+      if (fabHome) fabHome.style.display = "flex";
+    };
 
-    painelEstudo.classList.remove("hidden");
-    painelTema.classList.remove("hidden");
+    window.hideFabHome = () => {
+      if (fabHome) fabHome.style.display = "none";
+    };
 
-    hideSimFab();
+    // ------------------------------------------------------
+    // FUNÇÕES DE VISIBILIDADE
+    // ------------------------------------------------------
+    function showApp() {
+      home.classList.add("hidden");
+      app.classList.remove("hidden");
+    }
+
+    function showHome() {
+      home.classList.remove("hidden");
+      app.classList.add("hidden");
+    }
+
+    function hideAllPanels() {
+      painelEstudo.classList.add("hidden");
+      painelTema.classList.add("hidden");
+      painelUpload.classList.add("hidden");
+      areaSimulado.classList.add("hidden");
+      areaDashboard.classList.add("hidden");
+    }
+
+    // ------------------------------------------------------
+    // FAB INÍCIO → volta para a home
+    // ------------------------------------------------------
+    if (fabHome) {
+      fabHome.addEventListener("click", () => {
+        showHome();
+        hideSimFab();
+        hideFabHome();
+        hideAllPanels();
+      });
+    }
+
+    // ------------------------------------------------------
+    // HOME → TEMA
+    //---------------------------------------------
+    btnHomeTema.addEventListener("click", () => {
+      showApp();
+      hideAllPanels();
+
+      painelEstudo.classList.remove("hidden");
+      painelTema.classList.remove("hidden");
+
+      hideSimFab();   // <<< IMPORTANTÍSSIMO
+      showFabHome();
+    });
+
+    // ------------------------------------------------------
+    // HOME → UPLOAD
+    //---------------------------------------------
+    btnHomeUpload.addEventListener("click", () => {
+      showApp();
+      hideAllPanels();
+
+      painelEstudo.classList.remove("hidden");
+      painelUpload.classList.remove("hidden");
+
+      hideSimFab();
+      showFabHome();
+    });
+
+    // ------------------------------------------------------
+    // HOME → SIMULADOS
+    //---------------------------------------------
+    btnHomeSimulados.addEventListener("click", () => {
+      showApp();
+      hideAllPanels();
+
+      areaSimulado.classList.remove("hidden");
+
+      showSimFab();  // <<< AGORA FUNCIONA PERFEITO
+      showFabHome();
+    });
+
+    // ------------------------------------------------------
+    // HOME → DASHBOARD
+    //---------------------------------------------
+    btnHomeDashboard.addEventListener("click", () => {
+      showApp();
+      hideAllPanels();
+
+      areaDashboard.classList.remove("hidden");
+
+      hideSimFab();
+      showFabHome();
+    });
+
+    // ------------------------------------------------------
+    // ESTADO INICIAL (ESSENCIAL)
+    //---------------------------------------------
+    hideSimFab();    // FAB NÃO aparece na carga inicial
+    hideFabHome();   // O botão Início também não deve aparecer
+    hideAllPanels(); // Garantia total
+    showHome();      // Mostra a home limpa
+
+    console.log("🟢 nav-home.js OK (controle comercial ativado)");
   });
-
-  // --------------------------------------
-  // HOME → UPLOAD
-  // --------------------------------------
-  btnHomeUpload.addEventListener("click", () => {
-    hideAllPanels();
-    showApp();
-
-    painelEstudo.classList.remove("hidden");
-    painelUpload.classList.remove("hidden");
-
-    hideSimFab();
-  });
-
-  // --------------------------------------
-  // HOME → SIMULADOS
-  // --------------------------------------
-  btnHomeSim.addEventListener("click", () => {
-    hideAllPanels();
-    showApp();
-
-    areaSimulado.classList.remove("hidden");
-
-    showSimFab();   // <- FAB aparece aqui
-  });
-
-  // --------------------------------------
-  // HOME → DASHBOARD
-  // --------------------------------------
-  btnHomeDash.addEventListener("click", () => {
-    hideAllPanels();
-    showApp();
-
-    areaDashboard.classList.remove("hidden");
-
-    hideSimFab();
-  });
-
-  // --------------------------------------
-  // FAB HOME (voltar ao início)
-  // --------------------------------------
-  fabHome.addEventListener("click", () => {
-    showHome();
-  });
-
-  // Expor para outros módulos
-  window.homeDashboard = () => {
-    hideAllPanels();
-    showApp();
-    areaDashboard.classList.remove("hidden");
-    hideSimFab();
-  };
-});
+})();
