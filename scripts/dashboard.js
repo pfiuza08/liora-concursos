@@ -242,7 +242,8 @@
     }
 
     // expõe função global para o nav-home
-    window.lioraRenderDashboard = renderDashboard;
+    window.lioraDashboard = { atualizar: renderDashboard };
+
 
     console.log("🟢 Liora Dashboard v2 inicializado.");
   });
