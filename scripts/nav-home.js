@@ -1,14 +1,15 @@
 // ==========================================================
-// 🧭 LIORA — NAV-HOME v70-COMMERCIAL-SYNC
+// 🧭 LIORA — NAV-HOME v70-COMMERCIAL-SYNC-IA
 // Controla:
 // - Home → Tema / Upload / Simulados / Dashboard
 // - Mostra/esconde painéis
 // - Mostra/esconde FAB Início
-// - Mostra/esconde FAB de simulado
+// - Mostra/esconde FAB de simulado (#sim-fab)
+// - Expõe window.homeDashboard() para integração com simulados.js
 // ==========================================================
 
 (function () {
-  console.log("🔵 nav-home.js (v70-COMMERCIAL-SYNC) carregado...");
+  console.log("🔵 nav-home.js (v70-COMMERCIAL-SYNC-IA) carregado...");
 
   document.addEventListener("DOMContentLoaded", () => {
     // ------------------------------------------------------
@@ -31,6 +32,9 @@
     const btnHomeUpload = document.getElementById("home-upload");
     const btnHomeSimulados = document.getElementById("home-simulados");
     const btnHomeDashboard = document.getElementById("home-dashboard");
+
+    const viewTitle = document.getElementById("liora-view-title");
+    const viewSubtitle = document.getElementById("liora-view-subtitle");
 
     // ------------------------------------------------------
     // FUNÇÕES GLOBAIS
@@ -55,21 +59,28 @@
     // FUNÇÕES DE VISIBILIDADE
     // ------------------------------------------------------
     function showApp() {
-      home.classList.add("hidden");
-      app.classList.remove("hidden");
+      if (home) home.classList.add("hidden");
+      if (app) app.classList.remove("hidden");
     }
 
     function showHome() {
-      home.classList.remove("hidden");
-      app.classList.add("hidden");
+      if (home) home.classList.remove("hidden");
+      if (app) app.classList.add("hidden");
+      if (viewTitle) viewTitle.textContent = "";
+      if (viewSubtitle) viewSubtitle.textContent = "";
     }
 
     function hideAllPanels() {
-      painelEstudo.classList.add("hidden");
-      painelTema.classList.add("hidden");
-      painelUpload.classList.add("hidden");
-      areaSimulado.classList.add("hidden");
-      areaDashboard.classList.add("hidden");
+      if (painelEstudo) painelEstudo.classList.add("hidden");
+      if (painelTema) painelTema.classList.add("hidden");
+      if (painelUpload) painelUpload.classList.add("hidden");
+      if (areaSimulado) areaSimulado.classList.add("hidden");
+      if (areaDashboard) areaDashboard.classList.add("hidden");
+    }
+
+    function setView(title, subtitle) {
+      if (viewTitle) viewTitle.textContent = title || "";
+      if (viewSubtitle) viewSubtitle.textContent = subtitle || "";
     }
 
     // ------------------------------------------------------
@@ -78,74 +89,109 @@
     if (fabHome) {
       fabHome.addEventListener("click", () => {
         showHome();
-        hideSimFab();
-        hideFabHome();
+        window.hideSimFab();
+        window.hideFabHome();
         hideAllPanels();
       });
     }
 
     // ------------------------------------------------------
     // HOME → TEMA
-    //---------------------------------------------
-    btnHomeTema.addEventListener("click", () => {
-      showApp();
-      hideAllPanels();
+    // ------------------------------------------------------
+    if (btnHomeTema) {
+      btnHomeTema.addEventListener("click", () => {
+        showApp();
+        hideAllPanels();
 
-      painelEstudo.classList.remove("hidden");
-      painelTema.classList.remove("hidden");
+        if (painelEstudo) painelEstudo.classList.remove("hidden");
+        if (painelTema) painelTema.classList.remove("hidden");
 
-      hideSimFab();   // <<< IMPORTANTÍSSIMO
-      showFabHome();
-    });
+        setView(
+          "Plano por tema",
+          "Defina um tema e deixe a Liora quebrar o estudo em sessões."
+        );
+
+        window.hideSimFab();
+        window.showFabHome();
+      });
+    }
 
     // ------------------------------------------------------
     // HOME → UPLOAD
-    //---------------------------------------------
-    btnHomeUpload.addEventListener("click", () => {
-      showApp();
-      hideAllPanels();
+    // ------------------------------------------------------
+    if (btnHomeUpload) {
+      btnHomeUpload.addEventListener("click", () => {
+        showApp();
+        hideAllPanels();
 
-      painelEstudo.classList.remove("hidden");
-      painelUpload.classList.remove("hidden");
+        if (painelEstudo) painelEstudo.classList.remove("hidden");
+        if (painelUpload) painelUpload.classList.remove("hidden");
 
-      hideSimFab();
-      showFabHome();
-    });
+        setView(
+          "Plano a partir do PDF",
+          "Envie seu material e a Liora monta um plano completo."
+        );
+
+        window.hideSimFab();
+        window.showFabHome();
+      });
+    }
 
     // ------------------------------------------------------
     // HOME → SIMULADOS
-    //---------------------------------------------
-    btnHomeSimulados.addEventListener("click", () => {
+    // ------------------------------------------------------
+    function goSimulados() {
       showApp();
       hideAllPanels();
 
-      areaSimulado.classList.remove("hidden");
+      if (areaSimulado) areaSimulado.classList.remove("hidden");
 
-      showSimFab();  // <<< AGORA FUNCIONA PERFEITO
-      showFabHome();
-    });
+      setView(
+        "Simulados inteligentes",
+        "Configure banca, dificuldade, tema e deixe a IA montar o teste."
+      );
+
+      window.showSimFab();
+      window.showFabHome();
+    }
+
+    if (btnHomeSimulados) {
+      btnHomeSimulados.addEventListener("click", goSimulados);
+    }
 
     // ------------------------------------------------------
     // HOME → DASHBOARD
-    //---------------------------------------------
-    btnHomeDashboard.addEventListener("click", () => {
+    // ------------------------------------------------------
+    function goDashboard() {
       showApp();
       hideAllPanels();
 
-      areaDashboard.classList.remove("hidden");
+      if (areaDashboard) areaDashboard.classList.remove("hidden");
 
-      hideSimFab();
-      showFabHome();
-    });
+      setView(
+        "Meu desempenho",
+        "Veja um resumo dos simulados realizados neste dispositivo."
+      );
+
+      window.hideSimFab();
+      window.showFabHome();
+    }
+
+    if (btnHomeDashboard) {
+      btnHomeDashboard.addEventListener("click", goDashboard);
+    }
+
+    // Torna acessível para simulados.js (botão "Ver desempenho")
+    window.homeDashboard = goDashboard;
 
     // ------------------------------------------------------
     // ESTADO INICIAL (ESSENCIAL)
-    //---------------------------------------------
-    hideSimFab();    // FAB NÃO aparece na carga inicial
-    hideFabHome();   // O botão Início também não deve aparecer
-    hideAllPanels(); // Garantia total
-    showHome();      // Mostra a home limpa
+    // ------------------------------------------------------
+    window.hideSimFab();    // FAB não aparece na carga inicial
+    window.hideFabHome();   // Botão Início também não
+    hideAllPanels();        // Garantia total
+    showHome();             // Mostra a home limpa
 
-    console.log("🟢 nav-home.js OK (controle comercial ativado)");
+    console.log("🟢 nav-home.js OK (controle comercial + IA integrado)");
   });
 })();
