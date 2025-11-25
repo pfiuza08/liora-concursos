@@ -3,9 +3,9 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Liora — Plano de Estudo Inteligente</title>
+  <title>Liora — Estudo Inteligente para Concursos</title>
 
-  <!-- Tailwind (ok temporariamente; ajustar na build final) -->
+  <!-- Tailwind (temporário) -->
   <script src="https://cdn.tailwindcss.com"></script>
 
   <!-- PDF.js -->
@@ -15,7 +15,7 @@
       "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.14.305/pdf.worker.min.js";
   </script>
 
-  <!-- CSS Principal -->
+  <!-- CSS -->
   <link rel="stylesheet" href="/style.css?v=50">
   <link rel="stylesheet" href="/style-simulados.css?v=3">
 </head>
@@ -29,8 +29,8 @@
         Li
       </div>
       <div>
-        <h1 class="text-xl font-bold">Liora — Plano de Estudo Inteligente</h1>
-        <p class="text-sm text-[var(--muted)]">Personalize seu estudo em minutos.</p>
+        <h1 class="text-xl font-bold">Liora — Estudo Inteligente para Concursos</h1>
+        <p class="text-sm text-[var(--muted)]">Seu plano de estudo personalizado, organizado com IA.</p>
       </div>
     </div>
 
@@ -48,25 +48,25 @@
 
     <div class="space-y-3">
       <h2 class="text-2xl font-semibold tracking-tight text-[var(--fg)]">
-        O que você deseja fazer hoje?
+        Como deseja estudar hoje?
       </h2>
       <p class="text-sm text-[var(--muted)] max-w-md">
-        Escolha como deseja estudar ou avaliar seu desempenho.
+        A Liora cria planos de estudo, organiza sessões e gera simulados inteligentes adaptados à sua necessidade.
       </p>
     </div>
 
     <!-- ESTUDO -->
     <div class="space-y-3">
-      <h3 class="text-base font-medium tracking-wide text-[var(--muted)]">ESTUDO</h3>
+      <h3 class="text-base font-medium tracking-wide text-[var(--muted)]">PLANO DE ESTUDO</h3>
       <div class="flex gap-4 justify-center">
         <button id="home-tema" class="btn-secondary px-6 py-2 text-sm">Tema</button>
-        <button id="home-upload" class="btn-secondary px-6 py-2 text-sm">Upload</button>
+        <button id="home-upload" class="btn-secondary px-6 py-2 text-sm">PDF</button>
       </div>
     </div>
 
     <!-- AVALIAÇÃO -->
     <div class="space-y-3">
-      <h3 class="text-base font-medium tracking-wide text-[var(--muted)]">AVALIAÇÃO</h3>
+      <h3 class="text-base font-medium tracking-wide text-[var(--muted)]">AVALIAÇÃO COM IA</h3>
       <div class="flex gap-4 justify-center">
         <button id="home-simulados" class="btn-secondary px-6 py-2 text-sm">Simulados</button>
         <button id="home-dashboard" class="btn-secondary px-6 py-2 text-sm">Meu Desempenho</button>
@@ -96,7 +96,7 @@
       <div id="painel-tema" class="space-y-3 hidden">
         <label class="text-sm font-medium">Tema de estudo</label>
         <input id="inp-tema" type="text" class="w-full"
-               placeholder="Ex.: Direito Constitucional — Poder Legislativo">
+               placeholder="Ex.: Direito Constitucional — Controle de Constitucionalidade">
 
         <label class="text-sm font-medium">Nível</label>
         <select id="sel-nivel" class="w-full">
@@ -122,11 +122,8 @@
           <input id="inp-file" type="file" accept="application/pdf" />
         </label>
 
-        <!-- 🔹 NOVO: orientação clara sobre o tipo de PDF -->
         <p class="text-xs text-[var(--muted)]">
-          Nesta versão, a Liora funciona melhor com PDFs de conteúdo teórico
-          (sem blocos extensos de exercícios, questões ou gabaritos) e com
-          até aproximadamente 80 páginas.
+          PDFs teóricos com até 80 páginas funcionam melhor nesta versão.
         </p>
 
         <button id="btn-gerar-upload" class="btn w-full mt-2">Gerar plano</button>
@@ -210,7 +207,7 @@
          ===================================================== -->
     <div id="area-simulado" class="hidden space-y-8">
       <p class="text-sm text-[var(--muted)] max-w-xl">
-        Use o botão inferior direito para configurar seu simulado.
+        Use o botão no canto inferior direito para configurar seu simulado.
       </p>
 
       <div class="flex justify-between items-center">
@@ -255,7 +252,7 @@
 
 
 <!-- =====================================================
-     BOTÃO FLUTUANTE "INÍCIO"
+     FAB HOME
      ===================================================== -->
 <button id="fab-home" class="liora-fab-home">⬅ Início</button>
 
@@ -307,14 +304,15 @@
   </div>
 </div>
 
+
 <!-- =====================================================
-     BOTÃO FLUTUANTE "SIMULADO"
+     FAB SIMULADO
      ===================================================== -->
 <button id="sim-fab" class="sim-fab">⚙</button>
 
 
 <!-- =====================================================
-     OVERLAY GLOBAL DE ERRO
+     OVERLAY DE ERRO
      ===================================================== -->
 <div id="liora-error" class="liora-error hidden">
   <div class="liora-error-card">
@@ -331,7 +329,7 @@
 </div>
 
 <!-- =====================================================
-     OVERLAY GLOBAL DE LOADING
+     OVERLAY DE LOADING
      ===================================================== -->
 <div id="liora-loading" class="liora-loading hidden">
   <div class="liora-loading-card">
@@ -354,5 +352,6 @@
 <script src="scripts/core.js?v=70"></script>
 
 <div id="liora-build-info">Liora v70-COMMERCIAL</div>
+
 </body>
 </html>
