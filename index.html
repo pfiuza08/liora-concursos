@@ -314,6 +314,34 @@
 
 
 <!-- =====================================================
+     OVERLAY GLOBAL DE ERRO
+     ===================================================== -->
+<div id="liora-error" class="liora-error hidden">
+  <div class="liora-error-card">
+    <div class="liora-error-icon">⚠️</div>
+    <h3 class="liora-error-title">Opa! Algo não saiu como esperado</h3>
+    <p id="liora-error-message" class="liora-error-message">
+      Parece que tivemos um probleminha ao processar essa etapa.
+    </p>
+    <div class="liora-error-actions">
+      <button id="liora-error-retry" class="btn-primary">Tentar novamente</button>
+      <button id="liora-error-back" class="btn-secondary">Voltar ao início</button>
+    </div>
+  </div>
+</div>
+
+<!-- =====================================================
+     OVERLAY GLOBAL DE LOADING
+     ===================================================== -->
+<div id="liora-loading" class="liora-loading hidden">
+  <div class="liora-loading-card">
+    <div class="liora-spinner"></div>
+    <p id="liora-loading-text">Carregando…</p>
+  </div>
+</div>
+
+
+<!-- =====================================================
      SCRIPTS
      ===================================================== -->
 <script src="scripts/pdf-extractor.js"></script>
