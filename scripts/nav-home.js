@@ -1,16 +1,15 @@
 // ==========================================================
-// 🧭 LIORA — NAV-HOME v71-COMMERCIAL-SYNC-IA
-// Controla:
-// - Home → Tema / Upload / Simulados / Dashboard
-// - Mostra/esconde painéis
-// - Mostra/esconde FAB Início
-// - Mostra/esconde FAB de simulado (#sim-fab)
-// - Integra com simulados.js (window.homeDashboard)
-// - Integra com dashboard.js (window.lioraDashboard.atualizar())
+// 🧭 LIORA — NAV-HOME v72-COMMERCIAL-SYNC-IA-PREMIUM-RESET
+// ----------------------------------------------------------
+// Agora inclui:
+// ✔ Reset total (lioraHardReset)
+// ✔ Botão Início sempre começa do ZERO
+// ✔ Limpa plano, wizard, simulados, dashboard, modais, loaders
+// ✔ Evita telas “fantasmas” e vazamento de estado
 // ==========================================================
 
 (function () {
-  console.log("🔵 nav-home.js (v71-COMMERCIAL-SYNC-IA) carregado...");
+  console.log("🔵 nav-home.js (v72-COMMERCIAL-SYNC-IA-PREMIUM-RESET) carregado...");
 
   document.addEventListener("DOMContentLoaded", () => {
 
@@ -38,44 +37,33 @@
     // ------------------------------------------------------
     // FAB helpers
     // ------------------------------------------------------
-    window.showSimFab = () => {
-      if (fabSim) fabSim.style.display = "flex";
-    };
-
-    window.hideSimFab = () => {
-      if (fabSim) fabSim.style.display = "none";
-    };
-
-    window.showFabHome = () => {
-      if (fabHome) fabHome.style.display = "flex";
-    };
-
-    window.hideFabHome = () => {
-      if (fabHome) fabHome.style.display = "none";
-    };
+    window.showSimFab = () => fabSim && (fabSim.style.display = "flex");
+    window.hideSimFab = () => fabSim && (fabSim.style.display = "none");
+    window.showFabHome = () => fabHome && (fabHome.style.display = "flex");
+    window.hideFabHome = () => fabHome && (fabHome.style.display = "none");
 
     // ------------------------------------------------------
     // VISIBILIDADE
     // ------------------------------------------------------
     function showApp() {
-      if (home) home.classList.add("hidden");
-      if (app) app.classList.remove("hidden");
+      home?.classList.add("hidden");
+      app?.classList.remove("hidden");
     }
 
     function showHome() {
-      if (home) home.classList.remove("hidden");
-      if (app) app.classList.add("hidden");
+      home?.classList.remove("hidden");
+      app?.classList.add("hidden");
 
       if (viewTitle) viewTitle.textContent = "";
       if (viewSubtitle) viewSubtitle.textContent = "";
     }
 
     function hideAllPanels() {
-      if (painelEstudo) painelEstudo.classList.add("hidden");
-      if (painelTema) painelTema.classList.add("hidden");
-      if (painelUpload) painelUpload.classList.add("hidden");
-      if (areaSimulado) areaSimulado.classList.add("hidden");
-      if (areaDashboard) areaDashboard.classList.add("hidden");
+      painelEstudo?.classList.add("hidden");
+      painelTema?.classList.add("hidden");
+      painelUpload?.classList.add("hidden");
+      areaSimulado?.classList.add("hidden");
+      areaDashboard?.classList.add("hidden");
     }
 
     function setView(title, subtitle) {
@@ -84,58 +72,117 @@
     }
 
     // ------------------------------------------------------
-    // FAB HOME
+    // 🔥 RESET TOTAL (botão INÍCIO)
+    // ------------------------------------------------------
+    window.lioraHardReset = function () {
+      console.log("🧹✨ Reset completo iniciado...");
+
+      hideAllPanels();
+      showHome();
+      window.hideSimFab();
+      window.hideFabHome();
+
+      // LIMPA PLANO
+      const plano = document.getElementById("plano");
+      if (plano) plano.innerHTML = "";
+
+      // LINPA STATUS
+      const status = document.getElementById("status");
+      if (status) status.textContent = "";
+
+      const statusUpload = document.getElementById("status-upload");
+      if (statusUpload) statusUpload.textContent = "";
+
+      // LIMPA BARRAS
+      const barraTema = document.getElementById("barra-tema-fill");
+      if (barraTema) barraTema.style.width = "0%";
+
+      const barraUpload = document.getElementById("barra-upload-fill");
+      if (barraUpload) barraUpload.style.width = "0%";
+
+      // WIZARD
+      const wiz = document.getElementById("liora-sessoes");
+      if (wiz) wiz.classList.add("hidden");
+
+      // SIMULADOS
+      const simQuestao = document.getElementById("sim-questao-container");
+      if (simQuestao) simQuestao.innerHTML = "";
+
+      const simResultado = document.getElementById("sim-resultado");
+      if (simResultado) {
+        simResultado.innerHTML = "";
+        simResultado.classList.add("hidden");
+      }
+
+      const simNav = document.getElementById("sim-nav");
+      if (simNav) simNav.classList.add("hidden");
+
+      const simProgress = document.getElementById("sim-progress-bar");
+      if (simProgress) simProgress.style.width = "0%";
+
+      const simTimer = document.getElementById("sim-timer");
+      if (simTimer) {
+        simTimer.textContent = "00:00";
+        simTimer.classList.add("hidden");
+      }
+
+      // FECHA MODAL
+      const modal = document.getElementById("sim-modal-backdrop");
+      if (modal) modal.classList.remove("visible");
+
+      // FECHA ERRO E LOADING
+      if (window.lioraLoading?.hide) window.lioraLoading.hide();
+      if (window.lioraError?.hide) window.lioraError.hide();
+
+      console.log("🧹✨ Reset completo FINALIZADO!");
+    };
+
+    // ------------------------------------------------------
+    // Botão FAB HOME chama RESET TOTAL
     // ------------------------------------------------------
     if (fabHome) {
       fabHome.addEventListener("click", () => {
-        showHome();
-        hideAllPanels();
-        window.hideSimFab();
-        window.hideFabHome();
+        window.lioraHardReset();
       });
     }
 
     // ------------------------------------------------------
     // HOME → TEMA
     // ------------------------------------------------------
-    if (btnHomeTema) {
-      btnHomeTema.addEventListener("click", () => {
-        showApp();
-        hideAllPanels();
+    btnHomeTema?.addEventListener("click", () => {
+      showApp();
+      hideAllPanels();
 
-        if (painelEstudo) painelEstudo.classList.remove("hidden");
-        if (painelTema) painelTema.classList.remove("hidden");
+      painelEstudo?.classList.remove("hidden");
+      painelTema?.classList.remove("hidden");
 
-        setView(
-          "Plano por tema",
-          "Defina um tema e deixe a Liora quebrar o estudo em sessões."
-        );
+      setView(
+        "Plano por tema",
+        "Defina um tema e deixe a Liora quebrar o estudo em sessões."
+      );
 
-        window.hideSimFab();
-        window.showFabHome();
-      });
-    }
+      window.hideSimFab();
+      window.showFabHome();
+    });
 
     // ------------------------------------------------------
     // HOME → UPLOAD
     // ------------------------------------------------------
-    if (btnHomeUpload) {
-      btnHomeUpload.addEventListener("click", () => {
-        showApp();
-        hideAllPanels();
+    btnHomeUpload?.addEventListener("click", () => {
+      showApp();
+      hideAllPanels();
 
-        if (painelEstudo) painelEstudo.classList.remove("hidden");
-        if (painelUpload) painelUpload.classList.remove("hidden");
+      painelEstudo?.classList.remove("hidden");
+      painelUpload?.classList.remove("hidden");
 
-        setView(
-          "Plano a partir do PDF",
-          "Envie seu material e a Liora monta um plano completo."
-        );
+      setView(
+        "Plano a partir do PDF",
+        "Envie seu material e a Liora monta um plano completo."
+      );
 
-        window.hideSimFab();
-        window.showFabHome();
-      });
-    }
+      window.hideSimFab();
+      window.showFabHome();
+    });
 
     // ------------------------------------------------------
     // HOME → SIMULADOS
@@ -144,7 +191,7 @@
       showApp();
       hideAllPanels();
 
-      if (areaSimulado) areaSimulado.classList.remove("hidden");
+      areaSimulado?.classList.remove("hidden");
 
       setView(
         "Simulados inteligentes",
@@ -155,9 +202,7 @@
       window.showFabHome();
     }
 
-    if (btnHomeSimulados) {
-      btnHomeSimulados.addEventListener("click", goSimulados);
-    }
+    btnHomeSimulados?.addEventListener("click", goSimulados);
 
     // ------------------------------------------------------
     // HOME → DASHBOARD
@@ -166,40 +211,28 @@
       showApp();
       hideAllPanels();
 
-      if (areaDashboard) areaDashboard.classList.remove("hidden");
+      areaDashboard?.classList.remove("hidden");
 
-      setView(
-        "Meu desempenho",
-        "Veja o resumo dos seus simulados."
-      );
+      setView("Meu desempenho", "Veja o resumo dos seus simulados.");
 
       window.hideSimFab();
       window.showFabHome();
 
-      // Atualiza dashboard sempre que abrir
-      if (
-        window.lioraDashboard &&
-        typeof window.lioraDashboard.atualizar === "function"
-      ) {
+      if (window.lioraDashboard?.atualizar) {
         window.lioraDashboard.atualizar();
       }
     }
 
-    if (btnHomeDashboard) {
-      btnHomeDashboard.addEventListener("click", goDashboard);
-    }
+    btnHomeDashboard?.addEventListener("click", goDashboard);
 
-    // Exposto globalmente para simulados.js (botão "Ver meu desempenho")
+    // Exposto globalmente para simulados.js
     window.homeDashboard = goDashboard;
 
     // ------------------------------------------------------
     // ESTADO INICIAL
     // ------------------------------------------------------
-    hideAllPanels();
-    showHome();
-    window.hideSimFab();
-    window.hideFabHome();
+    window.lioraHardReset();
 
-    console.log("🟢 nav-home.js v71 OK");
+    console.log("🟢 nav-home.js v72 OK");
   });
 })();
