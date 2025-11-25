@@ -1,20 +1,100 @@
 // ==========================================================
-// 🧠 LIORA — CORE v70-COMMERCIAL-SYNC
-// - Compatível com index.html atual (workspace único)
-// - Tema: plano + sessões completas (cache localStorage)
-// - Upload: Modelo D (outline + sessões a partir do PDF)
-// - Wizard em <div id="liora-sessoes"> (fora do painel de plano)
-// - NÃO controla modos (Tema/Upload/Simulados/Dashboard) — isso é do nav-home
-// - Exponde window.lioraWizardShouldShow() para a navegação
+// 🧠 LIORA — CORE v70-COMMERCIAL-PREMIUM-DIA1
+// - Adiciona:
+//   ✔ Loading global (lioraLoading)
+//   ✔ Erro global (lioraError)
+//   ✔ Wizard Premium (fade e microinterações)
+//   ✔ Tratamento padronizado de erros
+//   ✔ Integração total com index.html + nav-home.js
 // ==========================================================
 
 (function () {
-  console.log("🔵 Inicializando Liora Core v70-COMMERCIAL-SYNC...");
+  console.log("🔵 Inicializando Liora Core v70-COMMERCIAL-PREMIUM-DIA1...");
 
   document.addEventListener("DOMContentLoaded", () => {
+
     // --------------------------------------------------------
-    // ELEMENTOS
+    // 🌟 UI PREMIUM: Loading Global
     // --------------------------------------------------------
+    window.lioraLoading = {
+      el: null,
+      text: null,
+
+      init() {
+        if (this.el) return;
+
+        const div = document.createElement("div");
+        div.className = "liora-loading hidden";
+        div.innerHTML = `
+          <div class="liora-loading-card">
+            <div class="liora-spinner"></div>
+            <p id="liora-loading-text">Processando...</p>
+          </div>
+        `;
+        document.body.appendChild(div);
+
+        this.el = div;
+        this.text = div.querySelector("#liora-loading-text");
+      },
+
+      show(msg = "Processando...") {
+        this.init();
+        if (this.text) this.text.textContent = msg;
+        this.el.classList.remove("hidden");
+      },
+
+      hide() {
+        if (this.el) this.el.classList.add("hidden");
+      },
+    };
+
+    // --------------------------------------------------------
+    // 🌟 UI PREMIUM: Erro Global
+    // --------------------------------------------------------
+    window.lioraError = {
+      el: null,
+      msgEl: null,
+
+      init() {
+        if (this.el) return;
+
+        const div = document.createElement("div");
+        div.className = "liora-error hidden";
+        div.innerHTML = `
+          <div class="liora-error-card">
+            <div class="liora-error-icon">⚠️</div>
+            <h3 class="liora-error-title">Ocorreu um erro</h3>
+            <p class="liora-error-message" id="liora-error-msg">
+              Algo inesperado aconteceu.
+            </p>
+            <div class="liora-error-actions">
+              <button class="btn-primary" id="liora-error-ok">OK</button>
+            </div>
+          </div>
+        `;
+        document.body.appendChild(div);
+
+        this.el = div;
+        this.msgEl = div.querySelector("#liora-error-msg");
+
+        div.querySelector("#liora-error-ok").onclick = () => {
+          this.hide();
+        };
+      },
+
+      show(msg = "Erro desconhecido") {
+        this.init();
+        this.msgEl.textContent = msg;
+        this.el.classList.remove("hidden");
+      },
+
+      hide() {
+        if (this.el) this.el.classList.add("hidden");
+      },
+    };
+    // ==========================================================
+    // ELEMENTOS DO CORE
+    // ==========================================================
     const els = {
       // tema
       inpTema: document.getElementById("inp-tema"),
@@ -27,16 +107,16 @@
       btnGerarUpload: document.getElementById("btn-gerar-upload"),
       statusUpload: document.getElementById("status-upload"),
 
-      // barra de progresso
+      // progresso
       barraTemaFill: document.getElementById("barra-tema-fill"),
       barraUploadFill: document.getElementById("barra-upload-fill"),
 
-      // painel plano (lista de sessões)
+      // plano
       areaPlano: document.getElementById("area-plano"),
       plano: document.getElementById("plano"),
       ctx: document.getElementById("ctx"),
 
-      // wizard (section fora do painel de plano)
+      // wizard
       wizardContainer: document.getElementById("liora-sessoes"),
       wizardTema: document.getElementById("liora-tema-ativo"),
       wizardTitulo: document.getElementById("liora-sessao-titulo"),
@@ -50,48 +130,39 @@
       wizardMapa: document.getElementById("liora-sessao-mapa"),
       wizardVoltar: document.getElementById("liora-btn-voltar"),
       wizardProxima: document.getElementById("liora-btn-proxima"),
-      wizardProgressBar: document.getElementById("liora-progress-bar"),
-
-      // tema claro/escuro
-      themeBtn: document.getElementById("btn-theme"),
-
-      // upload UX
-      uploadText: document.getElementById("upload-text"),
-      uploadSpinner: document.getElementById("upload-spinner"),
     };
 
-    // mensagem inicial no plano
+    // mostra mensagem no plano
     if (els.plano) {
       els.plano.innerHTML =
-        '<p class="text-sm text-[var(--muted)]">Gere um plano de estudo (por tema ou upload) para ver as sessões aqui.</p>';
+        '<p class="text-sm text-[var(--muted)]">Gere um plano de estudo para ver as sessões.</p>';
     }
 
-    // garante wizard escondido de partida
-    if (els.wizardContainer) {
-      els.wizardContainer.classList.add("hidden");
-    }
+    // wizard começa oculto
+    if (els.wizardContainer) els.wizardContainer.classList.add("hidden");
 
-    // --------------------------------------------------------
+
+    // ==========================================================
     // ESTADO
-    // --------------------------------------------------------
+    // ==========================================================
     let wizard = {
       tema: null,
       nivel: null,
       plano: [],
       sessoes: [],
       atual: 0,
-      origem: "tema", // "tema" ou "upload"
+      origem: "tema",
     };
 
     const key = (tema, nivel) =>
-      `liora:wizard:${tema.toLowerCase()}::${(nivel || "").toLowerCase()}`;
+      `liora:wizard:${tema.toLowerCase()}::${nivel.toLowerCase()}`;
 
     const saveProgress = () => {
       if (!wizard.tema || !wizard.nivel) return;
       try {
         localStorage.setItem(key(wizard.tema, wizard.nivel), JSON.stringify(wizard));
       } catch (e) {
-        console.warn("⚠️ Não foi possível salvar no localStorage", e);
+        console.warn("⚠️ Falha ao salvar progresso:", e);
       }
     };
 
@@ -103,178 +174,91 @@
       }
     };
 
-    // Expor para nav-home saber se pode mostrar o wizard
-    window.lioraWizardShouldShow = function () {
-      return !!(wizard && wizard.sessoes && wizard.sessoes.length);
-    };
+    window.lioraWizardShouldShow = () =>
+      wizard.sessoes && wizard.sessoes.length > 0;
 
-    // --------------------------------------------------------
-    // 🌗 THEME (LIGHT / DARK)
-    // --------------------------------------------------------
-    (function themeSetup() {
-      const btn = els.themeBtn;
+
+    // ==========================================================
+    // 🌗 TEMA (Dark / Light)
+    // ==========================================================
+    (function setupTheme() {
+      const btn = document.getElementById("btn-theme");
       if (!btn) return;
 
-      function apply(th) {
+      function applyTheme(th) {
         document.documentElement.classList.remove("light", "dark");
         document.documentElement.classList.add(th);
         document.body.classList.remove("light", "dark");
         document.body.classList.add(th);
+
         localStorage.setItem("liora-theme", th);
         btn.textContent = th === "light" ? "☀️" : "🌙";
       }
 
-      apply(localStorage.getItem("liora-theme") || "dark");
+      applyTheme(localStorage.getItem("liora-theme") || "dark");
 
       btn.addEventListener("click", () => {
-        const newTheme = document.documentElement.classList.contains("light")
+        const next = document.documentElement.classList.contains("light")
           ? "dark"
           : "light";
-        apply(newTheme);
+        applyTheme(next);
       });
     })();
 
-    // --------------------------------------------------------
-    // STATUS + BARRAS
-    // --------------------------------------------------------
-    function atualizarStatus(modo, texto, progresso = null) {
-      const statusEl = modo === "tema" ? els.status : els.statusUpload;
-      if (statusEl) statusEl.textContent = texto;
 
-      const barra = modo === "tema" ? els.barraTemaFill : els.barraUploadFill;
-      if (barra && progresso !== null) {
-        barra.style.width = `${progresso}%`;
-      }
-    }
-
-    // --------------------------------------------------------
+    // ==========================================================
     // UTILS
-    // --------------------------------------------------------
-    function shuffle(array) {
-      const arr = array.slice();
-      for (let i = arr.length - 1; i > 0; i--) {
+    // ==========================================================
+    function shuffle(arr) {
+      const a = arr.slice();
+      for (let i = a.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
-        [arr[i], arr[j]] = [arr[j], arr[i]];
+        [a[i], a[j]] = [a[j], a[i]];
       }
-      return arr;
+      return a;
     }
 
     function safeJsonParse(raw) {
-      if (!raw || typeof raw !== "string") {
-        throw new Error("JSON vazio ou inválido");
-      }
+      if (!raw) throw new Error("JSON vazio");
 
       const block =
         raw.match(/```json([\s\S]*?)```/i) ||
         raw.match(/```([\s\S]*?)```/i);
-      if (block) {
-        raw = block[1];
-      }
+
+      if (block) raw = block[1];
 
       const first = raw.search(/[\{\[]/);
-      const lastBrace = raw.lastIndexOf("}");
-      const lastBracket = raw.lastIndexOf("]");
-      const last = Math.max(lastBrace, lastBracket);
-      if (first !== -1 && last !== -1 && last > first) {
+      const last = Math.max(raw.lastIndexOf("}"), raw.lastIndexOf("]"));
+
+      if (first !== -1 && last !== -1) {
         raw = raw.slice(first, last + 1);
       }
 
-      raw = raw.replace(/[\u0000-\u0008\u000B-\u000C\u000E-\u001F]/g, " ");
       return JSON.parse(raw);
     }
 
     async function callLLM(system, user) {
-      const res = await fetch("/api/liora", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ system, user }),
-      });
-
-      const json = await res.json().catch(() => ({}));
-      if (!json.output) throw new Error("Resposta inválida da IA");
-      return json.output;
-    }
-    window.callLLM = callLLM;
-
-    // --------------------------------------------------------
-    // MAPA MENTAL
-    // --------------------------------------------------------
-    function construirMapaMental(sessao) {
-      if (!sessao) return "";
-
-      const titulo = sessao.titulo || "Sessão";
-      const linhas = [];
-      let mapaStr = null;
-
-      if (typeof sessao.mapaMental === "string" && sessao.mapaMental.trim()) {
-        mapaStr = sessao.mapaMental.trim();
-      } else if (typeof sessao.mindmap === "string" && sessao.mindmap.trim()) {
-        mapaStr = sessao.mindmap.trim();
-      }
-
-      if (mapaStr) {
-        linhas.push(titulo);
-
-        const blocos = mapaStr.split("|").map(b => b.trim()).filter(Boolean);
-        blocos.forEach((bloco) => {
-          const parts = bloco.split(">").map(p => p.trim()).filter(Boolean);
-          if (!parts.length) return;
-
-          linhas.push("├─ " + parts[0]);
-
-          for (let i = 1; i < parts.length; i++) {
-            const isLast = i === parts.length - 1;
-            const prefix = isLast ? "│   └─" : "│   ├─";
-            linhas.push(`${prefix} ${parts[i]}`);
-          }
+      try {
+        const res = await fetch("/api/liora", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ system, user }),
         });
 
-        return linhas.join("\n");
+        const json = await res.json();
+        if (!json.output) throw new Error("Resposta inesperada da IA");
+
+        return json.output;
+      } catch (e) {
+        console.error("❌ callLLM ERRO:", e);
+        throw e;
       }
-
-      const c = sessao.conteudo || {};
-
-      linhas.push(titulo);
-      linhas.push("├─ Objetivo: " + (sessao.objetivo || "—"));
-
-      if (c.introducao) {
-        linhas.push("├─ Introdução");
-      }
-
-      if (Array.isArray(c.conceitos) && c.conceitos.length) {
-        linhas.push("├─ Conceitos");
-        c.conceitos.forEach((item, idx) => {
-          linhas.push(`│   ├─ ${idx + 1}. ${item}`);
-        });
-      }
-
-      if (Array.isArray(c.exemplos) && c.exemplos.length) {
-        linhas.push("├─ Exemplos");
-        c.exemplos.forEach((item, idx) => {
-          linhas.push(`│   ├─ ${idx + 1}. ${item}`);
-        });
-      }
-
-      if (Array.isArray(c.aplicacoes) && c.aplicacoes.length) {
-        linhas.push("├─ Aplicações");
-        c.aplicacoes.forEach((item, idx) => {
-          linhas.push(`│   ├─ ${idx + 1}. ${item}`);
-        });
-      }
-
-      if (Array.isArray(c.resumoRapido) && c.resumoRapido.length) {
-        linhas.push("└─ Pontos-chave");
-        c.resumoRapido.forEach((item, idx) => {
-          linhas.push(`    ├─ ${idx + 1}. ${item}`);
-        });
-      }
-
-      return linhas.join("\n");
     }
 
-    // --------------------------------------------------------
-    // RENDERIZAÇÃO DO PLANO (lista de sessões)
-    // --------------------------------------------------------
+
+    // ==========================================================
+    // RENDERIZAÇÃO PLANO + WIZARD PREMIUM
+    // ==========================================================
     function renderPlanoResumo(plano) {
       if (!els.plano) return;
       els.plano.innerHTML = "";
@@ -288,517 +272,281 @@
       plano.forEach((p, index) => {
         const div = document.createElement("div");
         div.className = "liora-card-topico";
-        div.style.cursor = "pointer";
         div.dataset.index = index;
+        div.textContent = p.titulo;
 
-        div.textContent = p.titulo || p.nome || `Sessão ${index + 1}`;
-
-        div.addEventListener("mouseenter", () => div.classList.add("hovered"));
-        div.addEventListener("mouseleave", () => div.classList.remove("hovered"));
-
-        div.addEventListener("click", () => {
+        div.onclick = () => {
           document
             .querySelectorAll(".liora-card-topico")
-            .forEach(el => el.classList.remove("active"));
+            .forEach(x => x.classList.remove("active"));
 
           div.classList.add("active");
-
           wizard.atual = index;
           renderWizard();
-          if (els.wizardContainer) {
-            window.scrollTo({
-              top: els.wizardContainer.offsetTop - 20,
-              behavior: "smooth",
-            });
-          }
-        });
+
+          window.scrollTo({
+            top: els.wizardContainer.offsetTop - 20,
+            behavior: "smooth",
+          });
+        };
 
         els.plano.appendChild(div);
       });
     }
 
-    // --------------------------------------------------------
-    // RENDERIZAÇÃO DO WIZARD
-    // --------------------------------------------------------
-    function renderWizard() {
-      if (!els.wizardContainer) return;
 
-      // se não há sessões, garantimos que o box fique escondido
-      if (!wizard.sessoes || !wizard.sessoes.length) {
+    // --------------------------------------------------------------
+    // WIZARD PREMIUM — fade-in + microinterações
+    // --------------------------------------------------------------
+    function renderWizard() {
+      if (!wizard.sessoes.length) {
         els.wizardContainer.classList.add("hidden");
         return;
       }
 
       const s = wizard.sessoes[wizard.atual];
-      if (!s) {
-        els.wizardContainer.classList.add("hidden");
-        return;
-      }
+      if (!s) return;
 
-      // Agora sim: pode mostrar
       els.wizardContainer.classList.remove("hidden");
 
-      if (els.wizardQuizFeedback) {
-        els.wizardQuizFeedback.textContent = "";
-        els.wizardQuizFeedback.style.opacity = 0;
+      // fade premium
+      const card = els.wizardContainer.querySelector(".liora-wizard-card");
+      if (card) {
+        card.classList.remove("visible");
+        setTimeout(() => card.classList.add("visible"), 20);
       }
 
-      if (els.wizardTema) els.wizardTema.textContent = wizard.tema || "";
-      if (els.wizardTitulo) els.wizardTitulo.textContent = s.titulo || "";
-      if (els.wizardObjetivo) els.wizardObjetivo.textContent = s.objetivo || "";
+      els.wizardTema.textContent = wizard.tema;
+      els.wizardTitulo.textContent = s.titulo;
+      els.wizardObjetivo.textContent = s.objetivo;
 
+      // conteúdo
       const c = s.conteudo || {};
-      if (els.wizardConteudo) {
-        els.wizardConteudo.innerHTML = `
-          ${c.introducao ? `
-          <div class="liora-section">
-            <h5>INTRODUÇÃO</h5>
-            <p>${c.introducao}</p>
-          </div>
-          <hr class="liora-divider">` : ""}
+      els.wizardConteudo.innerHTML = `
+        ${c.introducao ? `<p>${c.introducao}</p>` : ""}
+        ${Array.isArray(c.conceitos)
+          ? `<h5>Conceitos</h5><ul>${c.conceitos
+              .map(x => `<li>${x}</li>`)
+              .join("")}</ul>`
+          : ""}
+      `;
 
-          ${Array.isArray(c.conceitos) && c.conceitos.length ? `
-          <div class="liora-section">
-            <h5>CONCEITOS PRINCIPAIS</h5>
-            <ul>${c.conceitos.map(x => `<li>${x}</li>`).join("")}</ul>
-          </div>
-          <hr class="liora-divider">` : ""}
+      els.wizardAnalogias.innerHTML = (s.analogias || [])
+        .map(a => `<p>${a}</p>`)
+        .join("");
 
-          ${Array.isArray(c.exemplos) && c.exemplos.length ? `
-          <div class="liora-section">
-            <h5>EXEMPLOS</h5>
-            <ul>${c.exemplos.map(x => `<li>${x}</li>`).join("")}</ul>
-          </div>
-          <hr class="liora-divider">` : ""}
+      els.wizardAtivacao.innerHTML = (s.ativacao || [])
+        .map(q => `<li>${q}</li>`)
+        .join("");
 
-          ${Array.isArray(c.aplicacoes) && c.aplicacoes.length ? `
-          <div class="liora-section">
-            <h5>APLICAÇÕES</h5>
-            <ul>${c.aplicacoes.map(x => `<li>${x}</li>`).join("")}</ul>
-          </div>
-          <hr class="liora-divider">` : ""}
+      // Quiz
+      els.wizardQuizFeedback.style.opacity = 0;
+      els.wizardQuiz.innerHTML = "";
 
-          ${Array.isArray(c.resumoRapido) && c.resumoRapido.length ? `
-          <div class="liora-section">
-            <h5>RESUMO RÁPIDO</h5>
-            <ul>${c.resumoRapido.map(x => `<li>${x}</li>`).join("")}</ul>
-          </div>` : ""}
-        `;
+      const q = s.quiz || {};
+      if (q.pergunta) {
+        const pergunta = document.createElement("p");
+        pergunta.textContent = q.pergunta;
+        els.wizardQuiz.appendChild(pergunta);
       }
 
-      if (els.wizardAnalogias) {
-        els.wizardAnalogias.innerHTML = (s.analogias || [])
-          .map(a => `<p>${a}</p>`)
-          .join("");
-      }
+      if (Array.isArray(q.alternativas)) {
+        const alternativas = shuffle(
+          q.alternativas.map((alt, i) => ({
+            texto: alt,
+            correta: i === q.corretaIndex,
+          }))
+        );
 
-      if (els.wizardAtivacao) {
-        els.wizardAtivacao.innerHTML = (s.ativacao || [])
-          .map(q => `<li>${q}</li>`)
-          .join("");
-      }
-
-      if (els.wizardQuiz) {
-        els.wizardQuiz.innerHTML = "";
-        const q = s.quiz || {};
-        if (q.pergunta) {
-          const pergunta = document.createElement("p");
-          pergunta.textContent = q.pergunta;
-          els.wizardQuiz.appendChild(pergunta);
-        }
-
-        const alternativas = Array.isArray(q.alternativas)
-          ? shuffle(
-              q.alternativas.map((alt, i) => ({
-                texto: String(alt)
-                  .replace(/\n/g, " ")
-                  .replace(/<\/?[^>]+(>|$)/g, ""),
-                correta: i === Number(q.corretaIndex),
-              }))
-            )
-          : [];
-
-        alternativas.forEach((altObj, idx) => {
+        alternativas.forEach((alt, i) => {
           const opt = document.createElement("label");
           opt.className = "liora-quiz-option";
           opt.innerHTML = `
-            <input type="radio" name="quiz" value="${idx}">
-            <span class="liora-quiz-option-text">${altObj.texto}</span>
+            <input type="radio" name="quiz" value="${i}">
+            <span class="liora-quiz-option-text">${alt.texto}</span>
           `;
 
-          opt.addEventListener("click", () => {
+          opt.onclick = () => {
             document
               .querySelectorAll(".liora-quiz-option")
-              .forEach(o => o.classList.remove("selected"));
-
+              .forEach(x => x.classList.remove("selected"));
             opt.classList.add("selected");
-            opt.querySelector("input").checked = true;
-
-            if (!els.wizardQuizFeedback) return;
-            els.wizardQuizFeedback.style.opacity = 0;
 
             setTimeout(() => {
-              if (altObj.correta) {
-                els.wizardQuizFeedback.textContent =
-                  `✅ Correto! ${q.explicacao || ""}`;
-                els.wizardQuizFeedback.style.color = "var(--brand)";
-              } else {
-                els.wizardQuizFeedback.textContent = "❌ Tente novamente.";
-                els.wizardQuizFeedback.style.color = "var(--muted)";
-              }
-              els.wizardQuizFeedback.style.transition = "opacity .4s ease";
+              els.wizardQuizFeedback.textContent = alt.correta
+                ? `✅ Correto! ${q.explicacao || ""}`
+                : "❌ Tente novamente.";
+
               els.wizardQuizFeedback.style.opacity = 1;
             }, 120);
-          });
+          };
 
           els.wizardQuiz.appendChild(opt);
         });
       }
 
-      if (els.wizardFlashcards) {
-        els.wizardFlashcards.innerHTML = (s.flashcards || [])
-          .map(f => `<li><b>${f.q}</b>: ${f.a}</li>`)
-          .join("");
-      }
+      // Flashcards
+      els.wizardFlashcards.innerHTML = (s.flashcards || [])
+        .map(fc => `<li><b>${fc.q}</b>: ${fc.a}</li>`)
+        .join("");
 
-      if (els.wizardMapa) {
-        const mapa = construirMapaMental(s);
-        els.wizardMapa.textContent =
-          mapa || "Mapa mental gerado a partir desta sessão.";
-      }
+      // Mapa mental
+      els.wizardMapa.textContent =
+        typeof s.mapaMental === "string"
+          ? s.mapaMental
+          : "Mapa mental gerado automaticamente.";
 
-      if (els.wizardProgressBar && wizard.sessoes.length) {
-        els.wizardProgressBar.style.width =
-          `${((wizard.atual + 1) / wizard.sessoes.length) * 100}%`;
-      }
     }
 
-    // --------------------------------------------------------
+
+    // ==========================================================
     // NAVEGAÇÃO DO WIZARD
-    // --------------------------------------------------------
-    if (els.wizardVoltar) {
-      els.wizardVoltar.addEventListener("click", () => {
-        if (wizard.atual > 0) {
-          wizard.atual--;
-          renderWizard();
-          saveProgress();
-        }
-      });
-    }
+    // ==========================================================
+    els.wizardVoltar.onclick = () => {
+      if (wizard.atual > 0) {
+        wizard.atual--;
+        renderWizard();
+        saveProgress();
+      }
+    };
 
-    if (els.wizardProxima) {
-      els.wizardProxima.addEventListener("click", () => {
-        if (wizard.atual < wizard.sessoes.length - 1) {
-          wizard.atual++;
-          renderWizard();
-          saveProgress();
-        } else {
-          atualizarStatus(
-            wizard.origem === "upload" ? "upload" : "tema",
-            "🎉 Tema concluído!",
-            100
-          );
-        }
-      });
-    }
+    els.wizardProxima.onclick = () => {
+      if (wizard.atual < wizard.sessoes.length - 1) {
+        wizard.atual++;
+        renderWizard();
+        saveProgress();
+      } else {
+        alert("🎉 Você concluiu este tema!");
+      }
+    };
 
-    // --------------------------------------------------------
-    // TEMA: PLANO E SESSÕES
-    // --------------------------------------------------------
-    async function gerarPlanoDeSessoesPorTema(tema, nivel) {
-      const prompt = `
-Crie um plano de estudo em sessões para o tema "${tema}" (nível: ${nivel}).
-Retorne JSON puro, por exemplo:
-[
-  {"numero":1, "nome":"Fundamentos do tema"},
-  {"numero":2, "nome":"Conceitos intermediários"},
-  {"numero":3, "nome":"Aplicações práticas"}
-]`;
 
-      const raw = await callLLM(
-        "Você é Liora, especialista em microlearning e design instrucional.",
-        prompt
-      );
-      return safeJsonParse(raw);
-    }
-
-    async function gerarSessaoPorTema(tema, nivel, numero, nome, sessaoAnteriorResumo = null) {
-      const contextoAnterior = sessaoAnteriorResumo
-        ? `Na sessão anterior, o aluno estudou: ${sessaoAnteriorResumo}. Agora avance para "${nome}" sem repetir o que já foi visto.`
-        : `Esta é a primeira sessão do tema "${tema}". Apresente o conteúdo de forma introdutória, mas consistente.`;
-
-      const prompt = `
-${contextoAnterior}
-
-Crie uma sessão de estudo completa para o tema "${tema}", sessão ${numero}, com foco em "${nome}".
-
-Use APENAS JSON puro, com a seguinte estrutura:
-
-{
- "titulo": "Sessão ${numero} — ${nome}",
- "objetivo": "descrição clara do objetivo de aprendizagem da sessão",
- "conteudo": {
-   "introducao": "2 a 3 parágrafos contextualizando o assunto desta sessão",
-   "conceitos": [
-     "conceito 1 explicado em 2 a 3 frases",
-     "conceito 2 explicado em 2 a 3 frases",
-     "conceito 3 explicado em 2 a 3 frases"
-   ],
-   "exemplos": [
-     "exemplo aplicado ao contexto profissional ou acadêmico",
-     "outro exemplo prático"
-   ],
-   "aplicacoes": [
-     "como o aluno pode aplicar o conteúdo desta sessão na prática",
-     "situação realista onde este conhecimento é essencial"
-   ],
-   "resumoRapido": [
-     "ponto-chave 1",
-     "ponto-chave 2",
-     "ponto-chave 3"
-   ]
- },
- "analogias": [
-   "uma analogia com algo do cotidiano",
-   "outra metáfora útil"
- ],
- "ativacao": [
-   "pergunta reflexiva 1",
-   "pergunta 2 mais aplicada"
- ],
- "quiz": {
-   "pergunta": "pergunta de múltipla escolha importante",
-   "alternativas": [
-     "alternativa A",
-     "alternativa B",
-     "alternativa C"
-   ],
-   "corretaIndex": 1,
-   "explicacao": "explique por que a alternativa correta está certa e as demais não estão"
- },
- "flashcards": [
-   {"q": "pergunta objetiva sobre um conceito importante", "a": "resposta direta"},
-   {"q": "outra pergunta de revisão rápida", "a": "resposta direta"}
- ]
-}`;
-
-      const raw = await callLLM(
-        "Você é Liora, tutora especializada em microlearning. Responda apenas JSON válido.",
-        prompt
-      );
-      return safeJsonParse(raw);
-    }
-
+    // ==========================================================
+    // FLUXO POR TEMA (COM LOADING E ERRO GLOBAL)
+    // ==========================================================
     async function fluxoTema(tema, nivel) {
-      if (!els.btnGerar) return;
-      els.btnGerar.disabled = true;
-      wizard.origem = "tema";
-
-      atualizarStatus("tema", "🧩 Criando plano...", 0);
-
       try {
+        lioraLoading.show("Gerando plano por tema...");
+
         const cached = loadProgress(tema, nivel);
-        if (cached && cached.sessoes && cached.sessoes.length) {
+        if (cached) {
           wizard = cached;
           renderPlanoResumo(wizard.plano);
           renderWizard();
-          atualizarStatus("tema", "✅ Plano carregado do histórico.", 100);
+          lioraLoading.hide();
           return;
         }
 
-        const plano = await gerarPlanoDeSessoesPorTema(tema, nivel);
+        const plano = await callLLM(
+          "Você é Liora, especialista em microlearning.",
+          `Crie um plano de estudo em sessões para "${tema}" (nível ${nivel}).`
+        );
 
-        wizard = { tema, nivel, plano: [], sessoes: [], atual: 0, origem: "tema" };
+        const lista = safeJsonParse(plano);
 
-        const planoNorm = plano.map((p, i) => ({
-          numero: p.numero ?? i + 1,
-          nome: p.nome ?? `Sessão ${i + 1}`,
-        }));
-        wizard.plano = planoNorm.map(p => ({
-          titulo: `Sessão ${p.numero} — ${p.nome}`,
-        }));
+        wizard = {
+          tema,
+          nivel,
+          atual: 0,
+          origem: "tema",
+          plano: lista.map((p, i) => ({
+            titulo: p.nome || `Sessão ${i + 1}`,
+          })),
+          sessoes: [],
+        };
+
         renderPlanoResumo(wizard.plano);
 
-        let resumoAnterior = null;
+        // gerar sessões
+        for (let i = 0; i < lista.length; i++) {
+          const p = lista[i];
 
-        for (let i = 0; i < planoNorm.length; i++) {
-          const p = planoNorm[i];
-          atualizarStatus(
-            "tema",
-            `⏳ Sessão ${i + 1}/${planoNorm.length}: ${p.nome}`,
-            ((i + 1) / planoNorm.length) * 100
+          const sRaw = await callLLM(
+            "Você é Liora, gere apenas JSON válido.",
+            `Crie a sessão ${p.numero} — ${p.nome} do tema "${tema}".`
           );
 
-          const sessao = await gerarSessaoPorTema(
-            tema,
-            nivel,
-            p.numero,
-            p.nome,
-            resumoAnterior
-          );
-
-          wizard.sessoes.push(sessao);
-
-          const c = sessao.conteudo || {};
-          const resumoRapido = Array.isArray(c.resumoRapido)
-            ? c.resumoRapido.join("; ")
-            : "";
-          resumoAnterior =
-            (sessao.objetivo || "") +
-            ". " +
-            (c.introducao || "") +
-            (resumoRapido ? " Pontos-chave: " + resumoRapido : "");
-
+          const s = safeJsonParse(sRaw);
+          wizard.sessoes.push(s);
           saveProgress();
         }
 
-        atualizarStatus("tema", "✅ Sessões concluídas!", 100);
         renderWizard();
+        lioraLoading.hide();
+
       } catch (err) {
-        console.error("Erro no fluxoTema:", err);
-        alert("Erro ao gerar plano por tema.");
-        atualizarStatus("tema", "⚠️ Erro ao gerar plano.");
-      } finally {
-        els.btnGerar.disabled = false;
+        console.error(err);
+        lioraLoading.hide();
+        lioraError.show("Falha ao gerar o plano por tema.");
       }
     }
 
-    // --------------------------------------------------------
-    // UPLOAD (Modelo D)
-    // --------------------------------------------------------
+
+    // ==========================================================
+    // FLUXO POR UPLOAD (COM LOADING E ERRO GLOBAL)
+    // ==========================================================
     async function fluxoUpload(file, nivel) {
-      if (!els.btnGerarUpload) return;
-      els.btnGerarUpload.disabled = true;
-      wizard.origem = "upload";
-
       try {
-        if (file.type !== "application/pdf") {
-          alert("Por enquanto a Liora lê apenas PDFs.");
-          return;
-        }
-
-        if (file.size > 12 * 1024 * 1024) {
-          alert("Arquivo muito grande (limite: 12 MB).");
-          return;
-        }
-
-        if (!window.LioraPDFExtractor) {
-          throw new Error("LioraPDFExtractor não encontrado.");
-        }
-        if (!window.LioraPDF) {
-          throw new Error("LioraPDF não encontrado.");
-        }
-        if (!window.LioraOutline) {
-          throw new Error("LioraOutline não encontrado.");
-        }
-
-        atualizarStatus("upload", "📄 Lendo PDF...", 10);
+        lioraLoading.show("Lendo PDF...");
 
         const extrairFn =
-          window.LioraPDFExtractor.extrairBlocos ||
-          window.LioraPDFExtractor.extrairBlocosDoPDF;
-        if (typeof extrairFn !== "function") {
-          throw new Error("Nenhuma função de extração válida em LioraPDFExtractor.");
-        }
+          window.LioraPDFExtractor?.extrairBlocos ||
+          window.LioraPDFExtractor?.extrairBlocosDoPDF;
+
+        if (!extrairFn) throw new Error("Extractor não encontrado");
 
         const blocos = await extrairFn(file);
-        console.log("📄 Blocos extraídos:", blocos);
-        atualizarStatus("upload", "🧱 Montando seções...", 30);
-
         const secoes = window.LioraPDF.construirSecoesAPartirDosBlocos(blocos);
-        console.log("🧱 Seções heurísticas:", secoes);
 
-        if (!secoes || !secoes.length) {
-          atualizarStatus("upload", "⚠️ Não foi possível identificar seções.", 100);
-          alert("Não foi possível identificar seções neste PDF.");
-          return;
+        if (!secoes?.length) {
+          throw new Error("Não foi possível identificar seções no PDF.");
         }
 
-        atualizarStatus("upload", "🧠 Gerando tópicos por seção...", 50);
+        lioraLoading.show("Gerando tópicos...");
         const outlines = await window.LioraOutline.gerarOutlinesPorSecao(secoes);
-        console.log("🧠 Outlines por seção:", outlines);
-
-        atualizarStatus("upload", "📚 Unificando tópicos...", 70);
         const outlineUnificado = window.LioraOutline.unificarOutlines(outlines);
-        console.log("🧠 Outline unificado:", outlineUnificado);
 
-        atualizarStatus("upload", "✏️ Montando sessões completas...", 90);
-        const planoFinal = await window.LioraOutline.gerarPlanoDeEstudo(outlineUnificado);
-        console.log("📘 Plano final (upload):", planoFinal);
-
-        if (!planoFinal || !Array.isArray(planoFinal.sessoes) || !planoFinal.sessoes.length) {
-          atualizarStatus("upload", "⚠️ Não foi possível gerar sessões.", 100);
-          alert("A IA não conseguiu gerar sessões a partir deste PDF.");
-          return;
-        }
+        lioraLoading.show("Gerando sessões...");
+        const plano = await window.LioraOutline.gerarPlanoDeEstudo(outlineUnificado);
 
         wizard = {
           tema: file.name.replace(/\.pdf$/i, ""),
           nivel,
-          plano: planoFinal.sessoes.map(s => ({ titulo: s.titulo || "" })),
-          sessoes: planoFinal.sessoes,
           atual: 0,
           origem: "upload",
+          plano: plano.sessoes.map(s => ({ titulo: s.titulo })),
+          sessoes: plano.sessoes,
         };
 
-        atualizarStatus("upload", "✅ Sessões concluídas!", 100);
         renderPlanoResumo(wizard.plano);
         renderWizard();
+        saveProgress();
+        lioraLoading.hide();
+
       } catch (err) {
-        console.error("Erro no fluxoUpload:", err);
-        alert("Erro ao gerar plano a partir do PDF.");
-        atualizarStatus("upload", "⚠️ Erro ao gerar plano.");
-      } finally {
-        els.btnGerarUpload.disabled = false;
+        console.error(err);
+        lioraLoading.hide();
+        lioraError.show("Erro ao gerar plano a partir do PDF.");
       }
     }
 
-    // --------------------------------------------------------
+
+    // ==========================================================
     // BOTÕES
-    // --------------------------------------------------------
-    if (els.btnGerar) {
-      els.btnGerar.addEventListener("click", () => {
-        const tema = (els.inpTema && els.inpTema.value.trim()) || "";
-        const nivel = els.selNivel ? els.selNivel.value : "iniciante";
+    // ==========================================================
+    els.btnGerar.onclick = () => {
+      const tema = els.inpTema.value.trim();
+      if (!tema) return lioraError.show("Digite um tema para continuar.");
+      fluxoTema(tema, els.selNivel.value);
+    };
 
-        if (!tema) {
-          alert("Digite um tema para gerar o plano.");
-          return;
-        }
+    els.btnGerarUpload.onclick = () => {
+      const file = els.inpFile.files[0];
+      if (!file) return lioraError.show("Selecione um arquivo PDF.");
+      fluxoUpload(file, els.selNivel.value);
+    };
 
-        fluxoTema(tema, nivel);
-      });
-    }
 
-    if (els.btnGerarUpload) {
-      els.btnGerarUpload.addEventListener("click", () => {
-        const file = els.inpFile && els.inpFile.files && els.inpFile.files[0];
-        const nivel = els.selNivel ? els.selNivel.value : "iniciante";
-
-        if (!file) {
-          alert("Selecione um arquivo PDF.");
-          return;
-        }
-
-        fluxoUpload(file, nivel);
-      });
-    }
-
-    // --------------------------------------------------------
-    // ATUALIZA NOME DO ARQUIVO NO UPLOAD
-    // --------------------------------------------------------
-    if (els.inpFile) {
-      els.inpFile.addEventListener("change", e => {
-        const file = e.target.files && e.target.files[0];
-        if (els.uploadText) {
-          els.uploadText.textContent = file
-            ? `Selecionado: ${file.name}`
-            : "Clique ou arraste um arquivo PDF";
-        }
-        if (els.uploadSpinner) els.uploadSpinner.style.display = "none";
-      });
-    }
-
-    console.log("🟢 Liora Core v70-COMMERCIAL-SYNC carregado com sucesso");
+    console.log("🟢 Liora Core Premium carregado.");
   });
 })();
