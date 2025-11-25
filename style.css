@@ -491,4 +491,172 @@ html.light .liora-fab-home {
 #btn-gerar-simulado:active {
   transform: translateY(0px);
 }
+/* ==========================================================
+   ⚡ LOADING GLOBAL PREMIUM
+========================================================== */
+
+.liora-loading {
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity .25s ease;
+}
+
+.liora-loading.hidden {
+  display: none;
+}
+
+.liora-loading-card {
+  background: var(--bgCard);
+  padding: 1.4rem 2rem;
+  border-radius: 1rem;
+  border: 1px solid var(--stroke);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.45);
+  text-align: center;
+  width: 90%;
+  max-width: 320px;
+}
+
+.liora-spinner {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 3px solid var(--stroke);
+  border-top-color: var(--brand);
+  animation: lioraSpin 0.75s linear infinite;
+  margin: 0 auto 1rem;
+}
+
+@keyframes lioraSpin {
+  to { transform: rotate(360deg); }
+}
+
+#liora-loading-text {
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+/* ==========================================================
+   ❌ ERRO GLOBAL PREMIUM
+========================================================== */
+
+.liora-error {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(0,0,0,0.65);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.liora-error.hidden {
+  display: none;
+}
+
+.liora-error-card {
+  width: 90%;
+  max-width: 380px;
+  background: var(--bgCard);
+  padding: 2rem 1.6rem;
+  border-radius: 1.1rem;
+  border: 1px solid var(--stroke);
+  box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+  text-align: center;
+}
+
+.liora-error-icon {
+  font-size: 2.4rem;
+  margin-bottom: 0.8rem;
+}
+
+.liora-error-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin-bottom: 0.4rem;
+}
+
+.liora-error-message {
+  font-size: 0.9rem;
+  opacity: 0.8;
+  margin-bottom: 1.3rem;
+}
+
+.liora-error-actions {
+  display: flex;
+  justify-content: center;
+  gap: 0.7rem;
+}
+/* ==========================================================
+   🧠 WIZARD PREMIUM – TRANSIÇÕES & MICROINTERAÇÕES
+========================================================== */
+
+.liora-wizard-card {
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity .28s ease, transform .28s ease;
+}
+
+.liora-wizard-card.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Rodapé fixo para navegação */
+#liora-sessoes .wizard-footer {
+  position: sticky;
+  bottom: 0;
+  background: var(--bg);
+  padding: 0.8rem 0;
+  margin-top: 1rem;
+  border-top: 1px solid var(--stroke);
+}
+
+/* Botões de navegação */
+#liora-btn-proxima, #liora-btn-voltar {
+  transition: .2s ease;
+}
+
+#liora-btn-proxima:hover, #liora-btn-voltar:hover {
+  transform: translateY(-1px);
+}
+/* ==========================================================
+   ✨ MICROINTERAÇÕES GLOBAIS
+========================================================== */
+
+button, .btn, .btn-secondary, .liora-btn {
+  transition: background .25s ease, transform .2s ease, border-color .25s ease;
+}
+
+button:active, .btn:active, .btn-secondary:active {
+  transform: scale(0.97);
+}
+
+/* Hover brand suave */
+.btn:hover {
+  filter: brightness(1.15);
+}
+
+/* Hover secondary */
+.btn-secondary:hover {
+  background: var(--bgHover);
+  border-color: var(--brand);
+}
+/* ==========================================================
+   🪶 AJUSTES FINOS EM CARDS (SUAVE PREMIUM)
+========================================================== */
+
+.card, .liora-wizard-card, .sim-resultado-card {
+  transition: box-shadow .25s ease, transform .25s ease;
+}
+
+.card:hover, .sim-resultado-card:hover {
+  box-shadow: 0 12px 28px rgba(0,0,0,0.4);
+  transform: translateY(-2px);
+}
 
