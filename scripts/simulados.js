@@ -1,21 +1,21 @@
 // ==============================================================
-// 🧠 LIORA — SIMULADOS v96-IA-PREMIUM-DIA2
-// - Usa IA real via /api/liora para gerar questões
-// - IA-C: seletor de IAs (chips) no modal
-// - IA-D: badges de IA nas questões e resultado
-// - Barra de loading linear enquanto a IA gera as questões
-// - Mantém <u> e <mark> no enunciado (sem markdown)
-// - Remove duplicações de alternativas por conteúdo
-// - Compatível com FAB comercial (#sim-fab)
-// - Timer, navegação, resultado, histórico (localStorage)
-// - 🔥 Integrado ao loading global (lioraLoading)
-// - 🔥 Integrado ao erro global (lioraError)
+// 🧠 LIORA — SIMULADOS v97-IA-PREMIUM-DIA2
+// - IA /api/liora para gerar questões reais
+// - Seletor de IAs auxiliares (C)
+// - Badges de IA (D)
+// - Loading global + progress interno
+// - Timer + navegação
+// - Resultado + salvamento histórico
+// - 🔥 Memória de estudos (auto-preenchimento)
+// - 🔥 Mensagem amigável quando não houver estudos
+// - 🔥 Compatível com FAB + nav-home v72
 // ==============================================================
 
 (function () {
-  console.log("🔵 Liora Simulados v96-IA-PREMIUM-DIA2 carregado...");
+  console.log("🔵 Liora Simulados v97-IA-PREMIUM-DIA2 carregado...");
 
   document.addEventListener("DOMContentLoaded", () => {
+
     // -------------------------------------------------------
     // ELEMENTOS
     // -------------------------------------------------------
@@ -31,7 +31,6 @@
       timer: document.getElementById("sim-timer"),
       progressBar: document.getElementById("sim-progress-bar"),
 
-      // modal
       modal: document.getElementById("sim-modal-backdrop"),
       modalClose: document.getElementById("sim-modal-close-btn"),
       btnIniciar: document.getElementById("sim-modal-iniciar"),
@@ -41,6 +40,8 @@
       selTempo: document.getElementById("sim-modal-tempo"),
       selDif: document.getElementById("sim-modal-dificuldade"),
       inpTema: document.getElementById("sim-modal-tema"),
+
+      avisoEstudos: document.getElementById("sim-modal-aviso-estudos")
     };
 
     if (!els.areaSim || !els.fabSim) {
@@ -48,8 +49,9 @@
       return;
     }
 
+
     // -------------------------------------------------------
-    // CONFIG DE IAs (C/D)
+    // IA CONFIG
     // -------------------------------------------------------
     const IA_CONFIG = {
       banca: {
@@ -58,7 +60,7 @@
         emoji: "🏛️",
         badgeClass: "sim-ia-badge--banca",
         prompt:
-          "ajuste o estilo das questões (vocabulário, pegadinhas, estrutura) para refletir fielmente a banca selecionada.",
+          "ajuste vocabulário, pegadinhas e estrutura para refletir fielmente a banca."
       },
       explica: {
         id: "explica",
@@ -66,7 +68,7 @@
         emoji: "💡",
         badgeClass: "sim-ia-badge--explica",
         prompt:
-          "garanta que cada questão tenha gabarito consistente, com foco didático, permitindo explicações claras se solicitado.",
+          "garanta gabarito consistente e explicações claras, se solicitadas."
       },
       reforco: {
         id: "reforco",
@@ -74,7 +76,7 @@
         emoji: "📈",
         badgeClass: "sim-ia-badge--reforco",
         prompt:
-          "priorize questões que reforcem conceitos centrais do tema e revisem armadilhas comuns do assunto.",
+          "reforce conceitos centrais e armadilhas frequentes."
       },
       historico: {
         id: "historico",
@@ -82,16 +84,17 @@
         emoji: "🧠",
         badgeClass: "sim-ia-badge--historico",
         prompt:
-          "simule adaptação com base em histórico de desempenho, variando levemente o nível de dificuldade.",
+          "adapte levemente a dificuldade com base no histórico."
       },
     };
 
     const iaState = {
-      selecionadas: new Set(["banca", "explica"]), // default
+      selecionadas: new Set(["banca", "explica"])
     };
 
+
     // -------------------------------------------------------
-    // ESTADO GERAL DOS SIMULADOS
+    // ESTADO GERAL
     // -------------------------------------------------------
     const HIST_KEY = "liora:simulados:historico";
 
@@ -108,6 +111,7 @@
       loadingIA: false,
       loadingIntervalID: null,
     };
+
 
     function loadHistorico() {
       try {
@@ -126,17 +130,17 @@
         hist.push(resumo);
         localStorage.setItem(HIST_KEY, JSON.stringify(hist));
       } catch (e) {
-        console.warn("⚠️ Não foi possível salvar histórico de simulados", e);
+        console.warn("⚠️ Erro ao salvar histórico de simulados", e);
       }
     }
 
+
     // -------------------------------------------------------
-    // HELPER: seletor de IA (C)
+    // IA SELECTOR (chips)
     // -------------------------------------------------------
     function setupIaSelector() {
       const modalBody = document.querySelector("#sim-modal-backdrop .sim-modal-body");
       if (!modalBody) return;
-
       if (modalBody.querySelector(".sim-ia-row")) return;
 
       const row = document.createElement("div");
@@ -153,24 +157,25 @@
         const chip = document.createElement("button");
         chip.type = "button";
         chip.className = "sim-ia-option";
-        if (iaState.selecionadas.has(cfg.id)) {
-          chip.classList.add("active");
-        }
+        if (iaState.selecionadas.has(cfg.id)) chip.classList.add("active");
         chip.dataset.iaId = cfg.id;
+
         chip.innerHTML = `
           <span class="emoji">${cfg.emoji}</span>
           <span>${cfg.label}</span>
         `;
-        chip.addEventListener("click", () => {
+
+        chip.onclick = () => {
           if (iaState.selecionadas.has(cfg.id)) {
-            if (iaState.selecionadas.size === 1) return; // nunca zera tudo
+            if (iaState.selecionadas.size === 1) return;
             iaState.selecionadas.delete(cfg.id);
             chip.classList.remove("active");
           } else {
             iaState.selecionadas.add(cfg.id);
             chip.classList.add("active");
           }
-        });
+        };
+
         options.appendChild(chip);
       });
 
@@ -181,8 +186,9 @@
 
     setupIaSelector();
 
+
     // -------------------------------------------------------
-    // BADGES DE IA (D)
+    // Badges IA
     // -------------------------------------------------------
     function renderIaBadges() {
       const selected = Array.from(iaState.selecionadas);
@@ -193,43 +199,45 @@
           ${selected
             .map((id) => {
               const cfg = IA_CONFIG[id];
-              if (!cfg) return "";
-              return `<span class="sim-ia-badge ${cfg.badgeClass}">${cfg.emoji} ${cfg.label}</span>`;
+              return cfg
+                ? `<span class="sim-ia-badge ${cfg.badgeClass}">${cfg.emoji} ${cfg.label}</span>`
+                : "";
             })
             .join("")}
         </span>
       `;
     }
 
+
+    // -------------------------------------------------------
+    // IA PROMPT
+    // -------------------------------------------------------
     function getIaPromptFragment() {
       const selected = Array.from(iaState.selecionadas);
       if (!selected.length) return "";
 
-      const lines = selected
-        .map((id) => IA_CONFIG[id])
-        .filter(Boolean)
-        .map((cfg) => `- Use o modo "${cfg.label}": ${cfg.prompt}`);
-
-      return `
-Além das regras acima, considere que o usuário ativou os seguintes modos de IA auxiliares:
-${lines.join("\n")}
-`;
+      return (
+        "\nAlém das regras acima, considere os modos ativados:\n" +
+        selected
+          .map((id) => IA_CONFIG[id])
+          .filter(Boolean)
+          .map((cfg) => `- "${cfg.label}": ${cfg.prompt}`)
+          .join("\n")
+      );
     }
 
+
     // -------------------------------------------------------
-    // 🔥 OPENAI / LLM HELPER
+    // CHAMADA IA (OpenAI)
     // -------------------------------------------------------
     async function gerarQuestoesIA(banca, qtd, tema, dificuldade) {
-      const iaFragmento = getIaPromptFragment();
+      const extra = getIaPromptFragment();
 
       const prompt = `
-Gere ${qtd} questões originais de concurso da banca ${banca}, tema: "${tema || "tema geral do edital"}".
-Níveis possíveis: fácil, médio, difícil. O simulado solicitado: ${dificuldade}.
+Gere ${qtd} questões originais da banca ${banca} sobre "${tema || "tema geral do edital"}".
+Nível solicitado: ${dificuldade}.
 
-Regras obrigatórias:
-
-1) Retorne APENAS JSON. NUNCA inclua explicações fora do JSON.
-2) Cada questão deve ter esta estrutura mínima:
+Estrutura obrigatória:
 {
   "enunciado": "...",
   "alternativas": ["A...", "B...", "C...", "D..."],
@@ -237,142 +245,129 @@ Regras obrigatórias:
   "nivel": "facil|medio|dificil"
 }
 
-3) Regras de qualidade:
-- NUNCA gere alternativas repetidas, parecidas ou semanticamente equivalentes.
-- Evite alternativas genéricas como "todas as anteriores" ou "nenhuma das anteriores", a menos que realmente faça sentido.
-- Se precisar destacar um trecho, use <u>trecho</u> ou <mark>trecho</mark>.
-- Não use formatação Markdown (*, **, __) no enunciado nem nas alternativas.
-- O enunciado deve ser 100% autossuficiente e não pode depender de imagens.
+Regras:
+- Não use markdown.
+- Sem alternativas duplicadas.
+- Enunciado autossuficiente.
+- Pode usar <u> e <mark>.
+${extra}
 
-${iaFragmento}
-
-Retorne o JSON final com uma lista:
-[
-  {...},
-  {...}
-]
+Retorne somente JSON.
 `;
 
       const res = await fetch("/api/liora", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          system: "Você é Liora, criadora de simulados para concursos, extremamente cuidadosa com a qualidade das questões.",
+          system: "Você é Liora, criadora de simulados premium.",
           user: prompt,
         }),
       });
 
       const json = await res.json().catch(() => ({}));
-      let data = [];
-
-      if (!json || !json.output) {
-        console.warn("⚠ Resposta da IA sem campo output", json);
-        return [];
-      }
+      if (!json || !json.output) return [];
 
       try {
         let raw = json.output;
         const block =
           raw.match(/```json([\s\S]*?)```/i) ||
           raw.match(/```([\s\S]*?)```/i);
-        if (block) {
-          raw = block[1];
-        }
-        const first = raw.search(/[\[\{]/);
-        const lastBrace = raw.lastIndexOf("}");
-        const lastBracket = raw.lastIndexOf("]");
-        const last = Math.max(lastBrace, lastBracket);
-        if (first !== -1 && last > first) {
-          raw = raw.slice(first, last + 1);
-        }
+        if (block) raw = block[1];
 
-        data = JSON.parse(raw);
-      } catch (e) {
-        console.warn("⚠ JSON inválido da IA, tentando fallback bruto.", e);
+        const first = raw.search(/[\[\{]/);
+        const last = Math.max(raw.lastIndexOf("]"), raw.lastIndexOf("}"));
+        raw = raw.slice(first, last + 1);
+
+        return JSON.parse(raw);
+      } catch {
         try {
-          data = JSON.parse(json.output);
+          return JSON.parse(json.output);
         } catch {
-          data = [];
+          return [];
         }
       }
-
-      return Array.isArray(data) ? data : [];
     }
 
+
     // -------------------------------------------------------
-    // AJUSTES DE QUALIDADE (remove duplicações de alternativas)
+    // LIMPEZA DE QUESTÕES
     // -------------------------------------------------------
-    function limparQuestoes(raw) {
-      return raw
+    function limparQuestoes(lista) {
+      return (lista || [])
         .filter((q) => q && q.enunciado && Array.isArray(q.alternativas))
         .map((q, idx) => {
           const seen = new Set();
-          const alternativas = [];
+          const alt = [];
 
-          q.alternativas.forEach((alt) => {
-            if (!alt) return;
-            const original = String(alt).trim();
-            if (!original) return;
-            const norm = original
-              .toLowerCase()
-              .replace(/\s+/g, " ")
-              .replace(/[.,;:!?]/g, "");
-            if (seen.has(norm)) return;
-            seen.add(norm);
-            alternativas.push(original);
+          q.alternativas.forEach((a) => {
+            const o = String(a).trim();
+            const n = o.toLowerCase().replace(/[.,;:!?]/g, "").replace(/\s+/g, " ");
+            if (!seen.has(n)) {
+              seen.add(n);
+              alt.push(o);
+            }
           });
 
-          const letras = ["A", "B", "C", "D", "E", "F"];
-          while (alternativas.length < 4) {
-            const idxAlt = alternativas.length;
-            alternativas.push(`Alternativa ${letras[idxAlt] || idxAlt + 1}`);
-          }
+          while (alt.length < 4) alt.push("Alternativa extra");
 
-          const limpaEnunciado = String(q.enunciado || "")
-            .replace(/[_*~`]/g, "")
-            .replace(/<(?!\/?(u|mark)\b)[^>]+>/gi, "");
+          let ci = Number(q.corretaIndex);
+          if (Number.isNaN(ci) || ci < 0 || ci >= alt.length) ci = 0;
 
-          let corretaIdx = Number(q.corretaIndex);
-          if (Number.isNaN(corretaIdx) || corretaIdx < 0) corretaIdx = 0;
-          if (corretaIdx >= alternativas.length) corretaIdx = alternativas.length - 1;
+          const enun = String(q.enunciado || "").replace(/[_*~`]/g, "");
 
           return {
-            enunciado: limpaEnunciado,
-            alternativas,
-            corretaIndex: corretaIdx,
+            enunciado: enun,
+            alternativas: alt,
+            corretaIndex: ci,
             nivel: q.nivel || "medio",
             indice: idx + 1,
-            resp: null,
+            resp: null
           };
-        })
-        .filter(Boolean);
+        });
     }
 
+
     // -------------------------------------------------------
-    // MODAL — Abrir/Fechar
+    // MODAL (abrir/fechar)
     // -------------------------------------------------------
     function abrirModal() {
       els.modal.classList.add("visible");
+
+      // Pré-preenchimento inteligente
+      if (window.lioraPreFillSimulado) window.lioraPreFillSimulado();
+
+      // Aviso quando não houver estudos
+      if (els.avisoEstudos) {
+        if (!window.lioraEstudos || window.lioraEstudos.lista().length === 0) {
+          els.avisoEstudos.style.display = "block";
+          els.avisoEstudos.textContent =
+            "💡 Dica: Gere um plano de estudos (Tema ou PDF) para que a Liora sugira simulados ideais.";
+        } else {
+          els.avisoEstudos.style.display = "none";
+        }
+      }
     }
+
     function fecharModal() {
       els.modal.classList.remove("visible");
     }
 
     els.fabSim.onclick = abrirModal;
-    if (els.modalClose) els.modalClose.onclick = fecharModal;
+    els.modalClose.onclick = fecharModal;
     els.modal.onclick = (e) => {
       if (e.target === els.modal) fecharModal();
     };
 
-    // -------------------------------------------------------
-    // LOADING DA IA — barra linear + overlay global
-    // -------------------------------------------------------
-    function setIaLoading(ativo) {
-      STATE.loadingIA = ativo;
 
-      if (ativo) {
-        if (window.lioraLoading && typeof window.lioraLoading.show === "function") {
-          const msg = `Gerando questões com IA${
+    // -------------------------------------------------------
+    // LOADING IA + overlay global
+    // -------------------------------------------------------
+    function setIaLoading(active) {
+      STATE.loadingIA = active;
+
+      if (active) {
+        if (window.lioraLoading) {
+          const msg = `Gerando questões${
             STATE.tema ? ` para "${STATE.tema}"` : ""
           }...`;
           window.lioraLoading.show(msg);
@@ -387,88 +382,74 @@ Retorne o JSON final com uma lista:
               <div class="sim-progress w-full mb-1">
                 <div id="sim-ia-loading-bar" class="sim-progress-fill" style="width: 8%;"></div>
               </div>
-              <p class="text-[0.75rem] text-[var(--muted)]">
-                Isso pode levar alguns instantes. As questões serão ajustadas para o estilo da banca e das IAs selecionadas.
-              </p>
             </div>
           `;
         }
-        if (els.nav) els.nav.classList.add("hidden");
-        if (els.resultado) {
-          els.resultado.classList.add("hidden");
-          els.resultado.innerHTML = "";
-        }
 
         let pct = 8;
-        const bar = () => document.getElementById("sim-ia-loading-bar");
         STATE.loadingIntervalID = setInterval(() => {
-          if (!STATE.loadingIA) return;
           pct += Math.random() * 5;
           if (pct > 92) pct = 92;
-          const el = bar();
-          if (el) el.style.width = pct + "%";
+          const bar = document.getElementById("sim-ia-loading-bar");
+          if (bar) bar.style.width = pct + "%";
         }, 400);
+
+        els.nav.classList.add("hidden");
+        els.resultado?.classList.add("hidden");
       } else {
-        if (STATE.loadingIntervalID) {
-          clearInterval(STATE.loadingIntervalID);
-          STATE.loadingIntervalID = null;
-        }
-        if (window.lioraLoading && typeof window.lioraLoading.hide === "function") {
-          window.lioraLoading.hide();
-        }
+        clearInterval(STATE.loadingIntervalID);
+        STATE.loadingIntervalID = null;
+
+        if (window.lioraLoading) window.lioraLoading.hide();
       }
     }
+
 
     // -------------------------------------------------------
     // TIMER
     // -------------------------------------------------------
-    const formatTime = (sec) =>
-      `${String(Math.floor(sec / 60)).padStart(2, "0")}:${String(sec % 60).padStart(2, "0")}`;
+    const fmt = (s) =>
+      `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
 
     function startTimer() {
       STATE.tempoRestante = STATE.tempoMin * 60;
-      if (els.timer) {
-        els.timer.classList.remove("hidden");
-        els.timer.textContent = formatTime(STATE.tempoRestante);
-      }
+      els.timer.textContent = fmt(STATE.tempoRestante);
+      els.timer.classList.remove("hidden");
 
       STATE.timerID = setInterval(() => {
         STATE.tempoRestante--;
-        if (els.timer) {
-          els.timer.textContent = formatTime(Math.max(STATE.tempoRestante, 0));
-        }
-
+        els.timer.textContent = fmt(Math.max(STATE.tempoRestante, 0));
         if (STATE.tempoRestante <= 0) {
           clearInterval(STATE.timerID);
-          STATE.timerID = null;
           finalizarSimulado(true);
         }
       }, 1000);
     }
 
     function stopTimer() {
-      if (STATE.timerID) {
-        clearInterval(STATE.timerID);
-        STATE.timerID = null;
-      }
+      clearInterval(STATE.timerID);
+      STATE.timerID = null;
     }
+
 
     // -------------------------------------------------------
     // RENDER QUESTÃO
     // -------------------------------------------------------
     function renderQuestao() {
       const total = STATE.questoes.length;
-      if (!total || !els.questaoContainer || !els.progressBar) return;
+      if (!total) return;
 
       const q = STATE.questoes[STATE.atual];
 
       els.questaoContainer.innerHTML = "";
-      els.progressBar.style.width = ((STATE.atual + 1) / total) * 100 + "%";
+      els.progressBar.style.width =
+        ((STATE.atual + 1) / total) * 100 + "%";
 
       const header = document.createElement("div");
-      header.className = "flex justify-between items-center text-xs text-[var(--muted)] mb-2";
+      header.className =
+        "flex justify-between items-center text-xs text-[var(--muted)] mb-2";
       header.innerHTML = `
-        <span>Questão ${STATE.atual + 1} de ${total}</span>
+        <span>Questão ${STATE.atual + 1} / ${total}</span>
         ${renderIaBadges()}
       `;
       els.questaoContainer.appendChild(header);
@@ -499,15 +480,12 @@ Retorne o JSON final com uma lista:
 
       els.questaoContainer.appendChild(card);
 
-      if (els.nav) els.nav.classList.remove("hidden");
-      if (els.btnProxima) {
-        els.btnProxima.textContent =
-          STATE.atual === total - 1 ? "Finalizar ▶" : "Próxima ▶";
-      }
-      if (els.btnVoltar) {
-        els.btnVoltar.disabled = STATE.atual === 0;
-      }
+      els.nav.classList.remove("hidden");
+      els.btnProxima.textContent =
+        STATE.atual === total - 1 ? "Finalizar ▶" : "Próxima ▶";
+      els.btnVoltar.disabled = STATE.atual === 0;
     }
+
 
     // -------------------------------------------------------
     // FINALIZAR SIMULADO
@@ -516,55 +494,49 @@ Retorne o JSON final com uma lista:
       stopTimer();
 
       const total = STATE.questoes.length;
-      let acertos = 0;
-      STATE.questoes.forEach((q) => {
-        if (q.resp === q.corretaIndex) acertos++;
-      });
+      const acertos = STATE.questoes.filter(
+        (q) => q.resp === q.corretaIndex
+      ).length;
 
-      const perc = total ? Math.round((acertos / total) * 100) : 0;
-      const tempoTotal = STATE.tempoMin * 60;
-      const tempoUsado = Math.max(0, tempoTotal - STATE.tempoRestante);
-      const tempoFmt = formatTime(tempoUsado);
+      const perc = Math.round((acertos / total) * 100);
 
-      if (els.questaoContainer) els.questaoContainer.innerHTML = "";
-      if (els.nav) els.nav.classList.add("hidden");
+      const tempoUsado =
+        STATE.tempoMin * 60 - STATE.tempoRestante;
 
-      if (els.resultado) {
-        els.resultado.innerHTML = `
-          <div class="sim-resultado-card">
-            <div class="flex justify-between items-start gap-3">
-              <div>
-                <div class="sim-resultado-titulo">Resultado do simulado</div>
-                <p class="text-xs text-[var(--muted)] mb-1">
-                  ${STATE.banca} · ${STATE.tema || "Tema não informado"}
-                </p>
-                <div>${renderIaBadges()}</div>
-              </div>
-              <div class="text-right">
-                <div class="sim-score">${perc}%</div>
-                <p class="text-[0.7rem] text-[var(--muted)]">
-                  ${acertos} acertos em ${total} questões
-                </p>
-              </div>
+      els.questaoContainer.innerHTML = "";
+      els.nav.classList.add("hidden");
+
+      els.resultado.innerHTML = `
+        <div class="sim-resultado-card">
+          <div class="flex justify-between items-start gap-3">
+            <div>
+              <div class="sim-resultado-titulo">Resultado do simulado</div>
+              <p class="text-xs text-[var(--muted)] mb-1">
+                ${STATE.banca} · ${STATE.tema || "Tema não informado"}
+              </p>
+              <div>${renderIaBadges()}</div>
             </div>
-
-            <p class="sim-feedback">
-              Tempo utilizado: ${tempoFmt}${porTempo ? " · Encerrado por tempo." : ""}<br>
-              Este simulado foi gerado em modo beta com IAs auxiliares. Em breve, a Liora vai usar
-              seu histórico real para calibrar ainda mais as questões.
-            </p>
-
-            <div class="mt-4 flex flex-wrap gap-2">
-              <button type="button" id="sim-refazer" class="btn-secondary">Fazer outro simulado</button>
-              <button type="button" id="sim-dashboard" class="btn-primary">Ver meu desempenho</button>
+            <div class="text-right">
+              <div class="sim-score">${perc}%</div>
+              <p class="text-[0.7rem] text-[var(--muted)]">
+                ${acertos} / ${total} questões
+              </p>
             </div>
           </div>
-        `;
 
-        els.resultado.classList.remove("hidden");
-      }
+          <p class="sim-feedback">
+            Tempo: ${fmt(tempoUsado)}${porTempo ? " · Encerrado por tempo." : ""}
+          </p>
 
-      const resumo = {
+          <div class="mt-4 flex flex-wrap gap-2">
+            <button type="button" id="sim-refazer" class="btn-secondary">Fazer outro simulado</button>
+            <button type="button" id="sim-dashboard" class="btn-primary">Ver meu desempenho</button>
+          </div>
+        </div>
+      `;
+      els.resultado.classList.remove("hidden");
+
+      salvarNoHistorico({
         dataISO: new Date().toISOString(),
         banca: STATE.banca,
         tema: STATE.tema,
@@ -572,142 +544,95 @@ Retorne o JSON final com uma lista:
         acertos,
         perc,
         tempoSeg: tempoUsado,
-        ia: Array.from(iaState.selecionadas),
-      };
-      salvarNoHistorico(resumo);
+        ia: Array.from(iaState.selecionadas)
+      });
 
-      const btnRefazer = document.getElementById("sim-refazer");
-      if (btnRefazer) {
-        btnRefazer.onclick = () => window.location.reload();
-      }
-
-      const btnDash = document.getElementById("sim-dashboard");
-      if (btnDash) {
-        btnDash.onclick = () => {
-          if (window.homeDashboard) {
-            window.homeDashboard();
-          } else {
-            window.location.reload();
-          }
-        };
-      }
+      document.getElementById("sim-refazer").onclick = () =>
+        window.location.reload();
+      document.getElementById("sim-dashboard").onclick = () =>
+        window.homeDashboard ? window.homeDashboard() : window.location.reload();
     }
+
 
     // -------------------------------------------------------
     // NAVEGAÇÃO
     // -------------------------------------------------------
-    if (els.btnVoltar) {
-      els.btnVoltar.onclick = () => {
-        if (STATE.atual > 0) {
-          STATE.atual--;
-          renderQuestao();
-        }
-      };
-    }
+    els.btnVoltar.onclick = () => {
+      if (STATE.atual > 0) {
+        STATE.atual--;
+        renderQuestao();
+      }
+    };
 
-    if (els.btnProxima) {
-      els.btnProxima.onclick = () => {
-        if (!STATE.questoes.length) return;
-        if (STATE.atual < STATE.questoes.length - 1) {
-          STATE.atual++;
-          renderQuestao();
-        } else {
-          finalizarSimulado(false);
-        }
-      };
-    }
+    els.btnProxima.onclick = () => {
+      if (STATE.atual < STATE.questoes.length - 1) {
+        STATE.atual++;
+        renderQuestao();
+      } else {
+        finalizarSimulado(false);
+      }
+    };
 
-      // ======================================================
-      // AUTO-PREENCHIMENTO DO MODAL USANDO MEMÓRIA DE ESTUDOS
-      // ======================================================
-      window.lioraPreFillSimulado = function () {
-        if (!window.lioraEstudos) return;
-      
-        const rec = window.lioraEstudos.recomendarSimulado();
-        if (!rec) return;
-      
-        const temaEl = document.getElementById("sim-modal-tema");
-        const qtdEl = document.getElementById("sim-modal-qtd");
-        const difEl = document.getElementById("sim-modal-dificuldade");
-        const bancaEl = document.getElementById("sim-modal-banca");
-      
-        if (temaEl) temaEl.value = rec.tema;
-        if (qtdEl) qtdEl.value = rec.qtd;
-        if (difEl) difEl.value = rec.dificuldade;
-        if (bancaEl) bancaEl.value = rec.banca;
-      };
 
-    
     // -------------------------------------------------------
-    // INICIAR (BOTÃO DO MODAL)
+    // AUTO-PREENCHIMENTO VIA MEMÓRIA (exposto global)
     // -------------------------------------------------------
-    if (els.btnIniciar) {
-      els.btnIniciar.onclick = async () => {
-        if (!els.selBanca || !els.selQtd || !els.selTempo || !els.selDif) return;
+    window.lioraPreFillSimulado = function () {
+      if (!window.lioraEstudos) return;
 
-        STATE.banca = els.selBanca.value || "FGV";
-        STATE.qtd = Number(els.selQtd.value || "10");
-        STATE.tempoMin = Number(els.selTempo.value || "30");
-        STATE.dificuldade = els.selDif.value || "misturado";
-        STATE.tema = els.inpTema ? els.inpTema.value.trim() : "";
+      const rec = window.lioraEstudos.recomendarSimulado();
+      if (!rec) return;
 
-        fecharModal();
+      if (els.inpTema) els.inpTema.value = rec.tema;
+      if (els.selQtd) els.selQtd.value = rec.qtd;
+      if (els.selDif) els.selDif.value = rec.dificuldade;
+      if (els.selBanca) els.selBanca.value = rec.banca;
+    };
 
-        setIaLoading(true);
 
-        try {
-          let raw = await gerarQuestoesIA(
-            STATE.banca,
-            STATE.qtd,
-            STATE.tema,
-            STATE.dificuldade
-          );
+    // -------------------------------------------------------
+    // BTN INICIAR
+    // -------------------------------------------------------
+    els.btnIniciar.onclick = async () => {
+      STATE.banca = els.selBanca.value || "FGV";
+      STATE.qtd = Number(els.selQtd.value || "10");
+      STATE.tempoMin = Number(els.selTempo.value || "30");
+      STATE.dificuldade = els.selDif.value || "misturado";
+      STATE.tema = els.inpTema.value.trim();
 
-          const limpas = limparQuestoes(raw);
+      fecharModal();
+      setIaLoading(true);
 
-          if (!limpas.length) {
-            if (els.questaoContainer) {
-              els.questaoContainer.innerHTML = `
-                <p class="text-sm text-[var(--muted)]">
-                  Não foi possível gerar questões com a IA neste momento. Tente novamente em instantes.
-                </p>
-              `;
-            }
-            setIaLoading(false);
-            if (window.lioraError && typeof window.lioraError.show === "function") {
-              window.lioraError.show("Não foi possível gerar questões com a IA neste momento. Tente novamente em instantes.");
-            }
-            return;
-          }
+      try {
+        let raw = await gerarQuestoesIA(
+          STATE.banca,
+          STATE.qtd,
+          STATE.tema,
+          STATE.dificuldade
+        );
 
-          STATE.questoes = limpas;
-          STATE.atual = 0;
-
-          if (els.resultado) {
-            els.resultado.classList.add("hidden");
-            els.resultado.innerHTML = "";
-          }
-
+        const limpas = limparQuestoes(raw);
+        if (!limpas.length) {
+          els.questaoContainer.innerHTML =
+            `<p class="text-sm text-[var(--muted)]">A IA não conseguiu gerar questões agora. Tente novamente.</p>`;
           setIaLoading(false);
-          renderQuestao();
-          startTimer();
-        } catch (e) {
-          console.error("❌ Erro ao gerar questões IA", e);
-          setIaLoading(false);
-          if (els.questaoContainer) {
-            els.questaoContainer.innerHTML = `
-              <p class="text-sm text-red-400">
-                Ocorreu um erro ao falar com a IA. Verifique sua conexão e tente novamente.
-              </p>
-            `;
-          }
-          if (window.lioraError && typeof window.lioraError.show === "function") {
-            window.lioraError.show("Ocorreu um erro ao gerar o simulado com a IA. Tente novamente em instantes.");
-          }
+          window.lioraError?.show("Não foi possível gerar questões. Tente novamente em instantes.");
+          return;
         }
-      };
-    }
 
-    console.log("🟢 Liora Simulados IA v96-PREMIUM-DIA2 inicializado.");
+        STATE.questoes = limpas;
+        STATE.atual = 0;
+
+        setIaLoading(false);
+        renderQuestao();
+        startTimer();
+      } catch (e) {
+        console.error("❌ Erro ao gerar questões IA", e);
+        setIaLoading(false);
+        window.lioraError?.show("Erro ao gerar simulado com IA. Tente novamente.");
+      }
+    };
+
+    console.log("🟢 Liora Simulados v97 inicializado.");
   });
 })();
