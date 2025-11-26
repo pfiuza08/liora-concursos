@@ -186,6 +186,10 @@
       if (window.lioraLoading?.hide) window.lioraLoading.hide();
       if (window.lioraError?.hide) window.lioraError.hide();
 
+      // Atualiza estudos recentes quando volta ao início
+      if (window.homeLoadEstudos) window.homeLoadEstudos();
+
+
       console.log("🧹✨ Reset completo FINALIZADO!");
     };
 
