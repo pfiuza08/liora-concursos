@@ -617,6 +617,27 @@ Retorne o JSON final com uma lista:
       };
     }
 
+      // ======================================================
+      // AUTO-PREENCHIMENTO DO MODAL USANDO MEMÓRIA DE ESTUDOS
+      // ======================================================
+      window.lioraPreFillSimulado = function () {
+        if (!window.lioraEstudos) return;
+      
+        const rec = window.lioraEstudos.recomendarSimulado();
+        if (!rec) return;
+      
+        const temaEl = document.getElementById("sim-modal-tema");
+        const qtdEl = document.getElementById("sim-modal-qtd");
+        const difEl = document.getElementById("sim-modal-dificuldade");
+        const bancaEl = document.getElementById("sim-modal-banca");
+      
+        if (temaEl) temaEl.value = rec.tema;
+        if (qtdEl) qtdEl.value = rec.qtd;
+        if (difEl) difEl.value = rec.dificuldade;
+        if (bancaEl) bancaEl.value = rec.banca;
+      };
+
+    
     // -------------------------------------------------------
     // INICIAR (BOTÃO DO MODAL)
     // -------------------------------------------------------
