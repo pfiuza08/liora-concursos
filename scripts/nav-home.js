@@ -247,22 +247,28 @@
     // ------------------------------------------------------
     // HOME → SIMULADOS
     // ------------------------------------------------------
-    function goSimulados() {
-      showApp();
-      hideAllPanels();
+  function goSimulados() {
+  showApp();
+  hideAllPanels();
 
-      areaSimulado?.classList.remove("hidden");
+  areaSimulado?.classList.remove("hidden");
 
-      setView(
-        "Simulados inteligentes",
-        "Monte simulados com IA por banca, tema e dificuldade."
-      );
+  setView(
+    "Simulados inteligentes",
+    "Monte simulados com IA por banca, tema e dificuldade."
+  );
 
-      window.showSimFab();
-      window.showFabHome();
+  window.showSimFab();
+  window.showFabHome();
+
+  // 🔥 Aguarda interface montar e pré-preenche simulados
+  setTimeout(() => {
+    if (window.lioraPreFillSimulado) {
+      window.lioraPreFillSimulado();
     }
+  }, 150);
+}
 
-    btnHomeSimulados?.addEventListener("click", goSimulados);
 
     // ------------------------------------------------------
     // HOME → DASHBOARD
