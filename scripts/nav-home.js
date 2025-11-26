@@ -1,19 +1,20 @@
 // ==========================================================
-// 🧭 LIORA — NAV-HOME v75-COMMERCIAL-SYNC-IA-PREMIUM-ESTUDOS
+// 🧭 LIORA — NAV-HOME v76-COMMERCIAL-SYNC-IA-PREMIUM-ESTUDOS
 // ----------------------------------------------------------
 // Inclui:
 // ✔ Reset total (lioraHardReset)
 // ✔ Prefill automático de simulados (lioraPreFillSimulado)
 // ✔ Memória de estudos integrada (lioraEstudos)
-// ✔ Botão Início sempre começa do ZERO
+// ✔ Botão Início sempre visível e funcional
 // ✔ Home Inteligente (Continuar Estudo)
 // ✔ Continue Study Engine (Modo Inteligente)
 // ✔ Jump automático para sessão correta
 // ✔ Sincronização com core.js / estudos.js
+// ✔ Correção de FAB Home invisível
 // ==========================================================
 
 (function () {
-  console.log("🔵 nav-home.js (v75) carregado...");
+  console.log("🔵 nav-home.js (v76) carregado...");
 
   document.addEventListener("DOMContentLoaded", () => {
 
@@ -58,6 +59,9 @@
     function showApp() {
       home?.classList.add("hidden");
       app?.classList.remove("hidden");
+
+      // Ao entrar no APP, FAB deve estar visível
+      window.showFabHome();
     }
 
     function showHome() {
@@ -66,6 +70,9 @@
 
       if (viewTitle) viewTitle.textContent = "";
       if (viewSubtitle) viewSubtitle.textContent = "";
+
+      // ⭐ FAB sempre visível na Home
+      window.showFabHome();
     }
 
     function hideAllPanels() {
@@ -90,7 +97,6 @@
       hideAllPanels();
       showHome();
       window.hideSimFab();
-      window.hideFabHome();
 
       // LIMPA PLANO
       const plano = document.getElementById("plano");
@@ -147,8 +153,14 @@
       // Atualiza home inteligente
       atualizarHomeEstudo();
 
+      // ⭐ Garante FAB funcional após reset
+      window.showFabHome();
+
       console.log("🧹✨ Reset completo FINALIZADO!");
     };
+
+    // FAB HOME → sempre reset total
+    fabHome?.addEventListener("click", () => window.lioraHardReset());
 
     // ------------------------------------------------------
     // ⭐ CONTINUE STUDY ENGINE — MODO INTELIGENTE
@@ -163,22 +175,20 @@
 
         const sessoes = plano.sessoes;
 
-        // Sessão inteligente: primeiro progresso < 100%
+        // alvo é a primeira sessão NÃO concluída
         let alvo = sessoes.find(s => Number(s.progresso || 0) < 100);
-        if (!alvo) alvo = sessoes[sessoes.length - 1]; // fallback
+        if (!alvo) alvo = sessoes[sessoes.length - 1];
 
-        if (!alvo) return;
+        const index = Number(alvo.ordem || 1) - 1;
 
-        const index = Number(alvo.ordem || alvo.index || 1) - 1;
-
-        // Abre painel correspondente
+        // abre painel correto
         if (plano.origem === "tema") {
           btnHomeTema?.click();
         } else {
           btnHomeUpload?.click();
         }
 
-        // Aguarda UI
+        // jump após renderizar UI
         setTimeout(() => {
           if (window.lioraIrParaSessao) {
             window.lioraIrParaSessao(index);
@@ -194,9 +204,7 @@
     // CONTINUAR ESTUDO — Listener
     // ------------------------------------------------------
     if (btnContinue) {
-      btnContinue.addEventListener("click", () => {
-        window.lioraContinueStudy();
-      });
+      btnContinue.addEventListener("click", () => window.lioraContinueStudy());
     }
 
     // ------------------------------------------------------
@@ -205,6 +213,7 @@
     function atualizarHomeEstudo() {
       try {
         const sm = window.lioraEstudos;
+
         if (!sm?.getPlanoAtivo) return;
 
         const plano = sm.getPlanoAtivo();
@@ -316,7 +325,8 @@
     // ------------------------------------------------------
     window.lioraHardReset();
     atualizarHomeEstudo();
+    window.showFabHome(); // ⭐ garantir FAB ativo
 
-    console.log("🟢 nav-home.js v75 OK");
+    console.log("🟢 nav-home.js v76 OK");
   });
 })();
