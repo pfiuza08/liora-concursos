@@ -189,6 +189,13 @@
       // Atualiza estudos recentes quando volta ao início
       if (window.homeLoadEstudos) window.homeLoadEstudos();
 
+      const box = document.getElementById("liora-estudos-recentes");
+if (box) box.classList.add("hidden");
+
+const list = document.getElementById("liora-estudos-list");
+if (list) list.innerHTML = "";
+
+
 
       console.log("🧹✨ Reset completo FINALIZADO!");
     };
