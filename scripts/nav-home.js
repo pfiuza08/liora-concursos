@@ -33,6 +33,58 @@
 
     const viewTitle = document.getElementById("liora-view-title");
     const viewSubtitle = document.getElementById("liora-view-subtitle");
+    
+
+      // ======================================================
+      // ESTUDOS RECENTES NA HOME
+      // ======================================================
+      window.homeLoadEstudos = function () {
+        const box = document.getElementById("liora-estudos-recentes");
+        const list = document.getElementById("liora-estudos-list");
+      
+        if (!box || !list || !window.lioraEstudos) return;
+      
+        const recentes = window.lioraEstudos.getRecentes(5);
+      
+        list.innerHTML = "";
+      
+        if (!recentes.length) {
+          box.classList.add("hidden");
+          return;
+        }
+      
+        box.classList.remove("hidden");
+      
+        recentes.forEach((rec) => {
+          const div = document.createElement("div");
+          div.className = "p-3 rounded-lg bg-[var(--card)] cursor-pointer hover:bg-[var(--card-hover)]";
+      
+          div.innerHTML = `
+            <div class="font-semibold">${rec.tema}</div>
+            <div class="text-xs text-[var(--muted)]">
+              ${rec.nivel} · ${rec.sessoesConcluidas}/${rec.sessoesTotal} sessões · ${
+                rec.origem === "tema" ? "Tema" : "Upload"
+              }
+            </div>
+          `;
+      
+          div.addEventListener("click", () => {
+            // abrir painel TEMAS/UPLOAD conforme origem
+            if (rec.origem === "tema") {
+              document.getElementById("home-tema")?.click();
+              setTimeout(() => {
+                const input = document.getElementById("inp-tema");
+                if (input) input.value = rec.tema;
+              }, 150);
+            } else {
+              document.getElementById("home-upload")?.click();
+            }
+          });
+      
+          list.appendChild(div);
+        });
+      };
+  
 
     // ------------------------------------------------------
     // FAB helpers
