@@ -1,17 +1,15 @@
 // ==========================================================
-// 🧭 LIORA — NAV-HOME v73-COMMERCIAL-SYNC-IA-PREMIUM-RESET-ESTUDOS
+// 🧭 LIORA — NAV-HOME v74-COMMERCIAL-STUDY-MANAGER
 // ----------------------------------------------------------
-// Inclui:
 // ✔ Reset total (lioraHardReset)
 // ✔ Prefill automático de simulados (lioraPreFillSimulado)
-// ✔ Memória de estudos integrada (lioraEstudos)
-// ✔ Botão Início sempre começa do ZERO
-// ✔ Limpeza de plano, wizard, simulados, dashboard, modais
-// ✔ Evita telas “fantasmas” e vazamento de estado
+// ✔ Integração REAL com StudyManager (continuar estudo)
+// ✔ Home inteligente: progresso + próxima sessão
+// ✔ Botão Continuar Estudo
 // ==========================================================
 
 (function () {
-  console.log("🔵 nav-home.js (v73) carregado...");
+  console.log("🔵 nav-home.js (v74) carregado...");
 
   document.addEventListener("DOMContentLoaded", () => {
 
@@ -39,6 +37,10 @@
     const viewTitle = document.getElementById("liora-view-title");
     const viewSubtitle = document.getElementById("liora-view-subtitle");
 
+    // NOVOS ELEMENTOS (Home inteligente)
+    const btnContinuar = document.getElementById("home-continuar-estudo");
+    const lblResumo = document.getElementById("home-resumo-estudo");
+
     // ------------------------------------------------------
     // FAB helpers
     // ------------------------------------------------------
@@ -61,6 +63,8 @@
 
       if (viewTitle) viewTitle.textContent = "";
       if (viewSubtitle) viewSubtitle.textContent = "";
+
+      atualizarHomeEstudo(); // ← inteligência da Home
     }
 
     function hideAllPanels() {
@@ -87,7 +91,7 @@
       window.hideSimFab();
       window.hideFabHome();
 
-      // LIMPA PLANO
+      // LIMPA PLANO VISUAL (não apaga o estudo no Study Manager)
       const plano = document.getElementById("plano");
       if (plano) plano.innerHTML = "";
 
@@ -184,7 +188,7 @@
     });
 
     // ------------------------------------------------------
-    // HOME → SIMULADOS  (com prefill automático)
+    // HOME → SIMULADOS
     // ------------------------------------------------------
     function goSimulados() {
       showApp();
@@ -200,7 +204,7 @@
       window.showSimFab();
       window.showFabHome();
 
-      // 🔥 Preenchimento automático (memória de estudos)
+      // Prefill automático
       setTimeout(() => {
         if (window.lioraPreFillSimulado) {
           window.lioraPreFillSimulado();
@@ -230,15 +234,80 @@
     }
 
     btnHomeDashboard?.addEventListener("click", goDashboard);
-
-    // Exposto globalmente
     window.homeDashboard = goDashboard;
+
+    // ------------------------------------------------------
+    // 🧠 HOME INTELIGENTE (Study Manager)
+    // ------------------------------------------------------
+    function atualizarHomeEstudo() {
+      if (!window.lioraEstudos || (!btnContinuar && !lblResumo)) return;
+
+      const hasPlan =
+        typeof window.lioraEstudos.hasPlan === "function"
+          ? window.lioraEstudos.hasPlan()
+          : false;
+
+      if (!hasPlan) {
+        if (btnContinuar) btnContinuar.classList.add("hidden");
+        if (lblResumo)
+          lblResumo.textContent = "Crie um plano de estudo para começar.";
+        return;
+      }
+
+      // Exibe botão e resumo
+      if (btnContinuar) btnContinuar.classList.remove("hidden");
+
+      const plan = window.lioraEstudos.getPlan();
+      const pct = window.lioraEstudos.getProgressPercent();
+      const prox = window.lioraEstudos.getNextSession();
+
+      if (lblResumo) {
+        lblResumo.textContent =
+          `Tema: ${plan.tema} • Progresso: ${pct}%` +
+          (prox ? ` • Próxima sessão: ${prox.titulo || prox.nome}` : "");
+      }
+    }
+
+    // Atualiza sempre que o estudo for alterado
+    window.addEventListener("liora:plan-updated", atualizarHomeEstudo);
+
+    // HOME → Continuar Estudo
+    if (btnContinuar) {
+      btnContinuar.addEventListener("click", () => {
+        if (!window.lioraEstudos) return;
+
+        const plan = window.lioraEstudos.getPlan();
+        const prox = window.lioraEstudos.getNextSession();
+
+        // Decide painel
+        const origem = plan.origem || "tema";
+        if (origem === "upload") {
+          showApp();
+          hideAllPanels();
+          painelEstudo?.classList.remove("hidden");
+          painelUpload?.classList.remove("hidden");
+        } else {
+          showApp();
+          hideAllPanels();
+          painelEstudo?.classList.remove("hidden");
+          painelTema?.classList.remove("hidden");
+        }
+
+        // Abre sessão no Wizard
+        if (prox && prox.id && typeof window.lioraWizardOpenSession === "function") {
+          window.lioraWizardOpenSession(prox.id);
+        }
+
+        setView("Continuar estudo", prox?.titulo || prox?.nome || "");
+      });
+    }
 
     // ------------------------------------------------------
     // ESTADO INICIAL
     // ------------------------------------------------------
     window.lioraHardReset();
+    atualizarHomeEstudo();
 
-    console.log("🟢 nav-home.js v73 OK");
+    console.log("🟢 nav-home.js v74 OK");
   });
 })();
