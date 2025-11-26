@@ -196,6 +196,10 @@
       fabHome.addEventListener("click", () => {
         window.lioraHardReset();
       });
+
+     // Atualiza estudos recentes quando volta ao início
+     if (window.homeLoadEstudos) window.homeLoadEstudos();
+     
     }
 
     // ------------------------------------------------------
@@ -284,6 +288,7 @@
     // ESTADO INICIAL
     // ------------------------------------------------------
     window.lioraHardReset();
+    window.homeLoadEstudos();
 
     console.log("🟢 nav-home.js v72 OK");
   });
