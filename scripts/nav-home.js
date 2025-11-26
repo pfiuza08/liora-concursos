@@ -1,18 +1,23 @@
 // ==========================================================
-// 🧭 LIORA — NAV-HOME v72-COMMERCIAL-SYNC-IA-PREMIUM-RESET
+// 🧭 LIORA — NAV-HOME v73-COMMERCIAL-SYNC-IA-PREMIUM-RESET-ESTUDOS
 // ----------------------------------------------------------
-// Agora inclui:
+// Inclui:
 // ✔ Reset total (lioraHardReset)
+// ✔ Prefill automático de simulados (lioraPreFillSimulado)
+// ✔ Memória de estudos integrada (lioraEstudos)
 // ✔ Botão Início sempre começa do ZERO
-// ✔ Limpa plano, wizard, simulados, dashboard, modais, loaders
+// ✔ Limpeza de plano, wizard, simulados, dashboard, modais
 // ✔ Evita telas “fantasmas” e vazamento de estado
 // ==========================================================
 
 (function () {
-  console.log("🔵 nav-home.js (v72-COMMERCIAL-SYNC-IA-PREMIUM-RESET) carregado...");
+  console.log("🔵 nav-home.js (v73) carregado...");
 
   document.addEventListener("DOMContentLoaded", () => {
 
+    // ------------------------------------------------------
+    // ELEMENTOS
+    // ------------------------------------------------------
     const home = document.getElementById("liora-home");
     const app = document.getElementById("liora-app");
 
@@ -33,58 +38,6 @@
 
     const viewTitle = document.getElementById("liora-view-title");
     const viewSubtitle = document.getElementById("liora-view-subtitle");
-    
-
-      // ======================================================
-      // ESTUDOS RECENTES NA HOME
-      // ======================================================
-      window.homeLoadEstudos = function () {
-        const box = document.getElementById("liora-estudos-recentes");
-        const list = document.getElementById("liora-estudos-list");
-      
-        if (!box || !list || !window.lioraEstudos) return;
-      
-        const recentes = window.lioraEstudos.getRecentes(5);
-      
-        list.innerHTML = "";
-      
-        if (!recentes.length) {
-          box.classList.add("hidden");
-          return;
-        }
-      
-        box.classList.remove("hidden");
-      
-        recentes.forEach((rec) => {
-          const div = document.createElement("div");
-          div.className = "p-3 rounded-lg bg-[var(--card)] cursor-pointer hover:bg-[var(--card-hover)]";
-      
-          div.innerHTML = `
-            <div class="font-semibold">${rec.tema}</div>
-            <div class="text-xs text-[var(--muted)]">
-              ${rec.nivel} · ${rec.sessoesConcluidas}/${rec.sessoesTotal} sessões · ${
-                rec.origem === "tema" ? "Tema" : "Upload"
-              }
-            </div>
-          `;
-      
-          div.addEventListener("click", () => {
-            // abrir painel TEMAS/UPLOAD conforme origem
-            if (rec.origem === "tema") {
-              document.getElementById("home-tema")?.click();
-              setTimeout(() => {
-                const input = document.getElementById("inp-tema");
-                if (input) input.value = rec.tema;
-              }, 150);
-            } else {
-              document.getElementById("home-upload")?.click();
-            }
-          });
-      
-          list.appendChild(div);
-        });
-      };
-  
 
     // ------------------------------------------------------
     // FAB helpers
@@ -124,7 +77,7 @@
     }
 
     // ------------------------------------------------------
-    // 🔥 RESET TOTAL (botão INÍCIO)
+    // 🔥 RESET TOTAL
     // ------------------------------------------------------
     window.lioraHardReset = function () {
       console.log("🧹✨ Reset completo iniciado...");
@@ -138,14 +91,14 @@
       const plano = document.getElementById("plano");
       if (plano) plano.innerHTML = "";
 
-      // LINPA STATUS
+      // STATUS
       const status = document.getElementById("status");
       if (status) status.textContent = "";
 
       const statusUpload = document.getElementById("status-upload");
       if (statusUpload) statusUpload.textContent = "";
 
-      // LIMPA BARRAS
+      // BARRAS
       const barraTema = document.getElementById("barra-tema-fill");
       if (barraTema) barraTema.style.width = "0%";
 
@@ -182,36 +135,15 @@
       const modal = document.getElementById("sim-modal-backdrop");
       if (modal) modal.classList.remove("visible");
 
-      // FECHA ERRO E LOADING
+      // FECHA LOADING / ERRO
       if (window.lioraLoading?.hide) window.lioraLoading.hide();
       if (window.lioraError?.hide) window.lioraError.hide();
-
-      // Atualiza estudos recentes quando volta ao início
-      if (window.homeLoadEstudos) window.homeLoadEstudos();
-
-      const box = document.getElementById("liora-estudos-recentes");
-if (box) box.classList.add("hidden");
-
-const list = document.getElementById("liora-estudos-list");
-if (list) list.innerHTML = "";
-
-
 
       console.log("🧹✨ Reset completo FINALIZADO!");
     };
 
-    // ------------------------------------------------------
-    // Botão FAB HOME chama RESET TOTAL
-    // ------------------------------------------------------
-    if (fabHome) {
-      fabHome.addEventListener("click", () => {
-        window.lioraHardReset();
-      });
-
-     // Atualiza estudos recentes quando volta ao início
-     if (window.homeLoadEstudos) window.homeLoadEstudos();
-     
-    }
+    // FAB HOME → sempre reset total
+    fabHome?.addEventListener("click", () => window.lioraHardReset());
 
     // ------------------------------------------------------
     // HOME → TEMA
@@ -252,30 +184,31 @@ if (list) list.innerHTML = "";
     });
 
     // ------------------------------------------------------
-    // HOME → SIMULADOS
+    // HOME → SIMULADOS  (com prefill automático)
     // ------------------------------------------------------
-  function goSimulados() {
-  showApp();
-  hideAllPanels();
+    function goSimulados() {
+      showApp();
+      hideAllPanels();
 
-  areaSimulado?.classList.remove("hidden");
+      areaSimulado?.classList.remove("hidden");
 
-  setView(
-    "Simulados inteligentes",
-    "Monte simulados com IA por banca, tema e dificuldade."
-  );
+      setView(
+        "Simulados inteligentes",
+        "Monte simulados com IA por banca, tema e dificuldade."
+      );
 
-  window.showSimFab();
-  window.showFabHome();
+      window.showSimFab();
+      window.showFabHome();
 
-  // 🔥 Aguarda interface montar e pré-preenche simulados
-  setTimeout(() => {
-    if (window.lioraPreFillSimulado) {
-      window.lioraPreFillSimulado();
+      // 🔥 Preenchimento automático (memória de estudos)
+      setTimeout(() => {
+        if (window.lioraPreFillSimulado) {
+          window.lioraPreFillSimulado();
+        }
+      }, 150);
     }
-  }, 150);
-}
 
+    btnHomeSimulados?.addEventListener("click", goSimulados);
 
     // ------------------------------------------------------
     // HOME → DASHBOARD
@@ -298,15 +231,14 @@ if (list) list.innerHTML = "";
 
     btnHomeDashboard?.addEventListener("click", goDashboard);
 
-    // Exposto globalmente para simulados.js
+    // Exposto globalmente
     window.homeDashboard = goDashboard;
 
     // ------------------------------------------------------
     // ESTADO INICIAL
     // ------------------------------------------------------
     window.lioraHardReset();
-    window.homeLoadEstudos();
 
-    console.log("🟢 nav-home.js v72 OK");
+    console.log("🟢 nav-home.js v73 OK");
   });
 })();
