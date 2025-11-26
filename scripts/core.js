@@ -1,5 +1,5 @@
 // ==========================================================
-// 🧠 LIORA — CORE v70-COMMERCIAL-PREMIUM-DIA2
+// 🧠 LIORA — CORE v71-COMMERCIAL-PREMIUM-DIA2-ESTUDOS
 // - Compatível com index.html comercial atual
 // - Tema: plano + sessões completas (cache localStorage)
 // - Upload: Modelo D (outline + sessões a partir do PDF)
@@ -7,10 +7,12 @@
 // - Loading global (overlay) e Erro global (overlay)
 // - Status + barras de progresso (tema / upload)
 // - Integração total com nav-home.js / simulados / dashboard
+// - 🆕 Memória de estudos (window.lioraEstudos)
+// - 🆕 Prefill de simulados (window.lioraPreFillSimulado)
 // ==========================================================
 
 (function () {
-  console.log("🔵 Inicializando Liora Core v70-COMMERCIAL-PREMIUM-DIA2...");
+  console.log("🔵 Inicializando Liora Core v71-COMMERCIAL-PREMIUM-DIA2-ESTUDOS...");
 
   document.addEventListener("DOMContentLoaded", () => {
 
@@ -37,7 +39,7 @@
       };
 
       const errorEl = document.getElementById("liora-error");
-      const errorMsgEl = document.getElementById("liora-error-message");
+      const errorMsgEl = document.getElementElementById?.("liora-error-message") || document.getElementById("liora-error-message");
       const btnRetry = document.getElementById("liora-error-retry");
       const btnBack = document.getElementById("liora-error-back");
 
@@ -65,7 +67,6 @@
       if (btnBack) {
         btnBack.addEventListener("click", () => {
           window.lioraError.hide();
-          // usa a própria navegação da home
           const fabHome = document.getElementById("fab-home");
           if (fabHome) fabHome.click();
         });
@@ -141,7 +142,7 @@
     };
 
     const key = (tema, nivel) =>
-      `liora:wizard:${tema.toLowerCase()}::${(nivel || "").toLowerCase()}`;
+      `liora:wizard:${(tema || "").toLowerCase()}::${(nivel || "").toLowerCase()}`;
 
     const saveProgress = () => {
       if (!wizard.tema || !wizard.nivel) return;
@@ -189,6 +190,156 @@
         apply(newTheme);
       });
     })();
+
+    // --------------------------------------------------------
+    // 🧠 MEMÓRIA DE ESTUDOS (localStorage)
+    // --------------------------------------------------------
+    (function setupEstudosMemory() {
+      const STORAGE_KEY = "liora:estudos:memoria";
+
+      function loadMem() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (!raw) return { temas: [] };
+          const parsed = JSON.parse(raw);
+          if (!parsed || typeof parsed !== "object") return { temas: [] };
+          if (!Array.isArray(parsed.temas)) parsed.temas = [];
+          return parsed;
+        } catch {
+          return { temas: [] };
+        }
+      }
+
+      function saveMem(data) {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        } catch (e) {
+          console.warn("⚠️ Não foi possível salvar memória de estudos", e);
+        }
+      }
+
+      const api = {
+        /**
+         * Registra ou atualiza um "tema estudado"
+         * opts: { origem, tema, nivel, sessoes, totalSessoes, concluido }
+         */
+        registrarTema(opts) {
+          const origem = opts.origem || "tema";
+          const tema = (opts.tema || "").trim();
+          const nivel = opts.nivel || "iniciante";
+          const sessoes = Number(opts.sessoes || 0);
+          const totalSessoes = Number(opts.totalSessoes || sessoes || 0);
+          const concluido = !!opts.concluido;
+
+          if (!tema) return;
+
+          const data = loadMem();
+          const arr = data.temas || [];
+          const now = new Date().toISOString();
+
+          const idx = arr.findIndex(
+            (t) =>
+              (t.tema || "").toLowerCase() === tema.toLowerCase() &&
+              (t.nivel || "") === nivel
+          );
+
+          const base = {
+            origem,
+            tema,
+            nivel,
+            sessoes,
+            totalSessoes,
+            concluido,
+            ultimaAtualizacaoISO: now,
+          };
+
+          if (idx >= 0) {
+            arr[idx] = {
+              ...arr[idx],
+              ...base,
+              sessoes: Math.max(arr[idx].sessoes || 0, sessoes),
+              totalSessoes: Math.max(arr[idx].totalSessoes || 0, totalSessoes),
+              concluido: arr[idx].concluido || concluido,
+              ultimaAtualizacaoISO: now,
+            };
+          } else {
+            arr.push(base);
+          }
+
+          data.temas = arr;
+          saveMem(data);
+          console.log("💾 lioraEstudos.registrarTema:", base);
+        },
+
+        /**
+         * Retorna recomendação para preencher o modal de simulado
+         * { tema, banca, qtd, dificuldade } ou null
+         */
+        recomendarSimulado() {
+          const data = loadMem();
+          const temas = data.temas || [];
+          if (!temas.length) return null;
+
+          // Mais recente primeiro
+          const ordenados = temas.slice().sort((a, b) => {
+            const da = new Date(a.ultimaAtualizacaoISO || 0).getTime();
+            const db = new Date(b.ultimaAtualizacaoISO || 0).getTime();
+            return db - da;
+          });
+
+          const ultimo = ordenados[0];
+          if (!ultimo || !ultimo.tema) return null;
+
+          // quantidade sugerida
+          let qtd = 10;
+          const total = Number(ultimo.totalSessoes || ultimo.sessoes || 0);
+          if (total >= 6) qtd = 20;
+          else if (total >= 3) qtd = 15;
+
+          // dificuldade sugerida
+          let dificuldade = "misturado";
+          if (ultimo.nivel === "iniciante") dificuldade = "facil";
+          else if (ultimo.nivel === "intermediario") dificuldade = "medio";
+          else if (ultimo.nivel === "avancado") dificuldade = "dificil";
+
+          const sugestao = {
+            tema: ultimo.tema,
+            banca: "FGV",
+            qtd,
+            dificuldade,
+          };
+
+          console.log("🎯 lioraEstudos.recomendarSimulado:", sugestao);
+          return sugestao;
+        },
+
+        dump() {
+          return loadMem();
+        },
+      };
+
+      window.lioraEstudos = api;
+    })();
+
+    // --------------------------------------------------------
+    // 🧠 PREFILL DO SIMULADO (usa memória de estudos)
+    // --------------------------------------------------------
+    window.lioraPreFillSimulado = function () {
+      if (!window.lioraEstudos) return;
+
+      const rec = window.lioraEstudos.recomendarSimulado();
+      if (!rec) return;
+
+      const temaEl = document.getElementById("sim-modal-tema");
+      const qtdEl = document.getElementById("sim-modal-qtd");
+      const difEl = document.getElementById("sim-modal-dificuldade");
+      const bancaEl = document.getElementById("sim-modal-banca");
+
+      if (temaEl) temaEl.value = rec.tema;
+      if (qtdEl) qtdEl.value = rec.qtd;
+      if (difEl) difEl.value = rec.dificuldade;
+      if (bancaEl) bancaEl.value = rec.banca;
+    };
 
     // --------------------------------------------------------
     // STATUS + BARRAS
@@ -667,6 +818,18 @@ Use APENAS JSON puro, com a seguinte estrutura:
           renderPlanoResumo(wizard.plano);
           renderWizard();
           atualizarStatus("tema", "✅ Plano carregado do histórico.", 100);
+
+          // registra na memória de estudos
+          if (window.lioraEstudos) {
+            window.lioraEstudos.registrarTema({
+              origem: "tema",
+              tema,
+              nivel,
+              sessoes: wizard.sessoes.length,
+              totalSessoes: wizard.sessoes.length,
+              concluido: false,
+            });
+          }
           return;
         }
 
@@ -718,6 +881,18 @@ Use APENAS JSON puro, com a seguinte estrutura:
 
         atualizarStatus("tema", "✅ Sessões concluídas!", 100);
         renderWizard();
+
+        // registra na memória de estudos
+        if (window.lioraEstudos) {
+          window.lioraEstudos.registrarTema({
+            origem: "tema",
+            tema,
+            nivel,
+            sessoes: wizard.sessoes.length,
+            totalSessoes: wizard.sessoes.length,
+            concluido: false,
+          });
+        }
       } catch (err) {
         console.error("Erro no fluxoTema:", err);
         atualizarStatus("tema", "⚠️ Erro ao gerar plano.");
@@ -814,6 +989,18 @@ Use APENAS JSON puro, com a seguinte estrutura:
         renderPlanoResumo(wizard.plano);
         renderWizard();
         saveProgress();
+
+        // registra na memória de estudos
+        if (window.lioraEstudos) {
+          window.lioraEstudos.registrarTema({
+            origem: "upload",
+            tema: wizard.tema,
+            nivel,
+            sessoes: wizard.sessoes.length,
+            totalSessoes: wizard.sessoes.length,
+            concluido: false,
+          });
+        }
       } catch (err) {
         console.error("Erro no fluxoUpload:", err);
         atualizarStatus("upload", "⚠️ Erro ao gerar plano.");
@@ -870,6 +1057,6 @@ Use APENAS JSON puro, com a seguinte estrutura:
       });
     }
 
-    console.log("🟢 Liora Core v70-COMMERCIAL-PREMIUM-DIA2 carregado com sucesso");
+    console.log("🟢 Liora Core v71-COMMERCIAL-PREMIUM-DIA2-ESTUDOS carregado com sucesso");
   });
 })();
