@@ -1,16 +1,20 @@
 // ==========================================================
-// 📊 LIORA — DASHBOARD PREMIUM (v5-COMMERCIAL-DIA2)
+// 📊 LIORA — DASHBOARD PREMIUM (v6-COMMERCIAL-DIA2)
 // - UI refinada + microinterações
 // - Estados vazios premium (simulados + estudos)
 // - Mini-gráficos nativos HTML/CSS
 // - Lê histórico de simulados (localStorage)
 // - Lê memória de estudos (window.lioraEstudos)
+// - Insights extras:
+//    • Evolução recente
+//    • Melhor tema
+//    • Tema que pede atenção
 // - Integra com lioraLoading e lioraError
 // - Integrado ao nav-home via window.lioraDashboard.atualizar()
 // ==========================================================
 
 (function () {
-  console.log("🔵 Liora Dashboard PREMIUM v5 carregado...");
+  console.log("🔵 Liora Dashboard PREMIUM v6 carregado...");
 
   document.addEventListener("DOMContentLoaded", () => {
 
@@ -91,6 +95,98 @@
       return Math.round((concl / total) * 100);
     }
 
+    function sortByDate(hist) {
+      return hist
+        .slice()
+        .sort((a, b) => {
+          const da = new Date(a.dataISO || a.data || 0).getTime();
+          const db = new Date(b.dataISO || b.data || 0).getTime();
+          return da - db;
+        });
+    }
+
+    function buildTemaStats(hist) {
+      const m = {};
+      hist.forEach(h => {
+        const tema = (h.tema || "").trim() || "Tema não informado";
+        if (!m[tema]) m[tema] = { qtd: 0, somaPerc: 0 };
+        m[tema].qtd++;
+        m[tema].somaPerc += Number(h.perc || 0);
+      });
+      return m;
+    }
+
+    function pickMelhorTema(temaStats) {
+      const entries = Object.entries(temaStats);
+      if (!entries.length) return null;
+
+      const valid = entries.filter(([_, st]) => st.qtd >= 1);
+      if (!valid.length) return null;
+
+      const [tema, st] = valid
+        .map(([t, st]) => [t, st, st.somaPerc / st.qtd])
+        .sort((a, b) => b[2] - a[2])[0];
+
+      return {
+        tema,
+        media: Math.round((st.somaPerc / st.qtd) * 10) / 10,
+        qtd: st.qtd,
+      };
+    }
+
+    function pickTemaCritico(temaStats) {
+      const entries = Object.entries(temaStats);
+      if (!entries.length) return null;
+
+      const valid = entries.filter(([_, st]) => st.qtd >= 1);
+      if (!valid.length) return null;
+
+      const [tema, st] = valid
+        .map(([t, st]) => [t, st, st.somaPerc / st.qtd])
+        .sort((a, b) => a[2] - b[2])[0];
+
+      return {
+        tema,
+        media: Math.round((st.somaPerc / st.qtd) * 10) / 10,
+        qtd: st.qtd,
+      };
+    }
+
+    function buildEvolucao(hist) {
+      const ordenado = sortByDate(hist);
+      if (ordenado.length < 2) {
+        return {
+          tipo: "neutro",
+          texto: "Ainda não há dados suficientes para ver a evolução.",
+          diff: 0,
+        };
+      }
+
+      const primeiro = Number(ordenado[0].perc || 0);
+      const ultimo = Number(ordenado[ordenado.length - 1].perc || 0);
+      const diff = Math.round((ultimo - primeiro) * 10) / 10;
+
+      if (diff > 0) {
+        return {
+          tipo: "up",
+          texto: `Você evoluiu +${diff} p.p. desde o seu primeiro simulado.`,
+          diff,
+        };
+      } else if (diff < 0) {
+        return {
+          tipo: "down",
+          texto: `Seu desempenho oscilou −${Math.abs(diff)} p.p. em relação ao primeiro simulado.`,
+          diff,
+        };
+      } else {
+        return {
+          tipo: "flat",
+          texto: "Seu desempenho está estável em relação ao primeiro simulado.",
+          diff: 0,
+        };
+      }
+    }
+
     // ==========================================================
     // RENDER PRINCIPAL
     // ==========================================================
@@ -98,7 +194,6 @@
       const hist = carregarHistoricoSimulados();
       const estudos = carregarEstudos();
 
-      // limpa áreas
       els.dashResumo.innerHTML = "";
       els.dashBancas.innerHTML = "";
       els.dashUltimos.innerHTML = "";
@@ -130,8 +225,10 @@
       }
 
       // ======================================================
-      // 1) RESUMO GERAL PREMIUM (Simulados + Estudos)
+      // 1) RESUMO GERAL + INSIGHTS
       // ======================================================
+
+      // SIMULADOS
       let totalSimulados = hist.length;
       let mediaPerc = 0;
       let totalQuestoes = 0;
@@ -175,7 +272,7 @@
         ? (Object.entries(freqTemaSim).sort((a, b) => b[1] - a[1])[0]?.[0] || "Diversos")
         : "—";
 
-      // Estudos
+      // ESTUDOS
       const totalEstudos = estudos.length;
       const totalSessoes = estudos.reduce(
         (acc, e) => acc + Number(e.sessoesTotal || 0),
@@ -200,39 +297,85 @@
         ? (Object.entries(freqTemaEstudos).sort((a, b) => b[1] - a[1])[0]?.[0] || "Diversos")
         : "—";
 
+      // INSIGHTS ADICIONAIS
+      let evolucao = { tipo: "neutro", texto: "Ainda não há dados de evolução.", diff: 0 };
+      let melhorTema = null;
+      let temaCritico = null;
+
+      if (temSimulados) {
+        evolucao = buildEvolucao(hist);
+
+        const temaStats = buildTemaStats(hist);
+        melhorTema = pickMelhorTema(temaStats);
+        temaCritico = pickTemaCritico(temaStats);
+      }
+
+      // Cards premium (3 colunas)
       els.dashResumo.innerHTML = `
-        <!-- Card 1: Simulados realizados -->
-        <div class="sim-resultado-card">
-          <div class="sim-resultado-titulo">Simulados realizados</div>
-          <div class="sim-score">${temSimulados ? totalSimulados : 0}</div>
+        <!-- Card 1: Evolução recente -->
+        <div class="sim-resultado-card dash-card-evolucao">
+          <div class="sim-resultado-titulo">Evolução recente</div>
+          <div class="sim-score">
+            ${temSimulados ? `${mediaPerc}%` : "—"}
+          </div>
           <p class="sim-desc">
-            ${temSimulados ? "Quantidade total concluída" : "Ainda não há simulados concluídos"}
+            ${temSimulados ? evolucao.texto : "Faça seu primeiro simulado para ver a evolução aqui."}
+          </p>
+          <p class="sim-detail mt-1">
+            Simulados realizados: <strong>${temSimulados ? totalSimulados : 0}</strong><br>
+            Tempo total: <strong>${tempoMin} min</strong><br>
+            Questões respondidas: <strong>${totalQuestoes}</strong>
           </p>
         </div>
 
-        <!-- Card 2: Desempenho em simulados -->
-        <div class="sim-resultado-card">
-          <div class="sim-resultado-titulo">Média de acertos</div>
-          <div class="sim-score">${temSimulados ? `${mediaPerc}%` : "—"}</div>
+        <!-- Card 2: Seu melhor tema -->
+        <div class="sim-resultado-card dash-card-melhor-tema">
+          <div class="sim-resultado-titulo">Seu melhor tema</div>
+          <div class="sim-score">
+            ${
+              melhorTema
+                ? `${melhorTema.media}%`
+                : (temSimulados ? `${mediaPerc}%` : "—")
+            }
+          </div>
           <p class="sim-desc">
-            ${temSimulados ? "Percentual médio nos simulados" : "Faça um simulado para ver seu desempenho."}
+            ${
+              melhorTema
+                ? `Você vai muito bem em <strong>${melhorTema.tema}</strong> (${melhorTema.qtd} simulado(s)).`
+                : (temSimulados
+                    ? `Ainda não há tema destacado. Continue fazendo simulados para descobrir seu ponto forte.`
+                    : `Comece um simulado para identificar em quais temas você se destaca.`)
+            }
+          </p>
+          <p class="sim-detail mt-1">
+            Banca mais treinada: <strong>${bancaTop}</strong><br>
+            Tema mais recorrente em simulados: <strong>${temaTopSim}</strong>
           </p>
         </div>
 
-        <!-- Card 3: Estudos e progresso -->
-        <div class="sim-resultado-card">
-          <div class="sim-resultado-titulo">Estudos & progresso</div>
-          <p class="sim-detail">
-            <strong>Planos ativos:</strong> ${totalEstudos}
+        <!-- Card 3: Tema que pede atenção + estudos -->
+        <div class="sim-resultado-card dash-card-atencao">
+          <div class="sim-resultado-titulo">Tema que pede atenção</div>
+          <div class="sim-score">
+            ${
+              temaCritico
+                ? `${temaCritico.media}%`
+                : (temSimulados ? `${mediaPerc}%` : "—")
+            }
+          </div>
+          <p class="sim-desc">
+            ${
+              temaCritico
+                ? `Vale revisar <strong>${temaCritico.tema}</strong> (${temaCritico.qtd} simulado(s)).`
+                : (temSimulados
+                    ? `Nenhum tema crítico evidente ainda. Observe os próximos simulados.`
+                    : `Gere um plano de estudo ou faça simulados para ver recomendações aqui.`)
+            }
           </p>
-          <p class="sim-detail">
-            <strong>Sessões planejadas:</strong> ${totalSessoes}
-          </p>
-          <p class="sim-detail">
-            <strong>Progresso médio:</strong> ${totalEstudos ? `${mediaProgresso}%` : "—"}
-          </p>
-          <p class="sim-desc mt-1">
-            Tema mais recorrente em simulados: <strong>${temaTopSim}</strong><br>
+          <p class="sim-detail mt-1">
+            Planos ativos: <strong>${totalEstudos}</strong><br>
+            Sessões planejadas: <strong>${totalSessoes}</strong><br>
+            Progresso médio nos planos: <strong>${totalEstudos ? `${mediaProgresso}%` : "—"}</strong><br>
             Tema mais estudado: <strong>${temaTopEstudo}</strong>
           </p>
         </div>
@@ -299,7 +442,7 @@
 
       // 3.1 Últimos simulados
       if (temSimulados) {
-        const ultimos = hist.slice(-5).reverse();
+        const ultimos = sortByDate(hist).slice(-5).reverse();
 
         const htmlSimulados = `
           <div class="sim-dashboard">
@@ -332,7 +475,7 @@
         blocos.push(htmlSimulados);
       }
 
-      // 3.2 Estudos recentes (vinculados à memória de estudos)
+      // 3.2 Estudos recentes (memória de estudos)
       if (temEstudos) {
         const recentes = estudos.slice(0, 5);
 
@@ -406,6 +549,6 @@
       atualizar: atualizarDashboard,
     };
 
-    console.log("🟢 Dashboard PREMIUM v5 inicializado.");
+    console.log("🟢 Dashboard PREMIUM v6 inicializado.");
   });
 })();
