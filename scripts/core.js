@@ -1,5 +1,5 @@
 // ==========================================================
-// 🧠 LIORA — CORE v72-COMMERCIAL-PREMIUM-DIA3-STUDY-MANAGER
+// 🧠 LIORA — CORE v73-COMMERCIAL-PREMIUM-DIA3-STUDY-MANAGER
 // - Compatível com index.html comercial atual
 // - Tema: plano + sessões completas (cache localStorage)
 // - Upload: Modelo D (outline + sessões a partir do PDF)
@@ -7,15 +7,15 @@
 // - Loading global (overlay) e Erro global (overlay)
 // - Status + barras de progresso (tema / upload)
 // - Integração total com nav-home.js / simulados / dashboard
-// - 🆕 Integração com StudyManager (window.lioraEstudos)
-// - 🆕 Prefill de simulados (window.lioraPreFillSimulado)
+// - ✅ Integração com StudyManager (window.lioraEstudos)
+// - ✅ Prefill de simulados (window.lioraPreFillSimulado)
+// - ✅ Progresso e sessões normalizados (id S1, S2, ...)
 // ==========================================================
 
 (function () {
-  console.log("🔵 Inicializando Liora Core v72-COMMERCIAL-PREMIUM-DIA3-STUDY-MANAGER...");
+  console.log("🔵 Inicializando Liora Core v73-COMMERCIAL-PREMIUM-DIA3-STUDY-MANAGER...");
 
   document.addEventListener("DOMContentLoaded", () => {
-
     // --------------------------------------------------------
     // 🔗 INTEGRAÇÃO COM STUDY MANAGER (classe)
     // --------------------------------------------------------
@@ -253,7 +253,7 @@
     function safeJsonParse(raw) {
       if (!raw || typeof raw !== "string") {
         throw new Error("JSON vazio ou inválido");
-        }
+      }
 
       const block =
         raw.match(/```json([\s\S]*?)```/i) ||
@@ -404,6 +404,7 @@
 
           wizard.atual = index;
           renderWizard();
+          saveProgress();
           if (els.wizardContainer) {
             window.scrollTo({
               top: els.wizardContainer.offsetTop - 20,
@@ -569,7 +570,46 @@
         els.wizardMapa.textContent =
           mapa || "Mapa mental gerado a partir desta sessão.";
       }
+
+      // 🔗 Marca sessão como "em andamento" no StudyManager
+      if (window.lioraEstudos && typeof window.lioraEstudos.updateSessionProgress === "function") {
+        const id = `S${wizard.atual + 1}`;
+        window.lioraEstudos.updateSessionProgress(id, 0.5);
+      }
     }
+
+    // --------------------------------------------------------
+    // API GLOBAL PARA ABRIR SESSÃO PELO ID (usado pela Home)
+    // --------------------------------------------------------
+    window.lioraWizardOpenSession = function (sessionId) {
+      if (!wizard || !Array.isArray(wizard.sessoes) || !wizard.sessoes.length) return;
+
+      let idx = 0;
+      if (typeof sessionId === "string" && sessionId.startsWith("S")) {
+        const num = parseInt(sessionId.slice(1), 10);
+        if (!Number.isNaN(num)) {
+          idx = Math.max(0, Math.min(wizard.sessoes.length - 1, num - 1));
+        }
+      }
+
+      wizard.atual = idx;
+      renderWizard();
+      saveProgress();
+
+      if (els.plano) {
+        const cards = els.plano.querySelectorAll(".liora-card-topico");
+        cards.forEach(c => c.classList.remove("active"));
+        const target = cards[idx];
+        if (target) {
+          target.classList.add("active");
+          target.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        }
+      }
+
+      if (els.wizardContainer) {
+        window.scrollTo({ top: els.wizardContainer.offsetTop - 20, behavior: "smooth" });
+      }
+    };
 
     // --------------------------------------------------------
     // NAVEGAÇÃO DO WIZARD (integra com StudyManager)
@@ -588,7 +628,7 @@
       els.wizardProxima.addEventListener("click", () => {
         // Marca a sessão atual como concluída no StudyManager antes de avançar
         if (window.lioraEstudos && typeof window.lioraEstudos.completeSession === "function") {
-          const id = "S" + (wizard.atual + 1); // ids normalizados no StudyManager
+          const id = `S${wizard.atual + 1}`;
           window.lioraEstudos.completeSession(id);
         }
 
@@ -709,13 +749,18 @@ Use APENAS JSON puro, com a seguinte estrutura:
           renderWizard();
           atualizarStatus("tema", "✅ Plano carregado do histórico.", 100);
 
-          // Sincroniza com StudyManager
-          if (window.lioraEstudos && typeof window.lioraEstudos.applyIAPlan === "function") {
-            window.lioraEstudos.applyIAPlan({
+          // Sincroniza com StudyManager (reconstrói plano com ids)
+          if (window.lioraEstudos && typeof window.lioraEstudos.createPlan === "function") {
+            const sessoesNorm = wizard.sessoes.map((s, i) => ({
+              ...s,
+              id: `S${i + 1}`,
+              ordem: i + 1
+            }));
+            window.lioraEstudos.createPlan({
               tema,
               nivel,
               origem: "tema",
-              sessoes: wizard.sessoes
+              sessoes: sessoesNorm
             });
           }
 
@@ -734,6 +779,16 @@ Use APENAS JSON puro, com a seguinte estrutura:
           titulo: `Sessão ${p.numero} — ${p.nome}`,
         }));
         renderPlanoResumo(wizard.plano);
+
+        // Cria plano vazio no StudyManager, será preenchido incrementalmente
+        if (window.lioraEstudos && typeof window.lioraEstudos.createPlan === "function") {
+          window.lioraEstudos.createPlan({
+            tema,
+            nivel,
+            origem: "tema",
+            sessoes: []
+          });
+        }
 
         let resumoAnterior = null;
 
@@ -755,6 +810,15 @@ Use APENAS JSON puro, com a seguinte estrutura:
 
           wizard.sessoes.push(sessao);
 
+          // Salva sessão incrementalmente no StudyManager
+          if (window.lioraEstudos && typeof window.lioraEstudos.addSession === "function") {
+            window.lioraEstudos.addSession({
+              id: `S${i + 1}`,
+              ordem: i + 1,
+              ...sessao
+            });
+          }
+
           const c = sessao.conteudo || {};
           const resumoRapido = Array.isArray(c.resumoRapido)
             ? c.resumoRapido.join("; ")
@@ -770,16 +834,6 @@ Use APENAS JSON puro, com a seguinte estrutura:
 
         atualizarStatus("tema", "✅ Sessões concluídas!", 100);
         renderWizard();
-
-        // Cria/atualiza plano no StudyManager
-        if (window.lioraEstudos && typeof window.lioraEstudos.applyIAPlan === "function") {
-          window.lioraEstudos.applyIAPlan({
-            tema,
-            nivel,
-            origem: "tema",
-            sessoes: wizard.sessoes
-          });
-        }
       } catch (err) {
         console.error("Erro no fluxoTema:", err);
         atualizarStatus("tema", "⚠️ Erro ao gerar plano.");
@@ -877,13 +931,19 @@ Use APENAS JSON puro, com a seguinte estrutura:
         renderWizard();
         saveProgress();
 
-        // Cria/atualiza plano no StudyManager
+        // Cria plano no StudyManager com sessões normalizadas
         if (window.lioraEstudos && typeof window.lioraEstudos.createPlan === "function") {
+          const sessoesNormUpload = wizard.sessoes.map((s, i) => ({
+            ...s,
+            id: `S${i + 1}`,
+            ordem: i + 1
+          }));
+
           window.lioraEstudos.createPlan({
             tema: wizard.tema,
             nivel,
             origem: "upload",
-            sessoes: wizard.sessoes
+            sessoes: sessoesNormUpload
           });
         }
       } catch (err) {
@@ -942,6 +1002,6 @@ Use APENAS JSON puro, com a seguinte estrutura:
       });
     }
 
-    console.log("🟢 Liora Core v72-COMMERCIAL-PREMIUM-DIA3-STUDY-MANAGER carregado com sucesso");
+    console.log("🟢 Liora Core v73-COMMERCIAL-PREMIUM-DIA3-STUDY-MANAGER carregado com sucesso");
   });
 })();
