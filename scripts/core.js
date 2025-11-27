@@ -455,6 +455,16 @@
       }
 
       const s = wizard.sessoes[wizard.atual];
+      
+      try {
+        if (window.lioraEstudos?.registrarAbertura && s?.id) {
+          window.lioraEstudos.registrarAbertura(s.id);
+        }
+      } catch (e) {
+        console.warn("⚠️ Erro ao registrar abertura da sessão:", e);
+      }
+   
+   
       if (!s) {
         els.wizardContainer.classList.add("hidden");
         return;
@@ -647,6 +657,16 @@
       
         // navegação
         if (wizard.atual < wizard.sessoes.length - 1) {
+
+          try {
+            const sessaoAtual = wizard.sessoes[wizard.atual];
+            if (window.lioraEstudos?.registrarProgresso && sessaoAtual?.id) {
+              window.lioraEstudos.registrarProgresso(sessaoAtual.id);
+            }
+          } catch (e) {
+            console.warn("⚠️ Erro ao registrar progresso:", e);
+          }
+           
           wizard.atual++;
           window.lioraModoRevisao = false;
           renderWizard();
