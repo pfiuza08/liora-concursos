@@ -133,7 +133,45 @@
       atual: 0,
       origem: "tema",
     };
+      // --------------------------------------------------------
+      // ⭐ MODO REVISÃO + REGISTRO DE ABERTURA DE SESSÃO
+      // --------------------------------------------------------
+      window.lioraModoRevisao = false;
+      
+      window.lioraIrParaSessao = function (index, isReview = false) {
+        try {
+          if (!wizard?.sessoes?.length) return;
+      
+          wizard.atual = Number(index) || 0;
+          window.lioraModoRevisao = !!isReview;
+      
+          const sessao = wizard.sessoes[wizard.atual];
+      
+          // Registro no Study Manager
+          if (window.lioraEstudos && sessao?.id) {
+            if (window.lioraModoRevisao) {
+              window.lioraEstudos.registrarRevisao(sessao.id);
+            } else {
+              window.lioraEstudos.registrarAbertura(sessao.id);
+            }
+          }
+      
+          renderWizard();
+          saveProgress();
+      
+          const cont = document.getElementById("liora-sessoes");
+          if (cont) {
+            window.scrollTo({
+              top: cont.offsetTop - 20,
+              behavior: "smooth"
+            });
+          }
+        } catch (e) {
+          console.error("❌ Erro no jump de sessão:", e);
+        }
+      };
 
+    
     const key = (tema, nivel) =>
       `liora:wizard:${(tema || "").toLowerCase()}::${(nivel || "").toLowerCase()}`;
 
@@ -376,30 +414,30 @@
         div.addEventListener("mouseleave", () => div.classList.remove("hovered"));
 
         div.addEventListener("click", () => {
-          document
-            .querySelectorAll(".liora-card-topico")
-            .forEach((el) => el.classList.remove("active"));
-
-          div.classList.add("active");
-
-          wizard.atual = index;
-          renderWizard();
-          saveProgress();
-
-          // sincroniza progresso “em andamento”
-          if (window.lioraEstudos?.updateSessionProgress) {
-            const id = `S${index + 1}`;
-            window.lioraEstudos.updateSessionProgress(id, 0.5);
-          }
-
-          if (els.wizardContainer) {
-            window.scrollTo({
-              top: els.wizardContainer.offsetTop - 20,
-              behavior: "smooth",
-            });
-          }
-        });
-
+        document
+          .querySelectorAll(".liora-card-topico")
+          .forEach((el) => el.classList.remove("active"));
+      
+        div.classList.add("active");
+      
+        wizard.atual = index;
+        window.lioraModoRevisao = false;
+      
+        const sessao = wizard.sessoes[index];
+        if (window.lioraEstudos?.registrarAbertura && sessao?.id) {
+          window.lioraEstudos.registrarAbertura(sessao.id);
+        }
+      
+        renderWizard();
+        saveProgress();
+      
+        if (els.wizardContainer) {
+          window.scrollTo({
+            top: els.wizardContainer.offsetTop - 20,
+            behavior: "smooth",
+          });
+        }
+      });
         els.plano.appendChild(div);
       });
     }
@@ -576,13 +614,20 @@
     // --------------------------------------------------------
     // NAVEGAÇÃO DO WIZARD
     // --------------------------------------------------------
-    els.wizardVoltar?.addEventListener("click", () => {
+      els.wizardVoltar?.addEventListener("click", () => {
       if (wizard.atual > 0) {
         wizard.atual--;
+    
+        const sessao = wizard.sessoes[wizard.atual];
+        if (window.lioraEstudos?.registrarAbertura && sessao?.id) {
+          window.lioraEstudos.registrarAbertura(sessao.id);
+        }
+    
         renderWizard();
         saveProgress();
       }
     });
+
 
     els.wizardProxima?.addEventListener("click", () => {
       if (wizard.atual < wizard.sessoes.length - 1) {
