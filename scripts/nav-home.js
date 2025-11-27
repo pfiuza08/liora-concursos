@@ -235,7 +235,51 @@
         console.error("Erro ao atualizar Home Inteligente:", e);
       }
     }
+// =======================================================
+// ⭐ LISTA DE ESTUDOS RECENTES (Home)
+// =======================================================
+function preencherEstudosRecentes() {
+  const container = document.getElementById("liora-estudos-recentes");
+  const list = document.getElementById("liora-estudos-list");
+  if (!container || !list) return;
 
+  const sm = window.lioraEstudos;
+  if (!sm?.listarRecentes) return;
+
+  const recentes = sm.listarRecentes(5);
+
+  if (!recentes.length) {
+    container.classList.add("hidden");
+    return;
+  }
+
+        container.classList.remove("hidden");
+        list.innerHTML = "";
+      
+        recentes.forEach(plano => {
+          const progressoMedio =
+            plano.sessoes.reduce((acc, s) => acc + (s.progresso || 0), 0) /
+            plano.sessoes.length;
+      
+          const div = document.createElement("button");
+          div.className = "liora-card-recent hover:bg-[var(--bg2)] transition p-3 rounded-xl text-left border border-[var(--border)]";
+          div.innerHTML = `
+            <div class="font-semibold text-[var(--fg)]">${plano.tema}</div>
+            <div class="text-sm text-[var(--muted)]">
+              ${plano.sessoes.length} sessões • ${progressoMedio.toFixed(0)}% concluído
+            </div>
+          `;
+      
+          // ⭐ Clicar em um estudo recente → continuar exatamente nele
+          div.addEventListener("click", () => {
+            window.lioraEstudos && (window.lioraEstudos._forcarAtivo = plano.id);
+            if (window.lioraContinueStudy) window.lioraContinueStudy();
+          });
+      
+          list.appendChild(div);
+        });
+      }
+         
     window.addEventListener("liora:plan-updated", atualizarHomeEstudo);
 
     // ------------------------------------------------------
