@@ -391,5 +391,26 @@
 
 <div id="liora-build-info">Liora v73.1-COMMERCIAL</div>
 
+<script>
+  // Ativa o console somente se tiver ?debug=1 na URL
+  (function () {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("debug") !== "1") return;
+
+    const script = document.createElement("script");
+    script.src = "https://cdn.jsdelivr.net/npm/eruda";
+    script.onload = function () {
+      eruda.init();
+      console.log("🟢 Eruda Debug Console ativado!");
+    };
+    document.body.appendChild(script);
+  })();
+</script>
+
+
+
+
+
+  
 </body>
 </html>
