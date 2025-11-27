@@ -104,6 +104,8 @@
       wizardMapa: document.getElementById("liora-sessao-mapa"),
       wizardVoltar: document.getElementById("liora-btn-voltar"),
       wizardProxima: document.getElementById("liora-btn-proxima"),
+      wizardRevisar: document.getElementById("liora-btn-revisar"),
+
 
       // tema claro/escuro
       themeBtn: document.getElementById("btn-theme"),
@@ -407,6 +409,12 @@
       plano.forEach((p, index) => {
         const div = document.createElement("div");
         div.className = "liora-card-topico";
+        
+        const sessao = wizard.sessoes[index];
+        if (sessao?.forca === "forte") div.classList.add("forca-forte");
+        else if (sessao?.forca === "media") div.classList.add("forca-media");
+        else div.classList.add("forca-fraca");
+     
         div.dataset.index = index;
         div.textContent = p.titulo || p.nome || `Sessão ${index + 1}`;
 
@@ -686,6 +694,32 @@
         }
       });
 
+    
+      els.wizardRevisar?.addEventListener("click", () => {
+        try {
+          const s = wizard.sessoes[wizard.atual];
+          if (!s?.id) return;
+      
+          if (window.lioraEstudos?.marcarRevisada) {
+            window.lioraEstudos.marcarRevisada(s.id);
+          }
+      
+          // feedback rápido
+          if (els.wizardQuizFeedback) {
+            els.wizardQuizFeedback.textContent = "🔁 Revisada!";
+            els.wizardQuizFeedback.style.color = "var(--brand)";
+            els.wizardQuizFeedback.style.opacity = 1;
+          }
+      
+          // atualizar plano lateral (cor)
+          renderPlanoResumo(wizard.plano);
+      
+        } catch (e) {
+          console.warn("⚠️ Erro ao revisar sessão:", e);
+        }
+      });
+
+    
     // --------------------------------------------------------
     // 🔥 GERAÇÃO DO PLANO POR TEMA
     // --------------------------------------------------------
