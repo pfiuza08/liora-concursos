@@ -1,5 +1,5 @@
 /* ==========================================================
-   🎨 VARIÁVEIS DE TEMA
+   🎨 VARIÁVEIS DE TEMA (FINAL v77)
 ========================================================== */
 :root {
   --brand:#c44b04;
@@ -13,6 +13,12 @@
   --bgCard:#151515;
   --bgHover:#1d1d1d;
   --border:#252525;
+
+  /* Variáveis faltantes — necessárias p/ mobile */
+  --bg2: var(--bgCard);
+  --bg-hover: var(--bgHover);
+  --border-subtle: var(--stroke);
+  --surface-elevated: var(--card);
 }
 
 html.light, body.light {
@@ -23,9 +29,16 @@ html.light, body.light {
   --muted:#6b6b6b;
   --stroke:#e0ddd8;
   --shadow:0 2px 10px rgba(0,0,0,0.1);
+
   --bgCard:#ffffff;
   --bgHover:#f3f2ef;
   --border:#e0ddd8;
+
+  /* Ajustes p/ tema claro */
+  --bg2: var(--bgCard);
+  --bg-hover: var(--bgHover);
+  --border-subtle: var(--stroke);
+  --surface-elevated: var(--card);
 }
 
 /* ==========================================================
@@ -43,40 +56,15 @@ html, body {
 }
 
 /* ==========================================================
-   🧱 LAYOUT PRINCIPAL
-========================================================== */
-.liora-grid {
-  display:grid;
-  grid-template-columns:380px 1fr;
-  gap:20px;
-  max-width:1400px;
-  width:100%;
-  margin:40px auto;
-  padding:0 20px;
-}
-@media(max-width:980px){
-  .liora-grid{ grid-template-columns:1fr; }
-}
-
-.card {
-  background:var(--card);
-  border:1px solid var(--stroke);
-  border-radius:1rem;
-  padding:20px;
-  box-shadow:var(--shadow);
-  overflow:hidden;
-}
-
-/* ==========================================================
    🔘 BOTÕES
 ========================================================== */
-.btn, .btn-secondary, .liora-btn {
+.btn, .btn-secondary {
   border-radius:12px;
   padding:.7rem 1rem;
   font-weight:600;
   cursor:pointer;
-  transition:.2s ease;
   white-space:nowrap;
+  transition:.25s ease;
 }
 
 .btn {
@@ -90,48 +78,40 @@ html, body {
   border:1px solid var(--stroke);
   color:var(--fg);
 }
-
-.btn-secondary.selected{
-  background:var(--brand);
-  color:#fff;
-  border-color:var(--brand)!important;
+.btn-secondary:hover {
+  background:var(--bgHover);
+  border-color:var(--brand);
 }
 
-/* Correção dos botões de modo */
-.modo-btn {
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  min-height:48px;
-  text-align:center;
-  font-size:.92rem;
-  padding:0 .4rem;
-  white-space:normal;
-  line-height:1.2;
-}
-
+/* ==========================================================
+   🧭 FAB HOME — (VERSÃO FINAL)
+========================================================== */
 .liora-fab-home {
   position: fixed;
   left: 1.5rem;
   bottom: 1.5rem;
-  padding: 0.4rem 0.9rem;
+  padding: 0.45rem 1rem;
   border-radius: 999px;
-  font-size: 0.8rem;
-  background: var(--surface-elevated, #111);
-  color: var(--fg, #fff);
-  border: 1px solid var(--border-subtle, #333);
+  font-size: 0.82rem;
+  background: var(--surface-elevated);
+  color: var(--fg) !important;
+  border: 1px solid var(--border-subtle);
   box-shadow: 0 10px 30px rgba(0,0,0,0.35);
   cursor: pointer;
-  display: none; /* só aparece fora da home */
+  display: none; /* mostrado via JS */
   z-index: 40;
+  transition: transform 120ms ease, background .25s;
 }
 
 .liora-fab-home:hover {
-  transform: translateY(-1px);
-  transition: transform 120ms ease;
+  transform: translateY(-2px);
 }
 
-
+html.light .liora-fab-home {
+  background:#ffffffdd;
+  color:#1e1e1e !important;
+  border-color:#d0cdc8;
+}
 
 /* ==========================================================
    ✏️ INPUTS
@@ -168,8 +148,16 @@ input:focus, select:focus {
   position:relative;
   transition:.3s ease;
 }
-.upload-zone:hover{ border-color:var(--brand); background:rgba(196,75,4,.15); }
-.upload-zone input{ position:absolute; inset:0; opacity:0; cursor:pointer; }
+.upload-zone:hover {
+  border-color:var(--brand);
+  background:rgba(196,75,4,0.15);
+}
+.upload-zone input {
+  position:absolute;
+  inset:0;
+  opacity:0;
+  cursor:pointer;
+}
 
 #upload-spinner {
   display:none;
@@ -179,7 +167,6 @@ input:focus, select:focus {
   width:26px; height:26px;
   animation:spin 1s linear infinite;
 }
-
 @keyframes spin { to { transform:rotate(360deg); } }
 
 /* ==========================================================
@@ -201,51 +188,37 @@ input:focus, select:focus {
 }
 
 /* ==========================================================
-   🧠 WIZARD / SESSÕES
+   📘 CARDS DO PLANO
 ========================================================== */
-#liora-sessoes {
-  margin-top:32px;
+.liora-card-topico {
+  padding:13px 15px;
+  border-radius:10px;
+  border:1px solid var(--stroke);
+  background:var(--bgCard);
+  transition:.2s ease;
 }
-
-.liora-section {
-  margin-bottom:30px;
+.liora-card-topico:hover {
+  background:var(--bgHover);
+  border-color:var(--brand);
+  transform:translateX(4px);
 }
-
-.liora-section h4 {
-  color:var(--brand);
-  font-size:1.05rem;
-  font-weight:700;
-  text-transform:uppercase;
-  margin-bottom:8px;
-}
-
-.liora-section p {
-  font-size:0.95rem;
-  margin-bottom:10px;
-  color:var(--fg);
+.liora-card-topico.active {
+  background:rgba(196,75,4,0.20);
+  border-color:var(--brand);
+  transform:translateX(4px);
 }
 
 /* ==========================================================
-   🎯 QUIZ — FIX DEFINITIVO
+   🎯 QUIZ
 ========================================================== */
-
 #liora-sessao-quiz {
   display:flex;
   flex-direction:column;
   gap:14px;
   margin-top:12px;
 }
-
-#liora-sessao-quiz p {
-  margin-bottom:8px;
-  color:var(--fg);
-  font-size:0.95rem;
-}
-
-/* cartão da alternativa */
 .liora-quiz-option {
   display:flex;
-  align-items:flex-start;
   gap:12px;
   padding:12px 16px;
   border-radius:10px;
@@ -254,88 +227,106 @@ input:focus, select:focus {
   cursor:pointer;
   transition:.25s ease;
   width:100%;
-  max-width:720px;
-  word-break:break-word;
-  white-space:normal;
 }
-
 .liora-quiz-option:hover {
   background:var(--bgHover);
   border-color:var(--brand);
-  transform:translateY(-1px);
 }
-
 .liora-quiz-option.selected {
   background:var(--brand);
-  border-color:var(--brand)!important;
+  border-color:var(--brand) !important;
   color:#fff;
-  box-shadow:0 0 10px rgba(196,75,4,0.45);
   transform:translateY(-2px);
-}
-
-.liora-quiz-option input[type="radio"] {
-  width:18px;
-  height:18px;
-  accent-color:var(--brand);
-  cursor:pointer;
-}
-
-.liora-quiz-option .liora-quiz-option-text {
-  flex:1;
-  font-size:0.97rem;
-  line-height:1.45;
-  color:inherit;
-}
-
-/* ==========================================================
-   📘 CARDS DO PLANO
-========================================================== */
-
-.liora-card-topico {
-  padding:13px 15px;
-  border-radius:10px;
-  border:1px solid var(--stroke);
-  background:var(--bgCard);
-  transition:.2s ease;
-}
-
-.liora-card-topico:hover {
-  background:var(--bgHover);
-  border-color:var(--brand);
-  transform:translateX(4px);
-}
-
-.liora-card-topico.active {
-  background:rgba(196,75,4,0.20);
-  border-color:var(--brand);
-  transform:translateX(4px);
+  box-shadow:0 0 10px rgba(196,75,4,0.45);
 }
 
 /* ==========================================================
    🧠 MAPA MENTAL
 ========================================================== */
-
 .liora-mapa-mental {
   background:var(--bgCard);
   border:1px solid var(--stroke);
   padding:16px 18px;
   border-radius:12px;
-  font-family:"Fira Code","Courier New",monospace;
+  font-family:"Fira Code", monospace;
   font-size:0.85rem;
   white-space:pre-wrap;
   word-break:break-word;
-  overflow-x:auto;
-  color:var(--fg);
-  box-shadow:inset 0 0 4px rgba(0,0,0,0.25);
 }
 
-/* Responsivo */
+/* Mobile */
 @media(max-width:640px){
-  .liora-mapa-mental {
-    font-size:0.80rem;
-    padding:14px;
-  }
+  .liora-mapa-mental{ font-size:0.80rem; padding:14px; }
 }
+
+/* ==========================================================
+   ❌ ERRO GLOBAL
+========================================================== */
+.liora-error {
+  position:fixed;
+  inset:0;
+  z-index:9999;
+  background:rgba(0,0,0,0.65);
+  backdrop-filter:blur(4px);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.liora-error.hidden { display:none; }
+
+.liora-error-card {
+  width:90%;
+  max-width:380px;
+  background:var(--bgCard);
+  padding:2rem 1.6rem;
+  border-radius:1.1rem;
+  border:1px solid var(--stroke);
+  box-shadow:0 25px 50px rgba(0,0,0,0.5);
+  text-align:center;
+}
+
+/* ==========================================================
+   🔁 REVISÕES PENDENTES
+========================================================== */
+.liora-rev-card {
+  background:var(--bgCard);
+  border:1px solid var(--border);
+  padding:1rem;
+  border-radius:1rem;
+  transition:.25s ease;
+  cursor:pointer;
+}
+.liora-rev-card:hover {
+  background:var(--bgHover);
+  border-color:var(--brand);
+}
+
+.liora-ret-bar {
+  width:100%;
+  height:6px;
+  background:var(--border);
+  border-radius:4px;
+  overflow:hidden;
+}
+.liora-ret-bar-fill {
+  height:100%;
+  border-radius:4px;
+  transition:width .4s;
+}
+
+.liora-rev-btn {
+  background:var(--brand);
+  color:white;
+  padding:0.4rem 0.7rem;
+  border-radius:0.6rem;
+  font-size:.75rem;
+  margin-left:auto;
+}
+
+/* ==========================================================
+   ✨ MICROINTERAÇÕES
+========================================================== */
+button:active, .btn:active { transform:scale(.97); }
 
 /* ==========================================================
    📄 BUILD INFO
@@ -345,545 +336,12 @@ input:focus, select:focus {
   bottom:10px;
   right:14px;
   font-size:.7rem;
-  opacity:0.45;
+  opacity:.45;
   padding:4px 8px;
   border-radius:6px;
   background:rgba(0,0,0,0.15);
   backdrop-filter:blur(4px);
-  pointer-events:none;
-  user-select:none;
-  transition:.3s ease;
 }
 html.light #liora-build-info {
   background:rgba(255,255,255,0.35);
 }
-#liora-build-info:hover { opacity:1; }
-
-/* ===============================
-   LIORA — WIZARD DE SESSÕES
-   =============================== */
-
-.liora-wizard-card {
-  background: rgba(0,0,0,0.45);
-  border: 1px solid rgba(255,255,255,0.08);
-  padding: 1.5rem;
-  border-radius: 1rem;
-  color: var(--text);
-  box-shadow: 0 20px 40px rgba(0,0,0,0.4);
-}
-
-.liora-wizard-title {
-  font-size: 1.25rem;
-  font-weight: 700;
-  margin-bottom: 1rem;
-}
-
-.liora-wizard-section {
-  margin-top: 1.4rem;
-}
-
-.liora-wizard-section h5 {
-  font-size: 0.95rem;
-  font-weight: 700;
-  color: var(--brand);
-  margin-bottom: 0.3rem;
-}
-
-.liora-wizard-section ul {
-  margin-left: 1rem;
-  list-style: disc;
-}
-
-.liora-wizard-section li {
-  margin-bottom: 0.3rem;
-}
-
-.liora-mapa-mental {
-  white-space: pre-wrap;
-  font-size: 0.85rem;
-  background: rgba(0,0,0,0.25);
-  border-radius: 0.75rem;
-  padding: 0.75rem;
-}
-
-.liora-quiz-feedback {
-  margin-top: .5rem;
-  font-size: .85rem;
-  opacity: 0;
-  transition: opacity .3s ease;
-}
-
-.liora-progress {
-  height: 7px;
-  background: rgba(255,255,255,0.1);
-  border-radius: 999px;
-  overflow: hidden;
-}
-
-.liora-progress__bar {
-  height: 100%;
-  width: 0%;
-  background: var(--brand);
-  transition: width .3s ease;
-}
-
-.btn-secondary:hover {
-  transform: translateY(-1px);
-  transition: 120ms ease;
-}
-.liora-fab-home {
-  position: fixed;
-  left: 1.5rem;
-  bottom: 1.5rem;
-  padding: 0.4rem 0.9rem;
-  border-radius: 999px;
-  font-size: 0.8rem;
-  background: var(--surface-elevated, #111);
-  color: var(--fg, #fff);
-  border: 1px solid var(--border-subtle, #333);
-  box-shadow: 0 10px 30px rgba(0,0,0,0.35);
-  cursor: pointer;
-  display: none; /* só aparece fora da home */
-  z-index: 40;
-}
-
-.liora-fab-home:hover {
-  transform: translateY(-1px);
-  transition: transform 120ms ease;
-}
-
-/* ==========================================================
-   🛠 CORREÇÃO DO BOTÃO INÍCIO (FAB)
-========================================================== */
-
-.liora-fab-home {
-  background: var(--card); /* passa a seguir o tema */
-  color: var(--fg) !important; /* texto sempre visível */
-  border: 1px solid var(--stroke);
-}
-html.light .liora-fab-home {
-  background: #ffffffdd;
-  color: #1e1e1e !important;
-  border-color: #d0cdc8;
-}
-
-/* ==========================================================
-   🧪 BOTÃO GERAR SIMULADO
-========================================================== */
-
-#btn-gerar-simulado {
-  background: var(--brand);
-  color: #fff;
-  padding: 0.75rem 1.2rem;
-  border-radius: 10px;
-  border: none;
-  font-weight: 600;
-  cursor: pointer;
-  margin-top: 1rem;
-  display: inline-block;
-  box-shadow: 0 4px 14px rgba(0,0,0,0.25);
-  transition: .2s ease;
-}
-#btn-gerar-simulado:hover {
-  filter: brightness(1.15);
-  transform: translateY(-2px);
-}
-#btn-gerar-simulado:active {
-  transform: translateY(0px);
-}
-/* ==========================================================
-   ⚡ LOADING GLOBAL PREMIUM
-========================================================== */
-
-.liora-loading {
-  position: fixed;
-  inset: 0;
-  z-index: 9998;
-  background: rgba(0,0,0,0.55);
-  backdrop-filter: blur(4px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: opacity .25s ease;
-}
-
-.liora-loading.hidden {
-  display: none;
-}
-
-.liora-loading-card {
-  background: var(--bgCard);
-  padding: 1.4rem 2rem;
-  border-radius: 1rem;
-  border: 1px solid var(--stroke);
-  box-shadow: 0 20px 40px rgba(0,0,0,0.45);
-  text-align: center;
-  width: 90%;
-  max-width: 320px;
-}
-
-.liora-spinner {
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  border: 3px solid var(--stroke);
-  border-top-color: var(--brand);
-  animation: lioraSpin 0.75s linear infinite;
-  margin: 0 auto 1rem;
-}
-
-@keyframes lioraSpin {
-  to { transform: rotate(360deg); }
-}
-
-#liora-loading-text {
-  font-size: 0.9rem;
-  color: var(--muted);
-}
-/* ==========================================================
-   ❌ ERRO GLOBAL PREMIUM
-========================================================== */
-
-.liora-error {
-  position: fixed;
-  inset: 0;
-  z-index: 9999;
-  background: rgba(0,0,0,0.65);
-  backdrop-filter: blur(4px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.liora-error.hidden {
-  display: none;
-}
-
-.liora-error-card {
-  width: 90%;
-  max-width: 380px;
-  background: var(--bgCard);
-  padding: 2rem 1.6rem;
-  border-radius: 1.1rem;
-  border: 1px solid var(--stroke);
-  box-shadow: 0 25px 50px rgba(0,0,0,0.5);
-  text-align: center;
-}
-
-.liora-error-icon {
-  font-size: 2.4rem;
-  margin-bottom: 0.8rem;
-}
-
-.liora-error-title {
-  font-size: 1.15rem;
-  font-weight: 700;
-  margin-bottom: 0.4rem;
-}
-
-.liora-error-message {
-  font-size: 0.9rem;
-  opacity: 0.8;
-  margin-bottom: 1.3rem;
-}
-
-.liora-error-actions {
-  display: flex;
-  justify-content: center;
-  gap: 0.7rem;
-}
-/* ==========================================================
-   🧠 WIZARD PREMIUM – TRANSIÇÕES & MICROINTERAÇÕES
-========================================================== */
-
-.liora-wizard-card {
-  opacity: 0;
-  transform: translateY(6px);
-  transition: opacity .28s ease, transform .28s ease;
-}
-
-.liora-wizard-card.visible {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-/* Rodapé fixo para navegação */
-#liora-sessoes .wizard-footer {
-  position: sticky;
-  bottom: 0;
-  background: var(--bg);
-  padding: 0.8rem 0;
-  margin-top: 1rem;
-  border-top: 1px solid var(--stroke);
-}
-
-/* Botões de navegação */
-#liora-btn-proxima, #liora-btn-voltar {
-  transition: .2s ease;
-}
-
-#liora-btn-proxima:hover, #liora-btn-voltar:hover {
-  transform: translateY(-1px);
-}
-/* ==========================================================
-   ✨ MICROINTERAÇÕES GLOBAIS
-========================================================== */
-
-button, .btn, .btn-secondary, .liora-btn {
-  transition: background .25s ease, transform .2s ease, border-color .25s ease;
-}
-
-button:active, .btn:active, .btn-secondary:active {
-  transform: scale(0.97);
-}
-
-/* Hover brand suave */
-.btn:hover {
-  filter: brightness(1.15);
-}
-
-/* Hover secondary */
-.btn-secondary:hover {
-  background: var(--bgHover);
-  border-color: var(--brand);
-}
-/* ==========================================================
-   🪶 AJUSTES FINOS EM CARDS (SUAVE PREMIUM)
-========================================================== */
-
-.card, .liora-wizard-card, .sim-resultado-card {
-  transition: box-shadow .25s ease, transform .25s ease;
-}
-
-.card:hover, .sim-resultado-card:hover {
-  box-shadow: 0 12px 28px rgba(0,0,0,0.4);
-  transform: translateY(-2px);
-}
-/* ==========================================================
-   📊 LIORA — DASHBOARD PREMIUM (v4)
-   ========================================================== */
-
-/* ===============================
-   CARDS PRINCIPAIS (Resumo)
-   =============================== */
-.sim-resultado-card {
-  background: var(--bgCard);
-  border: 1px solid var(--stroke);
-  border-radius: 1rem;
-  padding: 1.2rem 1.4rem;
-  box-shadow: var(--shadow);
-  transition: 0.25s ease;
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-}
-.sim-resultado-card:hover {
-  transform: translateY(-3px);
-  border-color: var(--brand);
-}
-
-/* Títulos dos cards */
-.sim-resultado-titulo {
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: var(--muted);
-  margin-bottom: -2px;
-}
-
-/* Números grandes */
-.sim-score {
-  font-size: 2rem;
-  font-weight: 800;
-  color: var(--fg);
-}
-
-/* Pequenos textos */
-.sim-desc {
-  font-size: 0.75rem;
-  color: var(--muted);
-}
-.sim-detail {
-  font-size: 0.9rem;
-  color: var(--fg);
-}
-
-/* ===============================
-   TABELAS (Desempenho por banca)
-   =============================== */
-.sim-dashboard {
-  background: var(--bgCard);
-  border: 1px solid var(--stroke);
-  border-radius: 1rem;
-  padding: 1.2rem 1.4rem;
-  box-shadow: var(--shadow);
-}
-
-.sim-subtitulo {
-  font-size: 1rem;
-  font-weight: 700;
-  margin-bottom: 0.8rem;
-  color: var(--fg);
-}
-
-.sim-dashboard-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.85rem;
-}
-.sim-dashboard-table th {
-  text-align: left;
-  padding-bottom: 0.4rem;
-  font-weight: 600;
-  color: var(--muted);
-  border-bottom: 1px solid var(--stroke);
-}
-.sim-dashboard-table td {
-  padding: 0.5rem 0;
-  color: var(--fg);
-}
-
-/* ===============================
-   MINI-BARRA DE PROGRESSO PREMIUM
-   =============================== */
-.sim-bar-outer {
-  width: 100%;
-  height: 6px;
-  background: rgba(255,255,255,0.06);
-  border-radius: 999px;
-  overflow: hidden;
-}
-
-.sim-bar-inner {
-  height: 100%;
-  background: linear-gradient(90deg, var(--brand), #f97316);
-  border-radius: 999px;
-  transition: width 0.3s ease;
-}
-
-/* ===============================
-   ÚLTIMOS SIMULADOS — LISTA
-   =============================== */
-.sim-lista-resultados {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.sim-resultado-item {
-  background: var(--bgCard);
-  border: 1px solid var(--stroke);
-  padding: 1rem 1.2rem;
-  border-radius: 0.9rem;
-  box-shadow: var(--shadow);
-  transition: 0.25s ease;
-}
-.sim-resultado-item:hover {
-  transform: translateX(4px);
-  border-color: var(--brand);
-}
-
-/* Cabeçalho de cada item */
-.sim-resultado-header {
-  display: flex;
-  justify-content: space-between;
-  font-size: 0.85rem;
-  margin-bottom: 0.2rem;
-}
-.sim-resultado-data {
-  color: var(--muted);
-}
-.sim-resultado-banca {
-  font-weight: 700;
-  color: var(--brand);
-}
-
-/* Tema */
-.sim-resultado-tema {
-  margin-bottom: 0.25rem;
-}
-
-/* Linha final: acertos + badge */
-.sim-resultado-info {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 0.4rem;
-  font-size: 0.9rem;
-}
-
-/* Badge grande com %, estilo premium */
-.sim-badge {
-  background: var(--brand);
-  color: #fff;
-  padding: 0.2rem 0.55rem;
-  border-radius: 999px;
-  font-size: 0.85rem;
-  font-weight: 700;
-  box-shadow: 0 0 8px rgba(196,75,4,0.45);
-}
-
-/* ===============================
-   RESPONSIVIDADE
-   =============================== */
-@media(max-width: 640px) {
-  .sim-score {
-    font-size: 1.6rem;
-  }
-  .sim-dashboard-table td,
-  .sim-dashboard-table th {
-    font-size: 0.78rem;
-  }
-  .sim-resultado-item {
-    padding: 0.85rem 1rem;
-  }
-}
-
-/* ==========================================================
-   🔁 Revisões Pendentes (UI Premium)
-========================================================== */
-
-.liora-rev-card {
-  background: var(--bg2);
-  border: 1px solid var(--border);
-  padding: 1rem;
-  border-radius: 1rem;
-  transition: 0.25s ease;
-  cursor: pointer;
-}
-
-.liora-rev-card:hover {
-  background: var(--bg-hover);
-  border-color: var(--brand);
-}
-
-.liora-ret-bar {
-  width: 100%;
-  height: 6px;
-  border-radius: 4px;
-  background: var(--border);
-  overflow: hidden;
-}
-
-.liora-ret-bar-fill {
-  height: 100%;
-  border-radius: 4px;
-  transition: width .4s;
-}
-
-.liora-rev-btn {
-  background: var(--brand);
-  color: white;
-  padding: 0.4rem 0.7rem;
-  border-radius: 0.6rem;
-  font-size: .75rem;
-  margin-left: auto;
-  transition: .18s;
-}
-.forca-forte { border-left: 4px solid #22c55e; }
-.forca-media { border-left: 4px solid #eab308; }
-.forca-fraca { border-left: 4px solid #ef4444; }
-
-.liora-rev-btn:hover {
-  filter: brightness(1.15);
-}
-
