@@ -12,6 +12,10 @@
 (function () {
   console.log("🔵 nav-home.js (v78) carregado...");
 
+  console.error("🔴 NAV-HOME TESTE — Erro forçado logo no load.");
+erroProposital.talvez(); // dispara erro
+
+
   document.addEventListener("DOMContentLoaded", () => {
 
     // ------------------------------------------------------
