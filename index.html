@@ -391,25 +391,63 @@
 
 <div id="liora-build-info">Liora v73.1-COMMERCIAL</div>
 
+<!-- =====================================================
+     🔧 LIORA — DEV TRIGGER (Console Mobile)
+     ===================================================== -->
+<style>
+  #liora-dev-trigger {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 60px;
+    height: 60px;
+    opacity: 0;
+    z-index: 99999;
+  }
+</style>
+
+<div id="liora-dev-trigger"></div>
+
 <script>
-  // Ativa o console somente se tiver ?debug=1 na URL
-  (function () {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get("debug") !== "1") return;
+(function () {
+  const trigger = document.getElementById("liora-dev-trigger");
+  let clicks = 0;
+  let timer = null;
+
+  function enableEruda() {
+    if (window.eruda) return eruda.show();
 
     const script = document.createElement("script");
     script.src = "https://cdn.jsdelivr.net/npm/eruda";
-    script.onload = function () {
-      eruda.init();
-      console.log("🟢 Eruda Debug Console ativado!");
-    };
     document.body.appendChild(script);
-  })();
+
+    script.onload = () => {
+      eruda.init();
+      console.log("🛠 ERUDA Dev Console ativado!");
+      alert("ERUDA Console ativado!");
+    };
+  }
+
+  trigger.addEventListener("click", () => {
+    clicks++;
+
+    if (!timer) {
+      timer = setTimeout(() => {
+        clicks = 0;
+        timer = null;
+      }, 2500);
+    }
+
+    if (clicks >= 5) {
+      clicks = 0;
+      clearTimeout(timer);
+      timer = null;
+      enableEruda();
+    }
+  });
+
+})();
 </script>
-
-
-
-
 
   
 </body>
