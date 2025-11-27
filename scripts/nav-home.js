@@ -152,6 +152,7 @@
 
       // Atualiza home inteligente
       atualizarHomeEstudo();
+      preencherRevisoesPendentes();
 
       // ⭐ Garante FAB funcional após reset
       window.showFabHome();
