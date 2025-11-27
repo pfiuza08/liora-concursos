@@ -345,3 +345,28 @@ button:active, .btn:active { transform:scale(.97); }
 html.light #liora-build-info {
   background:rgba(255,255,255,0.35);
 }
+/* ==========================================================
+   🔘 PRIMARY BUTTON (hotfix)
+========================================================== */
+.btn-primary {
+  background: var(--brand);
+  color: #fff;
+  border-radius: 12px;
+  padding: 0.7rem 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  width: 100%;
+  text-align: center;
+  display: inline-block;
+  transition: .25s ease;
+}
+
+.btn-primary:hover {
+  filter: brightness(1.12);
+  transform: translateY(-1px);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+}
+
