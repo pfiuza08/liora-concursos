@@ -879,6 +879,9 @@ button:active, .btn:active, .btn-secondary:active {
   margin-left: auto;
   transition: .18s;
 }
+.forca-forte { border-left: 4px solid #22c55e; }
+.forca-media { border-left: 4px solid #eab308; }
+.forca-fraca { border-left: 4px solid #ef4444; }
 
 .liora-rev-btn:hover {
   filter: brightness(1.15);
