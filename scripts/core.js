@@ -629,44 +629,43 @@
     });
 
 
-    els.wizardProxima?.addEventListener("click", () => {
-      if (wizard.atual < wizard.sessoes.length - 1) {
-        // ⭐ Registrar progresso da sessão atual no Study Manager
-        try {
-          const sessaoAtual = wizard.sessoes[wizard.atual];
-          if (window.lioraEstudos?.concluirSessao && sessaoAtual?.id) {
-            window.lioraEstudos.concluirSessao(sessaoAtual.id);
+         els.wizardProxima?.addEventListener("click", () => {
+        const sessao = wizard.sessoes[wizard.atual];
+      
+        if (sessao && window.lioraEstudos) {
+          if (window.lioraModoRevisao) {
+            // revisão
+            window.lioraEstudos.marcarRevisada(sessao.id);
+            window.lioraEstudos.agendarRevisao(sessao.id);
+            window.dispatchEvent(new Event("liora:review-updated"));
+          } else {
+            // progresso normal
+            window.lioraEstudos.registrarProgresso(sessao.id);
+            window.dispatchEvent(new Event("liora:plan-updated"));
           }
-        } catch (e) {
-          console.warn("⚠️ Não foi possível registrar progresso da sessão:", e);
         }
-        // ⭐ Registrar progresso da sessão atual no Study Manager
-        try {
-          const sessaoAtual = wizard.sessoes[wizard.atual];
-          if (window.lioraEstudos?.concluirSessao && sessaoAtual?.id) {
-            window.lioraEstudos.concluirSessao(sessaoAtual.id);
+      
+        // navegação
+        if (wizard.atual < wizard.sessoes.length - 1) {
+          wizard.atual++;
+          window.lioraModoRevisao = false;
+          renderWizard();
+          saveProgress();
+      
+        } else {
+          atualizarStatus(
+            wizard.origem === "upload" ? "upload" : "tema",
+            "🎉 Tema concluído!",
+            100
+          );
+      
+          // marcar conclusão total
+          if (window.lioraEstudos?.finalizarPlano) {
+            window.lioraEstudos.finalizarPlano(wizard.tema);
           }
-        } catch (e) {
-          console.warn("⚠️ Não foi possível registrar progresso da sessão:", e);
         }
-     
-        wizard.atual++;
-        renderWizard();
-        saveProgress();
-      } else {
-        atualizarStatus(
-          wizard.origem === "upload" ? "upload" : "tema",
-          "🎉 Tema concluído!",
-          100
-        );
+      });
 
-        // Conclusão total no Study Manager
-        if (window.lioraEstudos?.completeSession) {
-          const id = `S${wizard.atual + 1}`;
-          window.lioraEstudos.completeSession(id);
-        }
-      }
-    });
     // --------------------------------------------------------
     // 🔥 GERAÇÃO DO PLANO POR TEMA
     // --------------------------------------------------------
