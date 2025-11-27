@@ -1,18 +1,16 @@
 // ==========================================================
-// 🧭 LIORA — NAV-HOME v77-COMMERCIAL-SYNC-IA-PREMIUM-ESTUDOS
+// 🧭 LIORA — NAV-HOME v78-COMMERCIAL-SYNC-IA-PREMIUM-ESTUDOS
 // ----------------------------------------------------------
-// Correções principais v77:
-// ✔ Removidos os DOMContentLoaded duplicados
-// ✔ Continue Study sempre aparece no mobile
-// ✔ Home inteligente revalidada somente após window.load
-// ✔ display:block/none forçado para mobile
-// ✔ Reset seguro sem condições de corrida
-// ✔ FAB Home sempre visível e funcional
-// ✔ Compatível com lioraEstudos, revisões e recentes
+// Correções principais v78:
+// ✔ Home Inteligente revalida várias vezes (desktop + mobile)
+// ✔ Botão "Continuar Estudo" força display:block quando há plano
+// ✔ Função robusta mesmo se lioraEstudos carregar depois
+// ✔ Logs claros no console para debug (sm/plano/btn)
+// ✔ Mantida integração com revisões + estudos recentes
 // ==========================================================
 
 (function () {
-  console.log("🔵 nav-home.js (v77) carregado...");
+  console.log("🔵 nav-home.js (v78) carregado...");
 
   document.addEventListener("DOMContentLoaded", () => {
 
@@ -145,8 +143,8 @@
       if (window.lioraLoading?.hide) window.lioraLoading.hide();
       if (window.lioraError?.hide) window.lioraError.hide();
 
-      // Atualiza home inteligente
-      atualizarHomeEstudo();
+      // Atualiza home inteligente + revisões + recentes
+      atualizarHomeEstudo("reset");
       preencherRevisoesPendentes();
       preencherEstudosRecentes();
 
@@ -163,9 +161,13 @@
     window.lioraContinueStudy = function () {
       try {
         const sm = window.lioraEstudos;
+        console.log("▶ lioraContinueStudy(): sm =", !!sm);
+
         if (!sm?.getPlanoAtivo) return;
 
         const plano = sm.getPlanoAtivo();
+        console.log("▶ lioraContinueStudy(): plano ativo =", plano);
+
         if (!plano || !plano.sessoes?.length) return;
 
         const sessoes = plano.sessoes;
@@ -198,29 +200,40 @@
     // ------------------------------------------------------
     // HOME INTELIGENTE — APARECER / SUMIR
     // ------------------------------------------------------
-    function atualizarHomeEstudo() {
+    function atualizarHomeEstudo(origemLog) {
       try {
         const sm = window.lioraEstudos;
+        const hasSm = !!sm;
+        const hasGet = !!sm?.getPlanoAtivo;
+        const plano = hasGet ? sm.getPlanoAtivo() : null;
 
-        if (!sm?.getPlanoAtivo) {
-          btnContinue?.classList.add("hidden");
+        console.log(
+          `🏠 atualizarHomeEstudo(${origemLog || "manual"}) -> sm:`,
+          hasSm,
+          "getPlanoAtivo:",
+          hasGet,
+          "plano:",
+          !!plano,
+          "btnContinue:",
+          !!btnContinue
+        );
+
+        if (!btnContinue || !resumoEstudoEl) {
+          console.warn("⚠️ Home Inteligente: botão ou resumo não encontrado no DOM.");
+          return;
+        }
+
+        if (!hasGet || !plano) {
+          // Não há plano ativo → esconde botão
+          btnContinue.classList.add("hidden");
           btnContinue.style.display = "none";
           resumoEstudoEl.textContent =
             "Crie um plano de estudo por Tema ou PDF para começar.";
           return;
         }
 
-        const plano = sm.getPlanoAtivo();
-        if (!plano) {
-          btnContinue?.classList.add("hidden");
-          btnContinue.style.display = "none";
-          resumoEstudoEl.textContent =
-            "Crie um plano de estudo por Tema ou PDF para começar.";
-          return;
-        }
-
-        // EXIBE
-        btnContinue?.classList.remove("hidden");
+        // Há plano → exibe botão de forma FORÇADA (funciona em mobile)
+        btnContinue.classList.remove("hidden");
         btnContinue.style.display = "block";
 
         resumoEstudoEl.textContent =
@@ -365,7 +378,7 @@
     // ------------------------------------------------------
     // LISTENERS PARA ATUALIZAÇÕES
     // ------------------------------------------------------
-    window.addEventListener("liora:plan-updated", atualizarHomeEstudo);
+    window.addEventListener("liora:plan-updated", () => atualizarHomeEstudo("evt-plan"));
     window.addEventListener("liora:plan-updated", preencherRevisoesPendentes);
     window.addEventListener("liora:review-updated", preencherRevisoesPendentes);
     window.addEventListener("liora:plan-updated", preencherEstudosRecentes);
@@ -456,28 +469,48 @@
     // ------------------------------------------------------
     window.lioraHardReset();
 
-    console.log("🟢 nav-home.js v77 OK (DOM pronto)");
+    // Revalida rapidamente após reset (caso lioraEstudos já esteja pronto)
+    setTimeout(() => atualizarHomeEstudo("post-reset-150ms"), 150);
+
+    console.log("🟢 nav-home.js v78 OK (DOM pronto)");
   });
 
   // ------------------------------------------------------
   // 🚀 FINAL LOAD — GARANTE MOBILE FUNCIONANDO
   // ------------------------------------------------------
   window.addEventListener("load", () => {
+    console.log("🌐 window.load disparado — reforçando Home Inteligente...");
+
+    // retries espaçados para pegar qualquer atraso do estudos.js
     setTimeout(() => {
-      try {
-        console.log("📱 Validando Home Inteligente (pós-load)...");
-        const atualizar = window.lioraContinueStudy ? true : false;
+      atualizarHomeEstudoSafe("load+300ms");
+    }, 300);
 
-        const evt1 = new Event("liora:plan-updated");
-        window.dispatchEvent(evt1);
+    setTimeout(() => {
+      atualizarHomeEstudoSafe("load+1000ms");
+    }, 1000);
 
-        const evt2 = new Event("liora:review-updated");
-        window.dispatchEvent(evt2);
-
-      } catch (e) {
-        console.warn("Erro na validação pós-load:", e);
-      }
-    }, 150);
+    setTimeout(() => {
+      atualizarHomeEstudoSafe("load+2500ms");
+    }, 2500);
   });
+
+  // helper global para chamar atualizarHomeEstudo fora do escopo
+  function atualizarHomeEstudoSafe(origem) {
+    try {
+      if (window.lioraHardReset) {
+        // não reseta, só tenta atualizar a home
+      }
+      if (window.lioraEstudos) {
+        // truque: dispara evento que já está ligado ao atualizarHomeEstudo
+        const evt = new Event("liora:plan-updated");
+        window.dispatchEvent(evt);
+      } else {
+        console.log("ℹ️ atualizarHomeEstudoSafe:", origem, "→ lioraEstudos ainda não disponível.");
+      }
+    } catch (e) {
+      console.warn("Erro em atualizarHomeEstudoSafe:", e);
+    }
+  }
 
 })();
