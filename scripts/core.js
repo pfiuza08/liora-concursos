@@ -595,9 +595,16 @@
         } catch (e) {
           console.warn("⚠️ Não foi possível registrar progresso da sessão:", e);
         }
-AQUI +++++++++++++++++++++++++++++++++++++
-                
-        
+        // ⭐ Registrar progresso da sessão atual no Study Manager
+        try {
+          const sessaoAtual = wizard.sessoes[wizard.atual];
+          if (window.lioraEstudos?.concluirSessao && sessaoAtual?.id) {
+            window.lioraEstudos.concluirSessao(sessaoAtual.id);
+          }
+        } catch (e) {
+          console.warn("⚠️ Não foi possível registrar progresso da sessão:", e);
+        }
+     
         wizard.atual++;
         renderWizard();
         saveProgress();
