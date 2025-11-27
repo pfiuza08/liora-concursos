@@ -379,6 +379,9 @@ function preencherEstudosRecentes() {
       }
          
     window.addEventListener("liora:plan-updated", atualizarHomeEstudo);
+    window.addEventListener("liora:plan-updated", preencherRevisoesPendentes);
+    window.addEventListener("liora:review-updated", preencherRevisoesPendentes);
+    document.addEventListener("DOMContentLoaded", preencherRevisoesPendentes);
     window.addEventListener("liora:plan-updated", preencherEstudosRecentes);
     document.addEventListener("DOMContentLoaded", preencherEstudosRecentes);
 
