@@ -281,6 +281,8 @@ function preencherEstudosRecentes() {
       }
          
     window.addEventListener("liora:plan-updated", atualizarHomeEstudo);
+    window.addEventListener("liora:plan-updated", preencherEstudosRecentes);
+    document.addEventListener("DOMContentLoaded", preencherEstudosRecentes);
 
     // ------------------------------------------------------
     // HOME → TEMA
