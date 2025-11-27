@@ -468,13 +468,23 @@ function preencherEstudosRecentes() {
     btnHomeDashboard?.addEventListener("click", goDashboard);
     window.homeDashboard = goDashboard;
 
-    // ------------------------------------------------------
+     // ------------------------------------------------------
     // ESTADO INICIAL
     // ------------------------------------------------------
     window.lioraHardReset();
-    atualizarHomeEstudo();
-    window.showFabHome(); // ⭐ garantir FAB ativo
-
+    
+    // 🔥 Revalidar estudo salvo — garante que mobile também mostra o botão
+    setTimeout(() => {
+      try {
+        atualizarHomeEstudo();
+        preencherEstudosRecentes?.();
+      } catch (e) {
+        console.warn("erro ao revalidar estudo:", e);
+      }
+    }, 150);
+    
+    window.showFabHome();
+  
     console.log("🟢 nav-home.js v76 OK");
   });
 })();
