@@ -370,3 +370,24 @@ html.light #liora-build-info {
   transform: translateY(0);
 }
 
+/* Força o botão "Continuar Estudo" a ser visível no mobile */
+#home-continuar-estudo {
+  display: flex !important;
+  justify-content: center;
+  align-items: center;
+  min-height: 42px;
+  padding: 10px 14px;
+  width: 100%;
+}
+
+/* Evita compressão do container no mobile */
+#liora-home .max-w-md {
+  width: 100%;
+  max-width: none;
+}
+
+/* Evita colapso por espaçamentos */
+#liora-home .space-y-3 {
+  min-height: min-content;
+}
+
