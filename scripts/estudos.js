@@ -1,289 +1,244 @@
 // ==========================================================
-// 🧠 LIORA — ESTUDOS v1
-// Memória de Estudos da Liora (localStorage)
+// 📘 LIMB — LIORA INTELLIGENT MEMORY BRAIN (estudos.js v4)
 // ----------------------------------------------------------
-// - Lê todos os planos salvos pelo core (liora:wizard:*)
-// - Cria um "inventário de estudos" em memória
-// - Fornece helpers globais em window.lioraEstudos:
-//      • scan()
-//      • getAll()
-//      • getRecentes(limit)
-//      • getByTemaNivel(tema, nivel)
-//      • recomendarSimulado()
-//      • limparTudo()
-//      • apagar(tema, nivel)
-//      • syncFromWizard(wizard)   (opcional, para o core usar)
+// Funções principais:
+// ✔ Armazena planos e sessões
+// ✔ Regras de revisão (SRI)
+// ✔ Cálculo de retenção (curva de esquecimento)
+// ✔ Agendamento adaptativo (Leitner expandido)
+// ✔ Registro automático de abertura e revisão
+// ✔ Retorna revisões pendentes
+// ✔ Integrado com nav-home e core.js
 // ==========================================================
 
 (function () {
-  console.log("🔵 lioraEstudos.js carregado...");
+  console.log("🔵 estudos.js v4 carregado…");
 
-  // --------------------------------------------------------
-  // CONSTANTES
-  // --------------------------------------------------------
-  const PREFIX = "liora:wizard:";
+  const STORAGE_KEY = "liora:estudos:v4";
 
-  /**
-   * Normaliza tema/nivel para chave estável
-   */
-  function makeKey(tema, nivel) {
-    const t = (tema || "").toString().trim().toLowerCase();
-    const n = (nivel || "").toString().trim().toLowerCase();
-    return `${t}::${n}`;
-  }
-
-  /**
-   * Converte qualquer valor em Date (ou null)
-   */
-  function toDate(value) {
-    if (!value) return null;
+  // ---------------------------------------------------------
+  // 🔧 Utilidades base
+  // ---------------------------------------------------------
+  function load() {
     try {
-      const d = new Date(value);
-      return isNaN(d.getTime()) ? null : d;
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return { planos: [], ativoId: null };
+      const parsed = JSON.parse(raw);
+      if (!parsed.planos) parsed.planos = [];
+      return parsed;
     } catch {
-      return null;
+      return { planos: [], ativoId: null };
     }
   }
 
-  // --------------------------------------------------------
-  // REGISTRY INTERNO
-  // --------------------------------------------------------
-  const registry = {
-    // [key: string]: StudyRecord
-    items: {},
-  };
-
-  /**
-   * Cria um StudyRecord a partir do objeto wizard salvo no localStorage
-   */
-  function buildRecordFromWizard(lsKey, wizardObj) {
-    if (!wizardObj || typeof wizardObj !== "object") return null;
-
-    const tema = wizardObj.tema || "Tema sem nome";
-    const nivel = wizardObj.nivel || "iniciante";
-    const key = makeKey(tema, nivel);
-
-    const sessoes = Array.isArray(wizardObj.sessoes) ? wizardObj.sessoes : [];
-    const sessoesTotal = sessoes.length || 0;
-
-    let sessoesConcluidas = 0;
-    if (typeof wizardObj.atual === "number" && sessoesTotal > 0) {
-      // aqui poderíamos ser mais sofisticados, mas por enquanto:
-      sessoesConcluidas = Math.min(
-        Math.max(wizardObj.atual, 0),
-        sessoesTotal
-      );
-    }
-
-    // timestamp salvo pelo core (se existir)
-    let atualizadoEm = toDate(wizardObj.atualizadoEm);
-
-    // Se não existir, gera agora e já devolve pro localStorage
-    if (!atualizadoEm) {
-      atualizadoEm = new Date();
-      try {
-        wizardObj.atualizadoEm = atualizadoEm.toISOString();
-        localStorage.setItem(lsKey, JSON.stringify(wizardObj));
-      } catch (e) {
-        console.warn("⚠️ Não foi possível backfill de atualizadoEm:", e);
-      }
-    }
-
-    return {
-      tema,
-      nivel,
-      origem: wizardObj.origem || "tema",
-      sessoesTotal,
-      sessoesConcluidas,
-      atualizadoEm,
-      keyStorage: lsKey,
-      key, // chave normalizada (tema::nivel)
-    };
-  }
-
-  /**
-   * Faz o scan geral do localStorage e recria o registry
-   */
-  function scan() {
-    registry.items = {};
-
+  function save(data) {
     try {
-      for (let i = 0; i < localStorage.length; i++) {
-        const lsKey = localStorage.key(i);
-        if (!lsKey || !lsKey.startsWith(PREFIX)) continue;
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    } catch (e) {
+      console.warn("⚠️ Não foi possível salvar estudos:", e);
+    }
+  }
 
-        const raw = localStorage.getItem(lsKey);
-        if (!raw) continue;
+  function hojeISO() {
+    return new Date().toISOString().slice(0, 10); // yyyy-mm-dd
+  }
 
-        let wizardObj;
-        try {
-          wizardObj = JSON.parse(raw);
-        } catch (e) {
-          console.warn("⚠️ lioraEstudos: JSON inválido em", lsKey, e);
-          continue;
+  function diasEntre(aISO, bISO) {
+    const a = new Date(aISO);
+    const b = new Date(bISO);
+    return Math.floor((b - a) / (1000 * 60 * 60 * 24));
+  }
+
+  // ---------------------------------------------------------
+  // 🎛️ Cálculo da retenção (modelo Ebbinghaus)
+  // ---------------------------------------------------------
+  function calcularRetencao(sessao) {
+    if (!sessao.lastViewedISO) return 0;
+
+    const dias = diasEntre(sessao.lastViewedISO, hojeISO());
+    const fator = 1.5; // constante de esquecimento da Liora
+
+    const ret = Math.exp(-dias / fator) * 100;
+    return Math.max(0, Math.min(100, ret));
+  }
+
+  // ---------------------------------------------------------
+  // 🗂️ Agendamento de revisões (modelo Leitner adaptado)
+  // ---------------------------------------------------------
+  function calcularProximaRevisao(sessao) {
+    const revisoes = sessao.revisoes || 0;
+
+    let dias = 1; // primeira revisão
+
+    if (revisoes === 1) dias = 3;
+    else if (revisoes === 2) dias = 7;
+    else if (revisoes === 3) dias = 14;
+    else if (revisoes >= 4) dias = 30;
+
+    const prox = new Date();
+    prox.setDate(prox.getDate() + dias);
+    return prox.toISOString().slice(0, 10);
+  }
+
+  // ---------------------------------------------------------
+  // 📘 Study Manager (API pública)
+  // ---------------------------------------------------------
+  const api = {
+    // -----------------------------------------------------
+    // Criar plano
+    // -----------------------------------------------------
+    definirPlano({ tema, origem, sessoes }) {
+      const data = load();
+      const id = `plano_${Date.now()}`;
+
+      const plano = {
+        id,
+        tema,
+        origem,
+        sessoes: sessoes.map((s, i) => ({
+          id: s.id || `sessao_${i + 1}`,
+          ordem: s.ordem || i + 1,
+          titulo: s.titulo || "",
+          progresso: Number(s.progresso || 0),
+
+          // Dia 4 — novos campos
+          firstViewedISO: null,
+          lastViewedISO: null,
+          revisoes: 0,
+          nextReviewISO: null,
+          retencao: 0,
+
+          conteudo: s.conteudo || {},
+          analogias: s.analogias || [],
+          ativacao: s.ativacao || [],
+          quiz: s.quiz || {},
+          flashcards: s.flashcards || [],
+          mindmap: s.mindmap || ""
+        })),
+
+        criadoISO: hojeISO(),
+        atualizadoISO: hojeISO()
+      };
+
+      data.planos.push(plano);
+      data.ativoId = id;
+
+      save(data);
+
+      window.dispatchEvent(new Event("liora:plan-updated"));
+      return plano;
+    },
+
+    // -----------------------------------------------------
+    // Obter plano ativo
+    // -----------------------------------------------------
+    getPlanoAtivo() {
+      const data = load();
+      return data.planos.find(p => p.id === data.ativoId) || null;
+    },
+
+    // -----------------------------------------------------
+    // Atualizar progresso (Dia 3)
+    // -----------------------------------------------------
+    atualizarProgresso(sessaoId, pct) {
+      const data = load();
+      const plano = data.planos.find(p => p.id === data.ativoId);
+      if (!plano) return;
+
+      const s = plano.sessoes.find(x => x.id === sessaoId);
+      if (!s) return;
+
+      s.progresso = pct;
+      plano.atualizadoISO = hojeISO();
+
+      save(data);
+      window.dispatchEvent(new Event("liora:plan-updated"));
+    },
+
+    // -----------------------------------------------------
+    // Registrar abertura de sessão (Dia 4)
+    // -----------------------------------------------------
+    registrarAbertura(sessaoId) {
+      const data = load();
+      const plano = data.planos.find(p => p.id === data.ativoId);
+      if (!plano) return;
+
+      const s = plano.sessoes.find(x => x.id === sessaoId);
+      if (!s) return;
+
+      const hoje = hojeISO();
+      if (!s.firstViewedISO) s.firstViewedISO = hoje;
+      s.lastViewedISO = hoje;
+
+      // recalculamos retenção
+      s.retencao = calcularRetencao(s);
+
+      plano.atualizadoISO = hoje;
+      save(data);
+    },
+
+    // -----------------------------------------------------
+    // Registrar revisão (Dia 4)
+    // -----------------------------------------------------
+    registrarRevisao(sessaoId) {
+      const data = load();
+      const plano = data.planos.find(p => p.id === data.ativoId);
+      if (!plano) return;
+
+      const s = plano.sessoes.find(x => x.id === sessaoId);
+      if (!s) return;
+
+      s.revisoes = (s.revisoes || 0) + 1;
+      s.lastViewedISO = hojeISO();
+      s.retencao = 100;
+
+      // Agendar próxima revisão
+      s.nextReviewISO = calcularProximaRevisao(s);
+
+      plano.atualizadoISO = hojeISO();
+      save(data);
+
+      window.dispatchEvent(new Event("liora:review-updated"));
+    },
+
+    // -----------------------------------------------------
+    // Retornar revisões pendentes (Dia 4)
+    // -----------------------------------------------------
+    getRevisoesPendentes() {
+      const data = load();
+      const plano = data.planos.find(p => p.id === data.ativoId);
+      if (!plano) return [];
+
+      const hoje = hojeISO();
+
+      return plano.sessoes.filter(s => {
+        const ret = calcularRetencao(s);
+        const vencida =
+          (s.nextReviewISO && s.nextReviewISO <= hoje) ||
+          ret < 40; // urgência
+
+        if (vencida) {
+          s.retencao = ret;
         }
 
-        const rec = buildRecordFromWizard(lsKey, wizardObj);
-        if (!rec) continue;
+        return vencida;
+      });
+    },
 
-        registry.items[rec.key] = rec;
-      }
-
-      console.log("🧠 lioraEstudos scan OK:", Object.keys(registry.items).length, "registros.");
-    } catch (e) {
-      console.error("❌ lioraEstudos.scan ERRO:", e);
+    // -----------------------------------------------------
+    // Listar estudos recentes (Dia 3)
+    // -----------------------------------------------------
+    listarRecentes(limit = 5) {
+      const data = load();
+      return data.planos
+        .slice()
+        .sort(
+          (a, b) =>
+            new Date(b.atualizadoISO) - new Date(a.atualizadoISO)
+        )
+        .slice(0, limit);
     }
-
-    return registry.items;
-  }
-
-  // --------------------------------------------------------
-  // HELPERS PÚBLICOS
-  // --------------------------------------------------------
-  function getAll() {
-    const arr = Object.values(registry.items);
-    return arr
-      .slice()
-      .sort((a, b) => b.atualizadoEm - a.atualizadoEm); // mais recente primeiro
-  }
-
-  function getRecentes(limit = 5) {
-    return getAll().slice(0, limit);
-  }
-
-  function getByTemaNivel(tema, nivel) {
-    const key = makeKey(tema, nivel);
-    return registry.items[key] || null;
-  }
-
-  /**
-   * Usa o registry para sugerir um simulado.
-   * Regra inicial (pode sofisticar depois):
-   * - Pega o estudo mais recente
-   * - Tema = nome do tema
-   * - Dificuldade aproximada pelo nível
-   * - Banca default: FGV
-   * - Qtd: baseada no tamanho do plano
-   */
-  function recomendarSimulado() {
-    const todos = getAll();
-    if (!todos.length) {
-      return null; // nada a recomendar ainda
-    }
-
-    const estudo = todos[0]; // mais recente
-
-    let dificuldade = "misturado";
-    const nivelNorm = (estudo.nivel || "").toLowerCase();
-    if (nivelNorm.includes("iniciante")) dificuldade = "facil";
-    else if (nivelNorm.includes("inter")) dificuldade = "medio";
-    else if (nivelNorm.includes("avanc")) dificuldade = "dificil";
-
-    let qtd = 10;
-    if (estudo.sessoesTotal >= 8) qtd = 20;
-    if (estudo.sessoesTotal >= 15) qtd = 30;
-
-    return {
-      tema: estudo.tema,
-      banca: "FGV", // pode ser ajustado depois com base no histórico
-      qtd,
-      dificuldade,
-      nivel: estudo.nivel,
-      origem: estudo.origem,
-    };
-  }
-
-  /**
-   * Remove TODOS os estudos da memória (só os wizards)
-   */
-  function limparTudo() {
-    const keysToDelete = [];
-
-    for (let i = 0; i < localStorage.length; i++) {
-      const lsKey = localStorage.key(i);
-      if (lsKey && lsKey.startsWith(PREFIX)) {
-        keysToDelete.push(lsKey);
-      }
-    }
-
-    keysToDelete.forEach(k => {
-      try {
-        localStorage.removeItem(k);
-      } catch (e) {
-        console.warn("⚠️ Não foi possível remover", k, e);
-      }
-    });
-
-    registry.items = {};
-    console.log("🗑️ lioraEstudos: todos os estudos foram removidos.");
-  }
-
-  /**
-   * Remove apenas 1 estudo (tema + nível)
-   */
-  function apagar(tema, nivel) {
-    const key = makeKey(tema, nivel);
-    const rec = registry.items[key];
-    if (!rec) return;
-
-    try {
-      localStorage.removeItem(rec.keyStorage);
-    } catch (e) {
-      console.warn("⚠️ Não foi possível remover do localStorage:", rec.keyStorage, e);
-    }
-
-    delete registry.items[key];
-    console.log(`🗑️ lioraEstudos: estudo removido (${tema} / ${nivel}).`);
-  }
-
-  /**
-   * Sincroniza o registry com um objeto wizard que acabou de ser salvo pelo core.
-   * Opcional, mas útil se você quiser atualizar em tempo real sem precisar dar scan().
-   */
-  function syncFromWizard(wizardObj) {
-    if (!wizardObj || !wizardObj.tema) return;
-
-    const tema = wizardObj.tema;
-    const nivel = wizardObj.nivel || "iniciante";
-    const key = makeKey(tema, nivel);
-
-    // Encontrar a key real do localStorage
-    let lsKey = null;
-    const expectedPrefix = PREFIX + tema.toLowerCase() + "::" + (nivel || "").toLowerCase();
-
-    for (let i = 0; i < localStorage.length; i++) {
-      const k = localStorage.key(i);
-      if (k && k.toLowerCase() === expectedPrefix) {
-        lsKey = k;
-        break;
-      }
-    }
-
-    // Se não encontrar, não sincroniza
-    if (!lsKey) return;
-
-    const rec = buildRecordFromWizard(lsKey, wizardObj);
-    if (!rec) return;
-
-    registry.items[rec.key] = rec;
-  }
-
-  // --------------------------------------------------------
-  // EXPOE GLOBAL
-  // --------------------------------------------------------
-  window.lioraEstudos = {
-    scan,
-    getAll,
-    getRecentes,
-    getByTemaNivel,
-    recomendarSimulado,
-    limparTudo,
-    apagar,
-    syncFromWizard,
   };
 
-  // Faz um primeiro scan ao carregar
-  scan();
-
-  console.log("🟢 lioraEstudos inicializado.");
+  window.lioraEstudos = api;
 })();
