@@ -406,47 +406,9 @@
   }
 </style>
 
-<div id="liora-dev-trigger"></div>
-
 <script>
-(function () {
-  const trigger = document.getElementById("liora-dev-trigger");
-  let clicks = 0;
-  let timer = null;
-
-  function enableEruda() {
-    if (window.eruda) return eruda.show();
-
-    const script = document.createElement("script");
-    script.src = "https://cdn.jsdelivr.net/npm/eruda";
-    document.body.appendChild(script);
-
-    script.onload = () => {
-      eruda.init();
-      console.log("🛠 ERUDA Dev Console ativado!");
-      alert("ERUDA Console ativado!");
-    };
-  }
-
-  trigger.addEventListener("click", () => {
-    clicks++;
-
-    if (!timer) {
-      timer = setTimeout(() => {
-        clicks = 0;
-        timer = null;
-      }, 2500);
-    }
-
-    if (clicks >= 5) {
-      clicks = 0;
-      clearTimeout(timer);
-      timer = null;
-      enableEruda();
-    }
-  });
-
-})();
+  console.error("🔴 TESTE — ERRO FORÇADO: Se você está vendo isso, o console mobile está funcionando.");
+  naoExiste.funcaoQuebrada(); // força um ReferenceError imediatamente
 </script>
 
   
