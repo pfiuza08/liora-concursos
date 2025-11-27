@@ -964,8 +964,14 @@
         console.error("Erro em lioraIrParaSessao:", e);
       }
     };
-
-
+      window.addEventListener("liora:review-updated", () => {
+        try {
+          renderPlanoResumo(wizard.plano);
+          renderWizard();
+        } catch (e) {
+          console.warn("⚠️ Erro ao atualizar tela após revisão:", e);
+        }
+});
     // --------------------------------------------------------
     // FIM DO CORE
     // --------------------------------------------------------
