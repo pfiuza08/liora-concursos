@@ -236,6 +236,104 @@
       }
     }
 // =======================================================
+// 🔁 REVISÕES PENDENTES — UI PREMIUM
+// =======================================================
+function preencherRevisoesPendentes() {
+  const box = document.getElementById("liora-revisoes-box");
+  const list = document.getElementById("liora-revisoes-list");
+  if (!box || !list) return;
+
+  const sm = window.lioraEstudos;
+  if (!sm?.getRevisoesPendentes) return;
+
+  const revs = sm.getRevisoesPendentes();
+
+  if (!revs.length) {
+    box.classList.add("hidden");
+    return;
+  }
+
+  box.classList.remove("hidden");
+  list.innerHTML = "";
+
+  revs.forEach(s => {
+    const pct = Math.round(s.retencao || 0);
+    const next = s.nextReviewISO || "Hoje";
+
+    const fillColor =
+      pct >= 70 ? "var(--brand)" :
+      pct >= 40 ? "orange" :
+                  "red";
+
+    const urgente = pct < 40
+      ? `<span class="text-red-500 text-xs font-bold ml-2">URGENTE</span>`
+      : "";
+
+    const card = document.createElement("div");
+    card.className = "liora-rev-card";
+
+    card.innerHTML = `
+      <div class="flex justify-between items-start">
+        <div>
+          <div class="font-semibold text-[var(--fg)]">${s.titulo}</div>
+          <div class="text-xs text-[var(--muted)] mt-1">
+            Próxima revisão: ${next} ${urgente}
+          </div>
+          <div class="liora-ret-bar mt-2">
+            <div class="liora-ret-bar-fill"
+                 style="width:${pct}%; background:${fillColor}"></div>
+          </div>
+          <div class="text-xs text-[var(--muted)] mt-1">${pct}% de retenção</div>
+        </div>
+
+        <button class="liora-rev-btn">Revisar agora</button>
+      </div>
+    `;
+
+    // botão revisar agora
+    card.querySelector(".liora-rev-btn")
+      .addEventListener("click", e => {
+        e.stopPropagation();
+        abrirSessaoParaRevisao(s.id);
+      });
+
+    // clique no card
+    card.addEventListener("click", () => abrirSessaoParaRevisao(s.id));
+
+    list.appendChild(card);
+  });
+}
+
+// =======================================================
+// 🔁 Função para abrir sessão diretamente no modo revisão
+// =======================================================
+function abrirSessaoParaRevisao(sessaoId) {
+  const sm = window.lioraEstudos;
+  const plano = sm?.getPlanoAtivo();
+  if (!plano) return;
+
+  // descobre origem (tema ou upload)
+  if (plano.origem === "tema") {
+    document.getElementById("home-tema")?.click();
+  } else {
+    document.getElementById("home-upload")?.click();
+  }
+
+  // encontra index
+  const index = plano.sessoes.findIndex(s => s.id === sessaoId);
+  if (index < 0) return;
+
+  // abre wizard após carregar UI
+  setTimeout(() => {
+    if (window.lioraIrParaSessao) {
+      window.lioraIrParaSessao(index, true); // TRUE = modo revisão
+    }
+  }, 350);
+}
+ 
+      
+    
+// =======================================================
 // ⭐ LISTA DE ESTUDOS RECENTES (Home)
 // =======================================================
 function preencherEstudosRecentes() {
