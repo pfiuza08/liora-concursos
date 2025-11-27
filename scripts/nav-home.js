@@ -1,20 +1,18 @@
 // ==========================================================
-// 🧭 LIORA — NAV-HOME v76-COMMERCIAL-SYNC-IA-PREMIUM-ESTUDOS
+// 🧭 LIORA — NAV-HOME v77-COMMERCIAL-SYNC-IA-PREMIUM-ESTUDOS
 // ----------------------------------------------------------
-// Inclui:
-// ✔ Reset total (lioraHardReset)
-// ✔ Prefill automático de simulados (lioraPreFillSimulado)
-// ✔ Memória de estudos integrada (lioraEstudos)
-// ✔ Botão Início sempre visível e funcional
-// ✔ Home Inteligente (Continuar Estudo)
-// ✔ Continue Study Engine (Modo Inteligente)
-// ✔ Jump automático para sessão correta
-// ✔ Sincronização com core.js / estudos.js
-// ✔ Correção de FAB Home invisível
+// Correções principais v77:
+// ✔ Removidos os DOMContentLoaded duplicados
+// ✔ Continue Study sempre aparece no mobile
+// ✔ Home inteligente revalidada somente após window.load
+// ✔ display:block/none forçado para mobile
+// ✔ Reset seguro sem condições de corrida
+// ✔ FAB Home sempre visível e funcional
+// ✔ Compatível com lioraEstudos, revisões e recentes
 // ==========================================================
 
 (function () {
-  console.log("🔵 nav-home.js (v76) carregado...");
+  console.log("🔵 nav-home.js (v77) carregado...");
 
   document.addEventListener("DOMContentLoaded", () => {
 
@@ -59,8 +57,6 @@
     function showApp() {
       home?.classList.add("hidden");
       app?.classList.remove("hidden");
-
-      // Ao entrar no APP, FAB deve estar visível
       window.showFabHome();
     }
 
@@ -71,7 +67,6 @@
       if (viewTitle) viewTitle.textContent = "";
       if (viewSubtitle) viewSubtitle.textContent = "";
 
-      // ⭐ FAB sempre visível na Home
       window.showFabHome();
     }
 
@@ -142,29 +137,28 @@
         simTimer.classList.add("hidden");
       }
 
-      // FECHA MODAL
+      // fecha modal
       const modal = document.getElementById("sim-modal-backdrop");
       if (modal) modal.classList.remove("visible");
 
-      // FECHA LOADING / ERRO
+      // fecha overlays
       if (window.lioraLoading?.hide) window.lioraLoading.hide();
       if (window.lioraError?.hide) window.lioraError.hide();
 
       // Atualiza home inteligente
       atualizarHomeEstudo();
       preencherRevisoesPendentes();
+      preencherEstudosRecentes();
 
-      // ⭐ Garante FAB funcional após reset
       window.showFabHome();
 
       console.log("🧹✨ Reset completo FINALIZADO!");
     };
 
-    // FAB HOME → sempre reset total
     fabHome?.addEventListener("click", () => window.lioraHardReset());
 
     // ------------------------------------------------------
-    // ⭐ CONTINUE STUDY ENGINE — MODO INTELIGENTE
+    // ⭐ CONTINUE STUDY ENGINE — fluxo inteligente
     // ------------------------------------------------------
     window.lioraContinueStudy = function () {
       try {
@@ -176,24 +170,20 @@
 
         const sessoes = plano.sessoes;
 
-        // alvo é a primeira sessão NÃO concluída
+        // pega 1ª sessão não concluída
         let alvo = sessoes.find(s => Number(s.progresso || 0) < 100);
         if (!alvo) alvo = sessoes[sessoes.length - 1];
 
         const index = Number(alvo.ordem || 1) - 1;
 
         // abre painel correto
-        if (plano.origem === "tema") {
-          btnHomeTema?.click();
-        } else {
-          btnHomeUpload?.click();
-        }
+        plano.origem === "tema"
+          ? btnHomeTema?.click()
+          : btnHomeUpload?.click();
 
-        // jump após renderizar UI
+        // jump após UI renderizar
         setTimeout(() => {
-          if (window.lioraIrParaSessao) {
-            window.lioraIrParaSessao(index);
-          }
+          window.lioraIrParaSessao && window.lioraIrParaSessao(index);
         }, 350);
 
       } catch (e) {
@@ -201,34 +191,38 @@
       }
     };
 
-    // ------------------------------------------------------
-    // CONTINUAR ESTUDO — Listener
-    // ------------------------------------------------------
     if (btnContinue) {
       btnContinue.addEventListener("click", () => window.lioraContinueStudy());
     }
 
     // ------------------------------------------------------
-    // Atualiza Home Inteligente
+    // HOME INTELIGENTE — APARECER / SUMIR
     // ------------------------------------------------------
     function atualizarHomeEstudo() {
       try {
         const sm = window.lioraEstudos;
 
-        if (!sm?.getPlanoAtivo) return;
-
-        const plano = sm.getPlanoAtivo();
-
-        if (!btnContinue || !resumoEstudoEl) return;
-
-        if (!plano) {
-          btnContinue.classList.add("hidden");
+        if (!sm?.getPlanoAtivo) {
+          btnContinue?.classList.add("hidden");
+          btnContinue.style.display = "none";
           resumoEstudoEl.textContent =
             "Crie um plano de estudo por Tema ou PDF para começar.";
           return;
         }
 
-        btnContinue.classList.remove("hidden");
+        const plano = sm.getPlanoAtivo();
+        if (!plano) {
+          btnContinue?.classList.add("hidden");
+          btnContinue.style.display = "none";
+          resumoEstudoEl.textContent =
+            "Crie um plano de estudo por Tema ou PDF para começar.";
+          return;
+        }
+
+        // EXIBE
+        btnContinue?.classList.remove("hidden");
+        btnContinue.style.display = "block";
+
         resumoEstudoEl.textContent =
           `Você está estudando: ${plano.tema} (${plano.sessoes.length} sessões)`;
 
@@ -236,155 +230,145 @@
         console.error("Erro ao atualizar Home Inteligente:", e);
       }
     }
-// =======================================================
-// 🔁 REVISÕES PENDENTES — UI PREMIUM
-// =======================================================
-function preencherRevisoesPendentes() {
-  const box = document.getElementById("liora-revisoes-box");
-  const list = document.getElementById("liora-revisoes-list");
-  if (!box || !list) return;
 
-  const sm = window.lioraEstudos;
-  if (!sm?.getRevisoesPendentes) return;
+    // ------------------------------------------------------
+    // REVISÕES PENDENTES
+    // ------------------------------------------------------
+    function preencherRevisoesPendentes() {
+      const box = document.getElementById("liora-revisoes-box");
+      const list = document.getElementById("liora-revisoes-list");
+      if (!box || !list) return;
 
-  const revs = sm.getRevisoesPendentes();
+      const sm = window.lioraEstudos;
+      if (!sm?.getRevisoesPendentes) return;
 
-  if (!revs.length) {
-    box.classList.add("hidden");
-    return;
-  }
+      const revs = sm.getRevisoesPendentes();
 
-  box.classList.remove("hidden");
-  list.innerHTML = "";
-
-  revs.forEach(s => {
-    const pct = Math.round(s.retencao || 0);
-    const next = s.nextReviewISO || "Hoje";
-
-    const fillColor =
-      pct >= 70 ? "var(--brand)" :
-      pct >= 40 ? "orange" :
-                  "red";
-
-    const urgente = pct < 40
-      ? `<span class="text-red-500 text-xs font-bold ml-2">URGENTE</span>`
-      : "";
-
-    const card = document.createElement("div");
-    card.className = "liora-rev-card";
-
-    card.innerHTML = `
-      <div class="flex justify-between items-start">
-        <div>
-          <div class="font-semibold text-[var(--fg)]">${s.titulo}</div>
-          <div class="text-xs text-[var(--muted)] mt-1">
-            Próxima revisão: ${next} ${urgente}
-          </div>
-          <div class="liora-ret-bar mt-2">
-            <div class="liora-ret-bar-fill"
-                 style="width:${pct}%; background:${fillColor}"></div>
-          </div>
-          <div class="text-xs text-[var(--muted)] mt-1">${pct}% de retenção</div>
-        </div>
-
-        <button class="liora-rev-btn">Revisar agora</button>
-      </div>
-    `;
-
-    // botão revisar agora
-    card.querySelector(".liora-rev-btn")
-      .addEventListener("click", e => {
-        e.stopPropagation();
-        abrirSessaoParaRevisao(s.id);
-      });
-
-    // clique no card
-    card.addEventListener("click", () => abrirSessaoParaRevisao(s.id));
-
-    list.appendChild(card);
-  });
-}
-
-// =======================================================
-// 🔁 Função para abrir sessão diretamente no modo revisão
-// =======================================================
-function abrirSessaoParaRevisao(sessaoId) {
-  const sm = window.lioraEstudos;
-  const plano = sm?.getPlanoAtivo();
-  if (!plano) return;
-
-  // descobre origem (tema ou upload)
-  if (plano.origem === "tema") {
-    document.getElementById("home-tema")?.click();
-  } else {
-    document.getElementById("home-upload")?.click();
-  }
-
-  // encontra index
-  const index = plano.sessoes.findIndex(s => s.id === sessaoId);
-  if (index < 0) return;
-
-  // abre wizard após carregar UI
-  setTimeout(() => {
-    if (window.lioraIrParaSessao) {
-      window.lioraIrParaSessao(index, true); // TRUE = modo revisão
-    }
-  }, 350);
-}
- 
-      
-    
-// =======================================================
-// ⭐ LISTA DE ESTUDOS RECENTES (Home)
-// =======================================================
-function preencherEstudosRecentes() {
-  const container = document.getElementById("liora-estudos-recentes");
-  const list = document.getElementById("liora-estudos-list");
-  if (!container || !list) return;
-
-  const sm = window.lioraEstudos;
-  if (!sm?.listarRecentes) return;
-
-  const recentes = sm.listarRecentes(5);
-
-  if (!recentes.length) {
-    container.classList.add("hidden");
-    return;
-  }
-
-        container.classList.remove("hidden");
-        list.innerHTML = "";
-      
-        recentes.forEach(plano => {
-          const progressoMedio =
-            plano.sessoes.reduce((acc, s) => acc + (s.progresso || 0), 0) /
-            plano.sessoes.length;
-      
-          const div = document.createElement("button");
-          div.className = "liora-card-recent hover:bg-[var(--bg2)] transition p-3 rounded-xl text-left border border-[var(--border)]";
-          div.innerHTML = `
-            <div class="font-semibold text-[var(--fg)]">${plano.tema}</div>
-            <div class="text-sm text-[var(--muted)]">
-              ${plano.sessoes.length} sessões • ${progressoMedio.toFixed(0)}% concluído
-            </div>
-          `;
-      
-          // ⭐ Clicar em um estudo recente → continuar exatamente nele
-          div.addEventListener("click", () => {
-            window.lioraEstudos && (window.lioraEstudos._forcarAtivo = plano.id);
-            if (window.lioraContinueStudy) window.lioraContinueStudy();
-          });
-      
-          list.appendChild(div);
-        });
+      if (!revs.length) {
+        box.classList.add("hidden");
+        return;
       }
-         
+
+      box.classList.remove("hidden");
+      list.innerHTML = "";
+
+      revs.forEach(s => {
+        const pct = Math.round(s.retencao || 0);
+        const next = s.nextReviewISO || "Hoje";
+
+        const fillColor =
+          pct >= 70 ? "var(--brand)" :
+          pct >= 40 ? "orange" :
+                      "red";
+
+        const urgente = pct < 40
+          ? `<span class="text-red-500 text-xs font-bold ml-2">URGENTE</span>`
+          : "";
+
+        const card = document.createElement("div");
+        card.className = "liora-rev-card";
+
+        card.innerHTML = `
+          <div class="flex justify-between items-start">
+            <div>
+              <div class="font-semibold text-[var(--fg)]">${s.titulo}</div>
+              <div class="text-xs text-[var(--muted)] mt-1">
+                Próxima revisão: ${next} ${urgente}
+              </div>
+              <div class="liora-ret-bar mt-2">
+                <div class="liora-ret-bar-fill"
+                     style="width:${pct}%; background:${fillColor}"></div>
+              </div>
+              <div class="text-xs text-[var(--muted)] mt-1">${pct}% de retenção</div>
+            </div>
+
+            <button class="liora-rev-btn">Revisar agora</button>
+          </div>
+        `;
+
+        // botão revisão
+        card.querySelector(".liora-rev-btn")
+          .addEventListener("click", e => {
+            e.stopPropagation();
+            abrirSessaoParaRevisao(s.id);
+          });
+
+        card.addEventListener("click", () => abrirSessaoParaRevisao(s.id));
+
+        list.appendChild(card);
+      });
+    }
+
+    function abrirSessaoParaRevisao(sessaoId) {
+      const sm = window.lioraEstudos;
+      const plano = sm?.getPlanoAtivo();
+      if (!plano) return;
+
+      plano.origem === "tema"
+        ? btnHomeTema?.click()
+        : btnHomeUpload?.click();
+
+      const index = plano.sessoes.findIndex(s => s.id === sessaoId);
+      if (index < 0) return;
+
+      setTimeout(() => {
+        window.lioraIrParaSessao &&
+          window.lioraIrParaSessao(index, true);
+      }, 350);
+    }
+
+    // ------------------------------------------------------
+    // ESTUDOS RECENTES
+    // ------------------------------------------------------
+    function preencherEstudosRecentes() {
+      const container = document.getElementById("liora-estudos-recentes");
+      const list = document.getElementById("liora-estudos-list");
+      if (!container || !list) return;
+
+      const sm = window.lioraEstudos;
+      if (!sm?.listarRecentes) return;
+
+      const recentes = sm.listarRecentes(5);
+
+      if (!recentes.length) {
+        container.classList.add("hidden");
+        return;
+      }
+
+      container.classList.remove("hidden");
+      list.innerHTML = "";
+
+      recentes.forEach(plano => {
+        const progressoMedio =
+          plano.sessoes.reduce((acc, s) => acc + (s.progresso || 0), 0) /
+          plano.sessoes.length;
+
+        const div = document.createElement("button");
+        div.className =
+          "liora-card-recent hover:bg-[var(--bg2)] transition p-3 rounded-xl text-left border border-[var(--border)]";
+        div.innerHTML = `
+          <div class="font-semibold text-[var(--fg)]">${plano.tema}</div>
+          <div class="text-sm text-[var(--muted)]">
+            ${plano.sessoes.length} sessões • ${progressoMedio.toFixed(0)}% concluído
+          </div>
+        `;
+
+        div.addEventListener("click", () => {
+          window.lioraEstudos && (window.lioraEstudos._forcarAtivo = plano.id);
+          window.lioraContinueStudy && window.lioraContinueStudy();
+        });
+
+        list.appendChild(div);
+      });
+    }
+
+    // ------------------------------------------------------
+    // LISTENERS PARA ATUALIZAÇÕES
+    // ------------------------------------------------------
     window.addEventListener("liora:plan-updated", atualizarHomeEstudo);
     window.addEventListener("liora:plan-updated", preencherRevisoesPendentes);
     window.addEventListener("liora:review-updated", preencherRevisoesPendentes);
-    document.addEventListener("DOMContentLoaded", preencherRevisoesPendentes);
     window.addEventListener("liora:plan-updated", preencherEstudosRecentes);
-    document.addEventListener("DOMContentLoaded", preencherEstudosRecentes);
 
     // ------------------------------------------------------
     // HOME → TEMA
@@ -442,7 +426,7 @@ function preencherEstudosRecentes() {
       window.showFabHome();
 
       setTimeout(() => {
-        if (window.lioraPreFillSimulado) window.lioraPreFillSimulado();
+        window.lioraPreFillSimulado && window.lioraPreFillSimulado();
       }, 150);
     }
     btnHomeSimulados?.addEventListener("click", goSimulados);
@@ -461,30 +445,39 @@ function preencherEstudosRecentes() {
       window.hideSimFab();
       window.showFabHome();
 
-      if (window.lioraDashboard?.atualizar) {
+      window.lioraDashboard?.atualizar &&
         window.lioraDashboard.atualizar();
-      }
     }
     btnHomeDashboard?.addEventListener("click", goDashboard);
     window.homeDashboard = goDashboard;
 
-     // ------------------------------------------------------
+    // ------------------------------------------------------
     // ESTADO INICIAL
     // ------------------------------------------------------
     window.lioraHardReset();
-    
-    // 🔥 Revalidar estudo salvo — garante que mobile também mostra o botão
+
+    console.log("🟢 nav-home.js v77 OK (DOM pronto)");
+  });
+
+  // ------------------------------------------------------
+  // 🚀 FINAL LOAD — GARANTE MOBILE FUNCIONANDO
+  // ------------------------------------------------------
+  window.addEventListener("load", () => {
     setTimeout(() => {
       try {
-        atualizarHomeEstudo();
-        preencherEstudosRecentes?.();
+        console.log("📱 Validando Home Inteligente (pós-load)...");
+        const atualizar = window.lioraContinueStudy ? true : false;
+
+        const evt1 = new Event("liora:plan-updated");
+        window.dispatchEvent(evt1);
+
+        const evt2 = new Event("liora:review-updated");
+        window.dispatchEvent(evt2);
+
       } catch (e) {
-        console.warn("erro ao revalidar estudo:", e);
+        console.warn("Erro na validação pós-load:", e);
       }
     }, 150);
-    
-    window.showFabHome();
-  
-    console.log("🟢 nav-home.js v76 OK");
   });
+
 })();
