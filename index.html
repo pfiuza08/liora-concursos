@@ -44,45 +44,48 @@
   <!-- ========================================================
        HOME — FULLSCREEN
        ======================================================== -->
-  <section id="liora-home"
-           class="min-h-[60vh] flex flex-col items-center justify-center text-center space-y-10">
-
-    <div class="space-y-3">
-      <h2 class="text-2xl font-semibold tracking-tight text-[var(--fg)]">
-        Como deseja estudar hoje?
-      </h2>
-      <p class="text-sm text-[var(--muted)] max-w-md">
-        A Liora cria planos de estudo, organiza sessões e gera simulados inteligentes adaptados à sua necessidade.
-      </p>
-    </div>
-
-    <!-- ESTUDO -->
-    <div class="space-y-3">
-      <h3 class="text-base font-medium tracking-wide text-[var(--muted)]">PLANO DE ESTUDO</h3>
-      <div class="flex gap-4 justify-center">
-        <button id="home-tema" class="btn-secondary px-6 py-2 text-sm">Tema</button>
-        <button id="home-upload" class="btn-secondary px-6 py-2 text-sm">PDF</button>
-      </div>
-    </div>
-
-    <!-- AVALIAÇÃO -->
-    <div class="space-y-3">
-      <h3 class="text-base font-medium tracking-wide text-[var(--muted)]">AVALIAÇÃO COM IA</h3>
-      <div class="flex gap-4 justify-center">
-        <button id="home-simulados" class="btn-secondary px-6 py-2 text-sm">Simulados</button>
-        <button id="home-dashboard" class="btn-secondary px-6 py-2 text-sm">Meu Desempenho</button>
-      </div>
-    </div>
-
-    <!-- SEU ESTUDO (HOME INTELIGENTE) -->
-   <!-- SEU ESTUDO (HOME INTELIGENTE) -->
-      <div class="space-y-3 w-full px-4">
-        <h3 class="text-base font-medium tracking-wide text-[var(--muted)] text-center">
-          SEU ESTUDO
-        </h3>
+       <section id="liora-home"
+               class="w-full min-h-[70vh] flex flex-col items-center justify-center text-center px-4 space-y-12">
       
-        <div id="home-study-box"
-             class="flex flex-col items-center gap-3 w-full max-w-md mx-auto">
+        <!-- TÍTULO + SUBTÍTULO -->
+        <div class="space-y-3 max-w-md">
+          <h2 class="text-2xl font-semibold tracking-tight text-[var(--fg)]">
+            Como deseja estudar hoje?
+          </h2>
+          <p class="text-sm text-[var(--muted)]">
+            A Liora cria planos de estudo, organiza sessões e gera simulados inteligentes adaptados à sua necessidade.
+          </p>
+        </div>
+      
+        <!-- PLANO DE ESTUDO -->
+        <div class="space-y-3">
+          <h3 class="text-base font-medium tracking-wide text-[var(--muted)]">
+            PLANO DE ESTUDO
+          </h3>
+      
+          <div class="flex gap-4 justify-center">
+            <button id="home-tema" class="btn-secondary px-6 py-2 text-sm">Tema</button>
+            <button id="home-upload" class="btn-secondary px-6 py-2 text-sm">PDF</button>
+          </div>
+        </div>
+      
+        <!-- AVALIAÇÃO -->
+        <div class="space-y-3">
+          <h3 class="text-base font-medium tracking-wide text-[var(--muted)]">
+            AVALIAÇÃO COM IA
+          </h3>
+      
+          <div class="flex gap-4 justify-center">
+            <button id="home-simulados" class="btn-secondary px-6 py-2 text-sm">Simulados</button>
+            <button id="home-dashboard" class="btn-secondary px-6 py-2 text-sm">Meu Desempenho</button>
+          </div>
+        </div>
+      
+        <!-- SEU ESTUDO -->
+        <div class="space-y-3 w-full max-w-md">
+          <h3 class="text-base font-medium tracking-wide text-[var(--muted)]">
+            SEU ESTUDO
+          </h3>
       
           <button id="home-continuar-estudo"
                   class="btn-primary w-full py-2 text-sm hidden">
@@ -90,13 +93,12 @@
           </button>
       
           <p id="home-resumo-estudo"
-             class="text-[13px] leading-tight text-[var(--muted)] text-center">
+             class="text-xs text-[var(--muted)] leading-tight text-center">
             Crie um plano de estudo por Tema ou PDF para começar.
           </p>
         </div>
-      </div>
-
-  </section>
+      
+      </section>
 
   <!-- ========================================================
        APP — WORKSPACE ÚNICO
