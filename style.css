@@ -390,4 +390,13 @@ html.light #liora-build-info {
 #liora-home .space-y-3 {
   min-height: min-content;
 }
+/* DESKTOP — deixa o botão menor e centralizado */
+@media (min-width: 768px) {
+  #home-continuar-estudo {
+    width: auto !important;
+    max-width: 320px !important;
+    padding: 10px 24px !important;
+    margin: 0 auto !important;
+  }
+}
 
