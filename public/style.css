@@ -1,5 +1,5 @@
 /* ==========================================================
-   🎨 VARIÁVEIS DE TEMA (FINAL v77)
+   🎨 VARIÁVEIS DE TEMA (FINAL v78-STABLE)
 ========================================================== */
 :root {
   --brand:#c44b04;
@@ -14,7 +14,6 @@
   --bgHover:#1d1d1d;
   --border:#252525;
 
-  /* Variáveis faltantes — necessárias p/ mobile */
   --bg2: var(--bgCard);
   --bg-hover: var(--bgHover);
   --border-subtle: var(--stroke);
@@ -34,7 +33,6 @@ html.light, body.light {
   --bgHover:#f3f2ef;
   --border:#e0ddd8;
 
-  /* Ajustes p/ tema claro */
   --bg2: var(--bgCard);
   --bg-hover: var(--bgHover);
   --border-subtle: var(--stroke);
@@ -42,17 +40,22 @@ html.light, body.light {
 }
 
 /* ==========================================================
-   🌎 GLOBAL
+   🌍 GLOBAL
 ========================================================== */
 html, body {
-  background:var(--bg);
-  color:var(--fg);
   margin:0;
   padding:0;
+  background:var(--bg);
+  color:var(--fg);
   font-family:"Inter", sans-serif;
   line-height:1.6;
-  transition:background .3s ease, color .3s ease;
   overflow-x:hidden;
+  transition:background .3s ease, color .3s ease;
+}
+
+/* Fix para largura do conteúdo (remove RUÍDO da versão anterior) */
+#liora-home {
+  width:100%;
 }
 
 /* ==========================================================
@@ -71,7 +74,7 @@ html, body {
   background:var(--brand);
   color:#fff;
 }
-.btn:hover { filter:brightness(1.15); }
+.btn:hover { filter:brightness(1.12); }
 
 .btn-secondary {
   background:transparent;
@@ -84,7 +87,7 @@ html, body {
 }
 
 /* ==========================================================
-   🧭 FAB HOME — (VERSÃO FINAL)
+   🧭 FAB HOME
 ========================================================== */
 .liora-fab-home {
   position: fixed;
@@ -98,19 +101,13 @@ html, body {
   border: 1px solid var(--border-subtle);
   box-shadow: 0 10px 30px rgba(0,0,0,0.35);
   cursor: pointer;
-  display: none; /* mostrado via JS */
+  display: none;
   z-index: 40;
   transition: transform 120ms ease, background .25s;
 }
 
 .liora-fab-home:hover {
   transform: translateY(-2px);
-}
-
-html.light .liora-fab-home {
-  background:#ffffffdd;
-  color:#1e1e1e !important;
-  border-color:#d0cdc8;
 }
 
 /* ==========================================================
@@ -128,7 +125,7 @@ input, select {
 input:focus, select:focus {
   outline:none;
   border-color:var(--brand);
-  box-shadow:0 0 0 2px rgba(196,75,4,.3);
+  box-shadow:0 0 0 2px rgba(196,75,4,.35);
 }
 
 /* ==========================================================
@@ -150,8 +147,9 @@ input:focus, select:focus {
 }
 .upload-zone:hover {
   border-color:var(--brand);
-  background:rgba(196,75,4,0.15);
+  background:rgba(196,75,4,0.1);
 }
+
 .upload-zone input {
   position:absolute;
   inset:0;
@@ -159,6 +157,7 @@ input:focus, select:focus {
   cursor:pointer;
 }
 
+/* Spinner */
 #upload-spinner {
   display:none;
   border:3px solid var(--stroke);
@@ -183,7 +182,6 @@ input:focus, select:focus {
   height:100%;
   background:var(--brand);
   width:0%;
-  border-radius:999px;
   transition:width .3s ease;
 }
 
@@ -195,7 +193,7 @@ input:focus, select:focus {
   border-radius:10px;
   border:1px solid var(--stroke);
   background:var(--bgCard);
-  transition:.2s ease;
+  transition:.2s;
 }
 .liora-card-topico:hover {
   background:var(--bgHover);
@@ -203,41 +201,60 @@ input:focus, select:focus {
   transform:translateX(4px);
 }
 .liora-card-topico.active {
-  background:rgba(196,75,4,0.20);
+  background:rgba(196,75,4,0.25);
   border-color:var(--brand);
   transform:translateX(4px);
 }
 
 /* ==========================================================
-   🎯 QUIZ
+   🎯 QUIZ — FIXES PRINCIPAIS
 ========================================================== */
+
 #liora-sessao-quiz {
   display:flex;
   flex-direction:column;
   gap:14px;
   margin-top:12px;
+  width:100%;
 }
+
 .liora-quiz-option {
   display:flex;
   gap:12px;
-  padding:12px 16px;
+  padding:14px 16px;
   border-radius:10px;
   border:1px solid var(--stroke);
   background:var(--bgCard);
   cursor:pointer;
-  transition:.25s ease;
   width:100%;
+  transition:.25s ease;
 }
+
 .liora-quiz-option:hover {
   background:var(--bgHover);
   border-color:var(--brand);
 }
+
 .liora-quiz-option.selected {
   background:var(--brand);
-  border-color:var(--brand) !important;
   color:#fff;
+  border-color:var(--brand) !important;
   transform:translateY(-2px);
   box-shadow:0 0 10px rgba(196,75,4,0.45);
+}
+
+/* Letras A / B / C / D */
+.liora-quiz-letter {
+  font-weight:700;
+  font-size:1rem;
+  margin-right:4px;
+}
+
+/* Corrige quebra estreita em conteúdos longos */
+.liora-quiz-text {
+  flex:1;
+  word-break:break-word;
+  line-height:1.55;
 }
 
 /* ==========================================================
@@ -254,11 +271,6 @@ input:focus, select:focus {
   word-break:break-word;
 }
 
-/* Mobile */
-@media(max-width:640px){
-  .liora-mapa-mental{ font-size:0.80rem; padding:14px; }
-}
-
 /* ==========================================================
    ❌ ERRO GLOBAL
 ========================================================== */
@@ -267,7 +279,6 @@ input:focus, select:focus {
   inset:0;
   z-index:9999;
   background:rgba(0,0,0,0.65);
-  backdrop-filter:blur(4px);
   display:flex;
   align-items:center;
   justify-content:center;
@@ -286,7 +297,7 @@ input:focus, select:focus {
 }
 
 /* ==========================================================
-   🔁 REVISÕES PENDENTES
+   REVISÕES
 ========================================================== */
 .liora-rev-card {
   background:var(--bgCard);
@@ -324,12 +335,14 @@ input:focus, select:focus {
 }
 
 /* ==========================================================
-   ✨ MICROINTERAÇÕES
+   MICROINTERAÇÕES
 ========================================================== */
-button:active, .btn:active { transform:scale(.97); }
+button:active, .btn:active {
+  transform:scale(.97);
+}
 
 /* ==========================================================
-   📄 BUILD INFO
+   BUILD INFO
 ========================================================== */
 #liora-build-info {
   position:fixed;
@@ -339,64 +352,27 @@ button:active, .btn:active { transform:scale(.97); }
   opacity:.45;
   padding:4px 8px;
   border-radius:6px;
-  background:rgba(0,0,0,0.15);
-  backdrop-filter:blur(4px);
+  background:rgba(0,0,0,0.2);
 }
-html.light #liora-build-info {
-  background:rgba(255,255,255,0.35);
-}
+
 /* ==========================================================
-   🔘 PRIMARY BUTTON (hotfix)
+   CONTINUAR ESTUDO — FIX FINAL MOBILE/DESKTOP
 ========================================================== */
-.btn-primary {
-  background: var(--brand);
-  color: #fff;
-  border-radius: 12px;
-  padding: 0.7rem 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  width: 100%;
-  text-align: center;
-  display: inline-block;
-  transition: .25s ease;
-}
 
-.btn-primary:hover {
-  filter: brightness(1.12);
-  transform: translateY(-1px);
-}
-
-.btn-primary:active {
-  transform: translateY(0);
-}
-
-/* Força o botão "Continuar Estudo" a ser visível no mobile */
 #home-continuar-estudo {
-  display: flex !important;
-  justify-content: center;
-  align-items: center;
-  min-height: 42px;
-  padding: 10px 14px;
-  width: 100%;
+  display:flex !important;
+  justify-content:center;
+  align-items:center;
+  min-height:42px;
+  padding:10px 14px;
+  width:100%;
 }
 
-/* Evita compressão do container no mobile */
-#liora-home .max-w-md {
-  width: 100%;
-  max-width: none;
-}
-
-/* Evita colapso por espaçamentos */
-#liora-home .space-y-3 {
-  min-height: min-content;
-}
-/* DESKTOP — deixa o botão menor e centralizado */
-@media (min-width: 768px) {
+@media (min-width:768px){
   #home-continuar-estudo {
-    width: auto !important;
-    max-width: 320px !important;
-    padding: 10px 24px !important;
-    margin: 0 auto !important;
+    width:auto !important;
+    max-width:320px !important;
+    padding:10px 24px !important;
+    margin:0 auto !important;
   }
 }
-
