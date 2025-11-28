@@ -208,9 +208,58 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     };
 
+     // ------------------------------------------------------
+    // CONTINUE ESTUDO — COM FALLBACK INTELIGENTE
+    // ------------------------------------------------------
     if (btnContinue) {
-      btnContinue.addEventListener("click", () => window.lioraContinueStudy());
+      btnContinue.addEventListener("click", () => {
+        try {
+          const sm = window.lioraEstudos;
+    
+          console.log("🟦 [Continuar Estudo] Clique detectado. sm =", sm);
+    
+          // Caso extremo: Study Manager ainda não carregou
+          if (!sm) {
+            alert(
+              "⚠️ O sistema ainda está carregando seus dados de estudo.\n\n" +
+              "Aguarde alguns segundos e tente novamente."
+            );
+            return;
+          }
+    
+          if (!sm.getPlanoAtivo) {
+            alert(
+              "⚠️ Não foi possível localizar seu plano de estudo.\n\n" +
+              "Recarregue a página e tente novamente."
+            );
+            return;
+          }
+    
+          const plano = sm.getPlanoAtivo();
+    
+          // Nenhum plano salvo → fallback premium
+          if (!plano) {
+            alert(
+              "📘 Você ainda não criou um plano de estudo neste dispositivo.\n\n" +
+              "Use as opções 'Tema' ou 'PDF' para criar seu primeiro plano."
+            );
+            return;
+          }
+    
+          // Tudo OK → segue fluxo normal
+          console.log("🟩 [Continuar Estudo] Plano encontrado → executando fluxo");
+          window.lioraContinueStudy();
+    
+        } catch (e) {
+          console.error("❌ Erro no clique de Continuar Estudo:", e);
+          alert(
+            "⚠️ Ocorreu um erro ao tentar continuar seu estudo.\n" +
+            "Tente novamente em instantes."
+          );
+        }
+      });
     }
+
 
     // ------------------------------------------------------
     // HOME INTELIGENTE — APARECER / SUMIR
