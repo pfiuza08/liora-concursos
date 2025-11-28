@@ -9,6 +9,9 @@
 // ✔ Mantida integração com revisões + estudos recentes
 // ==========================================================
 
+console.log("🔵 NAV-HOME LOADED (versão 1009)");
+document.body.setAttribute("data-navhome-version", "1009");
+
 (function () {
   console.log("🔵 nav-home.js (v78) carregado...");
 
