@@ -9,8 +9,20 @@
 // ✔ Mantida integração com revisões + estudos recentes
 // ==========================================================
 
-console.log("🔵 NAV-HOME LOADED (versão 1009)");
-document.body.setAttribute("data-navhome-version", "1009");
+document.addEventListener("DOMContentLoaded", () => {
+  setTimeout(() => {
+    try {
+      if (window.lioraNavHome && window.lioraNavHome.registrarEventos) {
+        window.lioraNavHome.registrarEventos();
+        console.log("NAV-HOME: Eventos registrados após DOMContentLoaded");
+      } else {
+        console.warn("NAV-HOME: registrarEventos não encontrado");
+      }
+    } catch (err) {
+      console.error("NAV-HOME ERROR:", err);
+    }
+  }, 120);
+});
 
 (function () {
   console.log("🔵 nav-home.js (v78) carregado...");
