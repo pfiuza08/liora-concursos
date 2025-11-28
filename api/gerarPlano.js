@@ -9,10 +9,12 @@ export default async function handler(req, res) {
 
     const { tema, nivel, sessoes } = req.body;
 
-    if (!tema || !nivel || !sessoes) {
+   if (!tema || !nivel) {
       return res.status(400).json({ error: "Parâmetros incompletos." });
     }
-
+    
+    const qtdSessoes = sessoes || 6; // padrão saudável
+    
     const client = new OpenAI({
       apiKey: process.env.OPENAI_API_KEY,
     });
@@ -22,7 +24,7 @@ Você é a Liora, especialista em criar planos de estudo.
 
 Tema: ${tema}
 Nível: ${nivel}
-Sessões: ${sessoes}
+Sessões: ${qtdSessoes}
 
 Regras:
 - Cada sessão deve conter: título curto, resumo, tópicos e conceitos-chave.
