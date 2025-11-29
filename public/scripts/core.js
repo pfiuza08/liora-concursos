@@ -399,7 +399,7 @@
     }
 
     // --------------------------------------------------------
-    // RENDERIZAÇÃO DO WIZARD
+    // RENDERIZAÇÃO DO WIZARD (COM QUIZ FIX)
     // --------------------------------------------------------
     function renderWizard() {
       if (!els.wizardContainer) return;
@@ -487,67 +487,62 @@
           .join("");
       }
 
-     // Quiz (v74 FIX FINAL)
+      // QUIZ (v74 FIX com <div>)
       if (els.wizardQuiz) {
         els.wizardQuiz.innerHTML = "";
         const q = s.quiz || {};
-      
+
         if (q.pergunta) {
           const pergunta = document.createElement("p");
           pergunta.textContent = q.pergunta;
           els.wizardQuiz.appendChild(pergunta);
         }
-      
-        const alternativas = shuffle(marcadas);
-      
-        alternativas.forEach((altObj, idx) => {
-        // wrapper seguro (não usa label)
-        const opt = document.createElement("div");
-        opt.className = "liora-quiz-option";
-        opt.dataset.index = idx;
-      
-        opt.innerHTML = `
-          <input type="radio" name="quiz-${wizard.atual}" value="${idx}">
-          <span class="liora-quiz-option-text">${altObj.texto}</span>
-          <span class="liora-quiz-dot"></span>
-        `;
-      
-        // click handler
-        opt.addEventListener("click", () => {
-          // remove seleção anterior
-          els.wizardQuiz
-            .querySelectorAll(".liora-quiz-option")
-            .forEach(o => o.classList.remove("selected"));
-      
-          // aplica seleção
-          opt.classList.add("selected");
-          const input = opt.querySelector("input");
-          if (input) input.checked = true;
-      
-          // feedback
-          if (!els.wizardQuizFeedback) return;
-          els.wizardQuizFeedback.style.opacity = 0;
-      
-          setTimeout(() => {
-            if (altObj.correta) {
-              els.wizardQuizFeedback.textContent =
-                `✅ Correto! ${q.explicacao || ""}`;
-              els.wizardQuizFeedback.style.color = "var(--brand)";
-            } else {
-              els.wizardQuizFeedback.textContent = "❌ Tente novamente.";
-              els.wizardQuizFeedback.style.color = "var(--muted)";
-            }
-            els.wizardQuizFeedback.style.opacity = 1;
-          }, 120);
+
+        const brutas = Array.isArray(q.alternativas)
+          ? q.alternativas.filter((a) => {
+              if (a === null || a === undefined) return false;
+              const asStr = typeof a === "string" ? a : a.texto || a.label || "";
+              return String(asStr).trim().length > 0;
+            })
+          : [];
+
+        let marcadas = brutas.map((alt, i) => {
+          let texto = "";
+          if (typeof alt === "string") texto = alt;
+          else if (alt && typeof alt.texto === "string") texto = alt.texto;
+          else if (alt && typeof alt.label === "string") texto = alt.label;
+          else texto = JSON.stringify(alt);
+
+          const byIndex = i === Number(q.corretaIndex);
+          const byFlag = !!(alt && (alt.correta || alt.correto || alt.isCorrect));
+          return {
+            texto: String(texto)
+              .replace(/\n/g, " ")
+              .replace(/<\/?[^>]+(>|$)/g, ""),
+            correta: byIndex || byFlag,
+          };
         });
 
-  els.wizardQuiz.appendChild(opt);
-});
+        if (marcadas.length && !marcadas.some((a) => a.correta)) {
+          marcadas[0].correta = true;
+        }
 
-      }
+        const alternativas = shuffle(marcadas);
+
+        alternativas.forEach((altObj, idx) => {
+          const opt = document.createElement("div");
+          opt.className = "liora-quiz-option";
+          opt.dataset.index = idx;
+
+          opt.innerHTML = `
+            <input type="radio" name="quiz-${wizard.atual}" value="${idx}">
+            <span class="liora-quiz-option-text">${altObj.texto}</span>
+            <span class="liora-quiz-dot"></span>
+          `;
+
           opt.addEventListener("click", () => {
-            document
-              .querySelectorAll(`.liora-quiz-option`)
+            els.wizardQuiz
+              .querySelectorAll(".liora-quiz-option")
               .forEach((o) => o.classList.remove("selected"));
 
             opt.classList.add("selected");
@@ -566,7 +561,6 @@
                 els.wizardQuizFeedback.textContent = "❌ Tente novamente.";
                 els.wizardQuizFeedback.style.color = "var(--muted)";
               }
-              els.wizardQuizFeedback.style.transition = "opacity .4s ease";
               els.wizardQuizFeedback.style.opacity = 1;
             }, 120);
           });
