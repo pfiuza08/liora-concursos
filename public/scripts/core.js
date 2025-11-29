@@ -2,16 +2,17 @@
 // 🧠 LIORA — CORE v74-COMMERCIAL-PREMIUM-DIA3-STUDY-MANAGER
 // ----------------------------------------------------------
 // Inclui:
-// ✔ Tema: plano + sessões completas (JSON único, sem títulos repetidos)
-// ✔ Upload: Modelo D (outline + sessões)
+// ✔ Tema: usa /api/gerarPlano (6–12 sessões, adaptativo)
+// ✔ Upload: Modelo D (outline + sessões via IA genérica)
 // ✔ Wizard Premium (fade, microinterações, quiz bonito)
 // ✔ Loading global / Erro global
 // ✔ Barras de progresso
 // ✔ Estudo Inteligente (Study Manager)
 // ✔ Prefill de simulado
-// ✔ Continue Study Engine (jump automático) — via window.lioraIrParaSessao()
-// ✔ Salvamento incremental das sessões (localStorage por tema+nivel)
+// ✔ Continue Study Engine (jump autom.) — via lioraIrParaSessao()
+// ✔ Salvamento incremental das sessões
 // ✔ Normalização das sessões geradas (id, ordem)
+// ✔ Quiz normalizado (sem alternativas vazias / quebradas)
 // ==========================================================
 
 (function () {
@@ -136,9 +137,46 @@
     };
 
     // --------------------------------------------------------
-    // ⭐ MODO REVISÃO + NAVEGAÇÃO CENTRALIZADA
+    // ⭐ MODO REVISÃO + JUMP DE SESSÃO (ÚNICA DEFINIÇÃO)
     // --------------------------------------------------------
     window.lioraModoRevisao = false;
+
+    window.lioraIrParaSessao = function (index, isReview = false) {
+      try {
+        if (!wizard?.sessoes?.length) return;
+
+        const maxIndex = wizard.sessoes.length - 1;
+        const alvo = Math.max(0, Math.min(Number(index) || 0, maxIndex));
+
+        wizard.atual = alvo;
+        window.lioraModoRevisao = !!isReview;
+
+        const sessao = wizard.sessoes[alvo];
+
+        // Registro no Study Manager
+        if (window.lioraEstudos && sessao?.id) {
+          if (window.lioraModoRevisao) {
+            window.lioraEstudos.registrarRevisao(sessao.id);
+          } else {
+            window.lioraEstudos.registrarAbertura(sessao.id);
+          }
+        }
+
+        renderPlanoResumo(wizard.plano);
+        renderWizard();
+        saveProgress();
+
+        const cont = document.getElementById("liora-sessoes");
+        if (cont) {
+          window.scrollTo({
+            top: cont.offsetTop - 20,
+            behavior: "smooth",
+          });
+        }
+      } catch (e) {
+        console.error("❌ Erro no jump de sessão:", e);
+      }
+    };
 
     const key = (tema, nivel) =>
       `liora:wizard:${(tema || "").toLowerCase()}::${(nivel || "").toLowerCase()}`;
@@ -163,56 +201,6 @@
     window.lioraWizardShouldShow = function () {
       return !!(wizard.sessoes && wizard.sessoes.length);
     };
-
-    // função central de navegação
-    function irParaSessao(index, isReview = false) {
-      try {
-        if (!wizard || !wizard.sessoes || !wizard.sessoes.length) return;
-
-        const maxIndex = wizard.sessoes.length - 1;
-        index = Math.max(0, Math.min(maxIndex, Number(index) || 0));
-
-        wizard.atual = index;
-        window.lioraModoRevisao = !!isReview;
-
-        const sessao = wizard.sessoes[wizard.atual];
-
-        // Registro no Study Manager
-        try {
-          const sm = window.lioraEstudos;
-          if (sm && sessao?.id) {
-            if (window.lioraModoRevisao && sm.registrarRevisao) {
-              sm.registrarRevisao(sessao.id);
-            }
-            if (sm.registrarAbertura) {
-              sm.registrarAbertura(sessao.id);
-            }
-            if (sm.updateSessionProgress) {
-              // sessão em andamento
-              sm.updateSessionProgress(sessao.id, 0.5);
-            }
-          }
-        } catch (err) {
-          console.warn("⚠️ Erro ao integrar com Study Manager:", err);
-        }
-
-        renderWizard();
-        renderPlanoResumo(wizard.plano, wizard.atual);
-        saveProgress();
-
-        const cont = document.getElementById("liora-sessoes");
-        if (cont) {
-          window.scrollTo({
-            top: cont.offsetTop - 20,
-            behavior: "smooth",
-          });
-        }
-      } catch (e) {
-        console.error("❌ Erro no jump de sessão:", e);
-      }
-    }
-
-    window.lioraIrParaSessao = irParaSessao;
 
     // --------------------------------------------------------
     // 🌗 THEME (LIGHT / DARK)
@@ -246,7 +234,7 @@
     (function setupEstudosMemory() {
       const api = window.lioraEstudos;
       if (!api) return;
-      // (nenhuma alteração adicional aqui — já está integrada)
+      // Integrações adicionais já feitas no nav-home / estudos.js
     })();
 
 
@@ -340,6 +328,71 @@
 
 
     // --------------------------------------------------------
+    // NORMALIZAÇÃO DO QUIZ (opção C)
+    // --------------------------------------------------------
+    function limparTextoAlternativa(alt) {
+      if (alt == null) return "";
+      let t = String(alt);
+
+      // Remove tags HTML
+      t = t.replace(/<\/?[^>]+(>|$)/g, " ");
+      // Quebras de linha → espaço
+      t = t.replace(/\r?\n|\r/g, " ");
+      // Colapsa espaços
+      t = t.replace(/\s+/g, " ");
+      return t.trim();
+    }
+
+    function normalizarQuiz(quizRaw) {
+      if (!quizRaw || typeof quizRaw !== "object") return null;
+      const q = { ...quizRaw };
+
+      if (!q.pergunta || !String(q.pergunta).trim()) return null;
+      if (!Array.isArray(q.alternativas) || !q.alternativas.length) return null;
+
+      const limpas = [];
+      const mapaOrig = [];
+
+      q.alternativas.forEach((alt, idx) => {
+        const texto = limparTextoAlternativa(alt);
+        if (texto.length > 1) {
+          mapaOrig.push({ idxOriginal: idx, texto });
+          limpas.push(texto);
+        }
+      });
+
+      if (limpas.length < 2) {
+        return null;
+      }
+
+      let corretaIndex = Number(q.corretaIndex ?? 0);
+      if (
+        isNaN(corretaIndex) ||
+        corretaIndex < 0 ||
+        corretaIndex >= q.alternativas.length
+      ) {
+        // se índice inválido, assume primeira alternativa válida
+        corretaIndex = mapaOrig[0].idxOriginal;
+      }
+
+      // achar posição do correto dentro da lista filtrada
+      let idxCorretaFiltrado = mapaOrig.findIndex(
+        (item) => item.idxOriginal === corretaIndex
+      );
+      if (idxCorretaFiltrado < 0) {
+        idxCorretaFiltrado = 0;
+      }
+
+      return {
+        pergunta: String(q.pergunta).trim(),
+        alternativas: limpas,
+        corretaIndex: idxCorretaFiltrado,
+        explicacao: q.explicacao ? String(q.explicacao) : "",
+      };
+    }
+
+
+    // --------------------------------------------------------
     // MAPA MENTAL
     // --------------------------------------------------------
     function construirMapaMental(sessao) {
@@ -410,7 +463,7 @@
     // --------------------------------------------------------
     // RENDERIZAÇÃO DO PLANO (lista lateral)
     // --------------------------------------------------------
-    function renderPlanoResumo(plano, activeIndex = wizard.atual) {
+    function renderPlanoResumo(plano) {
       if (!els.plano) return;
 
       els.plano.innerHTML = "";
@@ -434,16 +487,33 @@
         div.dataset.index = index;
         div.textContent = p.titulo || p.nome || `Sessão ${index + 1}`;
 
-        if (index === activeIndex) {
-          div.classList.add("active");
-        }
-
         div.addEventListener("mouseenter", () => div.classList.add("hovered"));
         div.addEventListener("mouseleave", () => div.classList.remove("hovered"));
 
         div.addEventListener("click", () => {
-          // delega navegação para a função central
-          irParaSessao(index, false);
+          document
+            .querySelectorAll(".liora-card-topico")
+            .forEach((el) => el.classList.remove("active"));
+
+          div.classList.add("active");
+
+          wizard.atual = index;
+          window.lioraModoRevisao = false;
+
+          const sessao = wizard.sessoes[index];
+          if (window.lioraEstudos?.registrarAbertura && sessao?.id) {
+            window.lioraEstudos.registrarAbertura(sessao.id);
+          }
+
+          renderWizard();
+          saveProgress();
+
+          if (els.wizardContainer) {
+            window.scrollTo({
+              top: els.wizardContainer.offsetTop - 20,
+              behavior: "smooth",
+            });
+          }
         });
 
         els.plano.appendChild(div);
@@ -463,6 +533,14 @@
       }
 
       const s = wizard.sessoes[wizard.atual];
+
+      try {
+        if (window.lioraEstudos?.registrarAbertura && s?.id) {
+          window.lioraEstudos.registrarAbertura(s.id);
+        }
+      } catch (e) {
+        console.warn("⚠️ Erro ao registrar abertura da sessão:", e);
+      }
 
       if (!s) {
         els.wizardContainer.classList.add("hidden");
@@ -541,62 +619,68 @@
           .join("");
       }
 
-      // Quiz
+      // Quiz (com normalização)
       if (els.wizardQuiz) {
         els.wizardQuiz.innerHTML = "";
-        const q = s.quiz || {};
-        if (q.pergunta) {
+
+        const quizNormalizado = normalizarQuiz(s.quiz || {});
+        if (!quizNormalizado) {
+          // se quiz ruim, apenas não mostra nada (ou poderíamos mostrar msg)
+          if (els.wizardQuizFeedback) {
+            els.wizardQuizFeedback.textContent = "";
+            els.wizardQuizFeedback.style.opacity = 0;
+          }
+        } else {
+          const q = quizNormalizado;
+
           const pergunta = document.createElement("p");
           pergunta.textContent = q.pergunta;
           els.wizardQuiz.appendChild(pergunta);
-        }
 
-        const alternativas = Array.isArray(q.alternativas)
-          ? shuffle(
-              q.alternativas.map((alt, i) => ({
-                texto: String(alt)
-                  .replace(/\n/g, " ")
-                  .replace(/<\/?[^>]+(>|$)/g, ""),
-                correta: i === Number(q.corretaIndex),
-              }))
-            )
-          : [];
+          const alternativas = shuffle(
+            q.alternativas.map((texto, i) => ({
+              texto,
+              correta: i === q.corretaIndex,
+            }))
+          );
 
-        alternativas.forEach((altObj, idx) => {
-          const opt = document.createElement("label");
-          opt.className = "liora-quiz-option";
-          opt.innerHTML = `
-            <input type="radio" name="quiz" value="${idx}">
-            <span class="liora-quiz-option-text">${altObj.texto}</span>
-          `;
+          alternativas.forEach((altObj, idx) => {
+            const opt = document.createElement("label");
+            opt.className = "liora-quiz-option";
+            opt.innerHTML = `
+              <input type="radio" name="quiz" value="${idx}">
+              <span class="liora-quiz-option-text">${altObj.texto}</span>
+            `;
 
-          opt.addEventListener("click", () => {
-            document
-              .querySelectorAll(".liora-quiz-option")
-              .forEach(o => o.classList.remove("selected"));
+            opt.addEventListener("click", () => {
+              document
+                .querySelectorAll(".liora-quiz-option")
+                .forEach(o => o.classList.remove("selected"));
 
-            opt.classList.add("selected");
-            opt.querySelector("input").checked = true;
+              opt.classList.add("selected");
+              const input = opt.querySelector("input");
+              if (input) input.checked = true;
 
-            if (!els.wizardQuizFeedback) return;
-            els.wizardQuizFeedback.style.opacity = 0;
+              if (!els.wizardQuizFeedback) return;
+              els.wizardQuizFeedback.style.opacity = 0;
 
-            setTimeout(() => {
-              if (altObj.correta) {
-                els.wizardQuizFeedback.textContent =
-                  `✅ Correto! ${q.explicacao || ""}`;
-                els.wizardQuizFeedback.style.color = "var(--brand)";
-              } else {
-                els.wizardQuizFeedback.textContent = "❌ Tente novamente.";
-                els.wizardQuizFeedback.style.color = "var(--muted)";
-              }
-              els.wizardQuizFeedback.style.transition = "opacity .4s ease";
-              els.wizardQuizFeedback.style.opacity = 1;
-            }, 120);
+              setTimeout(() => {
+                if (altObj.correta) {
+                  els.wizardQuizFeedback.textContent =
+                    `✅ Correto! ${q.explicacao || ""}`;
+                  els.wizardQuizFeedback.style.color = "var(--brand)";
+                } else {
+                  els.wizardQuizFeedback.textContent = "❌ Tente novamente.";
+                  els.wizardQuizFeedback.style.color = "var(--muted)";
+                }
+                els.wizardQuizFeedback.style.transition = "opacity .4s ease";
+                els.wizardQuizFeedback.style.opacity = 1;
+              }, 120);
+            });
+
+            els.wizardQuiz.appendChild(opt);
           });
-
-          els.wizardQuiz.appendChild(opt);
-        });
+        }
       }
 
       // Flashcards
@@ -611,15 +695,28 @@
         const mapa = construirMapaMental(s);
         els.wizardMapa.textContent = mapa || "Mapa mental gerado automaticamente.";
       }
+
+      // SESSÃO EM ANDAMENTO → Study Manager
+      if (window.lioraEstudos?.updateSessionProgress && s?.id) {
+        window.lioraEstudos.updateSessionProgress(s.id, 0.5);
+      }
     }
 
 
     // --------------------------------------------------------
-    // NAVEGAÇÃO DO WIZARD (VOLTA / PRÓXIMA / REVISAR)
+    // NAVEGAÇÃO DO WIZARD
     // --------------------------------------------------------
     els.wizardVoltar?.addEventListener("click", () => {
       if (wizard.atual > 0) {
-        irParaSessao(wizard.atual - 1, false);
+        wizard.atual--;
+
+        const sessao = wizard.sessoes[wizard.atual];
+        if (window.lioraEstudos?.registrarAbertura && sessao?.id) {
+          window.lioraEstudos.registrarAbertura(sessao.id);
+        }
+
+        renderWizard();
+        saveProgress();
       }
     });
 
@@ -627,25 +724,21 @@
       const sessao = wizard.sessoes[wizard.atual];
 
       if (sessao && window.lioraEstudos) {
-        try {
-          if (window.lioraModoRevisao) {
-            // revisão
-            window.lioraEstudos.marcarRevisada?.(sessao.id);
-            window.lioraEstudos.agendarRevisao?.(sessao.id);
-            window.dispatchEvent(new Event("liora:review-updated"));
-          } else {
-            // progresso normal
-            window.lioraEstudos.registrarProgresso?.(sessao.id);
-            window.dispatchEvent(new Event("liora:plan-updated"));
-          }
-        } catch (e) {
-          console.warn("⚠️ Erro ao registrar progresso:", e);
+        if (window.lioraModoRevisao) {
+          window.lioraEstudos.marcarRevisada?.(sessao.id);
+          window.lioraEstudos.agendarRevisao?.(sessao.id);
+          window.dispatchEvent(new Event("liora:review-updated"));
+        } else {
+          window.lioraEstudos.registrarProgresso?.(sessao.id);
+          window.dispatchEvent(new Event("liora:plan-updated"));
         }
       }
 
-      // navegação
       if (wizard.atual < wizard.sessoes.length - 1) {
-        irParaSessao(wizard.atual + 1, false);
+        wizard.atual++;
+        window.lioraModoRevisao = false;
+        renderWizard();
+        saveProgress();
       } else {
         atualizarStatus(
           wizard.origem === "upload" ? "upload" : "tema",
@@ -653,11 +746,8 @@
           100
         );
 
-        // marcar conclusão total
-        try {
-          window.lioraEstudos?.finalizarPlano?.(wizard.tema);
-        } catch (e) {
-          console.warn("⚠️ Erro ao finalizar plano:", e);
+        if (window.lioraEstudos?.finalizarPlano && wizard.tema) {
+          window.lioraEstudos.finalizarPlano(wizard.tema);
         }
       }
     });
@@ -667,21 +757,15 @@
         const s = wizard.sessoes[wizard.atual];
         if (!s?.id) return;
 
-        if (window.lioraEstudos?.marcarRevisada) {
-          window.lioraEstudos.marcarRevisada(s.id);
-          window.dispatchEvent(new Event("liora:review-updated"));
-        }
+        window.lioraEstudos?.marcarRevisada?.(s.id);
 
-        // feedback rápido
         if (els.wizardQuizFeedback) {
           els.wizardQuizFeedback.textContent = "🔁 Revisada!";
           els.wizardQuizFeedback.style.color = "var(--brand)";
           els.wizardQuizFeedback.style.opacity = 1;
         }
 
-        // atualizar plano lateral (cor)
-        renderPlanoResumo(wizard.plano, wizard.atual);
-
+        renderPlanoResumo(wizard.plano);
       } catch (e) {
         console.warn("⚠️ Erro ao revisar sessão:", e);
       }
@@ -689,7 +773,7 @@
 
 
     // --------------------------------------------------------
-    // 🔥 GERAÇÃO DO PLANO POR TEMA (OPÇÃO B ADAPTATIVA)
+    // 🔥 GERAÇÃO DO PLANO POR TEMA (usa /api/gerarPlano.js)
     // --------------------------------------------------------
     els.btnGerar?.addEventListener("click", async () => {
       const tema = (els.inpTema?.value || "").trim();
@@ -704,119 +788,58 @@
         window.lioraLoading.show("Gerando plano de estudo...");
         atualizarStatus("tema", "Aguarde...", 10);
 
-        const system = `
-Você é a IA da Liora, especialista em criar planos de estudo para concursos, ENEM, certificações de TI, OAB e provas em geral.
+        const resp = await fetch("/api/gerarPlano", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ tema, nivel }),
+        });
 
-Seu trabalho é criar um PLANO DE ESTUDO COMPLETO para o tema informado, organizado em SESSÕES PROGRESSIVAS.
+        if (!resp.ok) {
+          throw new Error("Falha na API /api/gerarPlano");
+        }
 
-REGRAS DE ESTRUTURA:
-- Sempre gere PELO MENOS 6 sessões.
-- Se o tema for amplo ou complexo, divida em mais sessões (até 10–12 no máximo).
-- Cada sessão deve ter FOCO CLARO e DIFERENTE das demais.
-- Os TÍTULOS DAS SESSÕES DEVEM SER ÚNICOS — não repita títulos nem use títulos quase idênticos.
-- Comece com fundamentos e contexto → vá para aprofundamento → aplicações / resolução de questões → revisão.
-
-FORMATO DE RESPOSTA (JSON VÁLIDO, SEM TEXTO FORA DO JSON):
-{
-  "tema": "repita aqui o tema final",
-  "nivel": "iniciante | intermediario | avancado | misto",
-  "sessoes": [
-    {
-      "titulo": "título curto e específico da sessão",
-      "objetivo": "frase explicando o que o aluno será capaz de fazer ao final da sessão",
-      "conteudo": {
-        "introducao": "visão geral do assunto da sessão",
-        "conceitos": ["conceito 1", "conceito 2", "..."],
-        "exemplos": ["exemplo aplicado 1", "exemplo aplicado 2"],
-        "aplicacoes": ["como isso cai em prova / prática 1", "aplicação 2"],
-        "resumoRapido": ["bullet 1 com ideia-chave", "bullet 2", "bullet 3"]
-      },
-      "ativacao": [
-        "pergunta de reflexão ou exercício rápido 1",
-        "pergunta de reflexão ou exercício rápido 2"
-      ],
-      "quiz": {
-        "pergunta": "uma questão objetiva sobre o núcleo da sessão",
-        "alternativas": [
-          "alternativa A",
-          "alternativa B",
-          "alternativa C",
-          "alternativa D"
-        ],
-        "corretaIndex": 0,
-        "explicacao": "explique por que a alternativa correta está certa e as demais erradas"
-      },
-      "flashcards": [
-        { "q": "pergunta curta 1", "a": "resposta 1" },
-        { "q": "pergunta curta 2", "a": "resposta 2" }
-      ],
-      "mindmap": "representação em texto usando o padrão: NÓ RAIZ > ramo 1 > subramo 1 | ramo 2 > subramo 2"
-    }
-  ]
-}
-
-DETALHES IMPORTANTES:
-- Adapte a profundidade ao nível informado (iniciante, intermediário, avançado).
-- Use linguagem clara, objetiva e adequada a estudantes de provas.
-- Não inclua NENHUM comentário fora do JSON.
-        `.trim();
-
-        const user = `
-Tema do estudo: "${tema}"
-Nível do estudante: "${nivel}"
-
-Crie um plano ADAPTATIVO:
-- mínimo de 6 sessões
-- aumente o número de sessões se o tema for amplo
-- garanta que cada sessão tenha um papel diferente no aprendizado.
-        `.trim();
-
-        const rawOutput = await callLLM(system, user);
-        atualizarStatus("tema", "Processando IA...", 40);
-
-        const parsed = safeJsonParse(rawOutput);
+        const parsed = await resp.json();
 
         if (!parsed || !parsed.sessoes?.length) {
           throw new Error("JSON inválido ou sem sessões.");
         }
 
-        // normaliza e garante ids/ordem
         atualizarStatus("tema", "Construindo sessões...", 70);
+
+        const sessoesNormalizadas = parsed.sessoes.map((s, i) => ({
+          id: `S${i + 1}`,
+          ordem: i + 1,
+          progresso: 0,
+          ...s,
+        }));
 
         wizard = {
           tema: parsed.tema || tema,
           nivel: parsed.nivel || nivel,
-          origem: "tema",
-          plano: parsed.sessoes.map((s, i) => ({
-            id: `S${i + 1}`,
-            ordem: i + 1,
-            ...s,
+          origem: parsed.origem || "tema",
+          plano: sessoesNormalizadas.map((s) => ({
+            id: s.id,
+            ordem: s.ordem,
+            titulo: s.titulo,
+            objetivo: s.objetivo,
           })),
-          sessoes: parsed.sessoes.map((s, i) => ({
-            id: `S${i + 1}`,
-            ordem: i + 1,
-            progresso: 0,
-            ...s,
-          })),
+          sessoes: sessoesNormalizadas,
           atual: 0,
         };
 
-        els.ctx.textContent = `Tema: ${wizard.tema}`;
-        renderPlanoResumo(wizard.plano, 0);
+        renderPlanoResumo(wizard.plano);
         renderWizard();
+        if (els.ctx) els.ctx.textContent = `Tema: ${wizard.tema}`;
         saveProgress();
 
-        // 🔥 registra plano no Study Manager
-        try {
-          window.lioraEstudos?.definirPlano?.({
-            tema: wizard.tema,
-            origem: "tema",
-            sessoes: wizard.sessoes,
-          });
-          window.dispatchEvent(new Event("liora:plan-updated"));
-        } catch (e) {
-          console.warn("⚠️ Erro ao registrar plano no Study Manager:", e);
-        }
+        // registra plano no Study Manager
+        window.lioraEstudos?.definirPlano?.({
+          tema: wizard.tema,
+          origem: wizard.origem,
+          sessoes: wizard.sessoes,
+        });
+
+        window.dispatchEvent(new Event("liora:plan-updated"));
 
         atualizarStatus("tema", "Plano gerado!", 100);
         window.lioraLoading.hide();
@@ -830,7 +853,6 @@ Crie um plano ADAPTATIVO:
 
     // --------------------------------------------------------
     // 🔥 GERAÇÃO DO PLANO POR UPLOAD DE PDF
-    // (mantida, ainda usando /api/liora genérica)
     // --------------------------------------------------------
     els.btnGerarUpload?.addEventListener("click", async () => {
       const file = els.inpFile?.files?.[0];
@@ -858,91 +880,83 @@ Crie um plano ADAPTATIVO:
         atualizarStatus("upload", "Gerando sessões com IA...", 55);
 
         const system = `
-Você é a IA da Liora e deve transformar TÓPICOS de um PDF em sessões de estudo.
-
-Siga as MESMAS REGRAS de estrutura usadas no modo por tema:
-- mínimo de 6 sessões (aumente se o PDF for amplo)
-- sessões progressivas (fundamentos → aprofundamento → questões → revisão)
-- títulos de sessão ÚNICOS, sem repetições.
-
-FORMATO EXATO (JSON VÁLIDO, SEM TEXTO FORA DO JSON):
-{
-  "tema": "",
-  "sessoes": [
-    {
-      "titulo": "",
-      "objetivo": "",
-      "conteudo": {
-        "introducao": "",
-        "conceitos": [],
-        "exemplos": [],
-        "aplicacoes": [],
-        "resumoRapido": []
-      },
-      "ativacao": [],
-      "quiz": {
-        "pergunta": "",
-        "alternativas": [],
-        "corretaIndex": 0,
-        "explicacao": ""
-      },
-      "flashcards": [],
-      "mindmap": ""
-    }
-  ]
-}
-        `.trim();
+          Você é a IA da Liora e deve transformar tópicos em sessões de estudo.
+          Retorne APENAS JSON válido como:
+          {
+            "tema": "",
+            "sessoes": [
+              {
+                "titulo": "",
+                "objetivo": "",
+                "conteudo": {
+                  "introducao": "",
+                  "conceitos": [],
+                  "exemplos": [],
+                  "aplicacoes": [],
+                  "resumoRapido": []
+                },
+                "ativacao": [],
+                "quiz": {
+                  "pergunta": "",
+                  "alternativas": [],
+                  "corretaIndex": 0,
+                  "explicacao": ""
+                },
+                "flashcards": [],
+                "mindmap": ""
+              }
+            ]
+          }
+        `;
 
         const user = `
-TÓPICOS EXTRAÍDOS DO PDF (em ordem):
-${outline.topicos.join("\n")}
+          TÓPICOS EXTRAÍDOS DO PDF:
+          ${outline.topicos.join("\n")}
 
-Use esses tópicos para definir as sessões do plano. Não invente matéria completamente fora do PDF.
-        `.trim();
+          Gere sessões coerentes e completas.
+        `;
 
         const rawOutput = await callLLM(system, user);
         const parsed = safeJsonParse(rawOutput);
 
         atualizarStatus("upload", "Finalizando...", 80);
 
+        const sessoesNormalizadas = parsed.sessoes.map((s, i) => ({
+          id: `S${i + 1}`,
+          ordem: i + 1,
+          progresso: 0,
+          ...s,
+        }));
+
         wizard = {
           tema: parsed.tema || file.name.replace(".pdf", ""),
           nivel: "PDF",
           origem: "upload",
-          plano: parsed.sessoes.map((s, i) => ({
-            id: `S${i + 1}`,
-            ordem: i + 1,
-            ...s,
+          plano: sessoesNormalizadas.map((s) => ({
+            id: s.id,
+            ordem: s.ordem,
+            titulo: s.titulo,
+            objetivo: s.objetivo,
           })),
-          sessoes: parsed.sessoes.map((s, i) => ({
-            id: `S${i + 1}`,
-            ordem: i + 1,
-            progresso: 0,
-            ...s,
-          })),
+          sessoes: sessoesNormalizadas,
           atual: 0,
         };
 
-        els.ctx.textContent = `PDF: ${wizard.tema}`;
-        renderPlanoResumo(wizard.plano, 0);
+        renderPlanoResumo(wizard.plano);
         renderWizard();
+        if (els.ctx) els.ctx.textContent = `PDF: ${wizard.tema}`;
         saveProgress();
 
-        // registra no Study Manager
-        try {
-          window.lioraEstudos?.definirPlano?.({
-            tema: wizard.tema,
-            origem: "upload",
-            sessoes: wizard.sessoes,
-          });
-          window.dispatchEvent(new Event("liora:plan-updated"));
-        } catch (e) {
-          console.warn("⚠️ Erro ao registrar plano (upload):", e);
-        }
+        window.lioraEstudos?.definirPlano?.({
+          tema: wizard.tema,
+          origem: "upload",
+          sessoes: wizard.sessoes,
+        });
+
+        window.dispatchEvent(new Event("liora:plan-updated"));
 
         atualizarStatus("upload", "Plano gerado!", 100);
         window.lioraLoading.hide();
-
       } catch (e) {
         console.error(e);
         window.lioraLoading.hide();
@@ -952,11 +966,11 @@ Use esses tópicos para definir as sessões do plano. Não invente matéria comp
 
 
     // --------------------------------------------------------
-    // EVENTOS DE REVISÃO
+    // REACT A REVISÕES (ATUALIZA LATERAL/WIZARD)
     // --------------------------------------------------------
     window.addEventListener("liora:review-updated", () => {
       try {
-        renderPlanoResumo(wizard.plano, wizard.atual);
+        renderPlanoResumo(wizard.plano);
         renderWizard();
       } catch (e) {
         console.warn("⚠️ Erro ao atualizar tela após revisão:", e);
