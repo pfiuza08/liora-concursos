@@ -501,42 +501,49 @@
         const alternativas = shuffle(marcadas);
       
         alternativas.forEach((altObj, idx) => {
-          const opt = document.createElement("label");
-          opt.className = "liora-quiz-option";
-          opt.dataset.index = idx;
+        // wrapper seguro (não usa label)
+        const opt = document.createElement("div");
+        opt.className = "liora-quiz-option";
+        opt.dataset.index = idx;
       
-          opt.innerHTML = `
-            <input type="radio" name="quiz-${wizard.atual}" value="${idx}">
-            <span class="liora-quiz-option-text">${altObj.texto}</span>
-            <span class="liora-quiz-dot"></span>
-          `;
+        opt.innerHTML = `
+          <input type="radio" name="quiz-${wizard.atual}" value="${idx}">
+          <span class="liora-quiz-option-text">${altObj.texto}</span>
+          <span class="liora-quiz-dot"></span>
+        `;
       
-          opt.addEventListener("click", () => {
-            // Reset visual
-            els.wizardQuiz.querySelectorAll(".liora-quiz-option")
-              .forEach(o => o.classList.remove("selected"));
+        // click handler
+        opt.addEventListener("click", () => {
+          // remove seleção anterior
+          els.wizardQuiz
+            .querySelectorAll(".liora-quiz-option")
+            .forEach(o => o.classList.remove("selected"));
       
-            opt.classList.add("selected");
-            opt.querySelector("input").checked = true;
+          // aplica seleção
+          opt.classList.add("selected");
+          const input = opt.querySelector("input");
+          if (input) input.checked = true;
       
-            // Feedback
-            if (!els.wizardQuizFeedback) return;
-            els.wizardQuizFeedback.style.opacity = 0;
+          // feedback
+          if (!els.wizardQuizFeedback) return;
+          els.wizardQuizFeedback.style.opacity = 0;
       
-            setTimeout(() => {
-              if (altObj.correta) {
-                els.wizardQuizFeedback.textContent = `✅ Correto! ${q.explicacao || ""}`;
-                els.wizardQuizFeedback.style.color = "var(--brand)";
-              } else {
-                els.wizardQuizFeedback.textContent = "❌ Tente novamente.";
-                els.wizardQuizFeedback.style.color = "var(--muted)";
-              }
-              els.wizardQuizFeedback.style.opacity = 1;
-            }, 120);
-          });
-      
-          els.wizardQuiz.appendChild(opt);
+          setTimeout(() => {
+            if (altObj.correta) {
+              els.wizardQuizFeedback.textContent =
+                `✅ Correto! ${q.explicacao || ""}`;
+              els.wizardQuizFeedback.style.color = "var(--brand)";
+            } else {
+              els.wizardQuizFeedback.textContent = "❌ Tente novamente.";
+              els.wizardQuizFeedback.style.color = "var(--muted)";
+            }
+            els.wizardQuizFeedback.style.opacity = 1;
+          }, 120);
         });
+
+  els.wizardQuiz.appendChild(opt);
+});
+
       }
           opt.addEventListener("click", () => {
             document
