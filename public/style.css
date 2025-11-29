@@ -447,4 +447,15 @@ button:active, .btn:active {
   background: var(--brand);
   border-color: var(--brand);
 }
+/* FIX — Impede labels do quiz de capturar cliques fora do widget */
+.liora-quiz-option {
+  position: static !important;
+  pointer-events: auto !important;
+}
+
+/* Impede o label de bloquear botões externos */
+.liora-quiz-option input {
+  pointer-events: none !important;
+}
+
 
