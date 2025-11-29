@@ -1,4 +1,4 @@
-// /api/gerarPlano.js — COMPATÍVEL COM LIORA CORE v73
+// /api/gerarPlano.js — COMPATÍVEL COM LIORA CORE v73 (VERSÃO RECOMENDADA)
 import OpenAI from "openai";
 
 export default async function handler(req, res) {
@@ -19,15 +19,31 @@ export default async function handler(req, res) {
       apiKey: process.env.OPENAI_API_KEY,
     });
 
-    const prompt = `
-Você é a IA da Liora, especialista em criar planos de estudo completos e didáticos.
+    const system = `
+Você é LIORA, especialista em criar planos de estudo organizados,
+concisos e com estrutura JSON estável e VALIDADA.
 
-Gere EXATAMENTE ${qtdSessoes} sessões completas.
+Você NUNCA deve gerar nada fora do JSON.
+    `;
+
+    const user = `
+Gere um plano de estudo completo.
 
 Tema: ${tema}
 Nível: ${nivel}
+Quantidade exata de sessões: ${qtdSessoes}
 
-Formato OBRIGATÓRIO (JSON VÁLIDO):
+Regras CRÍTICAS:
+- Responda somente com JSON válido.
+- Sem texto antes ou depois.
+- Sem comentários.
+- Sem campos vazios.
+- Sem listas vazias.
+- Flashcards: mínimo 3, máximo 5.
+- Mindmap no formato: "A > B > C | D > E".
+- Quiz deve ter 1 pergunta, 4 alternativas e 1 corretaIndex.
+
+Modelo OBRIGATÓRIO:
 
 {
   "origem": "tema",
@@ -57,20 +73,19 @@ Formato OBRIGATÓRIO (JSON VÁLIDO):
   ]
 }
 
-REGRAS:
-- NÃO inclua comentários fora do JSON.
-- NÃO acrescente texto antes ou depois do JSON.
-- As sessões devem ser completas, coerentes e sem campos vazios.
-- Gere conceitos e exemplos reais sobre o tema.
-- Gere 1 quiz por sessão.
-- Gere 3 a 5 flashcards por sessão.
-- Gere mindmap no formato: "A > B > C | X > Y".
+IMPORTANTE:
+- Todas as sessões devem ser coerentes entre si.
+- Nenhum campo pode vir vazio.
+- "conteudo" deve sempre ter introdução, conceitos, exemplos, aplicações e resumo rápido.
 `;
 
     const completion = await client.chat.completions.create({
       model: "gpt-4.1",
-      messages: [{ role: "user", content: prompt }],
-      temperature: 0.35,
+      messages: [
+        { role: "system", content: system },
+        { role: "user", content: user }
+      ],
+      temperature: 0.25,
     });
 
     const output = completion.choices[0].message.content.trim();
