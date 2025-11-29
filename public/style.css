@@ -376,3 +376,75 @@ button:active, .btn:active {
     margin:0 auto !important;
   }
 }
+/* ==========================================================
+   🎯 QUIZ — FIX FINAL v74-COMMERCIAL
+   ========================================================== */
+
+#liora-sessao-quiz {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  margin-top: 16px;
+}
+
+/* Wrapper da alternativa */
+.liora-quiz-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 14px 18px;
+  background: var(--bgCard);
+  border: 1px solid var(--stroke);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: 0.2s ease;
+  width: 100%;
+  position: relative;
+}
+
+/* Efeito hover */
+.liora-quiz-option:hover {
+  background: var(--bgHover);
+  border-color: var(--brand);
+}
+
+/* Estado selecionado */
+.liora-quiz-option.selected {
+  background: rgba(196,75,4,0.22);
+  border-color: var(--brand);
+  box-shadow: 0 0 8px rgba(196,75,4,0.3);
+}
+
+/* Esconde o radio nativo */
+.liora-quiz-option input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Texto da alternativa */
+.liora-quiz-option-text {
+  flex: 1;
+  font-size: 0.95rem;
+  line-height: 1.45;
+  color: var(--fg);
+  word-break: break-word;
+}
+
+/* Bolinha */
+.liora-quiz-dot {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid var(--stroke);
+  flex-shrink: 0;
+}
+
+/* Bolinha selecionada */
+.liora-quiz-option.selected .liora-quiz-dot {
+  background: var(--brand);
+  border-color: var(--brand);
+}
+
