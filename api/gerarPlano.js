@@ -1,4 +1,4 @@
-// /api/gerarPlano.js — COMPATÍVEL COM LIORA CORE v73 (VERSÃO RECOMENDADA)
+// /api/gerarPlano.js — COMPATÍVEL COM LIORA CORE v74
 import OpenAI from "openai";
 
 export default async function handler(req, res) {
@@ -13,37 +13,22 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "Parâmetros incompletos." });
     }
 
+    // Adaptativo: mínimo 6, máximo 12, padrão 8
     const qtdSessoes = Math.max(6, Math.min(12, Number(sessoes) || 8));
 
     const client = new OpenAI({
       apiKey: process.env.OPENAI_API_KEY,
     });
 
-    const system = `
-Você é LIORA, especialista em criar planos de estudo organizados,
-concisos e com estrutura JSON estável e VALIDADA.
+    const prompt = `
+Você é a IA da Liora, especialista em criar planos de estudo completos e curtos.
 
-Você NUNCA deve gerar nada fora do JSON.
-    `;
+Gere EXATAMENTE ${qtdSessoes} sessões.
 
-    const user = `
-Gere um plano de estudo completo.
+TEMA: ${tema}
+NÍVEL: ${nivel}
 
-Tema: ${tema}
-Nível: ${nivel}
-Quantidade exata de sessões: ${qtdSessoes}
-
-Regras CRÍTICAS:
-- Responda somente com JSON válido.
-- Sem texto antes ou depois.
-- Sem comentários.
-- Sem campos vazios.
-- Sem listas vazias.
-- Flashcards: mínimo 3, máximo 5.
-- Mindmap no formato: "A > B > C | D > E".
-- Quiz deve ter 1 pergunta, 4 alternativas e 1 corretaIndex.
-
-Modelo OBRIGATÓRIO:
+⚠️ SAÍDA OBRIGATÓRIA (JSON VÁLIDO, SEM QUALQUER TEXTO FORA DO JSON):
 
 {
   "origem": "tema",
@@ -55,37 +40,42 @@ Modelo OBRIGATÓRIO:
       "objetivo": "",
       "conteudo": {
         "introducao": "",
-        "conceitos": [],
-        "exemplos": [],
-        "aplicacoes": [],
-        "resumoRapido": []
+        "conceitos": ["", ""],
+        "exemplos": ["", ""],
+        "aplicacoes": ["", ""],
+        "resumoRapido": ["", ""]
       },
-      "ativacao": [],
+      "ativacao": ["", ""],
       "quiz": {
         "pergunta": "",
-        "alternativas": [],
+        "alternativas": ["A", "B", "C", "D"],
         "corretaIndex": 0,
         "explicacao": ""
       },
-      "flashcards": [],
-      "mindmap": ""
+      "flashcards": [
+        { "q": "", "a": "" },
+        { "q": "", "a": "" },
+        { "q": "", "a": "" }
+      ],
+      "mindmap": "A > B > C | X > Y"
     }
   ]
 }
 
-IMPORTANTE:
-- Todas as sessões devem ser coerentes entre si.
-- Nenhum campo pode vir vazio.
-- "conteudo" deve sempre ter introdução, conceitos, exemplos, aplicações e resumo rápido.
+REGRAS IMPORTANTES:
+- NÃO gere texto fora do JSON.
+- NÃO deixe campos vazios.
+- Alternativas do quiz devem ser curtas, SEM HTML.
+- flashcards devem ter pares {q, a}.
+- mindmap deve usar o formato "A > B > C | X > Y".
+- Sem quebras de linha dentro dos campos.
+- NUNCA coloque comentários // ou texto solto.
 `;
 
     const completion = await client.chat.completions.create({
       model: "gpt-4.1",
-      messages: [
-        { role: "system", content: system },
-        { role: "user", content: user }
-      ],
-      temperature: 0.25,
+      messages: [{ role: "user", content: prompt }],
+      temperature: 0.25
     });
 
     const output = completion.choices[0].message.content.trim();
