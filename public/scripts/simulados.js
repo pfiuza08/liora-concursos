@@ -1,18 +1,15 @@
 // ==============================================================
-// 🧠 LIORA — SIMULADOS v97-IA-PREMIUM-DIA2
+// 🧠 LIORA — SIMULADOS v97-PREMIUM-C3
 // - IA /api/liora para gerar questões reais
-// - Seletor de IAs auxiliares (C)
-// - Badges de IA (D)
-// - Loading global + progress interno
-// - Timer + navegação
-// - Resultado + salvamento histórico
-// - 🔥 Memória de estudos (auto-preenchimento)
-// - 🔥 Mensagem amigável quando não houver estudos
-// - 🔥 Compatível com FAB + nav-home v72
+// - Seletor de IAs auxiliares (modo C3)
+// - Badges de IA
+// - Timer, navegação, resultado, histórico
+// - Perfil de banca + dificuldade + modo tema opcional
+// - Compatível com core v74 (Study Manager + Prefill)
 // ==============================================================
 
 (function () {
-  console.log("🔵 Liora Simulados v97-IA-PREMIUM-DIA2 carregado...");
+  console.log("🔵 Liora Simulados v97-PREMIUM-C3 carregado...");
 
   document.addEventListener("DOMContentLoaded", () => {
 
@@ -49,9 +46,8 @@
       return;
     }
 
-
     // -------------------------------------------------------
-    // IA CONFIG
+    // IA CONFIG — Modo C3 (3 auxiliares: banca, explica, reforco)
     // -------------------------------------------------------
     const IA_CONFIG = {
       banca: {
@@ -60,7 +56,7 @@
         emoji: "🏛️",
         badgeClass: "sim-ia-badge--banca",
         prompt:
-          "ajuste vocabulário, pegadinhas e estrutura para refletir fielmente a banca."
+          "refine vocabulário, estilo e pegadinhas para refletir fielmente o padrão da banca."
       },
       explica: {
         id: "explica",
@@ -68,7 +64,7 @@
         emoji: "💡",
         badgeClass: "sim-ia-badge--explica",
         prompt:
-          "garanta gabarito consistente e explicações claras, se solicitadas."
+          "garanta gabarito robusto, consistente e explicações objetivas quando solicitado."
       },
       reforco: {
         id: "reforco",
@@ -76,22 +72,14 @@
         emoji: "📈",
         badgeClass: "sim-ia-badge--reforco",
         prompt:
-          "reforce conceitos centrais e armadilhas frequentes."
-      },
-      historico: {
-        id: "historico",
-        label: "IA Histórico",
-        emoji: "🧠",
-        badgeClass: "sim-ia-badge--historico",
-        prompt:
-          "adapte levemente a dificuldade com base no histórico."
-      },
+          "aumente levemente a complexidade em tópicos chave, evitando trivialidades."
+      }
     };
 
+    // IA ativa por padrão: Banca + Explica
     const iaState = {
       selecionadas: new Set(["banca", "explica"])
     };
-
 
     // -------------------------------------------------------
     // ESTADO GERAL
@@ -109,9 +97,8 @@
       tempoRestante: 0,
       timerID: null,
       loadingIA: false,
-      loadingIntervalID: null,
+      loadingIntervalID: null
     };
-
 
     function loadHistorico() {
       try {
@@ -130,13 +117,12 @@
         hist.push(resumo);
         localStorage.setItem(HIST_KEY, JSON.stringify(hist));
       } catch (e) {
-        console.warn("⚠️ Erro ao salvar histórico de simulados", e);
+        console.warn("⚠️ Erro ao salvar histórico", e);
       }
     }
 
-
     // -------------------------------------------------------
-    // IA SELECTOR (chips)
+    // IA SELECTOR (chips C3)
     // -------------------------------------------------------
     function setupIaSelector() {
       const modalBody = document.querySelector("#sim-modal-backdrop .sim-modal-body");
@@ -148,7 +134,7 @@
 
       const label = document.createElement("div");
       label.className = "sim-ia-label";
-      label.textContent = "IAs auxiliares (beta)";
+      label.textContent = "IAs auxiliares (C3)";
 
       const options = document.createElement("div");
       options.className = "sim-ia-options";
@@ -186,9 +172,8 @@
 
     setupIaSelector();
 
-
     // -------------------------------------------------------
-    // Badges IA
+    // IA Badges
     // -------------------------------------------------------
     function renderIaBadges() {
       const selected = Array.from(iaState.selecionadas);
@@ -208,7 +193,6 @@
       `;
     }
 
-
     // -------------------------------------------------------
     // IA PROMPT
     // -------------------------------------------------------
@@ -217,26 +201,24 @@
       if (!selected.length) return "";
 
       return (
-        "\nAlém das regras acima, considere os modos ativados:\n" +
+        "\nModos auxiliares ativados:\n" +
         selected
           .map((id) => IA_CONFIG[id])
           .filter(Boolean)
-          .map((cfg) => `- "${cfg.label}": ${cfg.prompt}`)
+          .map((cfg) => `- ${cfg.label}: ${cfg.prompt}`)
           .join("\n")
       );
     }
 
-
     // -------------------------------------------------------
-    // CHAMADA IA (OpenAI)
+    // IA — chamada ao backend /api/liora
     // -------------------------------------------------------
     async function gerarQuestoesIA(banca, qtd, tema, dificuldade) {
       const extra = getIaPromptFragment();
 
       const prompt = `
-Gere ${qtd} questões originais da banca ${banca} sobre "${tema || "tema geral do edital"}".
-Nível solicitado: ${dificuldade}.
-
+Gere ${qtd} questões inéditas da banca ${banca} sobre "${tema || "tema geral"}".
+Dificuldade: ${dificuldade}.
 Estrutura obrigatória:
 {
   "enunciado": "...",
@@ -244,15 +226,12 @@ Estrutura obrigatória:
   "corretaIndex": 0-3,
   "nivel": "facil|medio|dificil"
 }
-
 Regras:
-- Não use markdown.
-- Sem alternativas duplicadas.
-- Enunciado autossuficiente.
+- Sem markdown.
+- Não repetir alternativas.
 - Pode usar <u> e <mark>.
 ${extra}
-
-Retorne somente JSON.
+Retorne apenas JSON válido.
 `;
 
       const res = await fetch("/api/liora", {
@@ -260,8 +239,8 @@ Retorne somente JSON.
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           system: "Você é Liora, criadora de simulados premium.",
-          user: prompt,
-        }),
+          user: prompt
+        })
       });
 
       const json = await res.json().catch(() => ({}));
@@ -270,11 +249,11 @@ Retorne somente JSON.
       try {
         let raw = json.output;
         const block =
-          raw.match(/```json([\s\S]*?)```/i) ||
-          raw.match(/```([\s\S]*?)```/i);
+          raw.match(/```json([\\s\\S]*?)```/i) ||
+          raw.match(/```([\\s\\S]*?)```/i);
         if (block) raw = block[1];
 
-        const first = raw.search(/[\[\{]/);
+        const first = raw.search(/[\\[\\{]/);
         const last = Math.max(raw.lastIndexOf("]"), raw.lastIndexOf("}"));
         raw = raw.slice(first, last + 1);
 
@@ -287,8 +266,6 @@ Retorne somente JSON.
         }
       }
     }
-
-
     // -------------------------------------------------------
     // LIMPEZA DE QUESTÕES
     // -------------------------------------------------------
@@ -308,10 +285,11 @@ Retorne somente JSON.
             }
           });
 
+          // garante 4 alternativas
           while (alt.length < 4) alt.push("Alternativa extra");
 
           let ci = Number(q.corretaIndex);
-          if (Number.isNaN(ci) || ci < 0 || ci >= alt.length) ci = 0;
+          if (isNaN(ci) || ci < 0 || ci >= alt.length) ci = 0;
 
           const enun = String(q.enunciado || "").replace(/[_*~`]/g, "");
 
@@ -326,22 +304,19 @@ Retorne somente JSON.
         });
     }
 
-
     // -------------------------------------------------------
-    // MODAL (abrir/fechar)
+    // MODAL
     // -------------------------------------------------------
     function abrirModal() {
       els.modal.classList.add("visible");
 
-      // Pré-preenchimento inteligente
       if (window.lioraPreFillSimulado) window.lioraPreFillSimulado();
 
-      // Aviso quando não houver estudos
       if (els.avisoEstudos) {
         if (!window.lioraEstudos || window.lioraEstudos.lista().length === 0) {
           els.avisoEstudos.style.display = "block";
           els.avisoEstudos.textContent =
-            "💡 Dica: Gere um plano de estudos (Tema ou PDF) para que a Liora sugira simulados ideais.";
+            "💡 Gere um plano de estudos (Tema ou PDF) para recomendações personalizadas.";
         } else {
           els.avisoEstudos.style.display = "none";
         }
@@ -358,18 +333,15 @@ Retorne somente JSON.
       if (e.target === els.modal) fecharModal();
     };
 
-
     // -------------------------------------------------------
-    // LOADING IA + overlay global
+    // LOADING IA
     // -------------------------------------------------------
     function setIaLoading(active) {
       STATE.loadingIA = active;
 
       if (active) {
         if (window.lioraLoading) {
-          const msg = `Gerando questões${
-            STATE.tema ? ` para "${STATE.tema}"` : ""
-          }...`;
+          const msg = `Gerando questões${STATE.tema ? ` para "${STATE.tema}"` : ""}...`;
           window.lioraLoading.show(msg);
         }
 
@@ -380,22 +352,22 @@ Retorne somente JSON.
                 Gerando questões com IA${STATE.tema ? ` para <b>${STATE.tema}</b>` : ""}...
               </p>
               <div class="sim-progress w-full mb-1">
-                <div id="sim-ia-loading-bar" class="sim-progress-fill" style="width: 8%;"></div>
+                <div id="sim-ia-loading-bar" class="sim-progress-fill" style="width:10%;"></div>
               </div>
             </div>
           `;
         }
 
-        let pct = 8;
+        let pct = 10;
         STATE.loadingIntervalID = setInterval(() => {
-          pct += Math.random() * 5;
+          pct += Math.random() * 4;
           if (pct > 92) pct = 92;
           const bar = document.getElementById("sim-ia-loading-bar");
           if (bar) bar.style.width = pct + "%";
-        }, 400);
+        }, 350);
 
         els.nav.classList.add("hidden");
-        els.resultado?.classList.add("hidden");
+        els.resultado.classList.add("hidden");
       } else {
         clearInterval(STATE.loadingIntervalID);
         STATE.loadingIntervalID = null;
@@ -403,7 +375,6 @@ Retorne somente JSON.
         if (window.lioraLoading) window.lioraLoading.hide();
       }
     }
-
 
     // -------------------------------------------------------
     // TIMER
@@ -419,6 +390,7 @@ Retorne somente JSON.
       STATE.timerID = setInterval(() => {
         STATE.tempoRestante--;
         els.timer.textContent = fmt(Math.max(STATE.tempoRestante, 0));
+
         if (STATE.tempoRestante <= 0) {
           clearInterval(STATE.timerID);
           finalizarSimulado(true);
@@ -430,10 +402,8 @@ Retorne somente JSON.
       clearInterval(STATE.timerID);
       STATE.timerID = null;
     }
-
-
     // -------------------------------------------------------
-    // RENDER QUESTÃO
+    // RENDERIZAR QUESTÃO ATUAL
     // -------------------------------------------------------
     function renderQuestao() {
       const total = STATE.questoes.length;
@@ -442,8 +412,7 @@ Retorne somente JSON.
       const q = STATE.questoes[STATE.atual];
 
       els.questaoContainer.innerHTML = "";
-      els.progressBar.style.width =
-        ((STATE.atual + 1) / total) * 100 + "%";
+      els.progressBar.style.width = ((STATE.atual + 1) / total) * 100 + "%";
 
       const header = document.createElement("div");
       header.className =
@@ -486,7 +455,6 @@ Retorne somente JSON.
       els.btnVoltar.disabled = STATE.atual === 0;
     }
 
-
     // -------------------------------------------------------
     // FINALIZAR SIMULADO
     // -------------------------------------------------------
@@ -498,10 +466,8 @@ Retorne somente JSON.
         (q) => q.resp === q.corretaIndex
       ).length;
 
-      const perc = Math.round((acertos / total) * 100);
-
-      const tempoUsado =
-        STATE.tempoMin * 60 - STATE.tempoRestante;
+      const perc = total > 0 ? Math.round((acertos / total) * 100) : 0;
+      const tempoUsado = STATE.tempoMin * 60 - STATE.tempoRestante;
 
       els.questaoContainer.innerHTML = "";
       els.nav.classList.add("hidden");
@@ -536,6 +502,7 @@ Retorne somente JSON.
       `;
       els.resultado.classList.remove("hidden");
 
+      // salva no histórico local
       salvarNoHistorico({
         dataISO: new Date().toISOString(),
         banca: STATE.banca,
@@ -544,18 +511,39 @@ Retorne somente JSON.
         acertos,
         perc,
         tempoSeg: tempoUsado,
-        ia: Array.from(iaState.selecionadas)
+        ia: Array.from(iaState.selecionadas),
       });
 
-      document.getElementById("sim-refazer").onclick = () =>
-        window.location.reload();
-      document.getElementById("sim-dashboard").onclick = () =>
-        window.homeDashboard ? window.homeDashboard() : window.location.reload();
+      const refazer = document.getElementById("sim-refazer");
+      const dashBtn = document.getElementById("sim-dashboard");
+
+      if (refazer) {
+        refazer.onclick = () => {
+          // reseta estado mínimo e volta pro modal
+          STATE.questoes = [];
+          STATE.atual = 0;
+          els.resultado.classList.add("hidden");
+          abrirModal();
+        };
+      }
+
+      if (dashBtn) {
+        dashBtn.onclick = () => {
+          if (window.homeDashboard) {
+            window.homeDashboard();
+          } else {
+            // fallback: rola para área do dashboard se existir
+            const dash = document.getElementById("area-dashboard");
+            if (dash) {
+              dash.scrollIntoView({ behavior: "smooth", block: "start" });
+            }
+          }
+        };
+      }
     }
 
-
     // -------------------------------------------------------
-    // NAVEGAÇÃO
+    // NAVEGAÇÃO ENTRE QUESTÕES
     // -------------------------------------------------------
     els.btnVoltar.onclick = () => {
       if (STATE.atual > 0) {
@@ -572,13 +560,11 @@ Retorne somente JSON.
         finalizarSimulado(false);
       }
     };
-
-
     // -------------------------------------------------------
-    // AUTO-PREENCHIMENTO VIA MEMÓRIA (exposto global)
+    // AUTO-PREENCHIMENTO VIA MEMÓRIA DE ESTUDOS
     // -------------------------------------------------------
     window.lioraPreFillSimulado = function () {
-      if (!window.lioraEstudos) return;
+      if (!window.lioraEstudos || !window.lioraEstudos.recomendarSimulado) return;
 
       const rec = window.lioraEstudos.recomendarSimulado();
       if (!rec) return;
@@ -589,16 +575,15 @@ Retorne somente JSON.
       if (els.selBanca) els.selBanca.value = rec.banca;
     };
 
-
     // -------------------------------------------------------
-    // BTN INICIAR
+    // BOTÃO INICIAR SIMULADO
     // -------------------------------------------------------
     els.btnIniciar.onclick = async () => {
       STATE.banca = els.selBanca.value || "FGV";
       STATE.qtd = Number(els.selQtd.value || "10");
       STATE.tempoMin = Number(els.selTempo.value || "30");
       STATE.dificuldade = els.selDif.value || "misturado";
-      STATE.tema = els.inpTema.value.trim();
+      STATE.tema = (els.inpTema.value || "").trim();
 
       fecharModal();
       setIaLoading(true);
@@ -616,7 +601,9 @@ Retorne somente JSON.
           els.questaoContainer.innerHTML =
             `<p class="text-sm text-[var(--muted)]">A IA não conseguiu gerar questões agora. Tente novamente.</p>`;
           setIaLoading(false);
-          window.lioraError?.show("Não foi possível gerar questões. Tente novamente em instantes.");
+          window.lioraError?.show(
+            "Não foi possível gerar questões neste momento. Tente novamente em alguns instantes."
+          );
           return;
         }
 
@@ -629,10 +616,12 @@ Retorne somente JSON.
       } catch (e) {
         console.error("❌ Erro ao gerar questões IA", e);
         setIaLoading(false);
-        window.lioraError?.show("Erro ao gerar simulado com IA. Tente novamente.");
+        window.lioraError?.show(
+          "Erro ao gerar simulado com IA. Verifique sua conexão e tente novamente."
+        );
       }
     };
 
-    console.log("🟢 Liora Simulados v97 inicializado.");
+    console.log("🟢 Liora Simulados v97-PREMIUM-C3 inicializado.");
   });
 })();
