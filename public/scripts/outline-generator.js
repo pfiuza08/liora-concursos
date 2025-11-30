@@ -1,13 +1,3 @@
-// =============================================
-// 🧠 Liora Outline Generator — Modelo D v72
-// 100% compatível com core v70-B + semantic v41
-// 6–12 sessões, com MAPA MENTAL textual
-// =============================================
-(function () {
-  console.log("🔵 Liora Outline Generator v72 carregado...");
-
-  const MIN = 6;
-  const MAX = 12;
 // ==========================================================
 // 🧩 LIORA — OUTLINE GENERATOR v74-C3
 // Compatível com core v74 (usa: window.lioraOutlineGenerator.gerar())
@@ -167,6 +157,7 @@ ${trecho}
     let resto = total % n;
 
     let idx = 0;
+
     for (let i = 0; i < n; i++) {
       const tam = base + (resto > 0 ? 1 : 0);
       if (resto > 0) resto--;
@@ -275,8 +266,7 @@ FORMATO:
             explicacao: "",
           },
           flashcards: [],
-          mapaMental:
-            "Mapa mental não pôde ser gerado automaticamente.",
+          mapaMental: "Mapa mental não pôde ser gerado automaticamente.",
         };
       }
 
