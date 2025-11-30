@@ -287,18 +287,28 @@ FORMATO:
     return { nivel: null, sessoes };
   }
 
-  // ========================================================
+   // ========================================================
   // 🌟 API GLOBAL COMPATÍVEL COM core v74
   // ========================================================
   async function gerar(secoes) {
     console.log("🚀 OutlineGenerator.gerar() iniciando pipeline…");
 
+    // 1) gerar outlines por seção
     const outlinePorSecao = await gerarOutlinesPorSecao(secoes);
-    const outlineUnificado = unificarOutlines(outlinePorSecao);
-    const plano = await gerarPlanoDeEstudo(outlineUnificado);
 
-    console.log("📘 OutlineGenerator → plano final:", plano);
-    return plano;
+    // 2) unificar tópicos
+    const outlineUnificado = unificarOutlines(outlinePorSecao);
+
+    // 3) extrair apenas os nomes dos tópicos, como o core v74 espera
+    const topicos = outlineUnificado
+      .map((t) => t.nome)
+      .filter((nome) => !!nome && nome.trim().length > 0);
+
+    console.log("📘 OutlineGenerator → tópicos finais:", topicos);
+
+    // contrato esperado pelo core:
+    //   outline.topicos (array de strings)
+    return { topicos, outlineUnificado };
   }
 
   window.lioraOutlineGenerator = {
@@ -308,3 +318,4 @@ FORMATO:
     gerarPlanoDeEstudo,
   };
 })();
+
