@@ -8,51 +8,66 @@
 
   const MIN = 6;
   const MAX = 12;
+// ==========================================================
+// 🧩 LIORA — OUTLINE GENERATOR v74-C3
+// Compatível com core v74 (usa: window.lioraOutlineGenerator.gerar())
+// Mantém a estrutura Modelo D v72 (seções → tópicos → sessões completas)
+// ==========================================================
+(function () {
+  console.log("🔵 Liora Outline Generator v74-C3 carregado...");
 
-  // -------------------------------------------------
+  const MIN = 6;
+  const MAX = 12;
+
+  // -----------------------------
   // JSON seguro
-  // -------------------------------------------------
+  // -----------------------------
   function safeParse(raw) {
     if (!raw || typeof raw !== "string") throw new Error("Resposta vazia.");
 
-    const block = raw.match(/```json([\s\S]*?)```/i) ||
-                  raw.match(/```([\s\S]*?)```/i);
+    const block =
+      raw.match(/```json([\s\S]*?)```/i) ||
+      raw.match(/```([\s\S]*?)```/i);
+
     if (block) raw = block[1];
 
     const first = raw.indexOf("{");
-    const last  = raw.lastIndexOf("}");
+    const last = raw.lastIndexOf("}");
     if (first !== -1 && last !== -1) raw = raw.slice(first, last + 1);
 
     raw = raw.replace(/[\u0000-\u001F]/g, " ");
     return JSON.parse(raw);
   }
 
-  // -------------------------------------------------
-  // Chamada IA centralizada
-  // -------------------------------------------------
+  // -----------------------------
+  // Chamada IA
+  // -----------------------------
   async function call(system, user) {
     if (!window.callLLM) throw new Error("callLLM() não disponível");
     return await window.callLLM(system, user);
   }
 
-  // -------------------------------------------------
+  // -----------------------------
   // 1) OUTLINES por seção
-  // -------------------------------------------------
+  // -----------------------------
   async function gerarOutlinesPorSecao(secoes) {
     const resultados = [];
 
     for (let i = 0; i < secoes.length; i++) {
       const sec = secoes[i];
       const titulo = sec.titulo || `Seção ${i + 1}`;
-      const linhas = Array.isArray(sec.conteudo) ? sec.conteudo : [String(sec.conteudo || "")];
+      const linhas = Array.isArray(sec.conteudo)
+        ? sec.conteudo
+        : [String(sec.conteudo || "")];
 
       const texto = window.LioraSemantic
         ? window.LioraSemantic.construirTextoBase(linhas)
         : linhas.join("\n");
 
-      const trecho = texto.length > 2500
-        ? texto.slice(0, 2300) + "\n[trecho truncado]"
-        : texto;
+      const trecho =
+        texto.length > 2500
+          ? texto.slice(0, 2300) + "\n[trecho truncado]"
+          : texto;
 
       const prompt = `Você é Liora.
 Extraia de 3 a 8 tópicos centrais do trecho abaixo.
@@ -80,14 +95,14 @@ ${trecho}
       }
 
       const topicos = (json.topicos || [])
-        .map(t => ({
+        .map((t) => ({
           nome: (t.nome || "").trim(),
           resumoTexto: (t.resumoTexto || "").trim(),
           importancia: Number(t.importancia) || 3,
           secaoTitulo: titulo,
-          secaoIndex: i
+          secaoIndex: i,
         }))
-        .filter(t => t.nome);
+        .filter((t) => t.nome);
 
       resultados.push({ secaoTitulo: titulo, secaoIndex: i, topicos });
     }
@@ -96,14 +111,14 @@ ${trecho}
     return resultados;
   }
 
-  // -------------------------------------------------
+  // -----------------------------
   // 2) Unificar tópicos
-  // -------------------------------------------------
+  // -----------------------------
   function unificarOutlines(lista) {
     const mapa = new Map();
 
-    lista.forEach(sec => {
-      sec.topicos.forEach(t => {
+    lista.forEach((sec) => {
+      sec.topicos.forEach((t) => {
         const chave = t.nome.toLowerCase();
 
         if (!mapa.has(chave)) {
@@ -112,7 +127,7 @@ ${trecho}
             importancia: 0,
             count: 0,
             texto: [],
-            secoes: new Set()
+            secoes: new Set(),
           });
         }
 
@@ -125,11 +140,11 @@ ${trecho}
     });
 
     const vet = Array.from(mapa.values())
-      .map(x => ({
+      .map((x) => ({
         nome: x.nome,
         importancia: x.importancia / x.count,
         textoBase: x.texto.join("\n\n"),
-        secoes: Array.from(x.secoes)
+        secoes: Array.from(x.secoes),
       }))
       .sort((a, b) => b.importancia - a.importancia);
 
@@ -137,9 +152,9 @@ ${trecho}
     return vet;
   }
 
-  // -------------------------------------------------
-  // 3) Agrupar em sessões (6–12)
-  // -------------------------------------------------
+  // -----------------------------
+  // 3) Agrupar tópicos em sessões
+  // -----------------------------
   function agrupar(topicos) {
     const total = topicos.length;
     if (!total) return [];
@@ -161,27 +176,26 @@ ${trecho}
 
       if (!grupo.length) continue;
 
-      // evita duplicação tipo: Sessão X — Sessão X — ABC
       const titulo = grupo[0].nome.replace(/^Sessão\s+\d+\s+—\s+/i, "");
 
       const textoBase = grupo
-        .map(g => g.textoBase)
+        .map((g) => g.textoBase)
         .filter(Boolean)
         .join("\n----------------------\n");
 
       sessoes.push({
         tituloBase: titulo,
-        topicos: grupo.map(g => g.nome),
-        textoBase
+        topicos: grupo.map((g) => g.nome),
+        textoBase,
       });
     }
 
     return sessoes;
   }
 
-  // -------------------------------------------------
-  // 4) Sessões completas (com MAPA MENTAL)
-  // -------------------------------------------------
+  // -----------------------------
+  // 4) Sessões completas
+  // -----------------------------
   async function gerarPlanoDeEstudo(outline) {
     const topicos = Array.isArray(outline) ? outline : [];
     if (!topicos.length) return { nivel: null, sessoes: [] };
@@ -195,11 +209,11 @@ ${trecho}
       const titulo = `Sessão ${i + 1} — ${g.tituloBase}`;
       const listaTopicos = g.topicos.join("; ");
 
-      const texto = g.textoBase.length > 2500
-        ? g.textoBase.slice(0, 2300) + "\n[trecho truncado]"
-        : g.textoBase;
+      const texto =
+        g.textoBase.length > 2500
+          ? g.textoBase.slice(0, 2300) + "\n[trecho truncado]"
+          : g.textoBase;
 
-      // ---------- PROMPT DA SESSÃO COMPLETA ----------
       const prompt = `Você é Liora.
 Monte a sessão abaixo APENAS com base no texto.
 Retorne SOMENTE JSON válido.
@@ -238,8 +252,6 @@ FORMATO:
       try {
         const raw = await call("Você é Liora. Responda SOMENTE JSON.", prompt);
         sessao = safeParse(raw);
-
-        // garantir campo extra
         sessao.mapaMental = sessao.mapaMental || "";
       } catch (err) {
         console.error("❌ Erro sessão", g, err);
@@ -252,42 +264,57 @@ FORMATO:
             conceitos: g.topicos,
             exemplos: [],
             aplicacoes: [],
-            resumoRapido: g.topicos.slice(0, 3)
+            resumoRapido: g.topicos.slice(0, 3),
           },
           analogias: [],
           ativacao: [],
-          quiz: { pergunta: "", alternativas: [], corretaIndex: 0, explicacao: "" },
+          quiz: {
+            pergunta: "",
+            alternativas: [],
+            corretaIndex: 0,
+            explicacao: "",
+          },
           flashcards: [],
-          mapaMental: "Mapa mental não pôde ser gerado automaticamente."
+          mapaMental:
+            "Mapa mental não pôde ser gerado automaticamente.",
         };
       }
 
-      // fallback: gerar mapa mental via semantic.js se estiver vazio
+      // fallback mapa mental
       if (!sessao.mapaMental && window.LioraSemantic) {
         try {
-          const mm = await window.LioraSemantic.gerarMapaMental(titulo, texto);
+          const mm = await window.LioraSemantic.gerarMapaMental(
+            titulo,
+            texto
+          );
           sessao.mapaMental = mm || "";
-        } catch {
-          sessao.mapaMental = "";
-        }
+        } catch {}
       }
 
       sessoes.push(sessao);
     }
 
-    const plano = { nivel: null, sessoes };
-    console.log("📘 Plano Modelo D v72:", plano);
+    return { nivel: null, sessoes };
+  }
+
+  // ========================================================
+  // 🌟 API GLOBAL COMPATÍVEL COM core v74
+  // ========================================================
+  async function gerar(secoes) {
+    console.log("🚀 OutlineGenerator.gerar() iniciando pipeline…");
+
+    const outlinePorSecao = await gerarOutlinesPorSecao(secoes);
+    const outlineUnificado = unificarOutlines(outlinePorSecao);
+    const plano = await gerarPlanoDeEstudo(outlineUnificado);
+
+    console.log("📘 OutlineGenerator → plano final:", plano);
     return plano;
   }
 
-  // -------------------------------------------------
-  // Expor API
-  // -------------------------------------------------
-  window.LioraOutline = {
+  window.lioraOutlineGenerator = {
+    gerar,
     gerarOutlinesPorSecao,
     unificarOutlines,
     gerarPlanoDeEstudo,
-    gerarPlanoEstudo: gerarPlanoDeEstudo
   };
-
 })();
