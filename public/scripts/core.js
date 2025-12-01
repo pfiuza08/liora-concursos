@@ -638,9 +638,37 @@
         });
       }
 
-      // ----------------------- FLASHCARDS (accordion premium) -----------------------
+     // ----------------------- FLASHCARDS (accordion premium + normalização universal) -----------------------
       if (els.wizardFlashcards) {
-        const cards = Array.isArray(s.flashcards) ? s.flashcards : [];
+        let cards = Array.isArray(s.flashcards) ? s.flashcards : [];
+      
+        // 🔥 Normalização inteligente
+        cards = cards
+          .map((fc) => {
+            // Caso { q: "...", a: "..." }
+            if (fc?.q && fc?.a) return fc;
+      
+            // Caso { pergunta: "...", resposta: "..." }
+            if (fc?.pergunta && fc?.resposta)
+              return { q: fc.pergunta, a: fc.resposta };
+      
+            // Caso string "Pergunta: ... | Resposta: ..."
+            if (typeof fc === "string") {
+              const partes = fc.split("|");
+              if (partes.length >= 2) {
+                return {
+                  q: partes[0].replace(/Pergunta:?/i, "").trim(),
+                  a: partes[1].replace(/Resposta:?/i, "").trim(),
+                };
+              }
+            }
+      
+            // Ignorar conteúdo inválido
+            return null;
+          })
+          .filter((x) => x && x.q && x.a);
+      
+        // Se ainda não sobrou nada
         if (!cards.length) {
           els.wizardFlashcards.innerHTML =
             "<p class='liora-muted'>Nenhum flashcard gerado para esta sessão.</p>";
@@ -648,14 +676,15 @@
           els.wizardFlashcards.innerHTML = cards
             .map(
               (f, i) => `
-              <article class="liora-flashcard" data-index="${i}">
-                <div class="liora-flashcard-q">${f.q}</div>
-                <div class="liora-flashcard-a">${f.a}</div>
-              </article>
-            `
+                <article class="liora-flashcard" data-index="${i}">
+                  <div class="liora-flashcard-q">${f.q}</div>
+                  <div class="liora-flashcard-a">${f.a}</div>
+                </article>
+              `
             )
             .join("");
-
+      
+          // Habilita animações
           els.wizardFlashcards
             .querySelectorAll(".liora-flashcard")
             .forEach((card) => {
