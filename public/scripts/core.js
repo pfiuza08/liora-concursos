@@ -451,7 +451,7 @@
     }
 
     // --------------------------------------------------------
-    // RENDERIZAÇÃO DO WIZARD (COM QUIZ FIX)
+    // RENDERIZAÇÃO DO WIZARD (PREMIUM)
     // --------------------------------------------------------
     function renderWizard() {
       if (!els.wizardContainer) return;
@@ -469,7 +469,6 @@
 
       els.wizardContainer.classList.remove("hidden");
 
-      // fade-in
       const card = els.wizardContainer.querySelector(".liora-wizard-card");
       if (card) {
         card.classList.remove("visible");
@@ -485,126 +484,155 @@
       if (els.wizardTitulo) els.wizardTitulo.textContent = s.titulo || "";
       if (els.wizardObjetivo) els.wizardObjetivo.textContent = s.objetivo || "";
 
-      // Conteúdo
       const c = s.conteudo || {};
+
+      // ----------------------- CONTEÚDO PRINCIPAL -----------------------
       if (els.wizardConteudo) {
+        const intro = c.introducao ? `<p>${c.introducao}</p>` : "";
+
+        const conceitos =
+          Array.isArray(c.conceitos) && c.conceitos.length
+            ? `<ul>${c.conceitos
+                .map((x) => `<li>${x}</li>`)
+                .join("")}</ul>`
+            : "";
+
+        const exemplos =
+          Array.isArray(c.exemplos) && c.exemplos.length
+            ? `<ul>${c.exemplos
+                .map((x) => `<li>${x}</li>`)
+                .join("")}</ul>`
+            : "";
+
+        const aplicacoes =
+          Array.isArray(c.aplicacoes) && c.aplicacoes.length
+            ? `<ul>${c.aplicacoes
+                .map((x) => `<li>${x}</li>`)
+                .join("")}</ul>`
+            : "";
+
+        const resumo =
+          Array.isArray(c.resumoRapido) && c.resumoRapido.length
+            ? `<ul>${c.resumoRapido
+                .map((x) => `<li>${x}</li>`)
+                .join("")}</ul>`
+            : "";
+
         els.wizardConteudo.innerHTML = `
-          ${
-            c.introducao
-              ? `
-          <div class="liora-section">
-            <h5>INTRODUÇÃO</h5>
-            <p>${c.introducao}</p>
-          </div>
-          <hr class="liora-divider">`
-              : ""
-          }
+          <div class="liora-wiz-shell">
+            ${
+              intro
+                ? `
+            <section class="liora-card">
+              <div class="liora-card-header">Introdução</div>
+              <div class="liora-card-body">
+                ${intro}
+              </div>
+            </section>
+            `
+                : ""
+            }
 
-          ${
-            Array.isArray(c.conceitos) && c.conceitos.length
-              ? `
-          <div class="liora-section">
-            <h5>CONCEITOS PRINCIPAIS</h5>
-            <ul>${c.conceitos.map((x) => `<li>${x}</li>`).join("")}</ul>
-          </div>
-          <hr class="liora-divider">`
-              : ""
-          }
+            ${
+              conceitos
+                ? `
+            <section class="liora-card">
+              <div class="liora-card-header">Conceitos principais</div>
+              <div class="liora-card-body">
+                ${conceitos}
+              </div>
+            </section>
+            `
+                : ""
+            }
 
-          ${
-            Array.isArray(c.exemplos) && c.exemplos.length
-              ? `
-          <div class="liora-section">
-            <h5>EXEMPLOS</h5>
-            <ul>${c.exemplos.map((x) => `<li>${x}</li>`).join("")}</ul>
-          </div>
-          <hr class="liora-divider">`
-              : ""
-          }
+            ${
+              exemplos
+                ? `
+            <section class="liora-card">
+              <div class="liora-card-header">Exemplos práticos</div>
+              <div class="liora-card-body">
+                ${exemplos}
+              </div>
+            </section>
+            `
+                : ""
+            }
 
-          ${
-            Array.isArray(c.aplicacoes) && c.aplicacoes.length
-              ? `
-          <div class="liora-section">
-            <h5>APLICAÇÕES</h5>
-            <ul>${c.aplicacoes.map((x) => `<li>${x}</li>`).join("")}</ul>
-          </div>
-          <hr class="liora-divider">`
-              : ""
-          }
+            ${
+              aplicacoes
+                ? `
+            <section class="liora-card">
+              <div class="liora-card-header">Aplicações em prova / prática</div>
+              <div class="liora-card-body">
+                ${aplicacoes}
+              </div>
+            </section>
+            `
+                : ""
+            }
 
-          ${
-            Array.isArray(c.resumoRapido) && c.resumoRapido.length
-              ? `
-          <div class="liora-section">
-            <h5>RESUMO RÁPIDO</h5>
-            <ul>${c.resumoRapido.map((x) => `<li>${x}</li>`).join("")}</ul>
-          </div>`
-              : ""
-          }
+            ${
+              resumo
+                ? `
+            <section class="liora-card liora-card-highlight">
+              <div class="liora-card-header">Resumo rápido</div>
+              <div class="liora-card-body">
+                ${resumo}
+              </div>
+            </section>
+            `
+                : ""
+            }
+          </div>
         `;
       }
 
-      // Analogias
+      // ----------------------- ANALOGIAS -----------------------
       if (els.wizardAnalogias) {
-        els.wizardAnalogias.innerHTML = (s.analogias || [])
-          .map((a) => `<p>${a}</p>`)
-          .join("");
+        const list = Array.isArray(s.analogias) ? s.analogias : [];
+        els.wizardAnalogias.innerHTML = list.length
+          ? list.map((a) => `<p>• ${a}</p>`).join("")
+          : "<p class='liora-muted'>Nenhuma analogia gerada para esta sessão.</p>";
       }
 
-      // Ativação
+      // ----------------------- ATIVAÇÃO -----------------------
       if (els.wizardAtivacao) {
-        els.wizardAtivacao.innerHTML = (s.ativacao || [])
-          .map((q) => `<li>${q}</li>`)
-          .join("");
+        const list = Array.isArray(s.ativacao) ? s.ativacao : [];
+        els.wizardAtivacao.innerHTML = list.length
+          ? `<ul>${list.map((q) => `<li>${q}</li>`).join("")}</ul>`
+          : "<p class='liora-muted'>Nenhuma pergunta de ativação disponível.</p>";
       }
 
-      // QUIZ (v74 FIX com <div>)
+      // ----------------------- QUIZ -----------------------
       if (els.wizardQuiz) {
         els.wizardQuiz.innerHTML = "";
         const q = s.quiz || {};
 
         if (q.pergunta) {
           const pergunta = document.createElement("p");
+          pergunta.className = "liora-quiz-question";
           pergunta.textContent = q.pergunta;
           els.wizardQuiz.appendChild(pergunta);
         }
 
-        // limpar alternativas brutas
         const brutas = Array.isArray(q.alternativas)
-          ? q.alternativas.filter((a) => {
-              if (a === null || a === undefined) return false;
-              const asStr = typeof a === "string" ? a : a.texto || a.label || "";
-              return String(asStr).trim().length > 0;
-            })
+          ? q.alternativas.filter((a) => !!String(a || "").trim())
           : [];
 
-        // normalizar
         const marcadas = brutas.map((alt, i) => {
-          let texto = "";
-          if (typeof alt === "string") texto = alt;
-          else if (alt && typeof alt.texto === "string") texto = alt.texto;
-          else if (alt && typeof alt.label === "string") texto = alt.label;
-          else texto = JSON.stringify(alt);
-
-          const byIndex = i === Number(q.corretaIndex);
-          const byFlag = !!(alt && (alt.correta || alt.correto || alt.isCorrect));
-          return {
-            texto: String(texto)
-              .replace(/\n/g, " ")
-              .replace(/<\/?[^>]+(>|$)/g, ""),
-            correta: byIndex || byFlag,
-          };
+          const texto = String(alt || "")
+            .replace(/\n/g, " ")
+            .replace(/<\/?[^>]+(>|$)/g, "");
+          const correta = i === Number(q.corretaIndex);
+          return { texto, correta };
         });
 
-        // se nenhuma marcada → marca a primeira
         if (marcadas.length && !marcadas.some((a) => a.correta)) {
           marcadas[0].correta = true;
         }
 
-        const alternativas = shuffle(marcadas);
-
-        alternativas.forEach((altObj, idx) => {
+        marcadas.forEach((altObj, idx) => {
           const opt = document.createElement("div");
           opt.className = "liora-quiz-option";
           opt.dataset.index = idx;
@@ -618,9 +646,10 @@
           opt.addEventListener("click", () => {
             els.wizardQuiz
               .querySelectorAll(".liora-quiz-option")
-              .forEach((o) => o.classList.remove("selected"));
+              .forEach((o) => o.classList.remove("selected", "correct", "incorrect"));
 
             opt.classList.add("selected");
+
             const input = opt.querySelector("input");
             if (input) input.checked = true;
 
@@ -629,11 +658,14 @@
 
             setTimeout(() => {
               if (altObj.correta) {
+                opt.classList.add("correct");
                 els.wizardQuizFeedback.textContent =
                   `✅ Correto! ${q.explicacao || ""}`;
                 els.wizardQuizFeedback.style.color = "var(--brand)";
               } else {
-                els.wizardQuizFeedback.textContent = "❌ Tente novamente.";
+                opt.classList.add("incorrect");
+                els.wizardQuizFeedback.textContent =
+                  "❌ Não é essa. Releia a pergunta e tente de novo.";
                 els.wizardQuizFeedback.style.color = "var(--muted)";
               }
               els.wizardQuizFeedback.style.opacity = 1;
@@ -644,21 +676,47 @@
         });
       }
 
-      // Flashcards
+      // ----------------------- FLASHCARDS -----------------------
       if (els.wizardFlashcards) {
-        els.wizardFlashcards.innerHTML = (s.flashcards || [])
-          .map((f) => `<li><b>${f.q}</b>: ${f.a}</li>`)
-          .join("");
+        const cards = Array.isArray(s.flashcards) ? s.flashcards : [];
+        if (!cards.length) {
+          els.wizardFlashcards.innerHTML =
+            "<p class='liora-muted'>Nenhum flashcard gerado para esta sessão.</p>";
+        } else {
+          els.wizardFlashcards.innerHTML = `
+            <div class="liora-flashcards-grid">
+              ${cards
+                .map(
+                  (f) => `
+                <article class="liora-flashcard">
+                  <div class="liora-flashcard-front">
+                    <span class="liora-flashcard-label">Pergunta</span>
+                    <p>${f.q}</p>
+                  </div>
+                  <div class="liora-flashcard-back">
+                    <span class="liora-flashcard-label">Resposta</span>
+                    <p>${f.a}</p>
+                  </div>
+                </article>
+              `
+                )
+                .join("")}
+            </div>
+          `;
+        }
       }
 
-      // Mapa mental
+      // ----------------------- MAPA MENTAL -----------------------
       if (els.wizardMapa) {
         const mapa = construirMapaMental(s);
-        els.wizardMapa.textContent =
-          mapa || "Mapa mental gerado automaticamente.";
+        els.wizardMapa.innerHTML = `
+          <pre class="liora-mindmap-block">${
+            mapa || "Mapa mental gerado automaticamente não pôde ser exibido."
+          }</pre>
+        `;
       }
 
-      // SESSÃO EM ANDAMENTO → Study Manager (progresso “em estudo”)
+      // Study Manager: sessão em andamento
       if (window.lioraEstudos?.updateSessionProgress && s?.id) {
         window.lioraEstudos.updateSessionProgress(s.id, 0.5);
       }
@@ -666,6 +724,7 @@
       // Atualiza cards laterais (active)
       renderPlanoResumo(wizard.plano);
     }
+
 
     // --------------------------------------------------------
     // NAVEGAÇÃO DO WIZARD
