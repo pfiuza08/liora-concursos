@@ -1,80 +1,188 @@
 /* =============================================================
-   LIORA — PREMIUM HYBRID UI (C3) + WIZARD PREMIUM (v76)
-   - Layout unificado
-   - Cards, quiz, flashcards e mapa mental refinados
-   - Totalmente compatível com Core v74, v75, v76
+   LIORA — PREMIUM HYBRID UI (C3)
+   Versão Final Consolidada v74-PREMIUM
+   - Tema escuro como padrão
+   - Tema claro ativado por html.light
+   - UI limpa, moderna e responsiva
 ============================================================= */
 
 /* --------------------------------------------------------------
-   🟧 WIZARD SHELL (container principal)
+   🌑 TEMA ESCURO (PADRÃO)
 -------------------------------------------------------------- */
-.liora-wiz-shell {
-  max-width: 830px;
-  margin: 0 auto;
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
+:root {
+  --brand: #c44b04;
+  --fg: #ffffff;
+  --bg: #0b0b0b;
+  --bg2: #141414;
+  --card: #181818;
+  --hover: #1f1f1f;
+  --border: #2a2a2a;
+  --muted: #bcbcbc;
+  --radius: 14px;
+  --shadow: 0 4px 16px rgba(0,0,0,0.4);
+  --transition: 0.25s ease;
 }
 
 /* --------------------------------------------------------------
-   🟩 CARDS DO WIZARD (não interfere nos cards do plano lateral)
+   🌞 TEMA CLARO — ATIVADO SOMENTE COM html.light
 -------------------------------------------------------------- */
-.liora-card {
-  background: var(--card);
-  border: 1px solid var(--border);
+html.light {
+  --fg: #1c1c1c;
+  --bg: #faf7f2;
+  --bg2: #ffffff;
+  --card: #ffffff;
+  --hover: #f0efec;
+  --border: #dfddd8;
+  --muted: #6b6b6b;
+  --shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+/* --------------------------------------------------------------
+   RESET GLOBAL
+-------------------------------------------------------------- */
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: "Inter", sans-serif;
+  line-height: 1.6;
+  overflow-x: hidden;
+  transition: background .3s ease, color .3s ease;
+}
+
+#liora-home {
+  width: 100%;
+}
+
+/* --------------------------------------------------------------
+   BOTÕES
+-------------------------------------------------------------- */
+.btn {
+  background: var(--brand);
+  color: #fff;
+  padding: 0.75rem 1rem;
   border-radius: var(--radius);
-  padding: 1rem 1.25rem;
-  box-shadow: var(--shadow);
+  font-weight: 600;
+  cursor: pointer;
   transition: var(--transition);
 }
+.btn:hover {
+  filter: brightness(1.12);
+}
 
-.liora-card:hover {
+.btn-secondary {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  color: var(--fg);
+  padding: 0.7rem 1rem;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: var(--transition);
+}
+.btn-secondary:hover {
   background: var(--hover);
-}
-
-.liora-card-highlight {
   border-color: var(--brand);
-  box-shadow: 0 0 0 1px rgba(196,75,4,0.25), var(--shadow);
-}
-
-.liora-card-header {
-  font-size: 0.85rem;
-  text-transform: uppercase;
-  letter-spacing: 0.07em;
-  color: var(--muted);
-  margin-bottom: 0.4rem;
-}
-
-.liora-card-body {
-  line-height: 1.55;
-  font-size: 0.95rem;
-}
-
-.liora-card-body ul {
-  padding-left: 1.2rem;
-}
-
-.liora-card-body li + li {
-  margin-top: 0.2rem;
 }
 
 /* --------------------------------------------------------------
-   🟦 QUIZ PREMIUM (in-line com seu estilo atual)
+   INPUTS
 -------------------------------------------------------------- */
-.liora-quiz-question {
-  font-weight: 600;
-  margin-bottom: 0.75rem;
-  font-size: 1rem;
+input, select {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  color: var(--fg);
+  padding: 0.65rem 0.8rem;
+  border-radius: var(--radius);
+  width: 100%;
+  transition: var(--transition);
+}
+input:focus, select:focus {
+  outline: none;
+  border-color: var(--brand);
+  box-shadow: 0 0 0 2px rgba(196,75,4,.35);
+}
+
+/* --------------------------------------------------------------
+   UPLOAD ZONE
+-------------------------------------------------------------- */
+.upload-zone {
+  border: 2px dashed var(--border);
+  background: rgba(255,255,255,0.03);
+  padding: 1.1rem;
+  border-radius: var(--radius);
+  text-align: center;
+  cursor: pointer;
+  transition: var(--transition);
+}
+.upload-zone:hover {
+  background: rgba(196,75,4,0.08);
+  border-color: var(--brand);
+}
+
+#upload-spinner {
+  display: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 3px solid var(--border);
+  border-top: 3px solid var(--brand);
+  animation: spin 1s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* --------------------------------------------------------------
+   PROGRESS BAR
+-------------------------------------------------------------- */
+.liora-progress {
+  height: 8px;
+  background: var(--border);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.liora-progress__bar {
+  height: 100%;
+  width: 0%;
+  background: var(--brand);
+  transition: width .3s ease;
+}
+
+/* --------------------------------------------------------------
+   CARDS DO PLANO
+-------------------------------------------------------------- */
+.liora-card-topico {
+  background: var(--card);
+  border: 1px solid var(--border);
+  padding: 14px;
+  border-radius: var(--radius);
+  transition: var(--transition);
+}
+.liora-card-topico:hover,
+.liora-card-topico.active {
+  background: rgba(196,75,4,0.15);
+  border-color: var(--brand);
+  transform: translateX(4px);
+}
+
+/* --------------------------------------------------------------
+   QUIZ PREMIUM C3
+-------------------------------------------------------------- */
+#liora-sessao-quiz {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+  margin-top: 10px;
 }
 
 .liora-quiz-option {
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 14px 16px;
-  border-radius: var(--radius);
-  border: 1px solid var(--border);
+  gap: 16px;
   background: var(--card);
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
   cursor: pointer;
   transition: var(--transition);
   position: relative;
@@ -85,123 +193,89 @@
   border-color: var(--brand);
 }
 
-/* selecionado */
 .liora-quiz-option.selected {
-  background: rgba(196,75,4,0.15);
+  background: var(--brand);
   border-color: var(--brand);
+  color: #fff;
   transform: translateY(-2px);
-}
-
-/* correto */
-.liora-quiz-option.correct {
-  background: rgba(34,197,94,0.15);
-  border-color: #22c55e;
-}
-
-/* errado */
-.liora-quiz-option.incorrect {
-  background: rgba(239,68,68,0.12);
-  border-color: #ef4444;
+  box-shadow: 0 4px 14px rgba(196,75,4,0.35);
 }
 
 .liora-quiz-dot {
-  margin-left: auto;
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
   border-radius: 50%;
   border: 2px solid var(--border);
+  transition: var(--transition);
 }
 
-.liora-quiz-option.correct .liora-quiz-dot {
-  background: #22c55e;
-  border-color: #22c55e;
+.liora-quiz-option.selected .liora-quiz-dot {
+  background: #fff;
+  border-color: #fff;
 }
 
-.liora-quiz-option.incorrect .liora-quiz-dot {
-  background: #ef4444;
-  border-color: #ef4444;
+.liora-quiz-option input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
 }
 
-.liora-quiz-option input {
-  display: none;
-}
-
-/* --------------------------------------------------------------
-   🟫 FLASHCARDS PREMIUM
--------------------------------------------------------------- */
-.liora-flashcards-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 1rem;
-  margin-top: 0.5rem;
-}
-
-.liora-flashcard {
-  background: radial-gradient(
-      circle at top left,
-      rgba(196,75,4,0.15),
-      var(--card)
-    );
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 0.8rem 1rem;
-  box-shadow: var(--shadow);
-}
-
-.liora-flashcard-front p,
-.liora-flashcard-back p {
-  margin: 0.25rem 0;
-}
-
-.liora-flashcard-back {
-  margin-top: 0.6rem;
-  padding-top: 0.4rem;
-  border-top: 1px dashed var(--border);
-}
-
-.liora-flashcard-label {
-  display: block;
-  font-size: 0.7rem;
-  color: var(--muted);
-  margin-bottom: 0.25rem;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
+.liora-quiz-option-text {
+  flex: 1;
+  word-break: break-word;
+  line-height: 1.55;
 }
 
 /* --------------------------------------------------------------
-   🟪 MAPA MENTAL (novo visual)
+   MAPA MENTAL
 -------------------------------------------------------------- */
-.liora-mindmap-block {
+.liora-mapa-mental {
   background: var(--card);
   border: 1px solid var(--border);
-  padding: 1rem 1.2rem;
+  padding: 18px;
   border-radius: var(--radius);
   font-family: "Fira Code", monospace;
   white-space: pre-wrap;
-  overflow-x: auto;
-  font-size: 0.9rem;
-  line-height: 1.45;
-  box-shadow: var(--shadow);
 }
 
 /* --------------------------------------------------------------
-   🟨 TEXTO AUXILIAR
+   ERRO GLOBAL
 -------------------------------------------------------------- */
-.liora-muted {
-  color: var(--muted);
-  opacity: 0.85;
-  font-size: 0.9rem;
+.liora-error {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.65);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.liora-error.hidden { display: none; }
+
+.liora-error-card {
+  background: var(--card);
+  padding: 2rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  max-width: 380px;
+  width: 90%;
+  text-align: center;
 }
 
 /* --------------------------------------------------------------
-   💫 CARD DO WIZARD COM ANIMAÇÃO
+   MICROINTERAÇÕES
 -------------------------------------------------------------- */
-.liora-wizard-card {
-  opacity: 0;
-  transform: translateY(10px);
-  transition: opacity .25s ease, transform .25s ease;
-}
-.liora-wizard-card.visible {
-  opacity: 1;
-  transform: translateY(0);
+button:active, .btn:active { transform: scale(.97); }
+
+/* --------------------------------------------------------------
+   BUILD INFO
+-------------------------------------------------------------- */
+#liora-build-info {
+  position: fixed;
+  bottom: 12px;
+  right: 14px;
+  font-size: .7rem;
+  opacity: .45;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: rgba(0,0,0,0.22);
 }
