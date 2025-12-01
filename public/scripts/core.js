@@ -487,194 +487,158 @@
       const c = s.conteudo || {};
 
       // ----------------------- CONTEÚDO PRINCIPAL -----------------------
-      if (els.wizardConteudo) {
-        const intro = c.introducao ? `<p>${c.introducao}</p>` : "";
-
-        const conceitos =
-          Array.isArray(c.conceitos) && c.conceitos.length
-            ? `<ul>${c.conceitos
-                .map((x) => `<li>${x}</li>`)
-                .join("")}</ul>`
-            : "";
-
-        const exemplos =
-          Array.isArray(c.exemplos) && c.exemplos.length
-            ? `<ul>${c.exemplos
-                .map((x) => `<li>${x}</li>`)
-                .join("")}</ul>`
-            : "";
-
-        const aplicacoes =
-          Array.isArray(c.aplicacoes) && c.aplicacoes.length
-            ? `<ul>${c.aplicacoes
-                .map((x) => `<li>${x}</li>`)
-                .join("")}</ul>`
-            : "";
-
-        const resumo =
-          Array.isArray(c.resumoRapido) && c.resumoRapido.length
-            ? `<ul>${c.resumoRapido
-                .map((x) => `<li>${x}</li>`)
-                .join("")}</ul>`
-            : "";
-
-        els.wizardConteudo.innerHTML = `
-          <div class="liora-wiz-shell">
-            ${
-              intro
-                ? `
-            <section class="liora-card">
-              <div class="liora-card-header">Introdução</div>
-              <div class="liora-card-body">
-                ${intro}
-              </div>
-            </section>
-            `
-                : ""
-            }
-
-            ${
-              conceitos
-                ? `
-            <section class="liora-card">
-              <div class="liora-card-header">Conceitos principais</div>
-              <div class="liora-card-body">
-                ${conceitos}
-              </div>
-            </section>
-            `
-                : ""
-            }
-
-            ${
-              exemplos
-                ? `
-            <section class="liora-card">
-              <div class="liora-card-header">Exemplos práticos</div>
-              <div class="liora-card-body">
-                ${exemplos}
-              </div>
-            </section>
-            `
-                : ""
-            }
-
-            ${
-              aplicacoes
-                ? `
-            <section class="liora-card">
-              <div class="liora-card-header">Aplicações em prova / prática</div>
-              <div class="liora-card-body">
-                ${aplicacoes}
-              </div>
-            </section>
-            `
-                : ""
-            }
-
-            ${
-              resumo
-                ? `
-            <section class="liora-card liora-card-highlight">
-              <div class="liora-card-header">Resumo rápido</div>
-              <div class="liora-card-body">
-                ${resumo}
-              </div>
-            </section>
-            `
-                : ""
-            }
-          </div>
-        `;
-      }
-
-      // ----------------------- ANALOGIAS -----------------------
-      if (els.wizardAnalogias) {
-        const list = Array.isArray(s.analogias) ? s.analogias : [];
-        els.wizardAnalogias.innerHTML = list.length
-          ? list.map((a) => `<p>• ${a}</p>`).join("")
-          : "<p class='liora-muted'>Nenhuma analogia gerada para esta sessão.</p>";
-      }
-
-      // ----------------------- ATIVAÇÃO -----------------------
-      if (els.wizardAtivacao) {
-        const list = Array.isArray(s.ativacao) ? s.ativacao : [];
-        els.wizardAtivacao.innerHTML = list.length
-          ? `<ul>${list.map((q) => `<li>${q}</li>`).join("")}</ul>`
-          : "<p class='liora-muted'>Nenhuma pergunta de ativação disponível.</p>";
-      }
-
-      // ----------------------- QUIZ -----------------------
-      if (els.wizardQuiz) {
-        els.wizardQuiz.innerHTML = "";
-        const q = s.quiz || {};
-
-        if (q.pergunta) {
-          const pergunta = document.createElement("p");
-          pergunta.className = "liora-quiz-question";
-          pergunta.textContent = q.pergunta;
-          els.wizardQuiz.appendChild(pergunta);
-        }
-
-        const brutas = Array.isArray(q.alternativas)
-          ? q.alternativas.filter((a) => !!String(a || "").trim())
-          : [];
-
-        const marcadas = brutas.map((alt, i) => {
-          const texto = String(alt || "")
-            .replace(/\n/g, " ")
-            .replace(/<\/?[^>]+(>|$)/g, "");
-          const correta = i === Number(q.corretaIndex);
-          return { texto, correta };
-        });
-
-        if (marcadas.length && !marcadas.some((a) => a.correta)) {
-          marcadas[0].correta = true;
-        }
-
-        marcadas.forEach((altObj, idx) => {
-          const opt = document.createElement("div");
-          opt.className = "liora-quiz-option";
-          opt.dataset.index = idx;
-
-          opt.innerHTML = `
-            <input type="radio" name="quiz-${wizard.atual}" value="${idx}">
-            <span class="liora-quiz-option-text">${altObj.texto}</span>
-            <span class="liora-quiz-dot"></span>
+      function renderConteudoPremium(conteudo) {
+        const el = document.getElementById("liora-sessao-conteudo");
+        el.innerHTML = "";
+      
+        if (!conteudo) return;
+      
+        // Introdução
+        if (conteudo.introducao) {
+          el.innerHTML += `
+            <div class="liora-bloco">
+              <h6 class="liora-conteudo-titulo">Introdução</h6>
+              <p class="liora-conteudo-texto">${conteudo.introducao}</p>
+            </div>
           `;
-
-          opt.addEventListener("click", () => {
-            els.wizardQuiz
-              .querySelectorAll(".liora-quiz-option")
-              .forEach((o) => o.classList.remove("selected", "correct", "incorrect"));
-
-            opt.classList.add("selected");
-
-            const input = opt.querySelector("input");
-            if (input) input.checked = true;
-
-            if (!els.wizardQuizFeedback) return;
-            els.wizardQuizFeedback.style.opacity = 0;
-
-            setTimeout(() => {
-              if (altObj.correta) {
-                opt.classList.add("correct");
-                els.wizardQuizFeedback.textContent =
-                  `✅ Correto! ${q.explicacao || ""}`;
-                els.wizardQuizFeedback.style.color = "var(--brand)";
-              } else {
-                opt.classList.add("incorrect");
-                els.wizardQuizFeedback.textContent =
-                  "❌ Não é essa. Releia a pergunta e tente de novo.";
-                els.wizardQuizFeedback.style.color = "var(--muted)";
-              }
-              els.wizardQuizFeedback.style.opacity = 1;
-            }, 120);
-          });
-
-          els.wizardQuiz.appendChild(opt);
-        });
+        }
+      
+        // Conceitos principais
+        if (conteudo.conceitos?.length) {
+          el.innerHTML += `
+            <div class="liora-bloco">
+              <h6 class="liora-conceito-subtitulo">Conceitos principais</h6>
+              <ul class="liora-lista">
+                ${conteudo.conceitos.map(c => `<li>• ${c}</li>`).join("")}
+              </ul>
+            </div>
+          `;
+        }
+      
+        // Exemplos
+        if (conteudo.exemplos?.length) {
+          el.innerHTML += `
+            <div class="liora-bloco">
+              <h6 class="liora-conceito-subtitulo">Exemplos práticos</h6>
+              <ul class="liora-lista">
+                ${conteudo.exemplos.map(e => `<li>• ${e}</li>`).join("")}
+              </ul>
+            </div>
+          `;
+        }
+      
+        // Aplicações
+        if (conteudo.aplicacoes?.length) {
+          el.innerHTML += `
+            <div class="liora-bloco">
+              <h6 class="liora-conceito-subtitulo">Aplicações em prova / prática</h6>
+              <ul class="liora-lista">
+                ${conteudo.aplicacoes.map(a => `<li>• ${a}</li>`).join("")}
+              </ul>
+            </div>
+          `;
+        }
+      
+        // Resumo rápido
+        if (conteudo.resumoRapido?.length) {
+          el.innerHTML += `
+            <div class="liora-bloco">
+              <h6 class="liora-conceito-subtitulo">Resumo rápido</h6>
+              <ul class="liora-lista">
+                ${conteudo.resumoRapido.map(r => `<li>• ${r}</li>`).join("")}
+              </ul>
+            </div>
+          `;
+        }
       }
+      
+            // ----------------------- ANALOGIAS -----------------------
+            if (els.wizardAnalogias) {
+              const list = Array.isArray(s.analogias) ? s.analogias : [];
+              els.wizardAnalogias.innerHTML = list.length
+                ? list.map((a) => `<p>• ${a}</p>`).join("")
+                : "<p class='liora-muted'>Nenhuma analogia gerada para esta sessão.</p>";
+            }
+      
+            // ----------------------- ATIVAÇÃO -----------------------
+            if (els.wizardAtivacao) {
+              const list = Array.isArray(s.ativacao) ? s.ativacao : [];
+              els.wizardAtivacao.innerHTML = list.length
+                ? `<ul>${list.map((q) => `<li>${q}</li>`).join("")}</ul>`
+                : "<p class='liora-muted'>Nenhuma pergunta de ativação disponível.</p>";
+            }
+      
+            // ----------------------- QUIZ -----------------------
+            if (els.wizardQuiz) {
+              els.wizardQuiz.innerHTML = "";
+              const q = s.quiz || {};
+      
+              if (q.pergunta) {
+                const pergunta = document.createElement("p");
+                pergunta.className = "liora-quiz-question";
+                pergunta.textContent = q.pergunta;
+                els.wizardQuiz.appendChild(pergunta);
+              }
+      
+              const brutas = Array.isArray(q.alternativas)
+                ? q.alternativas.filter((a) => !!String(a || "").trim())
+                : [];
+      
+              const marcadas = brutas.map((alt, i) => {
+                const texto = String(alt || "")
+                  .replace(/\n/g, " ")
+                  .replace(/<\/?[^>]+(>|$)/g, "");
+                const correta = i === Number(q.corretaIndex);
+                return { texto, correta };
+              });
+      
+              if (marcadas.length && !marcadas.some((a) => a.correta)) {
+                marcadas[0].correta = true;
+              }
+      
+              marcadas.forEach((altObj, idx) => {
+                const opt = document.createElement("div");
+                opt.className = "liora-quiz-option";
+                opt.dataset.index = idx;
+      
+                opt.innerHTML = `
+                  <input type="radio" name="quiz-${wizard.atual}" value="${idx}">
+                  <span class="liora-quiz-option-text">${altObj.texto}</span>
+                  <span class="liora-quiz-dot"></span>
+                `;
+      
+                opt.addEventListener("click", () => {
+                  els.wizardQuiz
+                    .querySelectorAll(".liora-quiz-option")
+                    .forEach((o) => o.classList.remove("selected", "correct", "incorrect"));
+      
+                  opt.classList.add("selected");
+      
+                  const input = opt.querySelector("input");
+                  if (input) input.checked = true;
+      
+                  if (!els.wizardQuizFeedback) return;
+                  els.wizardQuizFeedback.style.opacity = 0;
+      
+                  setTimeout(() => {
+                    if (altObj.correta) {
+                      opt.classList.add("correct");
+                      els.wizardQuizFeedback.textContent =
+                        `✅ Correto! ${q.explicacao || ""}`;
+                      els.wizardQuizFeedback.style.color = "var(--brand)";
+                    } else {
+                      opt.classList.add("incorrect");
+                      els.wizardQuizFeedback.textContent =
+                        "❌ Não é essa. Releia a pergunta e tente de novo.";
+                      els.wizardQuizFeedback.style.color = "var(--muted)";
+                    }
+                    els.wizardQuizFeedback.style.opacity = 1;
+                  }, 120);
+                });
+      
+                els.wizardQuiz.appendChild(opt);
+              });
+            }
 
       // ----------------------- FLASHCARDS -----------------------
       if (els.wizardFlashcards) {
