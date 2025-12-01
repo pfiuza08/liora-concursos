@@ -858,62 +858,6 @@
         }
       });
 
-        if (!resp.ok) {
-          throw new Error("Falha ao chamar /api/gerarPlano");
-        }
-
-        const parsed = await resp.json();
-
-        if (!parsed || !parsed.sessoes || !parsed.sessoes.length) {
-          throw new Error("Plano retornou sem sessões.");
-        }
-
-        atualizarStatus("tema", "Construindo sessões...", 60);
-
-        const sessoesNorm = parsed.sessoes.map((s, i) => ({
-          id: `S${i + 1}`,
-          ordem: i + 1,
-          progresso: 0,
-          ...s,
-        }));
-
-        wizard = {
-          tema: parsed.tema || tema,
-          nivel: parsed.nivel || nivel,
-          origem: parsed.origem || "tema",
-          plano: sessoesNorm.map((s) => ({
-            id: s.id,
-            ordem: s.ordem,
-            titulo: s.titulo,
-            objetivo: s.objetivo,
-          })),
-          sessoes: sessoesNorm,
-          atual: 0,
-        };
-
-        renderPlanoResumo(wizard.plano);
-        renderWizard();
-        if (els.ctx)
-          els.ctx.textContent = `Tema: ${wizard.tema} (${sessoesNorm.length} sessões)`;
-        saveProgress();
-
-        if (window.lioraEstudos?.definirPlano) {
-          window.lioraEstudos.definirPlano({
-            tema: wizard.tema,
-            origem: "tema",
-            sessoes: wizard.sessoes,
-          });
-        }
-
-        atualizarStatus("tema", "Plano gerado!", 100);
-        window.lioraLoading.hide();
-      } catch (e) {
-        console.error(e);
-        window.lioraLoading.hide();
-        window.lioraError.show("Erro ao gerar plano por tema.");
-      }
-    });
-
     // --------------------------------------------------------
     // 🔥 GERAÇÃO DO PLANO POR UPLOAD DE PDF
     // --------------------------------------------------------
