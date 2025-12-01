@@ -1,10 +1,10 @@
 // ==========================================================
-// 🧠 LIORA — GERADOR DE PLANO POR TEMA v75-P0.4
+// 🧠 LIORA — GERADOR DE PLANO POR TEMA v76-P0.5 (PREMIUM)
 // - Sessões densas e adaptativas por nível
-// - Perfis de banca para concursos/avaliações públicas (ENEM, ENEMED, CESPE, FGV, OAB, GERAL)
+// - Perfis de banca para concursos/avaliações públicas
 // - Quiz forte, flashcards garantidos, mapa mental consistente
 // - JSON robusto com limpeza + retry
-// - Compatível com CORE v74 (retorna plano como string JSON do array de sessões)
+// - Compatível com CORE v74 (retorna plano: JSON.stringify(sessoes))
 // ==========================================================
 
 import OpenAI from "openai";
@@ -22,7 +22,7 @@ export default async function handler(req, res) {
     }
 
     const nivelNorm = String(nivel || "").toLowerCase();
-    const bancaNorm = String(banca || "").toUpperCase().trim() || "GERAL";
+    const bancaNorm = (String(banca || "").toUpperCase().trim() || "GERAL");
 
     // número adaptativo de sessões
     const qtdSessoes = Math.max(6, Math.min(12, Number(sessoes) || 8));
@@ -31,95 +31,91 @@ export default async function handler(req, res) {
       apiKey: process.env.OPENAI_API_KEY,
     });
 
-    // ==========================================================
-    // 🎯 PERFIL POR NÍVEL
-    // ==========================================================
+    // ----------------------------------------------------------
+    // PERFIL POR NÍVEL
+    // ----------------------------------------------------------
     let perfilNivel = "";
 
     if (nivelNorm === "iniciante") {
       perfilNivel = `
 NÍVEL DO ESTUDANTE: INICIANTE.
-- Use linguagem acessível, mas sem infantilizar.
-- Explique termos técnicos quando aparecerem.
-- Foque mais em exemplos e analogias do que em detalhes formais.
-- Mantenha as sessões mais curtas e bem segmentadas.
-- Quiz com perguntas diretas, sem pegadinhas pesadas.
-- Flashcards abordam definições básicas e ideias principais.`;
+- Linguagem acessível, sem jargão excessivo.
+- Mais exemplos e analogias do que detalhes técnicos.
+- Introdução um pouco mais explicativa.
+- Quiz direto, sem pegadinhas pesadas.
+- Flashcards com definições básicas e ideias principais.`;
     } else if (nivelNorm === "avancado" || nivelNorm === "avançado") {
       perfilNivel = `
 NÍVEL DO ESTUDANTE: AVANÇADO.
-- Vá mais fundo em conceitos, premissas e consequências.
-- Use terminologia técnica de forma natural.
-- Traga aplicações complexas, casos de prova difíceis e nuances.
-- Quiz com alternativas muito próximas e explicações detalhadas.
-- Flashcards enfatizam detalhes, exceções e comparações finas.`;
+- Conteúdo mais denso e técnico.
+- Traga nuances, exceções e distinções conceituais relevantes para prova.
+- Use terminologia própria da área.
+- Quiz com alternativas muito próximas.
+- Flashcards voltados a detalhes e pontos controversos.`;
     } else {
-      // intermediário (padrão)
       perfilNivel = `
 NÍVEL DO ESTUDANTE: INTERMEDIÁRIO.
-- Combine clareza com boa densidade conceitual.
-- Misture exemplos cotidianos com situações de prova.
-- Aprofunde além do superficial, mas sem ser hermético.
-- Quiz com pegadinhas moderadas, evitando excesso de decoreba.
-- Flashcards misturam definições e aplicações.`;
+- Combinar clareza com boa densidade.
+- Explicar conceitos com precisão, usando exemplos de prova.
+- Evitar tanto superficialidade quanto excesso de tecnicismo.
+- Quiz com complexidade moderada.
+- Flashcards misturando conceito e aplicação.`;
     }
 
-    // ==========================================================
-    // 🎯 PERFIL POR BANCA / TIPO DE AVALIAÇÃO
-    // (Somente concursos / avaliações públicas, sem TI/Finanças)
-// ==========================================================
+    // ----------------------------------------------------------
+    // PERFIL POR BANCA / AVALIAÇÃO (apenas concursos/avaliações)
+    // ----------------------------------------------------------
     let perfilBanca = `
 BANCA/AVALIAÇÃO: GERAL (CONCURSOS OU AVALIAÇÕES PÚBLICAS).
-- Estilo objetivo, voltado para provas de múltipla escolha.
-- Linguagem clara, mas com rigor conceitual.
-- Traga exemplos ligados a situações de prova.`;
+- Estilo objetivo, voltado para múltipla escolha.
+- Linguagem clara, com rigor conceitual.
+- Exemplos remetem a enunciados de prova.`;
 
     if (bancaNorm.includes("ENEM")) {
       perfilBanca = `
-BANCA/AVALIAÇÃO: ENEM / AVALIAÇÕES ESTILO ENEM.
-- Linguagem acessível, contextualizada e interdisciplinar.
-- Conecte os conceitos a situações do cotidiano, cidadania, tecnologia e sociedade.
-- Quiz deve simular questões de múltipla escolha em contexto (enunciado interpretativo + cobrança de conceito).
-- Evite jargão excessivamente técnico.`;
+BANCA/AVALIAÇÃO: ENEM.
+- Linguagem acessível e contextualizada.
+- Conectar o tema com sociedade, cidadania, tecnologia, meio ambiente etc.
+- Questões com enunciado interpretativo seguido de cobrança de conceito.`;
     } else if (bancaNorm.includes("ENAMED")) {
       perfilBanca = `
-BANCA/AVALIAÇÃO: ENAMED (avaliação médica nacional).
+BANCA/AVALIAÇÃO: ENAMED.
 - Foco em casos clínicos, raciocínio diagnóstico e conduta.
-- Use linguagem técnica da área de saúde, mas clara.
-- Quiz deve lembrar questões baseadas em casos, com alternativas que representem condutas diagnósticas ou terapêuticas.`;
+- Linguagem técnica da saúde, mas clara.
+- Questões baseadas em vinhetas clínicas, com alternativas de conduta.`;
     } else if (
       bancaNorm.includes("CESPE") ||
       bancaNorm.includes("CEBRASPE")
     ) {
       perfilBanca = `
 BANCA/AVALIAÇÃO: CESPE/CEBRASPE.
-- Foco em precisão conceitual e distinção entre afirmações corretas e incorretas.
-- Mesmo usando formato de múltipla escolha, construa alternativas que possam ser confundidas se o estudante não dominar o conteúdo.
-- Evite enunciados longos, mas garanta alta densidade de informação.
-- Destaque nuances, exceções e detalhes que costumam ser cobrados.`;
+- Máxima precisão conceitual.
+- Questões que exploram diferenças sutis entre conceitos.
+- Mesmo em múltipla escolha, alternativas muito próximas.
+- Destaque nuances, exceções e pegadinhas clássicas.`;
     } else if (bancaNorm.includes("FGV")) {
       perfilBanca = `
 BANCA/AVALIAÇÃO: FGV.
-- Textos mais densos, com foco em interpretação e raciocínio lógico/conceitual.
-- Traga exemplos extraídos de contextos jurídicos, econômicos ou administrativos, quando fizer sentido.
-- Quiz com alternativas longas e muito próximas.
-- Explique com cuidado por que as demais alternativas não são corretas.`;
+- Textos mais densos, foco em interpretação e raciocínio.
+- Exemplos com cenários jurídicos, administrativos ou econômicos.
+- Alternativas longas e bem articuladas.
+- Valorização da fundamentação na explicação do gabarito.`;
     } else if (bancaNorm.includes("OAB")) {
       perfilBanca = `
 BANCA/AVALIAÇÃO: OAB.
-- Foco em aplicação jurídica: normas, princípios, jurisprudência e casos.
-- Use exemplos de peças, situações práticas e casos hipotéticos.
-- Quiz simulando primeira fase: múltipla escolha baseada em cenário jurídico ou norma.
-- Flashcards devem destacar fundamentos legais, conceitos e distinções entre institutos.`;
+- Foco em aplicação jurídica prática (normas, princípios, jurisprudência).
+- Exemplos de casos, situações concretas e peças.
+- Questões de múltipla escolha simulando 1ª fase.
+- Flashcards destacando fundamentos legais e distinções entre institutos.`;
     }
 
-    // ==========================================================
-    // 🧠 PROMPT PROFISSIONAL P0.4
-    // ==========================================================
+    // ----------------------------------------------------------
+    // PROMPT PRINCIPAL (P0.5 PREMIUM)
+    // ----------------------------------------------------------
     const prompt = `
-Você é a IA da Liora, especialista em estudo estratégico para concursos e avaliações públicas.
+Você é a IA da Liora, plataforma de estudo inteligente para concursos e avaliações públicas.
 
-Crie EXATAMENTE ${qtdSessoes} sessões de estudo densas, didáticas e úteis para:
+Crie EXATAMENTE ${qtdSessoes} sessões de estudo bem estruturadas, densas e úteis para:
 
 TEMA: ${tema}
 NÍVEL: ${nivel}
@@ -131,7 +127,7 @@ ${perfilNivel}
 E TAMBÉM:
 ${perfilBanca}
 
-⚠️ SAÍDA OBRIGATÓRIA: APENAS JSON VÁLIDO, NO FORMATO:
+Toda a saída deve ser APENAS JSON válido, no formato:
 
 {
   "origem": "tema",
@@ -141,28 +137,30 @@ ${perfilBanca}
   "sessoes": [
     {
       "titulo": "Título claro e específico da sessão",
-      "objetivo": "Objetivo único e bem definido, começando com verbo no infinitivo",
+      "objetivo": "Frase única, iniciando com verbo no infinitivo, descrevendo o que o estudante será capaz de fazer.",
       "conteudo": {
-        "introducao": "2–3 frases conectando o assunto com o contexto de prova.",
+        "introducao": "2–3 frases conectando o assunto com o contexto de prova, de forma clara e direta.",
         "conceitos": [
-          "3–6 conceitos ou ideias principais da sessão, sem redundância."
+          "3–5 conceitos centrais, cada um explicado em 1 linha.",
+          "Sem repetições, sem frases vazias."
         ],
         "exemplos": [
-          "2–4 exemplos aplicados, de preferência lembrando enunciados de prova."
+          "2–4 exemplos aplicados, lembrando enunciados de questões.",
+          "Podem ser mini-situações práticas."
         ],
         "aplicacoes": [
-          "2–4 aplicações práticas, situações reais ou de prova."
+          "2–4 aplicações reais ou situações típicas de prova.",
+          "Indique como o conceito aparece em concursos."
         ],
         "resumoRapido": [
-          "4–6 bullets curtos com o que não pode ser esquecido."
+          "5 bullets com o essencial para revisão, sem repetir texto das listas acima."
         ]
       },
       "analogias": [
-        "1–2 analogias que facilitem a compreensão do tema por comparação com algo conhecido."
+        "1–2 comparações que facilitem a compreensão (ex.: 'tratado é como um contrato formal entre Estados')."
       ],
       "ativacao": [
-        "2–4 perguntas que façam o estudante pensar, não decorar.",
-        "Podem ser perguntas abertas ou estilo 'explique por que...'"
+        "2–4 perguntas abertas que obriguem o estudante a explicar, comparar ou aplicar o conteúdo, não apenas decorar."
       ],
       "quiz": {
         "pergunta": "Pergunta objetiva, típica de prova, baseada no conteúdo da sessão.",
@@ -173,14 +171,14 @@ ${perfilBanca}
           "Alternativa D incorreta, mas verossímil"
         ],
         "corretaIndex": 0,
-        "explicacao": "Explique claramente por que a alternativa correta está certa e as outras não."
+        "explicacao": "Explique claramente por que a alternativa correta é correta e por que as outras não são."
       },
       "flashcards": [
         { "q": "Pergunta-chave sobre conceito importante", "a": "Resposta objetiva e sintética" },
         { "q": "Outra pergunta que poderia cair na prova", "a": "Resposta direta, sem rodeios" },
         { "q": "Ponto que costuma gerar confusão", "a": "Explicação clara, em 1–2 frases" }
       ],
-      "mindmap": "Mapa mental textual do conteúdo da sessão, com 2–3 níveis, no formato: A > B > C | X > Y | ..."
+      "mindmap": "Mapa mental textual do conteúdo da sessão, com 2–3 níveis, no formato: Tópico > Subtópico > Detalhe | Outro tópico > Subtópico..."
     }
   ]
 }
@@ -189,14 +187,14 @@ REGRAS CRÍTICAS:
 - NÃO escreva nada fora do JSON.
 - NÃO coloque comentários no JSON.
 - NÃO deixe listas vazias.
-- NÃO repita a mesma ideia com palavras diferentes.
-- Foque em clareza, aplicação em prova e utilidade real para o estudante.
+- NÃO repita a mesma ideia com outras palavras.
+- Foque em utilidade real para quem estuda para concursos.
 - O JSON deve ser 100% válido e parseável em JavaScript.
 `;
 
-    // ==========================================================
-    // 🧼 LIMPEZA DE STRING
-    // ==========================================================
+    // ----------------------------------------------------------
+    // Helpers de limpeza/parse
+    // ----------------------------------------------------------
     function sanitizeJSON(str) {
       return String(str || "")
         .replace(/```json/gi, "")
@@ -214,9 +212,9 @@ REGRAS CRÍTICAS:
       }
     }
 
-    // ==========================================================
-    // 🔁 RETRY INTELIGENTE (3 tentativas)
-    // ==========================================================
+    // ----------------------------------------------------------
+    // Retry inteligente (3 tentativas)
+    // ----------------------------------------------------------
     async function gerarComRetry() {
       for (let tentativa = 1; tentativa <= 3; tentativa++) {
         try {
@@ -226,14 +224,12 @@ REGRAS CRÍTICAS:
             temperature: 0.2,
           });
 
-          let output = sanitizeJSON(completion.choices[0].message.content);
-          let json = safeParse(output);
+          let output = sanitizeJSON(
+            completion.choices?.[0]?.message?.content || ""
+          );
+          const json = safeParse(output);
 
-          if (
-            json &&
-            Array.isArray(json.sessoes) &&
-            json.sessoes.length > 0
-          ) {
+          if (json && Array.isArray(json.sessoes) && json.sessoes.length > 0) {
             return json;
           }
 
@@ -248,36 +244,45 @@ REGRAS CRÍTICAS:
       throw new Error("Falha ao gerar JSON válido após 3 tentativas.");
     }
 
-    // ==========================================================
-    // 🛠️ NORMALIZAÇÃO DAS SESSÕES (fallback de flashcards/quiz)
-// ==========================================================
+    // ----------------------------------------------------------
+    // Normalização das sessões (garante consistência)
+    // ----------------------------------------------------------
     function normalizarSessoes(sessoes) {
       return sessoes.map((s, idx) => {
         const sessao = { ...s };
 
-        if (!sessao.titulo) {
-          sessao.titulo = `Sessão ${idx + 1} — ${tema}`;
-        }
+        sessao.titulo =
+          (sessao.titulo && String(sessao.titulo).trim()) ||
+          `Sessão ${idx + 1} — ${tema}`;
+
+        sessao.objetivo =
+          (sessao.objetivo && String(sessao.objetivo).trim()) ||
+          `Compreender os principais pontos sobre ${tema}.`;
 
         if (!sessao.conteudo || typeof sessao.conteudo !== "object") {
-          sessao.conteudo = {
-            introducao: "",
-            conceitos: [],
-            exemplos: [],
-            aplicacoes: [],
-            resumoRapido: [],
-          };
+          sessao.conteudo = {};
         }
 
         const c = sessao.conteudo;
-        c.conceitos = Array.isArray(c.conceitos) ? c.conceitos : [];
-        c.resumoRapido = Array.isArray(c.resumoRapido)
-          ? c.resumoRapido
-          : [];
-        c.exemplos = Array.isArray(c.exemplos) ? c.exemplos : [];
-        c.aplicacoes = Array.isArray(c.aplicacoes) ? c.aplicacoes : [];
+        c.introducao = String(c.introducao || "").trim();
 
-        // Quiz fallback básico
+        c.conceitos = Array.isArray(c.conceitos)
+          ? c.conceitos.map((x) => String(x || "").trim()).filter(Boolean)
+          : [];
+
+        c.exemplos = Array.isArray(c.exemplos)
+          ? c.exemplos.map((x) => String(x || "").trim()).filter(Boolean)
+          : [];
+
+        c.aplicacoes = Array.isArray(c.aplicacoes)
+          ? c.aplicacoes.map((x) => String(x || "").trim()).filter(Boolean)
+          : [];
+
+        c.resumoRapido = Array.isArray(c.resumoRapido)
+          ? c.resumoRapido.map((x) => String(x || "").trim()).filter(Boolean)
+          : [];
+
+        // quiz
         if (!sessao.quiz || typeof sessao.quiz !== "object") {
           sessao.quiz = {
             pergunta: "",
@@ -288,8 +293,10 @@ REGRAS CRÍTICAS:
         }
 
         const q = sessao.quiz;
+        q.pergunta = String(q.pergunta || "").trim();
+        q.explicacao = String(q.explicacao || "").trim();
         q.alternativas = Array.isArray(q.alternativas)
-          ? q.alternativas.filter((a) => !!a && String(a).trim())
+          ? q.alternativas.map((x) => String(x || "").trim()).filter(Boolean)
           : [];
 
         if (q.alternativas.length < 4) {
@@ -308,35 +315,32 @@ REGRAS CRÍTICAS:
           q.corretaIndex = 0;
         }
 
-        // Flashcards: garante pelo menos 3
+        // flashcards
         let cards = Array.isArray(sessao.flashcards)
-          ? sessao.flashcards.filter(
-              (f) => f && typeof f.q === "string" && typeof f.a === "string"
-            )
+          ? sessao.flashcards
+              .map((f) => ({
+                q: String(f?.q || "").trim(),
+                a: String(f?.a || "").trim(),
+              }))
+              .filter((f) => f.q && f.a)
           : [];
 
-        if (cards.length < 3) {
-          const baseFonte =
-            c.resumoRapido.length > 0
-              ? c.resumoRapido
-              : c.conceitos.length > 0
-              ? c.conceitos
-              : [];
+        const baseResumo = c.resumoRapido.length ? c.resumoRapido : c.conceitos;
 
-          for (let i = cards.length; i < 3 && i < baseFonte.length; i++) {
-            const txt = String(baseFonte[i]).trim();
-            cards.push({
-              q: `Explique: ${txt}`,
-              a: txt,
-            });
-          }
+        while (cards.length < 3 && baseResumo.length > 0) {
+          const idxBase = cards.length % baseResumo.length;
+          const txt = baseResumo[idxBase];
+          cards.push({
+            q: `Explique: ${txt}`,
+            a: txt,
+          });
+        }
 
-          while (cards.length < 3) {
-            cards.push({
-              q: `Ponto importante da sessão ${idx + 1}`,
-              a: `Revise o conteúdo principal desta sessão sobre ${tema}.`,
-            });
-          }
+        while (cards.length < 3) {
+          cards.push({
+            q: `Revise o conteúdo desta sessão (${idx + 1}).`,
+            a: `Releia os pontos principais da sessão sobre ${tema}.`,
+          });
         }
 
         sessao.flashcards = cards;
@@ -349,9 +353,9 @@ REGRAS CRÍTICAS:
       });
     }
 
-    // ==========================================================
-    // EXECUÇÃO
-    // ==========================================================
+    // ----------------------------------------------------------
+    // Execução
+    // ----------------------------------------------------------
     const bruto = await gerarComRetry();
 
     if (!bruto || !Array.isArray(bruto.sessoes) || !bruto.sessoes.length) {
@@ -360,9 +364,9 @@ REGRAS CRÍTICAS:
 
     const sessoesNorm = normalizarSessoes(bruto.sessoes);
 
-    // ==========================================================
-    // ✔ SAÍDA FINAL — FORMATO EXIGIDO PELO CORE v74
-    // ==========================================================
+    // ----------------------------------------------------------
+    // Saída compatível com CORE v74
+    // ----------------------------------------------------------
     return res.status(200).json({
       plano: JSON.stringify(sessoesNorm),
     });
