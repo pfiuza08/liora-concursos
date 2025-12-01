@@ -734,27 +734,129 @@
       }
     });
 
+      async function lioraGerarPlanoTema({ tema, nivel, sessoes }) {
+        try {
+          const resp = await fetch("/api/gerarPlano.js", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ tema, nivel, sessoes })
+          });
+      
+          const data = await resp.json();
+      
+          if (!data || !data.plano) {
+            throw new Error("Resposta inválida da IA");
+          }
+      
+          let parsed;
+          try {
+            parsed = JSON.parse(data.plano);
+          } catch (e) {
+            console.error("❌ Erro ao parsear JSON do plano:", e, data.plano);
+            throw new Error("Falha ao interpretar o plano");
+          }
+      
+          if (!Array.isArray(parsed) || parsed.length === 0) {
+            throw new Error("Plano vazio ou malformado");
+          }
+      
+          return parsed;
+      
+        } catch (err) {
+          console.error("❌ Erro ao gerar plano:", err);
+          throw err;
+        }
+      }
+
+      function lioraSalvarEExibirPlano(sessoes) {
+        localStorage.setItem("liora-plano-tema", JSON.stringify(sessoes));
+      
+        const painel = document.getElementById("painel-tema-result");
+        if (!painel) return;
+      
+        painel.innerHTML = "";
+      
+        sessoes.forEach(sessao => {
+          const div = document.createElement("div");
+          div.className = "liora-sessao-card";
+      
+          div.innerHTML = `
+            <h3>Sessão ${sessao.numero} — ${sessao.titulo}</h3>
+            <p><strong>Duração:</strong> ${sessao.duracao}</p>
+      
+            <h4>Objetivos</h4>
+            <ul>${sessao.objetivos.map(o => `<li>${o}</li>`).join("")}</ul>
+      
+            <h4>Conteúdo</h4>
+            <ul>${sessao.conteudo.map(c => `<li>${c}</li>`).join("")}</ul>
+      
+            <h4>Exercícios</h4>
+            <ul>${sessao.exercicios.map(e => `<li>${e}</li>`).join("")}</ul>
+      
+            <h4>Resumo</h4>
+            <p>${sessao.resumo}</p>
+          `;
+      
+          painel.appendChild(div);
+        });
+      }
+
+
+    
     // --------------------------------------------------------
     // 🔥 GERAÇÃO DO PLANO POR TEMA — /api/gerarPlano
     // --------------------------------------------------------
-    els.btnGerar?.addEventListener("click", async () => {
-      const tema = (els.inpTema?.value || "").trim();
-      const nivel = els.selNivel?.value || "iniciante";
-
-      if (!tema) {
-        window.lioraError.show("Digite um tema para gerar o plano.");
-        return;
-      }
-
-      try {
-        window.lioraLoading.show("Gerando plano de estudo...");
-        atualizarStatus("tema", "Chamando IA...", 15);
-
-        const resp = await fetch("/api/gerarPlano", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ tema, nivel }),
-        });
+        els.btnGerar?.addEventListener("click", async () => {
+        const tema = els.inpTema.value.trim();
+        const nivel = els.selNivel.value;
+        const sessoes = 6;
+      
+        if (!tema) {
+          window.lioraError.show("Digite um tema.");
+          return;
+        }
+      
+        try {
+          window.lioraLoading.show("Gerando plano...");
+          atualizarStatus("tema", "Chamando IA...", 20);
+      
+          const parsed = await lioraGerarPlanoTema({ tema, nivel, sessoes });
+      
+          atualizarStatus("tema", "Construindo sessões...", 60);
+      
+          const sessoesNorm = parsed.map((s, i) => ({
+            id: `S${i + 1}`,
+            ordem: i + 1,
+            ...s
+          }));
+      
+          wizard = {
+            tema,
+            nivel,
+            origem: "tema",
+            plano: sessoesNorm.map(s => ({
+              id: s.id,
+              ordem: s.ordem,
+              titulo: s.titulo,
+              objetivo: s.objetivos?.[0] || ""
+            })),
+            sessoes: sessoesNorm,
+            atual: 0
+          };
+      
+          lioraSalvarEExibirPlano(sessoesNorm);
+          renderPlanoResumo(wizard.plano);
+          renderWizard();
+          saveProgress();
+      
+          window.lioraLoading.hide();
+          atualizarStatus("tema", "Plano gerado!", 100);
+        } catch (err) {
+          console.error(err);
+          window.lioraLoading.hide();
+          window.lioraError.show("Erro ao gerar plano por tema.");
+        }
+      });
 
         if (!resp.ok) {
           throw new Error("Falha ao chamar /api/gerarPlano");
