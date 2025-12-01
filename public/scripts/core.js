@@ -1,5 +1,5 @@
 // ==========================================================
-// 🧠 LIORA — CORE v74-COMMERCIAL-PREMIUM-STUDY-MANAGER
+// 🧠 LIORA — CORE v74-FIX-PROMISE-COMMERCIAL-PREMIUM-STUDY-MANAGER
 // ----------------------------------------------------------
 // Inclui:
 // ✔ Tema: plano + sessões completas (via /api/gerarPlano)
@@ -12,7 +12,7 @@
 // ✔ Continue Study Engine (jump autom.) — lioraIrParaSessao()
 // ✔ Salvamento incremental das sessões
 // ✔ Normalização das sessões geradas (id, ordem)
-// ✔ v74-FIX: normalização do outline (array de strings ou objeto)
+// ✔ FIX: OutlineGenerator assíncrono + extração robusta de tópicos
 // ==========================================================
 
 (function () {
@@ -284,34 +284,54 @@
     window.callLLM = callLLM;
 
     // --------------------------------------------------------
-    // NORMALIZADOR DE OUTLINE (v74 FIX)
+    // EXTRAÇÃO DE TÓPICOS DO OUTLINE (robusta)
     // Aceita:
-    //  - retorno como array de strings
-    //  - retorno como { topicos: [...] }
-    // Devolve sempre { topicos: string[] }
-// --------------------------------------------------------
-    function normalizarOutline(out) {
-      if (!out) return { topicos: [] };
+    //  - array de strings
+    //  - array de objetos { titulo }
+    //  - objeto com .topicos (strings ou objetos)
+    //  - objeto com .outlineUnificado (strings ou objetos)
+    // --------------------------------------------------------
+    function extrairTopicosDoOutline(outlineRaw) {
+      let topicos = [];
 
-      // caso seja apenas array de strings
-      if (Array.isArray(out)) {
-        return {
-          topicos: out
-            .map((t) => (typeof t === "string" ? t.trim() : ""))
-            .filter((t) => t.length > 0),
-        };
+      if (!outlineRaw) return [];
+
+      // 1) Se já for array simples
+      if (Array.isArray(outlineRaw)) {
+        if (outlineRaw.length && typeof outlineRaw[0] === "string") {
+          topicos = outlineRaw;
+        } else if (outlineRaw.length && outlineRaw[0] && outlineRaw[0].titulo) {
+          topicos = outlineRaw.map((t) => t.titulo);
+        }
       }
 
-      // caso venha como objeto, mas com .topicos em formato livre
-      if (Array.isArray(out.topicos)) {
-        return {
-          topicos: out.topicos
-            .map((t) => (typeof t === "string" ? t.trim() : ""))
-            .filter((t) => t.length > 0),
-        };
+      // 2) Se for objeto com .topicos
+      else if (Array.isArray(outlineRaw.topicos)) {
+        const arr = outlineRaw.topicos;
+        if (arr.length && typeof arr[0] === "string") {
+          topicos = arr;
+        } else if (arr.length && arr[0] && arr[0].titulo) {
+          topicos = arr.map((t) => t.titulo);
+        }
       }
 
-      return { topicos: [] };
+      // 3) Se for objeto com .outlineUnificado
+      else if (Array.isArray(outlineRaw.outlineUnificado)) {
+        const arr = outlineRaw.outlineUnificado;
+        if (arr.length && typeof arr[0] === "string") {
+          topicos = arr;
+        } else if (arr.length && arr[0] && arr[0].titulo) {
+          topicos = arr.map((t) => t.titulo);
+        }
+      }
+
+      // limpeza final
+      topicos = topicos
+        .map((t) => String(t || "").trim())
+        .filter((t) => t.length > 0);
+
+      console.log("📘 Core v74 — tópicos extraídos do outline:", topicos);
+      return topicos;
     }
 
     // --------------------------------------------------------
@@ -814,40 +834,19 @@
 
         const estrutura = window.lioraPDFStructure.fromBlocks(rawBlocks);
 
-        // v74 FIX → aceitar retorno como array ou como objeto
-       let outlineRaw = window.lioraOutlineGenerator.gerar(estrutura);
-
-        // Se o gerador já retorna { topicos: [...] }
-        let outline = [];
-        
-        if (Array.isArray(outlineRaw)) {
-            // retorno antigo: array de strings
-            outline = outlineRaw;
-        }
-        else if (Array.isArray(outlineRaw.topicos)) {
-            // retorno correto
-            outline = outlineRaw.topicos;
-        }
-        else if (Array.isArray(outlineRaw.outlineUnificado)) {
-            // fallback
-            outline = outlineRaw.outlineUnificado;
-        }
-        else {
-            console.error("Formato inesperado do outline:", outlineRaw);
-            outline = [];
-        }
-        
-        // Agora normalize
-        outline = outline.map(x => String(x).trim()).filter(x => x.length > 0);
-        
-        if (!outline.length) {
-           console.error("Outline vazio após extração:", outlineRaw);
-           throw new Error("Não foi possível identificar tópicos.");
+        // FIX: OutlineGenerator assíncrono
+        let outlineRaw;
+        try {
+          outlineRaw = await window.lioraOutlineGenerator.gerar(estrutura);
+        } catch (e) {
+          console.error("❌ Erro ao gerar outline:", e);
+          throw new Error("Erro ao gerar tópicos a partir do PDF.");
         }
 
+        const topicos = extrairTopicosDoOutline(outlineRaw);
 
-        if (!outline.topicos.length) {
-          console.error("Outline vazio após normalização:", outline);
+        if (!topicos.length) {
+          console.error("Outline sem tópicos utilizáveis:", outlineRaw);
           throw new Error("Não foi possível identificar tópicos.");
         }
 
@@ -885,9 +884,10 @@
 
         const user = `
           TÓPICOS EXTRAÍDOS DO PDF:
-          ${outline.topicos.join("\n")}
+          ${topicos.join("\n")}
 
-          Gere sessões coerentes e completas.
+          Gere sessões coerentes e completas, em português claro,
+          com boa didática, exemplos práticos e foco em aplicação real dos conceitos.
         `;
 
         const rawOutput = await callLLM(system, user);
@@ -902,8 +902,12 @@
           ...s,
         }));
 
+        if (!sessoesNorm.length) {
+          throw new Error("A IA não retornou sessões válidas a partir do PDF.");
+        }
+
         wizard = {
-          tema: parsed.tema || file.name.replace(".pdf", ""),
+          tema: parsed.tema || file.name.replace(/\.pdf$/i, ""),
           nivel: "PDF",
           origem: "upload",
           plano: sessoesNorm.map((s) => ({
