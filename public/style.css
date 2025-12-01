@@ -417,3 +417,114 @@ button:active, .btn:active { transform: scale(.97); }
   border-radius: 6px;
   background: rgba(0,0,0,0.22);
 }
+
+/* ===============================================================
+   🧩 PATCH — TÍTULOS EM CAIXA ALTA + SUBSEÇÕES EM LARANJA + FLASHCARDS
+   Este bloco pode ser colado no final do style.css sem conflitos.
+================================================================ */
+
+/* -------------------------------
+   1) TÍTULOS PRINCIPAIS EM CAPS
+-------------------------------- */
+#liora-sessao-objetivo-label,
+#liora-sessao-conteudo-label,
+#liora-sessao-analogias-label,
+#liora-sessao-ativacao-label,
+#liora-sessao-quiz-label,
+#liora-sessao-flashcards-label,
+#liora-sessao-mapa-label {
+  text-transform: uppercase;
+  font-weight: 700;
+  margin-top: 32px;
+  margin-bottom: 12px;
+  letter-spacing: 0.5px;
+  font-size: 1.05rem;
+  color: var(--fg);
+}
+
+/* Ajustar margem do primeiro label */
+#liora-sessao-objetivo-label {
+  margin-top: 18px!important;
+}
+
+/* ------------------------------------------
+   2) Subtítulos internos (laranja Intellih)
+------------------------------------------ */
+.liora-conteudo-subtitulo {
+  color: var(--brand) !important;
+  font-weight: 600;
+  margin-top: 14px;
+  margin-bottom: 8px;
+  font-size: 1.1rem;
+}
+
+/* Se o conteúdo vier como <strong> ou <b> */
+.liora-section strong {
+  color: var(--brand);
+  font-weight: 600;
+}
+
+/* ---------------------------------------------------------
+   3) FLASHCARDS — NOVA APRESENTAÇÃO VISUAL PREMIUM
+   - Cartões expansíveis estilo “accordions”
+   - Transições suaves
+--------------------------------------------------------- */
+.liora-flashcard {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px 18px;
+  margin-bottom: 14px;
+  cursor: pointer;
+  transition: var(--transition);
+  position: relative;
+}
+
+.liora-flashcard:hover {
+  background: var(--hover);
+  border-color: var(--brand);
+}
+
+/* Pergunta */
+.liora-flashcard-q {
+  font-weight: 600;
+  color: var(--fg);
+  font-size: 1.05rem;
+  line-height: 1.55;
+  padding-right: 24px;
+}
+
+/* Ícone de expandir */
+.liora-flashcard::after {
+  content: "▼";
+  position: absolute;
+  right: 14px;
+  top: 18px;
+  font-size: 0.75rem;
+  opacity: .5;
+  transition: transform .25s ease;
+}
+
+/* Resposta escondida */
+.liora-flashcard-a {
+  margin-top: 12px;
+  display: none;
+  font-size: 0.98rem;
+  line-height: 1.55;
+  color: var(--muted);
+}
+
+/* Quando ativo */
+.liora-flashcard.open {
+  background: rgba(196,75,4,0.2);
+  border-color: var(--brand);
+}
+
+.liora-flashcard.open::after {
+  transform: rotate(180deg);
+  opacity: .9;
+}
+
+.liora-flashcard.open .liora-flashcard-a {
+  display: block;
+}
