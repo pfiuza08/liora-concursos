@@ -12,6 +12,7 @@
 // ✔ Continue Study Engine (jump autom.) — lioraIrParaSessao()
 // ✔ Salvamento incremental das sessões
 // ✔ Normalização das sessões geradas (id, ordem)
+// ✔ v74-FIX: normalização do outline (array de strings ou objeto)
 // ==========================================================
 
 (function () {
@@ -283,6 +284,37 @@
     window.callLLM = callLLM;
 
     // --------------------------------------------------------
+    // NORMALIZADOR DE OUTLINE (v74 FIX)
+    // Aceita:
+    //  - retorno como array de strings
+    //  - retorno como { topicos: [...] }
+    // Devolve sempre { topicos: string[] }
+// --------------------------------------------------------
+    function normalizarOutline(out) {
+      if (!out) return { topicos: [] };
+
+      // caso seja apenas array de strings
+      if (Array.isArray(out)) {
+        return {
+          topicos: out
+            .map((t) => (typeof t === "string" ? t.trim() : ""))
+            .filter((t) => t.length > 0),
+        };
+      }
+
+      // caso venha como objeto, mas com .topicos em formato livre
+      if (Array.isArray(out.topicos)) {
+        return {
+          topicos: out.topicos
+            .map((t) => (typeof t === "string" ? t.trim() : ""))
+            .filter((t) => t.length > 0),
+        };
+      }
+
+      return { topicos: [] };
+    }
+
+    // --------------------------------------------------------
     // MAPA MENTAL
     // --------------------------------------------------------
     function construirMapaMental(sessao) {
@@ -437,39 +469,59 @@
       const c = s.conteudo || {};
       if (els.wizardConteudo) {
         els.wizardConteudo.innerHTML = `
-          ${c.introducao ? `
+          ${
+            c.introducao
+              ? `
           <div class="liora-section">
             <h5>INTRODUÇÃO</h5>
             <p>${c.introducao}</p>
           </div>
-          <hr class="liora-divider">` : ""}
+          <hr class="liora-divider">`
+              : ""
+          }
 
-          ${Array.isArray(c.conceitos) && c.conceitos.length ? `
+          ${
+            Array.isArray(c.conceitos) && c.conceitos.length
+              ? `
           <div class="liora-section">
             <h5>CONCEITOS PRINCIPAIS</h5>
             <ul>${c.conceitos.map((x) => `<li>${x}</li>`).join("")}</ul>
           </div>
-          <hr class="liora-divider">` : ""}
+          <hr class="liora-divider">`
+              : ""
+          }
 
-          ${Array.isArray(c.exemplos) && c.exemplos.length ? `
+          ${
+            Array.isArray(c.exemplos) && c.exemplos.length
+              ? `
           <div class="liora-section">
             <h5>EXEMPLOS</h5>
             <ul>${c.exemplos.map((x) => `<li>${x}</li>`).join("")}</ul>
           </div>
-          <hr class="liora-divider">` : ""}
+          <hr class="liora-divider">`
+              : ""
+          }
 
-          ${Array.isArray(c.aplicacoes) && c.aplicacoes.length ? `
+          ${
+            Array.isArray(c.aplicacoes) && c.aplicacoes.length
+              ? `
           <div class="liora-section">
             <h5>APLICAÇÕES</h5>
             <ul>${c.aplicacoes.map((x) => `<li>${x}</li>`).join("")}</ul>
           </div>
-          <hr class="liora-divider">` : ""}
+          <hr class="liora-divider">`
+              : ""
+          }
 
-          ${Array.isArray(c.resumoRapido) && c.resumoRapido.length ? `
+          ${
+            Array.isArray(c.resumoRapido) && c.resumoRapido.length
+              ? `
           <div class="liora-section">
             <h5>RESUMO RÁPIDO</h5>
             <ul>${c.resumoRapido.map((x) => `<li>${x}</li>`).join("")}</ul>
-          </div>` : ""}
+          </div>`
+              : ""
+          }
         `;
       }
 
@@ -491,13 +543,13 @@
       if (els.wizardQuiz) {
         els.wizardQuiz.innerHTML = "";
         const q = s.quiz || {};
-      
+
         if (q.pergunta) {
           const pergunta = document.createElement("p");
           pergunta.textContent = q.pergunta;
           els.wizardQuiz.appendChild(pergunta);
         }
-      
+
         // limpar alternativas brutas
         const brutas = Array.isArray(q.alternativas)
           ? q.alternativas.filter((a) => {
@@ -506,7 +558,7 @@
               return String(asStr).trim().length > 0;
             })
           : [];
-      
+
         // normalizar
         const marcadas = brutas.map((alt, i) => {
           let texto = "";
@@ -514,7 +566,7 @@
           else if (alt && typeof alt.texto === "string") texto = alt.texto;
           else if (alt && typeof alt.label === "string") texto = alt.label;
           else texto = JSON.stringify(alt);
-      
+
           const byIndex = i === Number(q.corretaIndex);
           const byFlag = !!(alt && (alt.correta || alt.correto || alt.isCorrect));
           return {
@@ -524,37 +576,37 @@
             correta: byIndex || byFlag,
           };
         });
-      
+
         // se nenhuma marcada → marca a primeira
         if (marcadas.length && !marcadas.some((a) => a.correta)) {
           marcadas[0].correta = true;
         }
-      
+
         const alternativas = shuffle(marcadas);
-      
+
         alternativas.forEach((altObj, idx) => {
           const opt = document.createElement("div");
           opt.className = "liora-quiz-option";
           opt.dataset.index = idx;
-      
+
           opt.innerHTML = `
             <input type="radio" name="quiz-${wizard.atual}" value="${idx}">
             <span class="liora-quiz-option-text">${altObj.texto}</span>
             <span class="liora-quiz-dot"></span>
           `;
-      
+
           opt.addEventListener("click", () => {
             els.wizardQuiz
               .querySelectorAll(".liora-quiz-option")
               .forEach((o) => o.classList.remove("selected"));
-      
+
             opt.classList.add("selected");
             const input = opt.querySelector("input");
             if (input) input.checked = true;
-      
+
             if (!els.wizardQuizFeedback) return;
             els.wizardQuizFeedback.style.opacity = 0;
-      
+
             setTimeout(() => {
               if (altObj.correta) {
                 els.wizardQuizFeedback.textContent =
@@ -567,11 +619,10 @@
               els.wizardQuizFeedback.style.opacity = 1;
             }, 120);
           });
-      
+
           els.wizardQuiz.appendChild(opt);
         });
       }
-
 
       // Flashcards
       if (els.wizardFlashcards) {
@@ -763,8 +814,12 @@
 
         const estrutura = window.lioraPDFStructure.fromBlocks(rawBlocks);
 
-        const outline = window.lioraOutlineGenerator.gerar(estrutura);
-        if (!outline || !outline.topicos || !outline.topicos.length) {
+        // v74 FIX → aceitar retorno como array ou como objeto
+        let outline = window.lioraOutlineGenerator.gerar(estrutura);
+        outline = normalizarOutline(outline);
+
+        if (!outline.topicos.length) {
+          console.error("Outline vazio após normalização:", outline);
           throw new Error("Não foi possível identificar tópicos.");
         }
 
