@@ -1,17 +1,26 @@
 // ==========================================================
-// 📚 LIORA — PDF Structure v74-SUPREME-STABLE
-// - Anti-explosão (máx. 30 seções)
+// 📚 LIORA — PDF Structure v74-SUPREME-STABLE-FILTER
+// - Anti-explosão
 // - Detecção de títulos REALISTAS
-// - Agrupamento inteligente de blocos
-// - Remoção de ruído (headers/footers)
+// - Agrupamento inteligente
+// - Remoção de RUÍDO editorial
 // ==========================================================
 (function () {
-  console.log("🔵 Liora PDF Structure v74-SUPREME-STABLE carregado...");
+  console.log("🔵 Liora PDF Structure v74-SUPREME-STABLE-FILTER carregado...");
 
-  const MAX_SECOES = 30;       // limite ABSOLUTO
-  const MIN_TITULO_LEN = 6;   // evita títulos curtos demais
-  const MIN_BLOCO_LEN = 20;   // evita blocos de 1–2 palavras virarem seção
-  const FONT_TITULO_MIN = 16; // tamanho mínimo pra considerar título real
+  const MAX_SECOES = 30;
+  const MIN_TITULO_LEN = 6;
+  const MIN_BLOCO_LEN = 20;
+  const FONT_TITULO_MIN = 16;
+
+  const PALAVRAS_EDITORIAIS = [
+    "isbn", "edição", "copyright", "direitos",
+    "revisão", "revisor", "coordenação", "organização",
+    "autor", "autores", "ilustração", "diagramação",
+    "editora", "publicação", "impresso", "contato",
+    "www.", "http", "@", "ficha catalográfica",
+    "sumário", "índice remissivo", "índice", "apresentação"
+  ];
 
   function limparTexto(t) {
     return String(t || "")
@@ -19,38 +28,40 @@
       .trim();
   }
 
-  // Remove claramente números de página e rodapés
+  // Detecta ruído óbvio
   function ehRuido(t) {
-    if (/^Página\s+\d+/i.test(t)) return true;
-    if (/^\d+$/.test(t)) return true;     // número isolado
-    if (/^\-\s*\d+\s*\-$/.test(t)) return true; // "- 12 -"
-    if (t.length < 3) return true;        // linhas curtas são ruído quase sempre
+    const texto = t.toLowerCase();
+
+    if (/^p[aá]gina\s*\d+$/i.test(texto)) return true;
+    if (/^\d+$/.test(texto)) return true;
+    if (texto.length < 3) return true;
+
     return false;
   }
 
-  // Avaliação mais robusta de título
-  function classificarTitulo(t, bloco) {
+  // Detecta se bloco pertence a metadados editoriais
+  function ehEditorial(t) {
+    if (!t) return true;
+    const txt = t.toLowerCase();
+
+    return PALAVRAS_EDITORIAIS.some((w) => txt.includes(w));
+  }
+
+  function classificarTitulo(t, b) {
     let score = 0;
 
     const texto = t.trim();
-
-    // Não considerar textos muito curtos como título
     if (texto.length < MIN_TITULO_LEN) return 0;
 
-    // Sinais fortes
-    if (/^(CAP[IÍ]TULO|SEÇÃO)\s+\d+/i.test(texto)) score += 3;
-    if (/^\d+(\.\d+)*\s+/.test(texto)) score += 3; // 1. / 1.1 / 2.3.1 etc.
+    if (/^(cap[ií]tulo|seç[aã]o)\s+\d+/i.test(texto)) score += 3;
+    if (/^\d+(\.\d+)*\s+/.test(texto)) score += 3;
 
-    // Título por estilização
-    if (bloco.fontSize >= FONT_TITULO_MIN) score += 2;
+    if (b.fontSize >= FONT_TITULO_MIN) score += 2;
 
-    // Muitas palavras em maiúsculas? (mas não gritos)
     if (/^[A-Z][A-Za-z0-9\s:]{6,80}$/.test(texto)) score += 1;
 
-    // Títulos costumam NÃO terminar com ponto
     if (!texto.endsWith(".")) score += 1;
 
-    // Linhas longas demais não são títulos
     if (texto.length > 120) score = 0;
 
     return score;
@@ -75,27 +86,13 @@
 
       const score = classificarTitulo(texto, b);
 
-      // TÍTULO REAL
+      // TÍTULO
       if (score >= 3) {
-        // Salva seção anterior
-        if (atual.conteudo.length > 0 || atual.titulo) {
-          secoes.push(atual);
-        }
+        if (atual.conteudo.length > 0) secoes.push(atual);
 
         atual = { titulo: texto, conteudo: [] };
-
         if (secoes.length >= MAX_SECOES) break;
 
-        continue;
-      }
-
-      // BLOCO PEQUENO → junta ao anterior
-      if (texto.length < MIN_BLOCO_LEN) {
-        if (atual.conteudo.length > 0) {
-          atual.conteudo[atual.conteudo.length - 1] += " " + texto;
-        } else {
-          atual.conteudo.push(texto);
-        }
         continue;
       }
 
@@ -103,18 +100,27 @@
       atual.conteudo.push(texto);
     }
 
-    if (atual.conteudo.length > 0) {
-      secoes.push(atual);
-    }
+    if (atual.conteudo.length > 0) secoes.push(atual);
 
-    // LIMITE FINAL
-    if (secoes.length > MAX_SECOES) {
-      console.warn(`⚠️ PDF gerou ${secoes.length} seções; limitando para ${MAX_SECOES}.`);
-      return secoes.slice(0, MAX_SECOES);
-    }
+    // -------------------------------
+    // FILTRO FINAL: REMOVE SEÇÕES EDITORIAIS
+    // -------------------------------
+    const filtradas = secoes.filter((sec, idx) => {
+      const titulo = sec.titulo?.toLowerCase() || "";
+      const primeiro = (sec.conteudo[0] || "").toLowerCase();
 
-    console.log("🧱 Seções construídas:", secoes);
-    return secoes;
+      // Seção editorial quase sempre está entre as 3 primeiras:
+      // — capa, créditos, revisão, ISBN, ficha catalográfica, sumário, etc.
+      if (idx < 3) {
+        if (PALAVRAS_EDITORIAIS.some((w) => titulo.includes(w))) return false;
+        if (PALAVRAS_EDITORIAIS.some((w) => primeiro.includes(w))) return false;
+      }
+
+      return true;
+    });
+
+    console.log("🧱 Seções construídas (filtradas):", filtradas);
+    return filtradas.slice(0, MAX_SECOES);
   }
 
   window.lioraPDFStructure = { fromBlocks };
