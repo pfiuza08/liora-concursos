@@ -815,8 +815,36 @@
         const estrutura = window.lioraPDFStructure.fromBlocks(rawBlocks);
 
         // v74 FIX → aceitar retorno como array ou como objeto
-        let outline = window.lioraOutlineGenerator.gerar(estrutura);
-        outline = normalizarOutline(outline);
+       let outlineRaw = window.lioraOutlineGenerator.gerar(estrutura);
+
+        // Se o gerador já retorna { topicos: [...] }
+        let outline = [];
+        
+        if (Array.isArray(outlineRaw)) {
+            // retorno antigo: array de strings
+            outline = outlineRaw;
+        }
+        else if (Array.isArray(outlineRaw.topicos)) {
+            // retorno correto
+            outline = outlineRaw.topicos;
+        }
+        else if (Array.isArray(outlineRaw.outlineUnificado)) {
+            // fallback
+            outline = outlineRaw.outlineUnificado;
+        }
+        else {
+            console.error("Formato inesperado do outline:", outlineRaw);
+            outline = [];
+        }
+        
+        // Agora normalize
+        outline = outline.map(x => String(x).trim()).filter(x => x.length > 0);
+        
+        if (!outline.length) {
+           console.error("Outline vazio após extração:", outlineRaw);
+           throw new Error("Não foi possível identificar tópicos.");
+        }
+
 
         if (!outline.topicos.length) {
           console.error("Outline vazio após normalização:", outline);
