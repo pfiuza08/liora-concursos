@@ -266,6 +266,98 @@ input:focus, select:focus {
 -------------------------------------------------------------- */
 button:active, .btn:active { transform: scale(.97); }
 
+/* ================================================================
+   🧠 LIORA — SEÇÕES DE ESTUDO (WIZARD PREMIUM)
+================================================================ */
+
+/* container principal do cartão */
+.liora-wizard-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  padding: 32px;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  margin: 32px auto;
+  max-width: 820px;
+  transition: opacity .25s ease, transform .25s ease;
+}
+
+.liora-wizard-card.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.liora-wizard-card:not(.visible) {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+/* títulos principais */
+#liora-sessao-titulo {
+  font-size: 1.6rem;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+/* subtítulos */
+.liora-section h5 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 24px 0 8px 0;
+  color: var(--brand);
+}
+
+/* conteúdo da sessão */
+.liora-section p,
+.liora-section ul li {
+  font-size: 1rem;
+  line-height: 1.7;
+  margin-bottom: 10px;
+}
+
+/* divisores */
+.liora-divider {
+  border: none;
+  border-bottom: 1px solid var(--border);
+  margin: 20px 0;
+  opacity: .4;
+}
+
+/* analogias e ativação */
+#liora-sessao-analogias p,
+#liora-sessao-ativacao li {
+  background: var(--bg2);
+  padding: 12px 14px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  margin-bottom: 10px;
+}
+
+/* lista lateral (plano) espaçamento maior */
+#plano .liora-card-topico {
+  margin-bottom: 10px;
+}
+
+/* mapa mental */
+#liora-sessao-mapa {
+  background: var(--card);
+  border: 1px solid var(--border);
+  padding: 20px;
+  border-radius: var(--radius);
+  font-family: "Fira Code", monospace;
+  margin-top: 20px;
+  white-space: pre-wrap;
+}
+
+/* navegação inferior */
+#liora-btn-voltar,
+#liora-btn-proxima,
+#liora-btn-revisar {
+  margin-top: 24px;
+  margin-right: 10px;
+}
+
+
 /* --------------------------------------------------------------
    BUILD INFO
 -------------------------------------------------------------- */
