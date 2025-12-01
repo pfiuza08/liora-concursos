@@ -1,8 +1,11 @@
-// /api/gerarPlano.js — ROBUSTO, COMPATÍVEL COM CORE v74
+// /api/gerarPlano.js — VERSÃO FINAL ROBUSTA (compatível com CORE v74)
 import OpenAI from "openai";
 
 export default async function handler(req, res) {
   try {
+    // --------------------------
+    // MÉTODO PERMITIDO
+    // --------------------------
     if (req.method !== "POST") {
       return res.status(405).json({ error: "Método não permitido" });
     }
@@ -21,16 +24,17 @@ export default async function handler(req, res) {
     });
 
     // -------------------------------------------------------
-    // PROMPT DEFINITIVO: sessões densas + JSON válido
+    // 🧠 PROMPT DEFINITIVO PARA SESSÕES ESTÁVEIS
     // -------------------------------------------------------
     const prompt = `
-Você é a IA da Liora, especialista em aprendizado adaptativo.
+Você é a IA da Liora, especialista em aprendizado adaptativo e estudo guiado.
 
-Gere EXATAMENTE ${qtdSessoes} sessões completas e densas,
-seguindo o formato JSON OBRIGATÓRIO abaixo.
+Crie EXATAMENTE ${qtdSessoes} sessões de estudo para:
 
-⚠️ SAÍDA OBRIGATÓRIA: JSON **PURO**, sem NENHUM texto antes ou depois.
+TEMA: ${tema}
+NÍVEL: ${nivel}
 
+⚠️ SAÍDA OBRIGATÓRIA (JSON PURO, SEM NENHUMA EXPLICAÇÃO FORA):
 {
   "origem": "tema",
   "tema": "${tema}",
@@ -62,28 +66,27 @@ seguindo o formato JSON OBRIGATÓRIO abaixo.
   ]
 }
 
-REGRAS DE OURO:
-- Nunca escreva texto fora do JSON.
-- Nunca explique nada.
-- NUNCA coloque comentários.
+REGRAS:
+- Nunca escreva nada fora do JSON.
+- Nunca adicione comentários.
 - Todos os campos devem vir preenchidos.
-- Os itens “conceitos”, “exemplos” e “aplicacoes” devem ser úteis e didáticos.
-- O JSON deve ser 100% válido e pronto para parse.
+- As listas devem ser úteis, densas e didáticas.
+- O JSON deve ser 100% válido.
     `;
 
     // -------------------------------------------------------
-    // Função auxiliar: garantir JSON válido
+    // 🔧 Função auxiliar para tentar parse
     // -------------------------------------------------------
-    function tryParseJSON(str) {
+    const tryParseJSON = (str) => {
       try {
         return JSON.parse(str);
       } catch {
         return null;
       }
-    }
+    };
 
     // -------------------------------------------------------
-    // Função para gerar com retry automático
+    // 🔁 Função com retry automático (2 tentativas)
     // -------------------------------------------------------
     async function gerarComRetry() {
       for (let tentativa = 1; tentativa <= 2; tentativa++) {
@@ -91,22 +94,29 @@ REGRAS DE OURO:
           const completion = await client.chat.completions.create({
             model: "gpt-4.1",
             messages: [{ role: "user", content: prompt }],
-            temperature: 0.2
+            temperature: 0.25,
           });
 
           let output = completion.choices[0].message.content.trim();
 
-          // Se vier com ```json, remover
-          output = output.replace(/```json/g, "").replace(/```/g, "").trim();
+          // limpar blocos ```json
+          output = output.replace(/```json/gi, "").replace(/```/g, "").trim();
 
-          const test = tryParseJSON(output);
-          if (test && test.sessoes && test.sessoes.length) {
-            return output; // STRING válida
+          const parsed = tryParseJSON(output);
+
+          // validar estrutura
+          if (
+            parsed &&
+            parsed.sessoes &&
+            Array.isArray(parsed.sessoes) &&
+            parsed.sessoes.length > 0
+          ) {
+            return parsed; // retorna OBJETO parsed diretamente
           }
 
-          console.warn(`⚠️ Tentativa ${tentativa} retornou JSON inválido`);
+          console.warn(`⚠️ Tentativa ${tentativa}: JSON inválido ou sem sessões.`);
         } catch (err) {
-          console.warn(`⚠️ Tentativa ${tentativa} falhou`, err);
+          console.warn(`⚠️ Tentativa ${tentativa} falhou:`, err);
         }
       }
 
@@ -114,15 +124,20 @@ REGRAS DE OURO:
     }
 
     // -------------------------------------------------------
-    // Execução real
+    // EXECUÇÃO REAL
     // -------------------------------------------------------
-    const output = await gerarComRetry();
+    const parsed = await gerarComRetry();
+
+    if (!parsed.sessoes || !parsed.sessoes.length) {
+      throw new Error("JSON retornado pela IA não contém sessões.");
+    }
 
     // -------------------------------------------------------
-    // RESPOSTA FINAL — EXATAMENTE o formato que o CORE v74 espera
-    // NÃO FAZER JSON.parse(output) aqui!
+    // ✔ FORMATO FINAL EXIGIDO PELO CORE v74
     // -------------------------------------------------------
-    return res.status(200).json({ plano: output });
+    return res.status(200).json({
+      plano: JSON.stringify(parsed.sessoes), // <-- STRING contendo APENAS O ARRAY
+    });
 
   } catch (error) {
     console.error("❌ Erro ao gerar plano:", error);
