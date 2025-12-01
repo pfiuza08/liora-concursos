@@ -528,3 +528,35 @@ button:active, .btn:active { transform: scale(.97); }
 .liora-flashcard.open .liora-flashcard-a {
   display: block;
 }
+
+.liora-bloco {
+  margin-bottom: 20px;
+  padding: 14px 16px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.liora-conteudo-titulo {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: var(--fg);
+}
+
+.liora-conceito-subtitulo {
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin-bottom: 6px;
+  color: var(--brand); /* Intellih orange */
+}
+
+.liora-lista li {
+  margin-left: 6px;
+  padding: 3px 0;
+}
+
+.liora-conteudo-texto {
+  color: var(--fg);
+  opacity: 0.85;
+}
