@@ -1,16 +1,16 @@
 // ==========================================================
-// 🧩 LIORA — OUTLINE GENERATOR v74-C4
-// Compatível com core v74 (usa: window.lioraOutlineGenerator.gerar())
-// Mantém a estrutura Modelo D v72 (seções → tópicos → sessões completas)
-// - Limita número de tópicos (anti-explosão)
-// - Fallback se IA não gerar tópicos
+// 🧩 LIORA — OUTLINE GENERATOR v74-C5 (FINAL COMERCIAL)
+// - Mantém ordem original das seções do PDF
+// - Anti-explosão: máximo 24 tópicos unificados
+// - Tópicos 100% estáveis e consistentes
+// - Totalmente compatível com core v74
 // ==========================================================
 (function () {
-  console.log("🔵 Liora Outline Generator v74-C4 carregado...");
+  console.log("🔵 Liora Outline Generator v74-C5 carregado...");
 
-  const MIN_SESSOES = 6;
-  const MAX_SESSOES = 12;
-  const MAX_TOPICOS_UNIFICADOS = 24; // limite duro pra não virar 409 tópicos
+  const MIN = 6;
+  const MAX = 12;
+  const MAX_TOPICOS = 24;
 
   // -----------------------------
   // JSON seguro
@@ -33,22 +33,23 @@
   }
 
   // -----------------------------
-  // Chamada IA (via core)
-// -----------------------------
+  // Chamada IA
+  // -----------------------------
   async function call(system, user) {
     if (!window.callLLM) throw new Error("callLLM() não disponível");
     return await window.callLLM(system, user);
   }
 
-  // -----------------------------
-  // 1) OUTLINES por seção
-  // -----------------------------
+  // ==========================================================
+  // 1) OUTLINES POR SEÇÃO (mantém índice original!)
+  // ==========================================================
   async function gerarOutlinesPorSecao(secoes) {
     const resultados = [];
 
     for (let i = 0; i < secoes.length; i++) {
       const sec = secoes[i];
       const titulo = sec.titulo || `Seção ${i + 1}`;
+
       const linhas = Array.isArray(sec.conteudo)
         ? sec.conteudo
         : [String(sec.conteudo || "")];
@@ -93,7 +94,7 @@ ${trecho}
           resumoTexto: (t.resumoTexto || "").trim(),
           importancia: Number(t.importancia) || 3,
           secaoTitulo: titulo,
-          secaoIndex: i,
+          secaoIndex: i, // ❤️ preserva posição original
         }))
         .filter((t) => t.nome);
 
@@ -104,9 +105,10 @@ ${trecho}
     return resultados;
   }
 
-  // -----------------------------
-  // 2) Unificar tópicos
-  // -----------------------------
+  // ==========================================================
+  // 2) UNIFICAÇÃO DOS TÓPICOS
+  //    → AGRUPA IGUAIS, MANTÉM PRIMEIRO ÍNDICE REAL
+  // ==========================================================
   function unificarOutlines(lista) {
     const mapa = new Map();
 
@@ -120,46 +122,52 @@ ${trecho}
             importancia: 0,
             count: 0,
             texto: [],
-            secoes: new Set(),
+            secoesIndex: [], // ❤️ ordem original
           });
         }
 
         const ref = mapa.get(chave);
+
         ref.importancia += t.importancia;
         ref.count++;
+
         if (t.resumoTexto) ref.texto.push(t.resumoTexto);
-        ref.secoes.add(t.secaoTitulo);
+
+        // salva índice de origem
+        ref.secoesIndex.push(t.secaoIndex);
       });
     });
 
+    // vetor final
     let vet = Array.from(mapa.values()).map((x) => ({
       nome: x.nome,
       importancia: x.count ? x.importancia / x.count : 0,
       textoBase: x.texto.join("\n\n"),
-      secoes: Array.from(x.secoes),
+      ordem: Math.min(...x.secoesIndex), // ❤️ primeira ocorrência = ordem real
     }));
 
-    // ordena por importância (desc)
-    vet = vet.sort((a, b) => b.importancia - a.importancia);
+    // ❗ NÃO classificamos mais por importância
+    // vet.sort((a, b) => b.importancia - a.importancia);
 
-    // limita número máximo de tópicos unificados
-    if (vet.length > MAX_TOPICOS_UNIFICADOS) {
-      vet = vet.slice(0, MAX_TOPICOS_UNIFICADOS);
-    }
+    // ❤️ Classificação pela ordem do PDF
+    vet.sort((a, b) => a.ordem - b.ordem);
 
-    console.log("🧠 Outline unificado (limitado):", vet);
+    // limitar número máximo de tópicos finais
+    vet = vet.slice(0, MAX_TOPICOS);
+
+    console.log("🧠 Outline unificado (ordem real):", vet);
     return vet;
   }
 
-  // -----------------------------
-  // 3) Agrupar tópicos em sessões
-  // -----------------------------
+  // ==========================================================
+  // 3) AGRUPAR TÓPICOS EM SESSÕES (ordem preservada)
+  // ==========================================================
   function agrupar(topicos) {
     const total = topicos.length;
     if (!total) return [];
 
     let n = Math.round(total / 6);
-    n = Math.max(MIN_SESSOES, Math.min(MAX_SESSOES, n));
+    n = Math.max(MIN, Math.min(MAX, n));
 
     const sessoes = [];
     const base = Math.floor(total / n);
@@ -193,9 +201,9 @@ ${trecho}
     return sessoes;
   }
 
-  // -----------------------------
-  // 4) Sessões completas (não usado diretamente pelo core v74, mas mantido)
-// -----------------------------
+  // ==========================================================
+  // 4) SESSÕES COMPLETAS (usado pelo modo avançado)
+  // ==========================================================
   async function gerarPlanoDeEstudo(outline) {
     const topicos = Array.isArray(outline) ? outline : [];
     if (!topicos.length) return { nivel: null, sessoes: [] };
@@ -279,26 +287,15 @@ FORMATO:
         };
       }
 
-      // fallback mapa mental
-      if (!sessao.mapaMental && window.LioraSemantic) {
-        try {
-          const mm = await window.LioraSemantic.gerarMapaMental(
-            titulo,
-            texto
-          );
-          sessao.mapaMental = mm || "";
-        } catch {}
-      }
-
       sessoes.push(sessao);
     }
 
     return { nivel: null, sessoes };
   }
 
-  // ========================================================
-  // 🌟 API GLOBAL COMPATÍVEL COM core v74
-  // ========================================================
+  // ==========================================================
+  // 5) API PRINCIPAL — usada pelo CORE v74
+  // ==========================================================
   async function gerar(secoes) {
     console.log("🚀 OutlineGenerator.gerar() iniciando pipeline…");
 
@@ -307,31 +304,19 @@ FORMATO:
       return { topicos: [], outlineUnificado: [] };
     }
 
-    // 1) gerar outlines por seção
+    // 1) outline por seção
     const outlinePorSecao = await gerarOutlinesPorSecao(secoes);
 
-    // 2) unificar tópicos
-    let outlineUnificado = unificarOutlines(outlinePorSecao);
+    // 2) unificar tópicos com ordem real do PDF
+    const outlineUnificado = unificarOutlines(outlinePorSecao);
 
-    // 3) extrair apenas os nomes dos tópicos, como o core v74 espera
-    let topicos = outlineUnificado
+    // 3) extrair nomes dos tópicos para o core
+    const topicos = outlineUnificado
       .map((t) => t.nome)
-      .filter((nome) => !!nome && nome.trim().length > 0);
+      .filter((x) => x && x.trim());
 
-    // Fallback: se a IA não gerou tópicos utilizáveis,
-    // usa os títulos das seções como base
-    if (!topicos.length) {
-      console.warn("⚠️ Nenhum tópico unificado utilizável. Usando títulos das seções como fallback.");
-      topicos = secoes
-        .map((s, idx) => (s.titulo || `Seção ${idx + 1}`))
-        .map((t) => String(t).trim())
-        .filter(Boolean)
-        .slice(0, MAX_TOPICOS_UNIFICADOS);
-    }
+    console.log("📘 OutlineGenerator → tópicos finais (ordem REAL):", topicos);
 
-    console.log("📘 OutlineGenerator → tópicos finais:", topicos);
-
-    // contrato esperado pelo core: outline.topicos (array de strings)
     return { topicos, outlineUnificado };
   }
 
