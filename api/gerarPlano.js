@@ -1,4 +1,11 @@
-// /api/gerarPlano.js — VERSÃO FINAL ROBUSTA (compatível com CORE v74)
+// ==========================================================
+// 🧠 LIORA — GERADOR DE PLANO POR TEMA v75-PRO
+// - Sessões densas e didáticas
+// - Quiz forte, flashcards garantidos, mapa mental consistente
+// - JSON extremamente estável (com limpeza e retry)
+// - Compatível com CORE v74 (plano: JSON.stringify([]))
+// ==========================================================
+
 import OpenAI from "openai";
 
 export default async function handler(req, res) {
@@ -16,127 +23,147 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "Parâmetros incompletos." });
     }
 
-    // número de sessões adaptativo
+    // Número adaptativo de sessões
     const qtdSessoes = Math.max(6, Math.min(12, Number(sessoes) || 8));
 
     const client = new OpenAI({
       apiKey: process.env.OPENAI_API_KEY,
     });
 
-    // -------------------------------------------------------
-    // 🧠 PROMPT DEFINITIVO PARA SESSÕES ESTÁVEIS
-    // -------------------------------------------------------
+    // ==========================================================
+    // 🧠 PROMPT PROFISSIONAL (v75-PRO)
+    // ==========================================================
     const prompt = `
-Você é a IA da Liora, especialista em aprendizado adaptativo e estudo guiado.
+Você é a IA da Liora, especialista em ensino estruturado, aprendizado ativo e clareza didática.
 
-Crie EXATAMENTE ${qtdSessoes} sessões de estudo para:
+Crie EXATAMENTE ${qtdSessoes} sessões de estudo profundas e bem elaboradas para:
 
 TEMA: ${tema}
 NÍVEL: ${nivel}
 
-⚠️ SAÍDA OBRIGATÓRIA (JSON PURO, SEM NENHUMA EXPLICAÇÃO FORA):
+Toda a saída deve ser APENAS JSON válido no formato abaixo:
+
 {
   "origem": "tema",
   "tema": "${tema}",
   "nivel": "${nivel}",
   "sessoes": [
     {
-      "titulo": "",
-      "objetivo": "",
+      "titulo": "Título claro e didático",
+      "objetivo": "Objetivo único, direto e alinhado ao tema",
       "conteudo": {
-        "introducao": "",
-        "conceitos": ["", ""],
-        "exemplos": ["", ""],
-        "aplicacoes": ["", ""],
-        "resumoRapido": ["", ""]
+        "introducao": "2-3 frases contextualizando o tema da sessão",
+        "conceitos": ["3–6 conceitos essenciais, sem redundância"],
+        "exemplos": ["2–4 exemplos reais ou aplicados"],
+        "aplicacoes": ["2–4 aplicações práticas e concretas"],
+        "resumoRapido": ["4–6 bullets sintéticos com os pontos-chave"]
       },
-      "ativacao": ["", ""],
+      "ativacao": [
+        "2–4 perguntas que testem raciocínio, não memorização"
+      ],
       "quiz": {
-        "pergunta": "",
-        "alternativas": ["A", "B", "C", "D"],
+        "pergunta": "Pergunta forte, clara e objetiva",
+        "alternativas": [
+          "Alternativa A coerente",
+          "Alternativa B plausível",
+          "Alternativa C parcialmente correta",
+          "Alternativa D incorreta mas verossímil"
+        ],
         "corretaIndex": 0,
-        "explicacao": ""
+        "explicacao": "Justificativa detalhada da alternativa correta"
       },
       "flashcards": [
-        { "q": "", "a": "" },
-        { "q": "", "a": "" }
+        { "q": "Pergunta essencial do tópico", "a": "Resposta objetiva" },
+        { "q": "Outro conceito-chave", "a": "Resposta sintética" },
+        { "q": "Ponto que sempre causa dúvida", "a": "Explicação curta" }
       ],
-      "mindmap": "A > B > C | X > Y"
+      "mindmap": "Mapa mental textual com 2–3 níveis — formato: A > B > C | X > Y | ..."
     }
   ]
 }
 
-REGRAS:
+REGRAS CRÍTICAS:
 - Nunca escreva nada fora do JSON.
-- Nunca adicione comentários.
-- Todos os campos devem vir preenchidos.
-- As listas devem ser úteis, densas e didáticas.
-- O JSON deve ser 100% válido.
-    `;
+- Nunca deixe listas vazias.
+- Nunca use frases vagas (“é importante”, “é necessário entender”).
+- Foque em clareza, aplicabilidade e exemplos reais.
+- O JSON DEVE SER 100% válido.
+`;
 
-    // -------------------------------------------------------
-    // 🔧 Função auxiliar para tentar parse
-    // -------------------------------------------------------
-    const tryParseJSON = (str) => {
+    // ==========================================================
+    // 🧼 LIMPEZA DE CARACTERES PROBLEMÁTICOS
+    // ==========================================================
+    function sanitizeJSON(str) {
+      return str
+        .replace(/```json/gi, "")
+        .replace(/```/g, "")
+        .replace(/\u0000/g, "")
+        .replace(/[\u0001-\u001F]/g, " ")
+        .trim();
+    }
+
+    // ==========================================================
+    // 🍀 FUNÇÃO DE PARSE MAIS ROBUSTA POSSÍVEL
+    // ==========================================================
+    function safeParse(str) {
       try {
         return JSON.parse(str);
-      } catch {
+      } catch (e) {
         return null;
       }
-    };
+    }
 
-    // -------------------------------------------------------
-    // 🔁 Função com retry automático (2 tentativas)
-    // -------------------------------------------------------
+    // ==========================================================
+    // 🔁 RETRY INTELIGENTE (3 tentativas)
+    // ==========================================================
     async function gerarComRetry() {
-      for (let tentativa = 1; tentativa <= 2; tentativa++) {
+      for (let tentativa = 1; tentativa <= 3; tentativa++) {
         try {
           const completion = await client.chat.completions.create({
             model: "gpt-4.1",
             messages: [{ role: "user", content: prompt }],
-            temperature: 0.25,
+            temperature: 0.2,
           });
 
-          let output = completion.choices[0].message.content.trim();
+          let output = sanitizeJSON(
+            completion.choices[0].message.content || ""
+          );
 
-          // limpar blocos ```json
-          output = output.replace(/```json/gi, "").replace(/```/g, "").trim();
+          // tenta parser
+          let json = safeParse(output);
 
-          const parsed = tryParseJSON(output);
-
-          // validar estrutura
           if (
-            parsed &&
-            parsed.sessoes &&
-            Array.isArray(parsed.sessoes) &&
-            parsed.sessoes.length > 0
+            json &&
+            json.sessoes &&
+            Array.isArray(json.sessoes) &&
+            json.sessoes.length === qtdSessoes
           ) {
-            return parsed; // retorna OBJETO parsed diretamente
+            return json;
           }
 
-          console.warn(`⚠️ Tentativa ${tentativa}: JSON inválido ou sem sessões.`);
+          console.warn(`⚠️ Tentativa ${tentativa}: JSON inválido ou incompleto.`);
         } catch (err) {
           console.warn(`⚠️ Tentativa ${tentativa} falhou:`, err);
         }
       }
 
-      throw new Error("A IA não retornou JSON válido após 2 tentativas.");
+      throw new Error("Falha ao gerar JSON válido após 3 tentativas.");
     }
 
-    // -------------------------------------------------------
-    // EXECUÇÃO REAL
-    // -------------------------------------------------------
+    // ==========================================================
+    // EXECUÇÃO
+    // ==========================================================
     const parsed = await gerarComRetry();
 
-    if (!parsed.sessoes || !parsed.sessoes.length) {
-      throw new Error("JSON retornado pela IA não contém sessões.");
+    if (!parsed || !parsed.sessoes || !parsed.sessoes.length) {
+      throw new Error("A IA retornou uma estrutura inválida.");
     }
 
-    // -------------------------------------------------------
-    // ✔ FORMATO FINAL EXIGIDO PELO CORE v74
-    // -------------------------------------------------------
+    // ==========================================================
+    // ✔ SAÍDA FINAL — FORMATO EXIGIDO PELO CORE v74
+    // ==========================================================
     return res.status(200).json({
-      plano: JSON.stringify(parsed.sessoes), // <-- STRING contendo APENAS O ARRAY
+      plano: JSON.stringify(parsed.sessoes), // ⭐ CORE espera STRING do array de sessões
     });
 
   } catch (error) {
