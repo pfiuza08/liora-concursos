@@ -66,9 +66,35 @@ html, body {
   font-weight: 600;
   cursor: pointer;
   transition: var(--transition);
+  border: none;
 }
 .btn:hover {
   filter: brightness(1.12);
+}
+
+/* primário explícito (ex.: Continuar Estudo) */
+.btn-primary {
+  background: var(--brand);
+  color: #fff;
+  padding: 0.75rem 1.4rem;
+  border-radius: var(--radius);
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+.btn-primary:hover {
+  filter: brightness(1.12);
+  transform: translateY(-1px);
+}
+.btn-primary:disabled {
+  opacity: .6;
+  cursor: default;
+  transform: none;
 }
 
 .btn-secondary {
@@ -114,12 +140,36 @@ input:focus, select:focus {
   text-align: center;
   cursor: pointer;
   transition: var(--transition);
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .upload-zone:hover {
   background: rgba(196,75,4,0.08);
   border-color: var(--brand);
 }
 
+/* texto do upload (mostra nome do arquivo) */
+#upload-text {
+  font-size: 0.9rem;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+/* input real fica transparente ocupando toda a área,
+   para clicar ou arrastar sem quebrar o layout */
+.upload-zone input[type="file"] {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+/* spinner */
 #upload-spinner {
   display: none;
   width: 28px;
@@ -264,7 +314,9 @@ input:focus, select:focus {
 /* --------------------------------------------------------------
    MICROINTERAÇÕES
 -------------------------------------------------------------- */
-button:active, .btn:active { transform: scale(.97); }
+button:active, .btn:active, .btn-primary:active {
+  transform: scale(.97);
+}
 
 /* ================================================================
    🧠 LIORA — WIZARD PREMIUM C7 (visual nível Coursera / Notion)
@@ -420,7 +472,6 @@ button:active, .btn:active { transform: scale(.97); }
 
 /* ===============================================================
    🧩 PATCH — TÍTULOS EM CAIXA ALTA + SUBSEÇÕES EM LARANJA + FLASHCARDS
-   Este bloco pode ser colado no final do style.css sem conflitos.
 ================================================================ */
 
 /* -------------------------------
@@ -466,9 +517,12 @@ button:active, .btn:active { transform: scale(.97); }
 
 /* ---------------------------------------------------------
    3) FLASHCARDS — NOVA APRESENTAÇÃO VISUAL PREMIUM
-   - Cartões expansíveis estilo “accordions”
-   - Transições suaves
 --------------------------------------------------------- */
+.liora-flashcards-grid {
+  display: grid;
+  gap: 14px;
+}
+
 .liora-flashcard {
   background: var(--card);
   border: 1px solid var(--border);
@@ -549,64 +603,16 @@ button:active, .btn:active { transform: scale(.97); }
   font-weight: 700;
   margin-bottom: 6px;
   color: var(--brand); /* Intellih orange */
+  text-transform: uppercase;
 }
 
 .liora-lista li {
-  margin-left: 6px;
+  margin-left: 8px;
+  margin-bottom: 4px;
   padding: 3px 0;
 }
 
 .liora-conteudo-texto {
   color: var(--fg);
   opacity: 0.85;
-}
-
-/* Títulos principais das seções do Wizard */
-.liora-wizard-section h5 {
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  font-weight: 700;
-}
-
-/* Subtítulos premium em laranja Intellih */
-.liora-conceito-subtitulo {
-  color: var(--brand);
-  font-weight: 600;
-  margin-bottom: 6px;
-  text-transform: uppercase;
-  font-size: .82rem;
-}
-
-/* Bloco Premium */
-.liora-bloco {
-  background: var(--card);
-  border: 1px solid var(--border);
-  padding: 14px;
-  border-radius: var(--radius);
-  margin-bottom: 14px;
-}
-
-.liora-lista li {
-  margin-left: 8px;
-  margin-bottom: 4px;
-}
-
-/* Flashcards Premium */
-.liora-flashcards-grid {
-  display: grid;
-  gap: 14px;
-}
-
-.liora-flashcard {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 14px;
-}
-
-.liora-flashcard-label {
-  font-size: .7rem;
-  color: var(--brand);
-  font-weight: 700;
-  text-transform: uppercase;
 }
