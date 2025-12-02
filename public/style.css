@@ -399,3 +399,13 @@ button:active,
   font-size: .7rem;
   opacity: .45;
 }
+/* FIX — Centralização do botão "Continuar Estudo" */
+#home-continuar-estudo {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  width: auto;
+}
+
