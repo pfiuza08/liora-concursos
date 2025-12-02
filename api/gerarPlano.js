@@ -1,9 +1,6 @@
 // ==========================================================
-// 🧠 LIORA — GERADOR DE PLANO POR TEMA v76-P0.6 (PREMIUM)
-// - Sessões densas e adaptativas por nível e banca
-// - Quiz forte, flashcards garantidos, mapa mental consistente
-// - JSON robusto com limpeza, fallback e retry inteligente
-// - Compatível com CORE v74 (retorna array puro: plano: [...] )
+// 🧠 LIORA — GERADOR DE PLANO POR TEMA v76-P0.7 (PREMIUM)
+// COMPATÍVEL COM O CORE v74  (retorna plano como STRING JSON)
 // ==========================================================
 
 import OpenAI from "openai";
@@ -22,89 +19,55 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "Parâmetros incompletos." });
     }
 
-    const nivelNorm = String(nivel || "").trim().toLowerCase();
-    const bancaNorm = String(banca || "").trim().toUpperCase() || "GERAL";
+    const nivelNorm = String(nivel).trim().toLowerCase();
+    const bancaNorm = String(banca || "GERAL").trim().toUpperCase();
     const qtdSessoes = Math.max(6, Math.min(12, Number(sessoes) || 8));
 
     const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
     // ----------------------------------------------------------
-    // PERFIL NÍVEL
+    // PERFIL DE NÍVEL
     // ----------------------------------------------------------
     let perfilNivel = `
 NÍVEL DO ESTUDANTE: INTERMEDIÁRIO.
 - Clareza + densidade equilibrada.
 - Linguagem objetiva.
-- Quiz de complexidade moderada.
-- Flashcards com conceito + aplicação.`;
+- Quiz moderado.
+- Flashcards com aplicação.`;
 
     if (nivelNorm === "iniciante") {
       perfilNivel = `
 NÍVEL DO ESTUDANTE: INICIANTE.
 - Linguagem simples.
 - Exemplos concretos.
-- Pouca terminologia técnica.
 - Quiz direto, sem pegadinhas.`;
     }
 
     if (nivelNorm === "avançado" || nivelNorm === "avancado") {
       perfilNivel = `
 NÍVEL DO ESTUDANTE: AVANÇADO.
-- Maior profundidade conceitual.
-- Diferenças sutis entre conceitos.
-- Quiz com alternativas próximas.
-- Flashcards com detalhes específicos.`;
+- Profundidade conceitual maior.
+- Quiz difícil, alternativas próximas.
+- Aplicações especializadas.`;
     }
 
     // ----------------------------------------------------------
-    // PERFIL BANCA (somente concursos/avaliações públicas)
+    // PERFIL DE BANCA
     // ----------------------------------------------------------
-    let perfilBanca = `
-BANCA/AVALIAÇÃO: GERAL.
-- Linguagem objetiva.
-- Exemplos inspirados em provas reais.`;
+    let perfilBanca = `BANCA/AVALIAÇÃO: GERAL.`;
 
-    if (bancaNorm.includes("ENEM")) {
-      perfilBanca = `
-BANCA: ENEM.
-- Linguagem contextualizada.
-- Relação com sociedade, cultura, tecnologia.
-- Estilo interpretativo.`;
-    }
-
-    if (bancaNorm.includes("ENAMED")) {
-      perfilBanca = `
-BANCA: ENAMED.
-- Vinhetas clínicas.
-- Raciocínio diagnóstico + conduta.`;
-    }
-
-    if (bancaNorm.includes("FGV")) {
-      perfilBanca = `
-BANCA: FGV.
-- Enunciados densos.
-- Cenários administrativos/jurídicos.`;
-    }
-
-    if (bancaNorm.includes("CESPE") || bancaNorm.includes("CEBRASPE")) {
-      perfilBanca = `
-BANCA: CESPE/CEBRASPE.
-- Precisão máxima.
-- Alternativas muito próximas.`;
-    }
-
-    if (bancaNorm.includes("OAB")) {
-      perfilBanca = `
-BANCA: OAB.
-- Aplicação jurídica.
-- Fundamentos legais e jurisprudência.`;
-    }
+    if (bancaNorm.includes("ENEM")) perfilBanca = `BANCA: ENEM.`;
+    if (bancaNorm.includes("ENAMED")) perfilBanca = `BANCA: ENAMED.`;
+    if (bancaNorm.includes("FGV")) perfilBanca = `BANCA: FGV.`;
+    if (bancaNorm.includes("CESPE") || bancaNorm.includes("CEBRASPE"))
+      perfilBanca = `BANCA: CESPE/CEBRASPE.`;
+    if (bancaNorm.includes("OAB")) perfilBanca = `BANCA: OAB.`;
 
     // ----------------------------------------------------------
-    // PROMPT PRINCIPAL
+    // PROMPT LLM
     // ----------------------------------------------------------
     const prompt = `
-Você é a IA da Liora. Gere EXATAMENTE ${qtdSessoes} sessões de estudo.
+Você é a IA da Liora. Gere EXATAMENTE ${qtdSessoes} sessões.
 
 TEMA: ${tema}
 NÍVEL: ${nivel}
@@ -152,8 +115,7 @@ RETORNE APENAS JSON, no formato:
   ]
 }
 
-NÃO ESCREVER NADA FORA DO JSON.
-NÃO GERAR TEXTO EXPLICATIVO.
+NÃO escreva nada além do JSON.
 `;
 
     // ----------------------------------------------------------
@@ -174,9 +136,6 @@ NÃO GERAR TEXTO EXPLICATIVO.
       }
     };
 
-    // ----------------------------------------------------------
-    // Retry Smart (3 tentativas)
-    // ----------------------------------------------------------
     async function gerarComRetry() {
       for (let i = 1; i <= 3; i++) {
         try {
@@ -186,9 +145,9 @@ NÃO GERAR TEXTO EXPLICATIVO.
             temperature: 0.25,
           });
 
-          let out = sanitize(r.choices?.[0]?.message?.content);
+          let out = sanitize(r.choices?.[0]?.message?.content || "");
 
-          if (isDev) console.log("👀 RAW:", out.slice(0, 150) + "...");
+          if (isDev) console.log("RAW:", out.slice(0, 200));
 
           const json = tryParse(out);
 
@@ -196,7 +155,7 @@ NÃO GERAR TEXTO EXPLICATIVO.
 
           console.warn(`⚠️ Tentativa ${i}: JSON inválido.`);
         } catch (err) {
-          console.warn(`⚠️ Falha na tentativa ${i}:`, err);
+          console.warn(`⚠️ Erro tentativa ${i}:`, err);
         }
       }
 
@@ -204,12 +163,11 @@ NÃO GERAR TEXTO EXPLICATIVO.
     }
 
     // ----------------------------------------------------------
-    // Normalização
+    // NORMALIZAÇÃO
     // ----------------------------------------------------------
-    function normalizarSessoes(sessoes) {
+    function normalizar(sessoes) {
       return sessoes.map((s, idx) => {
         const fix = (v) => (typeof v === "string" ? v.trim() : v);
-
         const c = s.conteudo || {};
 
         return {
@@ -241,10 +199,7 @@ NÃO GERAR TEXTO EXPLICATIVO.
           },
 
           flashcards: (s.flashcards || [])
-            .map((f) => ({
-              q: fix(f?.q || ""),
-              a: fix(f?.a || ""),
-            }))
+            .map((f) => ({ q: fix(f?.q || ""), a: fix(f?.a || "") }))
             .filter((f) => f.q && f.a)
             .slice(0, 3),
 
@@ -258,18 +213,19 @@ NÃO GERAR TEXTO EXPLICATIVO.
     // ----------------------------------------------------------
     const bruto = await gerarComRetry();
 
-    if (!bruto || !Array.isArray(bruto.sessoes) || bruto.sessoes.length === 0) {
-      throw new Error("A IA retornou estrutura inválida.");
+    if (!Array.isArray(bruto.sessoes) || bruto.sessoes.length === 0) {
+      throw new Error("Estrutura inválida retornada pela IA.");
     }
 
-    const sessoesNorm = normalizarSessoes(bruto.sessoes);
+    const sessoesNorm = normalizar(bruto.sessoes);
 
-    if (isDev) console.log("🟢 SESSÕES GERADAS:", sessoesNorm.length);
+    // ⚠️ Compatibilidade: plano deve ser STRING JSON
+    const planoString = JSON.stringify(sessoesNorm);
 
-    // ⚠️ AQUI ESTÁ A CORREÇÃO PRINCIPAL (array puro)
     return res.status(200).json({
-      plano: sessoesNorm,
+      plano: planoString,
     });
+
   } catch (err) {
     console.error("❌ Erro ao gerar plano:", err);
     return res.status(500).json({ error: "Erro ao gerar plano." });
