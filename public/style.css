@@ -193,46 +193,124 @@ input:focus, select:focus {
   transform: translateX(4px);
 }
 
-/* --------------------------------------------------------------
-   QUIZ PREMIUM
--------------------------------------------------------------- */
-#liora-sessao-quiz {
+/* ============================================
+   LIORA — QUIZ PREMIUM v2
+   ============================================ */
+
+.liora-quiz-question {
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin-bottom: 14px;
+  color: var(--text-primary);
+}
+
+/* Container da alternativa */
+.liora-quiz-option {
+  position: relative;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  transition: all 0.25s ease;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 8px;
 }
 
-.liora-quiz-option {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  background: var(--card);
-  padding: 18px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  cursor: pointer;
-  transition: var(--transition);
-}
+/* Hover */
 .liora-quiz-option:hover {
-  background: rgba(196,75,4,0.1);
   border-color: var(--brand);
-}
-.liora-quiz-option.selected {
-  background: var(--brand);
-  border-color: var(--brand);
-  color: #fff;
-  box-shadow: 0 4px 20px rgba(196,75,4,0.35);
+  transform: scale(1.01);
 }
 
-.liora-quiz-dot {
-  width: 18px;
-  height: 18px;
-  border: 2px solid var(--border);
-  border-radius: 50%;
+/* Texto */
+.liora-quiz-option-text {
+  font-size: 0.95rem;
+  color: var(--text-primary);
 }
-.liora-quiz-option.selected .liora-quiz-dot {
-  background: #fff;
-  border-color: #fff;
+
+/* Radio invisível */
+.liora-quiz-option input {
+  display: none;
+}
+
+/* Pontinho animado */
+.liora-quiz-dot {
+  position: absolute;
+  right: 12px;
+  top: 16px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--muted);
+  opacity: 0.6;
+  transition: all 0.25s ease;
+}
+
+/* Selecionado */
+.liora-quiz-option.selected {
+  border-color: var(--brand);
+  background: rgba(255, 140, 0, 0.08);
+}
+
+/* Correto */
+.liora-quiz-option.correct {
+  border-color: #2ecc71 !important;
+  background: rgba(46, 204, 113, 0.1) !important;
+}
+
+.liora-quiz-option.correct .liora-quiz-dot {
+  background: #2ecc71;
+  opacity: 1;
+}
+
+/* Errado */
+.liora-quiz-option.incorrect {
+  border-color: #e74c3c !important;
+  background: rgba(231, 76, 60, 0.12) !important;
+}
+
+.liora-quiz-option.incorrect .liora-quiz-dot {
+  background: #e74c3c;
+  opacity: 1;
+}
+
+/* Caixa de explicação */
+.liora-quiz-explicacao {
+  background: var(--card-bg-2);
+  padding: 10px 12px;
+  border-left: 3px solid var(--brand);
+  border-radius: 6px;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  line-height: 1.35rem;
+  animation: fadeInQuiz 0.35s ease forwards;
+}
+
+.liora-quiz-explicacao.hidden {
+  display: none;
+}
+
+/* Animação */
+@keyframes fadeInQuiz {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Feedback */
+.liora-quiz-feedback {
+  margin-top: 12px;
+  font-size: 0.95rem;
+  opacity: 0;
+  transition: opacity 0.25s ease;
 }
 
 /* --------------------------------------------------------------
