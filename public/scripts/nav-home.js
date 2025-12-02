@@ -14,7 +14,22 @@
 
   document.addEventListener("DOMContentLoaded", () => {
     console.log("🔵 NAV-HOME: DOM pronto, inicializando...");
-
+       // ----------------------------------------------------------
+      // FIX — Mostrar nome do arquivo enviado no upload (UPLOAD ZONE)
+      // ----------------------------------------------------------
+      const inpFile = document.getElementById("inp-file");
+      const uploadText = document.getElementById("upload-text");
+    
+      if (inpFile && uploadText) {
+        inpFile.addEventListener("change", () => {
+          if (inpFile.files && inpFile.files.length > 0) {
+            uploadText.textContent = inpFile.files[0].name;
+          } else {
+            uploadText.textContent = "Clique ou arraste um PDF";
+          }
+        });
+      }
+    
     // ------------------------------------------------------
     // ELEMENTOS
     // ------------------------------------------------------
