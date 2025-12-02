@@ -616,3 +616,40 @@ button:active, .btn:active, .btn-primary:active {
   color: var(--fg);
   opacity: 0.85;
 }
+/* FIX — Centralização do bloco "Continuar Estudo" */
+#liora-home .continuar-estudo-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 28px;
+}
+
+#liora-home .continuar-estudo-container button {
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+/* FIX — Mostrar nome do arquivo enviado no upload */
+#inp-file {
+  opacity: 1;              /* torna visível */
+  position: relative;
+  height: auto;
+  pointer-events: auto;
+  width: 100%;
+  padding: 0.65rem 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg2);
+  color: var(--fg);
+}
+
+.upload-zone {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+}
+
+.upload-zone span {
+  font-size: .9rem;
+  opacity: .6;
+}
