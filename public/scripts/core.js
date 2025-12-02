@@ -1,5 +1,5 @@
 // ==========================================================
-// 🧠 LIORA — CORE v75-COMMERCIAL-PREMIUM-STUDY-MANAGER
+// 🧠 LIORA — CORE v74-FIX-PROMISE-COMMERCIAL-PREMIUM-STUDY-MANAGER
 // ----------------------------------------------------------
 // Inclui:
 // ✔ Tema: plano + sessões completas (via /api/gerarPlano)
@@ -13,11 +13,10 @@
 // ✔ Salvamento incremental das sessões
 // ✔ Normalização das sessões geradas (id, ordem)
 // ✔ FIX: OutlineGenerator assíncrono + extração robusta de tópicos
-// ✔ FIX v75: integração correta com /api/gerarPlano (array puro)
 // ==========================================================
 
 (function () {
-  console.log("🔵 Inicializando Liora Core v75...");
+  console.log("🔵 Inicializando Liora Core v74...");
 
   document.addEventListener("DOMContentLoaded", () => {
     // --------------------------------------------------------
@@ -135,6 +134,7 @@
       origem: "tema",
     };
 
+    // modo revisão controlado globalmente
     window.lioraModoRevisao = false;
 
     const key = (tema, nivel) =>
@@ -291,20 +291,27 @@
 
       if (!outlineRaw) return [];
 
+      // 1) Se já for array simples
       if (Array.isArray(outlineRaw)) {
         if (outlineRaw.length && typeof outlineRaw[0] === "string") {
           topicos = outlineRaw;
         } else if (outlineRaw.length && outlineRaw[0] && outlineRaw[0].titulo) {
           topicos = outlineRaw.map((t) => t.titulo);
         }
-      } else if (Array.isArray(outlineRaw.topicos)) {
+      }
+
+      // 2) Se for objeto com .topicos
+      else if (Array.isArray(outlineRaw.topicos)) {
         const arr = outlineRaw.topicos;
         if (arr.length && typeof arr[0] === "string") {
           topicos = arr;
         } else if (arr.length && arr[0] && arr[0].titulo) {
           topicos = arr.map((t) => t.titulo);
         }
-      } else if (Array.isArray(outlineRaw.outlineUnificado)) {
+      }
+
+      // 3) Se for objeto com .outlineUnificado
+      else if (Array.isArray(outlineRaw.outlineUnificado)) {
         const arr = outlineRaw.outlineUnificado;
         if (arr.length && typeof arr[0] === "string") {
           topicos = arr;
@@ -313,11 +320,12 @@
         }
       }
 
+      // limpeza final
       topicos = topicos
         .map((t) => String(t || "").trim())
         .filter((t) => t.length > 0);
 
-      console.log("📘 Core v75 — tópicos extraídos do outline:", topicos);
+      console.log("📘 Core v74 — tópicos extraídos do outline:", topicos);
       return topicos;
     }
 
@@ -357,6 +365,7 @@
         return linhas.join("\n");
       }
 
+      // fallback: conteúdo normal
       const c = sessao.conteudo || {};
 
       linhas.push(titulo);
@@ -396,7 +405,7 @@
     }
 
     // --------------------------------------------------------
-    // CONTEÚDO PREMIUM
+    // CONTEÚDO PREMIUM (blocos, subtítulos laranja)
     // --------------------------------------------------------
     function renderConteudoPremium(conteudo) {
       const el = document.getElementById("liora-sessao-conteudo");
@@ -405,6 +414,7 @@
       el.innerHTML = "";
       if (!conteudo) return;
 
+      // Introdução
       if (conteudo.introducao) {
         el.innerHTML += `
           <div class="liora-bloco">
@@ -414,6 +424,7 @@
         `;
       }
 
+      // Conceitos principais
       if (Array.isArray(conteudo.conceitos) && conteudo.conceitos.length) {
         el.innerHTML += `
           <div class="liora-bloco">
@@ -425,6 +436,7 @@
         `;
       }
 
+      // Exemplos práticos
       if (Array.isArray(conteudo.exemplos) && conteudo.exemplos.length) {
         el.innerHTML += `
           <div class="liora-bloco">
@@ -436,6 +448,7 @@
         `;
       }
 
+      // Aplicações em prova / prática
       if (Array.isArray(conteudo.aplicacoes) && conteudo.aplicacoes.length) {
         el.innerHTML += `
           <div class="liora-bloco">
@@ -447,6 +460,7 @@
         `;
       }
 
+      // Resumo rápido
       if (Array.isArray(conteudo.resumoRapido) && conteudo.resumoRapido.length) {
         el.innerHTML += `
           <div class="liora-bloco">
@@ -536,7 +550,7 @@
       const c = s.conteudo || {};
       renderConteudoPremium(c);
 
-      // ANALOGIAS
+      // ----------------------- ANALOGIAS -----------------------
       if (els.wizardAnalogias) {
         const list = Array.isArray(s.analogias) ? s.analogias : [];
         els.wizardAnalogias.innerHTML = list.length
@@ -544,7 +558,7 @@
           : "<p class='liora-muted'>Nenhuma analogia gerada para esta sessão.</p>";
       }
 
-      // ATIVAÇÃO
+      // ----------------------- ATIVAÇÃO -----------------------
       if (els.wizardAtivacao) {
         const list = Array.isArray(s.ativacao) ? s.ativacao : [];
         els.wizardAtivacao.innerHTML = list.length
@@ -552,7 +566,7 @@
           : "<p class='liora-muted'>Nenhuma pergunta de ativação disponível.</p>";
       }
 
-      // QUIZ
+      // ----------------------- QUIZ -----------------------
       if (els.wizardQuiz) {
         els.wizardQuiz.innerHTML = "";
         const q = s.quiz || {};
@@ -624,15 +638,21 @@
         });
       }
 
-      // FLASHCARDS (accordion)
+     // ----------------------- FLASHCARDS (accordion premium + normalização universal) -----------------------
       if (els.wizardFlashcards) {
         let cards = Array.isArray(s.flashcards) ? s.flashcards : [];
-
+      
+        // 🔥 Normalização inteligente
         cards = cards
           .map((fc) => {
+            // Caso { q: "...", a: "..." }
             if (fc?.q && fc?.a) return fc;
+      
+            // Caso { pergunta: "...", resposta: "..." }
             if (fc?.pergunta && fc?.resposta)
               return { q: fc.pergunta, a: fc.resposta };
+      
+            // Caso string "Pergunta: ... | Resposta: ..."
             if (typeof fc === "string") {
               const partes = fc.split("|");
               if (partes.length >= 2) {
@@ -642,10 +662,13 @@
                 };
               }
             }
+      
+            // Ignorar conteúdo inválido
             return null;
           })
           .filter((x) => x && x.q && x.a);
-
+      
+        // Se ainda não sobrou nada
         if (!cards.length) {
           els.wizardFlashcards.innerHTML =
             "<p class='liora-muted'>Nenhum flashcard gerado para esta sessão.</p>";
@@ -660,7 +683,8 @@
               `
             )
             .join("");
-
+      
+          // Habilita animações
           els.wizardFlashcards
             .querySelectorAll(".liora-flashcard")
             .forEach((card) => {
@@ -671,7 +695,7 @@
         }
       }
 
-      // MAPA MENTAL
+      // ----------------------- MAPA MENTAL -----------------------
       if (els.wizardMapa) {
         const mapa = construirMapaMental(s);
         els.wizardMapa.innerHTML = `
@@ -681,10 +705,12 @@
         `;
       }
 
+      // Study Manager: sessão em andamento
       if (window.lioraEstudos?.updateSessionProgress && s?.id) {
         window.lioraEstudos.updateSessionProgress(s.id, 0.5);
       }
 
+      // Atualiza cards laterais (active)
       renderPlanoResumo(wizard.plano);
     }
 
@@ -756,37 +782,35 @@
     });
 
     // --------------------------------------------------------
-    // 🔥 GERAÇÃO DO PLANO POR TEMA — /api/gerarPlano (v75)
+    // 🔥 GERAÇÃO DO PLANO POR TEMA — /api/gerarPlano
     // --------------------------------------------------------
-    async function lioraGerarPlanoTema({ tema, nivel, sessoes, banca }) {
+    async function lioraGerarPlanoTema({ tema, nivel, sessoes }) {
       try {
-        const resp = await fetch("/api/gerarPlano", {
+        const resp = await fetch("/api/gerarPlano.js", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ tema, nivel, sessoes, banca }),
+          body: JSON.stringify({ tema, nivel, sessoes }),
         });
 
-        if (!resp.ok) {
-          const errText = await resp.text().catch(() => "");
-          console.error(
-            "❌ Erro HTTP em /api/gerarPlano:",
-            resp.status,
-            errText
-          );
-          throw new Error("Falha na comunicação com a IA");
-        }
+        const data = await resp.json();
 
-        const data = await resp.json().catch((e) => {
-          console.error("❌ Erro ao ler JSON de /api/gerarPlano:", e);
-          return null;
-        });
-
-        if (!data || !Array.isArray(data.plano) || !data.plano.length) {
-          console.error("❌ Estrutura inesperada de /api/gerarPlano:", data);
+        if (!data || !data.plano) {
           throw new Error("Resposta inválida da IA");
         }
 
-        return data.plano;
+        let parsed;
+        try {
+          parsed = JSON.parse(data.plano);
+        } catch (e) {
+          console.error("❌ Erro ao parsear JSON do plano:", e, data.plano);
+          throw new Error("Falha ao interpretar o plano");
+        }
+
+        if (!Array.isArray(parsed) || parsed.length === 0) {
+          throw new Error("Plano vazio ou malformado");
+        }
+
+        return parsed;
       } catch (err) {
         console.error("❌ Erro ao gerar plano:", err);
         throw err;
@@ -825,7 +849,7 @@
     els.btnGerar?.addEventListener("click", async () => {
       const tema = els.inpTema.value.trim();
       const nivel = els.selNivel.value;
-      const sessoes = 6; // default atual
+      const sessoes = 6;
 
       if (!tema) {
         window.lioraError.show("Digite um tema.");
@@ -854,7 +878,7 @@
             id: s.id,
             ordem: s.ordem,
             titulo: s.titulo,
-            objetivo: s.objetivo || "",
+            objetivo: s.objetivos?.[0] || s.objetivo || "",
           })),
           sessoes: sessoesNorm,
           atual: 0,
@@ -896,6 +920,7 @@
 
         const estrutura = window.lioraPDFStructure.fromBlocks(rawBlocks);
 
+        // FIX: OutlineGenerator assíncrono
         let outlineRaw;
         try {
           outlineRaw = await window.lioraOutlineGenerator.gerar(estrutura);
@@ -1004,7 +1029,7 @@
     });
 
     // --------------------------------------------------------
-    // ⭐ JUMP-TO-SESSION ÚNICO
+    // ⭐ JUMP-TO-SESSION ÚNICO (Continue Study + cards + revisão)
     // --------------------------------------------------------
     window.lioraIrParaSessao = function (index, isReview = false) {
       try {
@@ -1063,6 +1088,6 @@
     // --------------------------------------------------------
     // FIM DO CORE
     // --------------------------------------------------------
-    console.log("🟢 Liora Core v75 totalmente carregado.");
+    console.log("🟢 Liora Core v74 totalmente carregado.");
   });
 })();
