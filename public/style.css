@@ -436,4 +436,62 @@ button:active,
   font-size: 0.9rem;
   pointer-events: none;
 }
+/* =======================================================
+   FIX DEFINITIVO — Labels principais + Subtítulos internos
+   (Restaurando o comportamento pedido originalmente)
+======================================================= */
+
+/* 1) LABELS PRINCIPAIS — sempre brancas + maiúsculas */
+#liora-sessao-objetivo-label,
+#liora-sessao-conteudo-label,
+#liora-sessao-analogias-label,
+#liora-sessao-ativacao-label,
+#liora-sessao-quiz-label,
+#liora-sessao-flashcards-label,
+#liora-sessao-mapa-label {
+  text-transform: uppercase !important;
+  font-weight: 700 !important;
+  color: var(--fg) !important;
+  letter-spacing: 0.5px !important;
+  font-size: 1.05rem !important;
+  margin-top: 32px !important;
+  margin-bottom: 12px !important;
+}
+
+/* 2) SUBTÍTULOS INTERNOS PREMIUM — sempre em laranja */
+.liora-conteudo-subtitulo,
+.liora-section .subtitulo,
+.liora-section strong.subtitulo {
+  color: var(--brand) !important;
+  font-weight: 600 !important;
+  font-size: 1.1rem !important;
+  text-transform: none !important;
+  margin-top: 14px !important;
+  margin-bottom: 8px !important;
+}
+
+/* 3) Proteção contra efeitos colaterais de strong */
+.liora-section strong {
+  color: inherit !important;
+  font-weight: 600;
+}
+
+/* Apenas strong que são subtítulo recebem laranja */
+.liora-section strong.subtitulo {
+  color: var(--brand) !important;
+}
+
+/* 4) Restaurar barra laranja dos títulos internos */
+.liora-section h5 {
+  color: var(--brand) !important;
+  border-left: 4px solid var(--brand) !important;
+  padding-left: 6px !important;
+  margin-top: 32px !important;
+  margin-bottom: 12px !important;
+}
+
+/* 5) Ajuste de espaçamento entre seções */
+.liora-section {
+  margin-top: 28px !important;
+}
 
