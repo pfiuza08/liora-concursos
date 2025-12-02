@@ -1,13 +1,12 @@
 /* =============================================================
    LIORA — PREMIUM HYBRID UI (C3)
-   Versão Final Consolidada v74-PREMIUM
-   - Tema escuro como padrão
-   - Tema claro ativado por html.light
-   - UI limpa, moderna e responsiva
+   Versão Consolidada v74-PREMIUM-C7.4
+   Tema escuro (padrão) + Claro (html.light)
+   UI moderna, limpa, responsiva
 ============================================================= */
 
 /* --------------------------------------------------------------
-   🌑 TEMA ESCURO (PADRÃO)
+   🌑 TEMA ESCURO — PADRÃO
 -------------------------------------------------------------- */
 :root {
   --brand: #c44b04;
@@ -24,7 +23,7 @@
 }
 
 /* --------------------------------------------------------------
-   🌞 TEMA CLARO — ATIVADO SOMENTE COM html.light
+   🌞 TEMA CLARO — html.light
 -------------------------------------------------------------- */
 html.light {
   --fg: #1c1c1c;
@@ -51,32 +50,14 @@ html, body {
   transition: background .3s ease, color .3s ease;
 }
 
-#liora-home {
-  width: 100%;
-}
-
 /* --------------------------------------------------------------
    BOTÕES
 -------------------------------------------------------------- */
-.btn {
-  background: var(--brand);
-  color: #fff;
-  padding: 0.75rem 1rem;
-  border-radius: var(--radius);
-  font-weight: 600;
-  cursor: pointer;
-  transition: var(--transition);
-  border: none;
-}
-.btn:hover {
-  filter: brightness(1.12);
-}
-
-/* primário explícito (ex.: Continuar Estudo) */
+.btn,
 .btn-primary {
   background: var(--brand);
   color: #fff;
-  padding: 0.75rem 1.4rem;
+  padding: 0.75rem 1.2rem;
   border-radius: var(--radius);
   font-weight: 600;
   cursor: pointer;
@@ -85,8 +66,8 @@ html, body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
 }
+.btn:hover,
 .btn-primary:hover {
   filter: brightness(1.12);
   transform: translateY(-1px);
@@ -101,7 +82,7 @@ html, body {
   background: var(--bg2);
   border: 1px solid var(--border);
   color: var(--fg);
-  padding: 0.7rem 1rem;
+  padding: 0.7rem 1.2rem;
   border-radius: var(--radius);
   cursor: pointer;
   transition: var(--transition);
@@ -130,38 +111,26 @@ input:focus, select:focus {
 }
 
 /* --------------------------------------------------------------
-   UPLOAD ZONE
+   ZONA DE UPLOAD — versão final
 -------------------------------------------------------------- */
 .upload-zone {
-  border: 2px dashed var(--border);
-  background: rgba(255,255,255,0.03);
-  padding: 1.1rem;
+  border: 2px dashed var(--brand);
+  background: rgba(196, 75, 4, 0.05);
+  padding: 1.2rem;
   border-radius: var(--radius);
   text-align: center;
   cursor: pointer;
-  transition: var(--transition);
   position: relative;
+  overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: var(--transition);
 }
 .upload-zone:hover {
-  background: rgba(196,75,4,0.08);
-  border-color: var(--brand);
+  background: rgba(196,75,4,0.12);
 }
 
-/* texto do upload (mostra nome do arquivo) */
-#upload-text {
-  font-size: 0.9rem;
-  color: var(--muted);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 100%;
-}
-
-/* input real fica transparente ocupando toda a área,
-   para clicar ou arrastar sem quebrar o layout */
 .upload-zone input[type="file"] {
   position: absolute;
   inset: 0;
@@ -169,7 +138,17 @@ input:focus, select:focus {
   cursor: pointer;
 }
 
-/* spinner */
+/* Nome do arquivo */
+#upload-text {
+  font-size: 0.95rem;
+  color: var(--muted);
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Spinner */
 #upload-spinner {
   display: none;
   width: 28px;
@@ -215,14 +194,12 @@ input:focus, select:focus {
 }
 
 /* --------------------------------------------------------------
-   QUIZ PREMIUM C3
+   QUIZ PREMIUM
 -------------------------------------------------------------- */
 #liora-sessao-quiz {
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  width: 100%;
-  margin-top: 10px;
+  gap: 16px;
 }
 
 .liora-quiz-option {
@@ -230,50 +207,32 @@ input:focus, select:focus {
   align-items: center;
   gap: 16px;
   background: var(--card);
-  padding: 14px 16px;
+  padding: 18px;
   border: 1px solid var(--border);
   border-radius: var(--radius);
   cursor: pointer;
   transition: var(--transition);
-  position: relative;
 }
-
 .liora-quiz-option:hover {
-  background: var(--hover);
+  background: rgba(196,75,4,0.1);
   border-color: var(--brand);
 }
-
 .liora-quiz-option.selected {
   background: var(--brand);
   border-color: var(--brand);
   color: #fff;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 14px rgba(196,75,4,0.35);
+  box-shadow: 0 4px 20px rgba(196,75,4,0.35);
 }
 
 .liora-quiz-dot {
   width: 18px;
   height: 18px;
-  border-radius: 50%;
   border: 2px solid var(--border);
-  transition: var(--transition);
+  border-radius: 50%;
 }
-
 .liora-quiz-option.selected .liora-quiz-dot {
   background: #fff;
   border-color: #fff;
-}
-
-.liora-quiz-option input[type="radio"] {
-  position: absolute;
-  opacity: 0;
-  pointer-events: none;
-}
-
-.liora-quiz-option-text {
-  flex: 1;
-  word-break: break-word;
-  line-height: 1.55;
 }
 
 /* --------------------------------------------------------------
@@ -286,6 +245,7 @@ input:focus, select:focus {
   border-radius: var(--radius);
   font-family: "Fira Code", monospace;
   white-space: pre-wrap;
+  line-height: 1.6;
 }
 
 /* --------------------------------------------------------------
@@ -314,15 +274,15 @@ input:focus, select:focus {
 /* --------------------------------------------------------------
    MICROINTERAÇÕES
 -------------------------------------------------------------- */
-button:active, .btn:active, .btn-primary:active {
+button:active,
+.btn:active,
+.btn-primary:active {
   transform: scale(.97);
 }
 
 /* ================================================================
-   🧠 LIORA — WIZARD PREMIUM C7 (visual nível Coursera / Notion)
+   🧠 WIZARD PREMIUM C7
 ================================================================ */
-
-/* container principal */
 .liora-wizard-card {
   background: var(--card);
   border: 1px solid var(--border);
@@ -330,29 +290,16 @@ button:active, .btn:active, .btn-primary:active {
   border-radius: var(--radius);
   box-shadow: var(--shadow);
   margin: 40px auto 60px;
-  max-width: 980px; /* <<< AUMENTADO */
-  transition: opacity .25s ease, transform .25s ease;
+  max-width: 980px;
+  transition: .25s ease;
 }
 
-.liora-wizard-card.visible {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.liora-wizard-card:not(.visible) {
-  opacity: 0;
-  transform: translateY(14px);
-}
-
-/* título da sessão */
 #liora-sessao-titulo {
-  font-size: 2rem; /* maior */
+  font-size: 2rem;
   font-weight: 700;
   margin-bottom: 14px;
-  letter-spacing: -0.5px;
 }
 
-/* objetivo */
 #liora-sessao-objetivo {
   background: var(--bg2);
   padding: 14px 20px;
@@ -360,101 +307,87 @@ button:active, .btn:active, .btn-primary:active {
   border: 1px solid var(--border);
   color: var(--muted);
   margin-bottom: 28px;
-  font-size: 1rem;
 }
 
 /* títulos internos */
-.liora-section h5 {
+.liora-wizard-section h5 {
   font-size: 1.3rem;
-  font-weight: 600;
   margin: 32px 0 10px;
+  font-weight: 700;
   color: var(--brand);
-  padding-left: 6px;
-  border-left: 4px solid var(--brand); /* BARRA premium */
+  letter-spacing: .5px;
+  text-transform: uppercase;
 }
 
-/* texto padrão */
-.liora-section p,
-.liora-section ul li {
-  font-size: 1.08rem;
-  line-height: 1.75;
-  margin-bottom: 14px;
+/* --------------------------------------------------------------
+   FLASHCARDS PREMIUM
+-------------------------------------------------------------- */
+.liora-flashcards-grid {
+  display: grid;
+  gap: 14px;
 }
 
-/* listas */
-.liora-section ul {
-  margin-left: 20px;
-}
-
-/* separadores */
-.liora-divider {
-  border: none;
-  border-bottom: 1px solid var(--border);
-  margin: 28px 0;
-  opacity: .35;
-}
-
-/* analogias + ativação */
-#liora-sessao-analogias p,
-#liora-sessao-ativacao li {
-  background: var(--bg2);
-  padding: 14px 18px;
-  border-radius: var(--radius);
-  border: 1px solid var(--border);
-  margin-bottom: 12px;
-  font-size: 1.05rem;
-}
-
-/* quiz premium */
-#liora-sessao-quiz {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  margin: 24px 0;
-}
-
-.liora-quiz-option {
+.liora-flashcard {
   background: var(--card);
-  padding: 18px 20px;
   border: 1px solid var(--border);
+  padding: 16px 18px;
   border-radius: var(--radius);
   cursor: pointer;
   transition: var(--transition);
+  position: relative;
 }
-
-.liora-quiz-option:hover {
-  background: rgba(196,75,4,0.1);
+.liora-flashcard:hover {
+  background: var(--hover);
   border-color: var(--brand);
 }
 
-.liora-quiz-option.selected {
-  background: var(--brand);
-  border-color: var(--brand);
-  box-shadow: 0 4px 20px rgba(196,75,4,0.35);
-  color: #fff;
-}
-
-/* mapa mental premium */
-#liora-sessao-mapa {
-  background: var(--card);
-  border: 1px solid var(--border);
-  padding: 22px;
-  border-radius: var(--radius);
-  font-family: "Fira Code", monospace;
-  margin-top: 28px;
-  white-space: pre-wrap;
-  font-size: 0.95rem;
+.liora-flashcard-q {
+  font-weight: 600;
+  font-size: 1.05rem;
+  color: var(--fg);
   line-height: 1.6;
+}
+
+.liora-flashcard::after {
+  content: "▼";
+  position: absolute;
+  right: 14px;
+  top: 18px;
+  opacity: .5;
+  transition: .25s;
+}
+
+.liora-flashcard-a {
+  display: none;
+  margin-top: 12px;
   color: var(--muted);
 }
 
-/* navegação */
-#liora-btn-voltar,
-#liora-btn-proxima,
-#liora-btn-revisar {
-  margin-top: 28px;
+.liora-flashcard.open {
+  background: rgba(196,75,4,0.2);
+  border-color: var(--brand);
+}
+.liora-flashcard.open .liora-flashcard-a {
+  display: block;
+}
+.liora-flashcard.open::after {
+  transform: rotate(180deg);
+  opacity: .9;
 }
 
+/* --------------------------------------------------------------
+   FIX — Centralização do bloco "Continuar Estudo"
+-------------------------------------------------------------- */
+#liora-home .continuar-estudo-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+#liora-home .continuar-estudo-container #home-continuar-estudo {
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
 
 /* --------------------------------------------------------------
    BUILD INFO
@@ -465,191 +398,4 @@ button:active, .btn:active, .btn-primary:active {
   right: 14px;
   font-size: .7rem;
   opacity: .45;
-  padding: 4px 8px;
-  border-radius: 6px;
-  background: rgba(0,0,0,0.22);
-}
-
-/* ===============================================================
-   🧩 PATCH — TÍTULOS EM CAIXA ALTA + SUBSEÇÕES EM LARANJA + FLASHCARDS
-================================================================ */
-
-/* -------------------------------
-   1) TÍTULOS PRINCIPAIS EM CAPS
--------------------------------- */
-#liora-sessao-objetivo-label,
-#liora-sessao-conteudo-label,
-#liora-sessao-analogias-label,
-#liora-sessao-ativacao-label,
-#liora-sessao-quiz-label,
-#liora-sessao-flashcards-label,
-#liora-sessao-mapa-label {
-  text-transform: uppercase;
-  font-weight: 700;
-  margin-top: 32px;
-  margin-bottom: 12px;
-  letter-spacing: 0.5px;
-  font-size: 1.05rem;
-  color: var(--fg);
-}
-
-/* Ajustar margem do primeiro label */
-#liora-sessao-objetivo-label {
-  margin-top: 18px!important;
-}
-
-/* ------------------------------------------
-   2) Subtítulos internos (laranja Intellih)
------------------------------------------- */
-.liora-conteudo-subtitulo {
-  color: var(--brand) !important;
-  font-weight: 600;
-  margin-top: 14px;
-  margin-bottom: 8px;
-  font-size: 1.1rem;
-}
-
-/* Se o conteúdo vier como <strong> ou <b> */
-.liora-section strong {
-  color: var(--brand);
-  font-weight: 600;
-}
-
-/* ---------------------------------------------------------
-   3) FLASHCARDS — NOVA APRESENTAÇÃO VISUAL PREMIUM
---------------------------------------------------------- */
-.liora-flashcards-grid {
-  display: grid;
-  gap: 14px;
-}
-
-.liora-flashcard {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 16px 18px;
-  margin-bottom: 14px;
-  cursor: pointer;
-  transition: var(--transition);
-  position: relative;
-}
-
-.liora-flashcard:hover {
-  background: var(--hover);
-  border-color: var(--brand);
-}
-
-/* Pergunta */
-.liora-flashcard-q {
-  font-weight: 600;
-  color: var(--fg);
-  font-size: 1.05rem;
-  line-height: 1.55;
-  padding-right: 24px;
-}
-
-/* Ícone de expandir */
-.liora-flashcard::after {
-  content: "▼";
-  position: absolute;
-  right: 14px;
-  top: 18px;
-  font-size: 0.75rem;
-  opacity: .5;
-  transition: transform .25s ease;
-}
-
-/* Resposta escondida */
-.liora-flashcard-a {
-  margin-top: 12px;
-  display: none;
-  font-size: 0.98rem;
-  line-height: 1.55;
-  color: var(--muted);
-}
-
-/* Quando ativo */
-.liora-flashcard.open {
-  background: rgba(196,75,4,0.2);
-  border-color: var(--brand);
-}
-
-.liora-flashcard.open::after {
-  transform: rotate(180deg);
-  opacity: .9;
-}
-
-.liora-flashcard.open .liora-flashcard-a {
-  display: block;
-}
-
-.liora-bloco {
-  margin-bottom: 20px;
-  padding: 14px 16px;
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-}
-
-.liora-conteudo-titulo {
-  font-size: 1rem;
-  font-weight: 600;
-  margin-bottom: 6px;
-  color: var(--fg);
-}
-
-.liora-conceito-subtitulo {
-  font-size: 0.95rem;
-  font-weight: 700;
-  margin-bottom: 6px;
-  color: var(--brand); /* Intellih orange */
-  text-transform: uppercase;
-}
-
-.liora-lista li {
-  margin-left: 8px;
-  margin-bottom: 4px;
-  padding: 3px 0;
-}
-
-.liora-conteudo-texto {
-  color: var(--fg);
-  opacity: 0.85;
-}
-/* FIX — Centralização do bloco "Continuar Estudo" */
-#liora-home .continuar-estudo-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-top: 28px;
-}
-
-#liora-home .continuar-estudo-container button {
-  margin-left: 0 !important;
-  margin-right: 0 !important;
-}
-/* FIX — Mostrar nome do arquivo enviado no upload */
-#inp-file {
-  opacity: 1;              /* torna visível */
-  position: relative;
-  height: auto;
-  pointer-events: auto;
-  width: 100%;
-  padding: 0.65rem 0.8rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--bg2);
-  color: var(--fg);
-}
-
-.upload-zone {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 6px;
-}
-
-.upload-zone span {
-  font-size: .9rem;
-  opacity: .6;
 }
