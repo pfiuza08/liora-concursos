@@ -408,4 +408,32 @@ button:active,
   margin-right: auto !important;
   width: auto;
 }
+/* FIX — Exibir nome do PDF corretamente */
+.upload-zone {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 1.4rem;
+}
+
+.upload-zone input[type="file"] {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+/* Nome do arquivo com ellipsis */
+#upload-text {
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--muted);
+  font-size: 0.9rem;
+  pointer-events: none;
+}
 
