@@ -1,125 +1,114 @@
 // ==========================================================
-// 🧠 LIORA — GERADOR DE PLANO POR TEMA v76-P0.5 (PREMIUM)
-// - Sessões densas e adaptativas por nível
-// - Perfis de banca para concursos/avaliações públicas
+// 🧠 LIORA — GERADOR DE PLANO POR TEMA v76-P0.6 (PREMIUM)
+// - Sessões densas e adaptativas por nível e banca
 // - Quiz forte, flashcards garantidos, mapa mental consistente
-// - JSON robusto com limpeza + retry
-// - Compatível com CORE v74 (retorna plano: JSON.stringify(sessoes))
+// - JSON robusto com limpeza, fallback e retry inteligente
+// - Compatível com CORE v74 (retorna array puro: plano: [...] )
 // ==========================================================
 
 import OpenAI from "openai";
 
 export default async function handler(req, res) {
+  const isDev = process.env.NODE_ENV !== "production";
+
   try {
     if (req.method !== "POST") {
       return res.status(405).json({ error: "Método não permitido" });
     }
 
-    const { tema, nivel, sessoes, banca } = req.body;
+    const { tema, nivel, sessoes, banca } = req.body || {};
 
     if (!tema || !nivel) {
       return res.status(400).json({ error: "Parâmetros incompletos." });
     }
 
-    const nivelNorm = String(nivel || "").toLowerCase();
-    const bancaNorm = (String(banca || "").toUpperCase().trim() || "GERAL");
-
-    // número adaptativo de sessões
+    const nivelNorm = String(nivel || "").trim().toLowerCase();
+    const bancaNorm = String(banca || "").trim().toUpperCase() || "GERAL";
     const qtdSessoes = Math.max(6, Math.min(12, Number(sessoes) || 8));
 
-    const client = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
-    });
+    const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
     // ----------------------------------------------------------
-    // PERFIL POR NÍVEL
+    // PERFIL NÍVEL
     // ----------------------------------------------------------
-    let perfilNivel = "";
+    let perfilNivel = `
+NÍVEL DO ESTUDANTE: INTERMEDIÁRIO.
+- Clareza + densidade equilibrada.
+- Linguagem objetiva.
+- Quiz de complexidade moderada.
+- Flashcards com conceito + aplicação.`;
 
     if (nivelNorm === "iniciante") {
       perfilNivel = `
 NÍVEL DO ESTUDANTE: INICIANTE.
-- Linguagem acessível, sem jargão excessivo.
-- Mais exemplos e analogias do que detalhes técnicos.
-- Introdução um pouco mais explicativa.
-- Quiz direto, sem pegadinhas pesadas.
-- Flashcards com definições básicas e ideias principais.`;
-    } else if (nivelNorm === "avancado" || nivelNorm === "avançado") {
+- Linguagem simples.
+- Exemplos concretos.
+- Pouca terminologia técnica.
+- Quiz direto, sem pegadinhas.`;
+    }
+
+    if (nivelNorm === "avançado" || nivelNorm === "avancado") {
       perfilNivel = `
 NÍVEL DO ESTUDANTE: AVANÇADO.
-- Conteúdo mais denso e técnico.
-- Traga nuances, exceções e distinções conceituais relevantes para prova.
-- Use terminologia própria da área.
-- Quiz com alternativas muito próximas.
-- Flashcards voltados a detalhes e pontos controversos.`;
-    } else {
-      perfilNivel = `
-NÍVEL DO ESTUDANTE: INTERMEDIÁRIO.
-- Combinar clareza com boa densidade.
-- Explicar conceitos com precisão, usando exemplos de prova.
-- Evitar tanto superficialidade quanto excesso de tecnicismo.
-- Quiz com complexidade moderada.
-- Flashcards misturando conceito e aplicação.`;
+- Maior profundidade conceitual.
+- Diferenças sutis entre conceitos.
+- Quiz com alternativas próximas.
+- Flashcards com detalhes específicos.`;
     }
 
     // ----------------------------------------------------------
-    // PERFIL POR BANCA / AVALIAÇÃO (apenas concursos/avaliações)
+    // PERFIL BANCA (somente concursos/avaliações públicas)
     // ----------------------------------------------------------
     let perfilBanca = `
-BANCA/AVALIAÇÃO: GERAL (CONCURSOS OU AVALIAÇÕES PÚBLICAS).
-- Estilo objetivo, voltado para múltipla escolha.
-- Linguagem clara, com rigor conceitual.
-- Exemplos remetem a enunciados de prova.`;
+BANCA/AVALIAÇÃO: GERAL.
+- Linguagem objetiva.
+- Exemplos inspirados em provas reais.`;
 
     if (bancaNorm.includes("ENEM")) {
       perfilBanca = `
-BANCA/AVALIAÇÃO: ENEM.
-- Linguagem acessível e contextualizada.
-- Conectar o tema com sociedade, cidadania, tecnologia, meio ambiente etc.
-- Questões com enunciado interpretativo seguido de cobrança de conceito.`;
-    } else if (bancaNorm.includes("ENAMED")) {
+BANCA: ENEM.
+- Linguagem contextualizada.
+- Relação com sociedade, cultura, tecnologia.
+- Estilo interpretativo.`;
+    }
+
+    if (bancaNorm.includes("ENAMED")) {
       perfilBanca = `
-BANCA/AVALIAÇÃO: ENAMED.
-- Foco em casos clínicos, raciocínio diagnóstico e conduta.
-- Linguagem técnica da saúde, mas clara.
-- Questões baseadas em vinhetas clínicas, com alternativas de conduta.`;
-    } else if (
-      bancaNorm.includes("CESPE") ||
-      bancaNorm.includes("CEBRASPE")
-    ) {
+BANCA: ENAMED.
+- Vinhetas clínicas.
+- Raciocínio diagnóstico + conduta.`;
+    }
+
+    if (bancaNorm.includes("FGV")) {
       perfilBanca = `
-BANCA/AVALIAÇÃO: CESPE/CEBRASPE.
-- Máxima precisão conceitual.
-- Questões que exploram diferenças sutis entre conceitos.
-- Mesmo em múltipla escolha, alternativas muito próximas.
-- Destaque nuances, exceções e pegadinhas clássicas.`;
-    } else if (bancaNorm.includes("FGV")) {
+BANCA: FGV.
+- Enunciados densos.
+- Cenários administrativos/jurídicos.`;
+    }
+
+    if (bancaNorm.includes("CESPE") || bancaNorm.includes("CEBRASPE")) {
       perfilBanca = `
-BANCA/AVALIAÇÃO: FGV.
-- Textos mais densos, foco em interpretação e raciocínio.
-- Exemplos com cenários jurídicos, administrativos ou econômicos.
-- Alternativas longas e bem articuladas.
-- Valorização da fundamentação na explicação do gabarito.`;
-    } else if (bancaNorm.includes("OAB")) {
+BANCA: CESPE/CEBRASPE.
+- Precisão máxima.
+- Alternativas muito próximas.`;
+    }
+
+    if (bancaNorm.includes("OAB")) {
       perfilBanca = `
-BANCA/AVALIAÇÃO: OAB.
-- Foco em aplicação jurídica prática (normas, princípios, jurisprudência).
-- Exemplos de casos, situações concretas e peças.
-- Questões de múltipla escolha simulando 1ª fase.
-- Flashcards destacando fundamentos legais e distinções entre institutos.`;
+BANCA: OAB.
+- Aplicação jurídica.
+- Fundamentos legais e jurisprudência.`;
     }
 
     // ----------------------------------------------------------
-    // PROMPT PRINCIPAL (P0.5 PREMIUM)
+    // PROMPT PRINCIPAL
     // ----------------------------------------------------------
     const prompt = `
-Você é a IA da Liora, plataforma de estudo inteligente para concursos e avaliações públicas.
-
-Crie EXATAMENTE ${qtdSessoes} sessões de estudo bem estruturadas, densas e úteis para:
+Você é a IA da Liora. Gere EXATAMENTE ${qtdSessoes} sessões de estudo.
 
 TEMA: ${tema}
 NÍVEL: ${nivel}
-BANCA/ESTILO: ${bancaNorm}
+BANCA: ${bancaNorm}
 
 CONSIDERE:
 ${perfilNivel}
@@ -127,7 +116,7 @@ ${perfilNivel}
 E TAMBÉM:
 ${perfilBanca}
 
-Toda a saída deve ser APENAS JSON válido, no formato:
+RETORNE APENAS JSON, no formato:
 
 {
   "origem": "tema",
@@ -136,108 +125,78 @@ Toda a saída deve ser APENAS JSON válido, no formato:
   "banca": "${bancaNorm}",
   "sessoes": [
     {
-      "titulo": "Título claro e específico da sessão",
-      "objetivo": "Frase única, iniciando com verbo no infinitivo, descrevendo o que o estudante será capaz de fazer.",
+      "titulo": "",
+      "objetivo": "",
       "conteudo": {
-        "introducao": "2–3 frases conectando o assunto com o contexto de prova, de forma clara e direta.",
-        "conceitos": [
-          "3–5 conceitos centrais, cada um explicado em 1 linha.",
-          "Sem repetições, sem frases vazias."
-        ],
-        "exemplos": [
-          "2–4 exemplos aplicados, lembrando enunciados de questões.",
-          "Podem ser mini-situações práticas."
-        ],
-        "aplicacoes": [
-          "2–4 aplicações reais ou situações típicas de prova.",
-          "Indique como o conceito aparece em concursos."
-        ],
-        "resumoRapido": [
-          "5 bullets com o essencial para revisão, sem repetir texto das listas acima."
-        ]
+        "introducao": "",
+        "conceitos": ["","",""],
+        "exemplos": ["",""],
+        "aplicacoes": ["",""],
+        "resumoRapido": ["","",""]
       },
-      "analogias": [
-        "1–2 comparações que facilitem a compreensão (ex.: 'tratado é como um contrato formal entre Estados')."
-      ],
-      "ativacao": [
-        "2–4 perguntas abertas que obriguem o estudante a explicar, comparar ou aplicar o conteúdo, não apenas decorar."
-      ],
+      "analogias": ["",""],
+      "ativacao": ["","",""],
       "quiz": {
-        "pergunta": "Pergunta objetiva, típica de prova, baseada no conteúdo da sessão.",
-        "alternativas": [
-          "Alternativa A coerente",
-          "Alternativa B plausível",
-          "Alternativa C parcialmente correta ou incompleta",
-          "Alternativa D incorreta, mas verossímil"
-        ],
+        "pergunta": "",
+        "alternativas": ["","","",""],
         "corretaIndex": 0,
-        "explicacao": "Explique claramente por que a alternativa correta é correta e por que as outras não são."
+        "explicacao": ""
       },
       "flashcards": [
-        { "q": "Pergunta-chave sobre conceito importante", "a": "Resposta objetiva e sintética" },
-        { "q": "Outra pergunta que poderia cair na prova", "a": "Resposta direta, sem rodeios" },
-        { "q": "Ponto que costuma gerar confusão", "a": "Explicação clara, em 1–2 frases" }
+        {"q":"","a":""},
+        {"q":"","a":""},
+        {"q":"","a":""}
       ],
-      "mindmap": "Mapa mental textual do conteúdo da sessão, com 2–3 níveis, no formato: Tópico > Subtópico > Detalhe | Outro tópico > Subtópico..."
+      "mindmap": "A > B > C | X > Y"
     }
   ]
 }
 
-REGRAS CRÍTICAS:
-- NÃO escreva nada fora do JSON.
-- NÃO coloque comentários no JSON.
-- NÃO deixe listas vazias.
-- NÃO repita a mesma ideia com outras palavras.
-- Foque em utilidade real para quem estuda para concursos.
-- O JSON deve ser 100% válido e parseável em JavaScript.
+NÃO ESCREVER NADA FORA DO JSON.
+NÃO GERAR TEXTO EXPLICATIVO.
 `;
 
     // ----------------------------------------------------------
-    // Helpers de limpeza/parse
+    // Sanitização & Parse
     // ----------------------------------------------------------
-    function sanitizeJSON(str) {
-      return String(str || "")
+    const sanitize = (txt) =>
+      String(txt || "")
         .replace(/```json/gi, "")
         .replace(/```/g, "")
-        .replace(/\u0000/g, "")
-        .replace(/[\u0001-\u001F]/g, " ")
+        .replace(/[\u0000-\u001F]/g, " ")
         .trim();
-    }
 
-    function safeParse(str) {
+    const tryParse = (raw) => {
       try {
-        return JSON.parse(str);
+        return JSON.parse(raw);
       } catch {
         return null;
       }
-    }
+    };
 
     // ----------------------------------------------------------
-    // Retry inteligente (3 tentativas)
+    // Retry Smart (3 tentativas)
     // ----------------------------------------------------------
     async function gerarComRetry() {
-      for (let tentativa = 1; tentativa <= 3; tentativa++) {
+      for (let i = 1; i <= 3; i++) {
         try {
-          const completion = await client.chat.completions.create({
+          const r = await client.chat.completions.create({
             model: "gpt-4.1",
             messages: [{ role: "user", content: prompt }],
-            temperature: 0.2,
+            temperature: 0.25,
           });
 
-          let output = sanitizeJSON(
-            completion.choices?.[0]?.message?.content || ""
-          );
-          const json = safeParse(output);
+          let out = sanitize(r.choices?.[0]?.message?.content);
 
-          if (json && Array.isArray(json.sessoes) && json.sessoes.length > 0) {
-            return json;
-          }
+          if (isDev) console.log("👀 RAW:", out.slice(0, 150) + "...");
 
-          console.warn(
-            `⚠️ Tentativa ${tentativa}: JSON inválido ou sem sessões.`
-          );
+          const json = tryParse(out);
+
+          if (json?.sessoes?.length) return json;
+
+          console.warn(`⚠️ Tentativa ${i}: JSON inválido.`);
         } catch (err) {
-          console.warn(`⚠️ Tentativa ${tentativa} falhou:`, err);
+          console.warn(`⚠️ Falha na tentativa ${i}:`, err);
         }
       }
 
@@ -245,133 +204,74 @@ REGRAS CRÍTICAS:
     }
 
     // ----------------------------------------------------------
-    // Normalização das sessões (garante consistência)
+    // Normalização
     // ----------------------------------------------------------
     function normalizarSessoes(sessoes) {
       return sessoes.map((s, idx) => {
-        const sessao = { ...s };
+        const fix = (v) => (typeof v === "string" ? v.trim() : v);
 
-        sessao.titulo =
-          (sessao.titulo && String(sessao.titulo).trim()) ||
-          `Sessão ${idx + 1} — ${tema}`;
+        const c = s.conteudo || {};
 
-        sessao.objetivo =
-          (sessao.objetivo && String(sessao.objetivo).trim()) ||
-          `Compreender os principais pontos sobre ${tema}.`;
+        return {
+          titulo: fix(s.titulo) || `Sessão ${idx + 1} — ${tema}`,
+          objetivo: fix(s.objetivo) || `Compreender o tema ${tema}.`,
 
-        if (!sessao.conteudo || typeof sessao.conteudo !== "object") {
-          sessao.conteudo = {};
-        }
+          conteudo: {
+            introducao: fix(c.introducao || ""),
+            conceitos: (c.conceitos || []).map(fix).filter(Boolean),
+            exemplos: (c.exemplos || []).map(fix).filter(Boolean),
+            aplicacoes: (c.aplicacoes || []).map(fix).filter(Boolean),
+            resumoRapido: (c.resumoRapido || []).map(fix).filter(Boolean),
+          },
 
-        const c = sessao.conteudo;
-        c.introducao = String(c.introducao || "").trim();
+          analogias: (s.analogias || []).map(fix).filter(Boolean),
+          ativacao: (s.ativacao || []).map(fix).filter(Boolean),
 
-        c.conceitos = Array.isArray(c.conceitos)
-          ? c.conceitos.map((x) => String(x || "").trim()).filter(Boolean)
-          : [];
+          quiz: {
+            pergunta: fix(s.quiz?.pergunta || ""),
+            alternativas: (s.quiz?.alternativas || [])
+              .map(fix)
+              .filter(Boolean)
+              .slice(0, 4),
+            corretaIndex:
+              typeof s.quiz?.corretaIndex === "number"
+                ? s.quiz.corretaIndex
+                : 0,
+            explicacao: fix(s.quiz?.explicacao || ""),
+          },
 
-        c.exemplos = Array.isArray(c.exemplos)
-          ? c.exemplos.map((x) => String(x || "").trim()).filter(Boolean)
-          : [];
+          flashcards: (s.flashcards || [])
+            .map((f) => ({
+              q: fix(f?.q || ""),
+              a: fix(f?.a || ""),
+            }))
+            .filter((f) => f.q && f.a)
+            .slice(0, 3),
 
-        c.aplicacoes = Array.isArray(c.aplicacoes)
-          ? c.aplicacoes.map((x) => String(x || "").trim()).filter(Boolean)
-          : [];
-
-        c.resumoRapido = Array.isArray(c.resumoRapido)
-          ? c.resumoRapido.map((x) => String(x || "").trim()).filter(Boolean)
-          : [];
-
-        // quiz
-        if (!sessao.quiz || typeof sessao.quiz !== "object") {
-          sessao.quiz = {
-            pergunta: "",
-            alternativas: [],
-            corretaIndex: 0,
-            explicacao: "",
-          };
-        }
-
-        const q = sessao.quiz;
-        q.pergunta = String(q.pergunta || "").trim();
-        q.explicacao = String(q.explicacao || "").trim();
-        q.alternativas = Array.isArray(q.alternativas)
-          ? q.alternativas.map((x) => String(x || "").trim()).filter(Boolean)
-          : [];
-
-        if (q.alternativas.length < 4) {
-          while (q.alternativas.length < 4) {
-            q.alternativas.push("Alternativa adicional");
-          }
-        } else if (q.alternativas.length > 4) {
-          q.alternativas = q.alternativas.slice(0, 4);
-        }
-
-        if (
-          typeof q.corretaIndex !== "number" ||
-          q.corretaIndex < 0 ||
-          q.corretaIndex > 3
-        ) {
-          q.corretaIndex = 0;
-        }
-
-        // flashcards
-        let cards = Array.isArray(sessao.flashcards)
-          ? sessao.flashcards
-              .map((f) => ({
-                q: String(f?.q || "").trim(),
-                a: String(f?.a || "").trim(),
-              }))
-              .filter((f) => f.q && f.a)
-          : [];
-
-        const baseResumo = c.resumoRapido.length ? c.resumoRapido : c.conceitos;
-
-        while (cards.length < 3 && baseResumo.length > 0) {
-          const idxBase = cards.length % baseResumo.length;
-          const txt = baseResumo[idxBase];
-          cards.push({
-            q: `Explique: ${txt}`,
-            a: txt,
-          });
-        }
-
-        while (cards.length < 3) {
-          cards.push({
-            q: `Revise o conteúdo desta sessão (${idx + 1}).`,
-            a: `Releia os pontos principais da sessão sobre ${tema}.`,
-          });
-        }
-
-        sessao.flashcards = cards;
-
-        if (typeof sessao.mindmap !== "string") {
-          sessao.mindmap = "";
-        }
-
-        return sessao;
+          mindmap: fix(s.mindmap || ""),
+        };
       });
     }
 
     // ----------------------------------------------------------
-    // Execução
+    // EXECUÇÃO
     // ----------------------------------------------------------
     const bruto = await gerarComRetry();
 
-    if (!bruto || !Array.isArray(bruto.sessoes) || !bruto.sessoes.length) {
-      throw new Error("A IA retornou uma estrutura inválida.");
+    if (!bruto || !Array.isArray(bruto.sessoes) || bruto.sessoes.length === 0) {
+      throw new Error("A IA retornou estrutura inválida.");
     }
 
     const sessoesNorm = normalizarSessoes(bruto.sessoes);
 
-    // ----------------------------------------------------------
-    // Saída compatível com CORE v74
-    // ----------------------------------------------------------
+    if (isDev) console.log("🟢 SESSÕES GERADAS:", sessoesNorm.length);
+
+    // ⚠️ AQUI ESTÁ A CORREÇÃO PRINCIPAL (array puro)
     return res.status(200).json({
-      plano: JSON.stringify(sessoesNorm),
+      plano: sessoesNorm,
     });
-  } catch (error) {
-    console.error("❌ Erro ao gerar plano:", error);
+  } catch (err) {
+    console.error("❌ Erro ao gerar plano:", err);
     return res.status(500).json({ error: "Erro ao gerar plano." });
   }
 }
