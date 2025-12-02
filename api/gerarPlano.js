@@ -103,7 +103,12 @@ RETORNE APENAS JSON, no formato:
         "pergunta": "",
         "alternativas": ["","","",""],
         "corretaIndex": 0,
-        "explicacao": ""
+        "explicacoes": [
+          "Explique porque a alternativa 0 está correta ou incorreta.",
+          "Explique porque a alternativa 1 está correta ou incorreta.",
+          "Explique porque a alternativa 2 está correta ou incorreta.",
+          "Explique porque a alternativa 3 está correta ou incorreta."
+        ]
       },
       "flashcards": [
         {"q":"","a":""},
@@ -191,11 +196,15 @@ NÃO escreva nada além do JSON.
               .map(fix)
               .filter(Boolean)
               .slice(0, 4),
+          
             corretaIndex:
               typeof s.quiz?.corretaIndex === "number"
                 ? s.quiz.corretaIndex
                 : 0,
-            explicacao: fix(s.quiz?.explicacao || ""),
+          
+            explicacoes: Array.isArray(s.quiz?.explicacoes)
+              ? s.quiz.explicacoes.map(fix).slice(0, 4)
+              : ["", "", "", ""]
           },
 
           flashcards: (s.flashcards || [])
