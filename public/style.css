@@ -494,4 +494,64 @@ button:active,
 .liora-section {
   margin-top: 28px !important;
 }
+/* ============================================================
+   FIX PREMIUM — HEADERS + SUBSEÇÕES + ESPAÇAMENTO
+   ============================================================ */
+
+/* 1) TÍTULOS PRINCIPAIS DAS SEÇÕES (sempre brancos + caps) */
+.liora-wizard-section > h5 {
+  color: var(--fg) !important;
+  text-transform: uppercase;
+  font-weight: 700;
+  font-size: 1.05rem;
+  margin-top: 32px;
+  margin-bottom: 12px;
+  letter-spacing: 0.5px;
+  border-left: 4px solid var(--brand);
+  padding-left: 8px;
+}
+
+/* Ajuste do primeiro título (OBJETIVO) */
+#liora-sessao-objetivo-label {
+  margin-top: 12px !important;
+}
+
+/* 2) SUBTÍTULOS INTERNOS DO CONTEÚDO EM LARANJA */
+#liora-sessao-conteudo strong,
+#liora-sessao-conteudo b {
+  color: var(--brand) !important;
+  font-weight: 700;
+  font-size: 1.08rem;
+  text-transform: none;
+  display: block;
+  margin-top: 16px;
+  margin-bottom: 6px;
+}
+
+/* 3) PADRONIZAÇÃO DO TEXTO INTERNO */
+#liora-sessao-conteudo p,
+#liora-sessao-conteudo li {
+  color: var(--fg);
+  font-size: 1.05rem;
+  line-height: 1.7;
+  margin-bottom: 10px;
+}
+
+/* 4) LISTAS */
+#liora-sessao-conteudo ul {
+  margin-left: 22px;
+  margin-bottom: 16px;
+}
+
+/* 5) MELHOR ESPAÇAMENTO ENTRE SEÇÕES */
+.liora-wizard-section {
+  margin-bottom: 22px;
+}
+
+/* 6) FLASHCARDS – manter layout premium */
+.liora-flashcards-box {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
 
