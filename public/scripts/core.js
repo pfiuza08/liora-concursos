@@ -619,17 +619,32 @@
             els.wizardQuizFeedback.style.opacity = 0;
 
             setTimeout(() => {
-              if (altObj.correta) {
-                opt.classList.add("correct");
-                els.wizardQuizFeedback.textContent =
-                  `✅ Correto! ${q.explicacao || ""}`;
-                els.wizardQuizFeedback.style.color = "var(--brand)";
-              } else {
-                opt.classList.add("incorrect");
-                els.wizardQuizFeedback.textContent =
-                  "❌ Não é essa. Releia a pergunta e tente de novo.";
-                els.wizardQuizFeedback.style.color = "var(--muted)";
-              }
+       const explicacoes = Array.isArray(q.explicacoes) ? q.explicacoes : [];
+
+
+              
+          if (altObj.correta) {
+            opt.classList.add("correct");
+          
+            const exp = explicacoes[idx] || q.explicacao || "";
+          
+            els.wizardQuizFeedback.textContent = `✅ Correto! ${exp}`;
+            els.wizardQuizFeedback.style.color = "var(--brand)";
+          } else {
+            opt.classList.add("incorrect");
+          
+            const exp = explicacoes[idx] || "";
+          
+            els.wizardQuizFeedback.textContent =
+              exp
+                ? `❌ Errado. ${exp}`
+                : "❌ Não é essa. Releia a pergunta e tente novamente.";
+          
+            els.wizardQuizFeedback.style.color = "var(--muted)";
+          }
+
+
+              
               els.wizardQuizFeedback.style.opacity = 1;
             }, 120);
           });
