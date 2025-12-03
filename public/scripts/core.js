@@ -19,6 +19,24 @@
   console.log("🔵 Inicializando Liora Core v74...");
 
   document.addEventListener("DOMContentLoaded", () => {
+  
+    // ======================================================
+  // 🌱 A2-PADRÃO — Reset Seguro de Estado Inicial
+  // - impede carregamentos automáticos de sessões antigas
+  // - evita que home chame estudos automaticamente
+  // ======================================================
+  
+  window.liora = window.liora || {};
+  window.lioraPlano = null;
+  window.lioraSessoes = [];
+  window.lioraEstudos = null;
+  window.lioraCache = {};
+  
+  console.log("🌱 A2: Estado inicial limpo carregado.");
+ 
+  
+   
+    
     // --------------------------------------------------------
     // 🌟 UI GLOBAL: Loading & Erro
     // --------------------------------------------------------
