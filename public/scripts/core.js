@@ -692,11 +692,13 @@
         // ====================================================
         // 4. Constrói estrutura base para randomização
         // ====================================================
+        // Construção com índice original preservado
         let alternativas = brutas.map((alt, i) => ({
           texto: String(alt).replace(/\n/g, " ").replace(/<\/?[^>]+(>|$)/g, ""),
-          corretaOriginal: i === Number(q.corretaIndex)
+          corretaOriginal: i === Number(q.corretaIndex),
+          indiceOriginal: i   
         }));
-      
+    
         // Garante pelo menos 1 correta
         if (!alternativas.some(a => a.corretaOriginal)) {
           const rnd = Math.floor(Math.random() * alternativas.length);
@@ -735,8 +737,8 @@
             opt.querySelector("input").checked = true;
       
             const explicacoes = Array.isArray(q.explicacoes) ? q.explicacoes : [];
-            const exp = explicacoes[altObj.idx] || q.explicacao || "";
-      
+            const exp = explicacoes[altObj.indiceOriginal] || q.explicacao || "";
+     
             setTimeout(() => {
               if (altObj.correta) {
                 opt.classList.add("correct");
