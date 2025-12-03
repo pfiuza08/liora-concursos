@@ -632,4 +632,86 @@ button:active,
   flex-direction: column;
   gap: 14px;
 }
+/* ======== UX PREMIUM LITE — A3.3 ======== */
+
+/* Smooth fade-in */
+.liora-wizard-card.visible {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.25s ease-out, transform 0.25s ease-out;
+}
+.liora-wizard-card {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+/* Subtítulos premium */
+.liora-conteudo-titulo,
+.liora-conceito-subtitulo {
+  color: #c44b04;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.liora-conteudo-titulo::before,
+.liora-conceito-subtitulo::before {
+  content: "▹";
+  color: #c44b04;
+  font-size: 14px;
+}
+
+/* Quiz hover */
+.liora-quiz-option {
+  transition: background 0.18s, border-color 0.18s;
+}
+.liora-quiz-option:hover {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+/* Dot animação */
+.liora-quiz-option.correct .liora-quiz-dot {
+  background: #2ecc71;
+  transform: scale(1.2);
+}
+.liora-quiz-option.incorrect .liora-quiz-dot {
+  background: #e74c3c;
+  transform: scale(1.2);
+}
+.liora-quiz-dot {
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+
+/* Flashcards premium */
+.liora-flashcard {
+  border-radius: 10px;
+  transition: all 0.25s ease;
+  border: 1px solid var(--border);
+}
+.liora-flashcard.open {
+  border-color: #c44b04;
+  background: rgba(196, 75, 4, 0.05);
+}
+.liora-flashcard .liora-flashcard-a {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.25s ease;
+}
+.liora-flashcard.open .liora-flashcard-a {
+  max-height: 500px;
+}
+
+/* Mapa mental premium */
+.liora-mindmap-block {
+  background: #111;
+  border: 1px solid #333;
+  border-radius: 8px;
+  padding: 14px;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 13px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  color: #eee;
+}
 
