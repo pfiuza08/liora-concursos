@@ -645,48 +645,36 @@
           : "<p class='liora-muted'>Nenhuma pergunta de ativação disponível.</p>";
       }
 
-      // ----------------------- QUIZ -----------------------
+     // ----------------------- QUIZ -----------------------
       if (els.wizardQuiz) {
         els.wizardQuiz.innerHTML = "";
+      
+        // 1. Captura do quiz
         const q = s.quiz || {};
-
-        if (q.pergunta) {
-          const pergunta = document.createElement("p");
-          pergunta.className = "liora-quiz-question";
-          pergunta.textContent = q.pergunta;
-          els.wizardQuiz.appendChild(pergunta);
+      
+        // ====================================================
+        // A3.2 — PATCH 2: Fallback de Quiz quando IA envia fraco
+        // ====================================================
+        if (!q.alternativas || q.alternativas.length < 3) {
+          console.warn("A3.2: Quiz fraco detectado → aplicando fallback.");
+      
+          q.pergunta = q.pergunta || "Qual das opções abaixo está mais correta?";
+          q.alternativas = [
+            q.pergunta || "Resposta considerada correta.",
+            "Não sei responder.",
+            "Nenhuma das anteriores."
+          ];
+          q.corretaIndex = 0;
+      
+          q.explicacoes = q.explicacoes || [];
+          q.explicacao =
+            q.explicacao ||
+            "A IA não gerou um quiz completo, então esta questão foi reconstruída automaticamente.";
         }
-
-        const brutas = Array.isArray(q.alternativas)
-          ? q.alternativas.filter((a) => !!String(a || "").trim())
-          : [];
-
-        // ----------------------- QUIZ -----------------------
-     
-          els.wizardQuiz.innerHTML = "";
-          const q = s.quiz || {};
-        
-          // ====================================================
-          // A3.2 — PATCH 2: Fallback de Quiz quando IA envia fraco
-          // ====================================================
-          if (!q.alternativas || q.alternativas.length < 3) {
-            console.warn("A3.2: Quiz fraco detectado → aplicando fallback.");
-        
-            q.pergunta = q.pergunta || "Qual das opções abaixo está mais correta?";
-            q.alternativas = [
-              q.pergunta || "Resposta considerada correta.",
-              "Não sei responder.",
-              "Nenhuma das anteriores."
-            ];
-            q.corretaIndex = 0;
-        
-            q.explicacoes = q.explicacoes || [];
-            q.explicacao =
-              q.explicacao ||
-              "A IA não gerou um quiz completo, então esta questão foi reconstruída automaticamente.";
-          }
-          // ====================================================
-           // Pergunta
+      
+        // ====================================================
+        // 2. Pergunta
+        // ====================================================
         if (q.pergunta) {
           const pergunta = document.createElement("p");
           pergunta.className = "liora-quiz-question";
@@ -694,34 +682,40 @@
           els.wizardQuiz.appendChild(pergunta);
         }
       
-        // Alternativas
+        // ====================================================
+        // 3. Alternativas brutas
+        // ====================================================
         const brutas = Array.isArray(q.alternativas)
           ? q.alternativas.filter(a => !!String(a || "").trim())
           : [];
       
-        // Mapeamento base
+        // ====================================================
+        // 4. Constrói estrutura base para randomização
+        // ====================================================
         let alternativas = brutas.map((alt, i) => ({
           texto: String(alt).replace(/\n/g, " ").replace(/<\/?[^>]+(>|$)/g, ""),
           corretaOriginal: i === Number(q.corretaIndex)
         }));
       
-        // Se IA não marcou nenhuma como correta, define 1 aleatória
+        // Garante pelo menos 1 correta
         if (!alternativas.some(a => a.corretaOriginal)) {
           const rnd = Math.floor(Math.random() * alternativas.length);
           alternativas[rnd].corretaOriginal = true;
         }
       
-        // EMBARALHAMENTO SEGURO
+        // 5. Embaralhamento seguro
         alternativas = shuffle(alternativas);
       
-        // Reindexação após shuffle
+        // 6. Reindexação após shuffle
         alternativas = alternativas.map((alt, i) => ({
           texto: alt.texto,
-          correta: alt.corretaOriginal, // mantém flag verdadeira após embaralhar
+          correta: alt.corretaOriginal,
           idx: i
         }));
       
-        // Renderização
+        // ====================================================
+        // 7. Renderização das alternativas
+        // ====================================================
         alternativas.forEach((altObj) => {
           const opt = document.createElement("div");
           opt.className = "liora-quiz-option";
@@ -734,8 +728,7 @@
           `;
       
           opt.addEventListener("click", () => {
-            els.wizardQuiz
-              .querySelectorAll(".liora-quiz-option")
+            els.wizardQuiz.querySelectorAll(".liora-quiz-option")
               .forEach(o => o.classList.remove("selected", "correct", "incorrect"));
       
             opt.classList.add("selected");
@@ -759,68 +752,6 @@
             }, 150);
           });
       
-          els.wizardQuiz.appendChild(opt);
-        });
-      }
-        if (marcadas.length && !marcadas.some((a) => a.correta)) {
-          marcadas[0].correta = true;
-        }
-
-        marcadas.forEach((altObj, idx) => {
-          const opt = document.createElement("div");
-          opt.className = "liora-quiz-option";
-          opt.dataset.index = idx;
-
-          opt.innerHTML = `
-            <input type="radio" name="quiz-${wizard.atual}" value="${idx}">
-            <span class="liora-quiz-option-text">${altObj.texto}</span>
-            <span class="liora-quiz-dot"></span>
-          `;
-
-          opt.addEventListener("click", () => {
-            els.wizardQuiz
-              .querySelectorAll(".liora-quiz-option")
-              .forEach((o) => o.classList.remove("selected", "correct", "incorrect"));
-
-            opt.classList.add("selected");
-
-            const input = opt.querySelector("input");
-            if (input) input.checked = true;
-
-            if (!els.wizardQuizFeedback) return;
-            els.wizardQuizFeedback.style.opacity = 0;
-
-            setTimeout(() => {
-       const explicacoes = Array.isArray(q.explicacoes) ? q.explicacoes : [];
-
-
-              
-          if (altObj.correta) {
-            opt.classList.add("correct");
-          
-            const exp = explicacoes[idx] || q.explicacao || "";
-          
-            els.wizardQuizFeedback.textContent = `✅ Correto! ${exp}`;
-            els.wizardQuizFeedback.style.color = "var(--brand)";
-          } else {
-            opt.classList.add("incorrect");
-          
-            const exp = explicacoes[idx] || "";
-          
-            els.wizardQuizFeedback.textContent =
-              exp
-                ? `❌ Errado. ${exp}`
-                : "❌ Não é essa. Releia a pergunta e tente novamente.";
-          
-            els.wizardQuizFeedback.style.color = "var(--muted)";
-          }
-
-
-              
-              els.wizardQuizFeedback.style.opacity = 1;
-            }, 120);
-          });
-
           els.wizardQuiz.appendChild(opt);
         });
       }
