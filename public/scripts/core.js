@@ -661,14 +661,107 @@
           ? q.alternativas.filter((a) => !!String(a || "").trim())
           : [];
 
-        const marcadas = brutas.map((alt, i) => {
-          const texto = String(alt || "")
-            .replace(/\n/g, " ")
-            .replace(/<\/?[^>]+(>|$)/g, "");
-          const correta = i === Number(q.corretaIndex);
-          return { texto, correta };
+        // ----------------------- QUIZ -----------------------
+     
+          els.wizardQuiz.innerHTML = "";
+          const q = s.quiz || {};
+        
+          // ====================================================
+          // A3.2 — PATCH 2: Fallback de Quiz quando IA envia fraco
+          // ====================================================
+          if (!q.alternativas || q.alternativas.length < 3) {
+            console.warn("A3.2: Quiz fraco detectado → aplicando fallback.");
+        
+            q.pergunta = q.pergunta || "Qual das opções abaixo está mais correta?";
+            q.alternativas = [
+              q.pergunta || "Resposta considerada correta.",
+              "Não sei responder.",
+              "Nenhuma das anteriores."
+            ];
+            q.corretaIndex = 0;
+        
+            q.explicacoes = q.explicacoes || [];
+            q.explicacao =
+              q.explicacao ||
+              "A IA não gerou um quiz completo, então esta questão foi reconstruída automaticamente.";
+          }
+          // ====================================================
+           // Pergunta
+        if (q.pergunta) {
+          const pergunta = document.createElement("p");
+          pergunta.className = "liora-quiz-question";
+          pergunta.textContent = q.pergunta;
+          els.wizardQuiz.appendChild(pergunta);
+        }
+      
+        // Alternativas
+        const brutas = Array.isArray(q.alternativas)
+          ? q.alternativas.filter(a => !!String(a || "").trim())
+          : [];
+      
+        // Mapeamento base
+        let alternativas = brutas.map((alt, i) => ({
+          texto: String(alt).replace(/\n/g, " ").replace(/<\/?[^>]+(>|$)/g, ""),
+          corretaOriginal: i === Number(q.corretaIndex)
+        }));
+      
+        // Se IA não marcou nenhuma como correta, define 1 aleatória
+        if (!alternativas.some(a => a.corretaOriginal)) {
+          const rnd = Math.floor(Math.random() * alternativas.length);
+          alternativas[rnd].corretaOriginal = true;
+        }
+      
+        // EMBARALHAMENTO SEGURO
+        alternativas = shuffle(alternativas);
+      
+        // Reindexação após shuffle
+        alternativas = alternativas.map((alt, i) => ({
+          texto: alt.texto,
+          correta: alt.corretaOriginal, // mantém flag verdadeira após embaralhar
+          idx: i
+        }));
+      
+        // Renderização
+        alternativas.forEach((altObj) => {
+          const opt = document.createElement("div");
+          opt.className = "liora-quiz-option";
+          opt.dataset.index = altObj.idx;
+      
+          opt.innerHTML = `
+            <input type="radio" name="quiz-${wizard.atual}" value="${altObj.idx}">
+            <span class="liora-quiz-option-text">${altObj.texto}</span>
+            <span class="liora-quiz-dot"></span>
+          `;
+      
+          opt.addEventListener("click", () => {
+            els.wizardQuiz
+              .querySelectorAll(".liora-quiz-option")
+              .forEach(o => o.classList.remove("selected", "correct", "incorrect"));
+      
+            opt.classList.add("selected");
+            opt.querySelector("input").checked = true;
+      
+            const explicacoes = Array.isArray(q.explicacoes) ? q.explicacoes : [];
+            const exp = explicacoes[altObj.idx] || q.explicacao || "";
+      
+            setTimeout(() => {
+              if (altObj.correta) {
+                opt.classList.add("correct");
+                els.wizardQuizFeedback.textContent = `✅ Correto! ${exp}`;
+                els.wizardQuizFeedback.style.color = "var(--brand)";
+              } else {
+                opt.classList.add("incorrect");
+                els.wizardQuizFeedback.textContent =
+                  exp ? `❌ Errado. ${exp}` : "❌ Não é essa. Tente novamente.";
+                els.wizardQuizFeedback.style.color = "var(--muted)";
+              }
+              els.wizardQuizFeedback.style.opacity = 1;
+            }, 150);
+          });
+      
+          els.wizardQuiz.appendChild(opt);
         });
-
+      }
         if (marcadas.length && !marcadas.some((a) => a.correta)) {
           marcadas[0].correta = true;
         }
