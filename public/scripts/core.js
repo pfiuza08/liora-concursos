@@ -592,293 +592,262 @@
       }
     }
   
-    // --------------------------------------------------------
-    // RENDERIZAÇÃO DO WIZARD (PREMIUM)
-    // --------------------------------------------------------
-    function renderWizard() {
-      if (!els.wizardContainer) return;
-
-      if (!wizard.sessoes || !wizard.sessoes.length) {
-        els.wizardContainer.classList.add("hidden");
-        return;
-      }
-
-      const s = wizard.sessoes[wizard.atual];
-      if (!s) {
-        els.wizardContainer.classList.add("hidden");
-        return;
-      }
-
-      els.wizardContainer.classList.remove("hidden");
-
-      const card = els.wizardContainer.querySelector(".liora-wizard-card");
-      if (card) {
-        card.classList.remove("visible");
-        setTimeout(() => card.classList.add("visible"), 20);
-      }
-
-      if (els.wizardQuizFeedback) {
-        els.wizardQuizFeedback.textContent = "";
-        els.wizardQuizFeedback.style.opacity = 0;
-      }
-
-      if (els.wizardTema) els.wizardTema.textContent = wizard.tema || "";
-      if (els.wizardTitulo) els.wizardTitulo.textContent = s.titulo || "";
-      // Progresso da sessão (UX Premium)
-      const progressoTopEl = document.getElementById("liora-sessao-progress");
-      if (progressoTopEl) {
-        progressoTopEl.textContent =
-          `Sessão ${wizard.atual + 1} de ${wizard.sessoes.length}`;
-      }
+      // --------------------------------------------------------
+      // RENDERIZAÇÃO DO WIZARD (PREMIUM A3.3)
+      // --------------------------------------------------------
+      function renderWizard() {
+        if (!els.wizardContainer) return;
       
-      if (els.wizardObjetivo) els.wizardObjetivo.textContent = s.objetivo || "";
-
-      const c = s.conteudo || {};
-      renderConteudoPremium(c);
-
-      // ----------------------- ANALOGIAS -----------------------
-      if (els.wizardAnalogias) {
-        const list = Array.isArray(s.analogias) ? s.analogias : [];
-        els.wizardAnalogias.innerHTML = list.length
-          ? list.map((a) => `<p>• ${a}</p>`).join("")
-          : "<p class='liora-muted'>Nenhuma analogia gerada para esta sessão.</p>";
-      }
-
-      // ----------------------- ATIVAÇÃO -----------------------
-      if (els.wizardAtivacao) {
-        const list = Array.isArray(s.ativacao) ? s.ativacao : [];
-        els.wizardAtivacao.innerHTML = list.length
-          ? `<ul>${list.map((q) => `<li>${q}</li>`).join("")}</ul>`
-          : "<p class='liora-muted'>Nenhuma pergunta de ativação disponível.</p>";
-      }
-
-     // ----------------------- QUIZ -----------------------
-      if (els.wizardQuiz) {
-        els.wizardQuiz.innerHTML = "";
-      
-        const q = s.quiz || {};
-      
-        // Normaliza alternativas e explicações
-        let alternativasBrutas = Array.isArray(q.alternativas)
-          ? q.alternativas.filter(a => !!String(a || "").trim())
-          : [];
-      
-        const explicacoesArr = Array.isArray(q.explicacoes) ? q.explicacoes : [];
-      
-        // Fallback se a IA mandou um quiz muito fraco
-        if (!q.pergunta && alternativasBrutas.length) {
-          q.pergunta = "Analise as alternativas e escolha a melhor resposta.";
-        }
-      
-        if (alternativasBrutas.length < 2) {
-          console.warn("A3.2: Quiz muito fraco, gerando fallback mínimo.");
-          q.pergunta = q.pergunta || "Qual das opções abaixo está mais correta?";
-          alternativasBrutas = [
-            alternativasBrutas[0] || "Resposta considerada correta.",
-            "Não sei responder."
-          ];
-          q.corretaIndex = 0;
-        }
-      
-        // Se ainda assim estiver sem alternativas, exibe mensagem e sai
-        if (!alternativasBrutas.length) {
-          els.wizardQuiz.innerHTML =
-            "<p class='liora-muted'>Nenhuma questão gerada para esta sessão.</p>";
-          if (els.wizardQuizFeedback) {
-            els.wizardQuizFeedback.textContent = "";
-            els.wizardQuizFeedback.style.opacity = 0;
-          }
+        // se não houver sessões, oculta tudo
+        if (!wizard.sessoes || !wizard.sessoes.length) {
+          els.wizardContainer.classList.add("hidden");
           return;
         }
       
-        // Pergunta
-        if (q.pergunta) {
-          const pergunta = document.createElement("p");
-          pergunta.className = "liora-quiz-question";
-          pergunta.textContent = q.pergunta;
-          els.wizardQuiz.appendChild(pergunta);
+        const s = wizard.sessoes[wizard.atual];
+        if (!s) {
+          els.wizardContainer.classList.add("hidden");
+          return;
         }
       
-        // Construção das alternativas, preservando o índice ORIGINAL
-        let alternativas = alternativasBrutas.map((alt, i) => ({
-          texto: String(alt)
-            .replace(/\n/g, " ")
-            .replace(/<\/?[^>]+(>|$)/g, ""),
-          indiceOriginal: i,
-          corretaOriginal: i === Number(q.corretaIndex)
-        }));
+        // mostra container
+        els.wizardContainer.classList.remove("hidden");
       
-        // Se a IA não marcou nenhuma correta, escolhe uma aleatória
-        if (!alternativas.some(a => a.corretaOriginal)) {
-          const rnd = Math.floor(Math.random() * alternativas.length);
-          alternativas[rnd].corretaOriginal = true;
+        // animação de entrada
+        const card = els.wizardContainer.querySelector(".liora-wizard-card");
+        if (card) {
+          card.classList.remove("visible");
+          setTimeout(() => card.classList.add("visible"), 20);
         }
       
-        // Embaralha as alternativas
-        alternativas = shuffle(alternativas);
+        // limpa feedback do quiz
+        if (els.wizardQuizFeedback) {
+          els.wizardQuizFeedback.textContent = "";
+          els.wizardQuizFeedback.style.opacity = 0;
+        }
       
-        // Reindexa após o shuffle
-        alternativas = alternativas.map((alt, idx) => ({
-          ...alt,
-          idx,
-          correta: alt.corretaOriginal
-        }));
+        // título do tema & sessão
+        if (els.wizardTema) els.wizardTema.textContent = wizard.tema || "";
+        if (els.wizardTitulo) els.wizardTitulo.textContent = s.titulo || "";
       
-        // Renderização das alternativas
-        alternativas.forEach(altObj => {
-          const opt = document.createElement("div");
-          opt.className = "liora-quiz-option";
-          opt.dataset.index = altObj.idx;
+        // progresso no topo da sessão (novo UX Premium)
+        const progressoTopEl = document.getElementById("liora-sessao-progress");
+        if (progressoTopEl) {
+          progressoTopEl.textContent =
+            `Sessão ${wizard.atual + 1} de ${wizard.sessoes.length}`;
+        }
       
-          opt.innerHTML = `
-            <input type="radio" name="quiz-${wizard.atual}" value="${altObj.idx}">
-            <span class="liora-quiz-option-text">${altObj.texto}</span>
-            <span class="liora-quiz-dot"></span>
-          `;
+        // OBJETIVO
+        if (els.wizardObjetivo) els.wizardObjetivo.textContent = s.objetivo || "";
       
-          opt.addEventListener("click", () => {
-            // limpa estado anterior
-            els.wizardQuiz
-              .querySelectorAll(".liora-quiz-option")
-              .forEach(o => o.classList.remove("selected", "correct", "incorrect"));
+        // CONTEÚDO PREMIUM
+        renderConteudoPremium(s.conteudo || {});
       
-            opt.classList.add("selected");
+        // ----------------------- ANALOGIAS -----------------------
+        if (els.wizardAnalogias) {
+          const list = Array.isArray(s.analogias) ? s.analogias : [];
+          els.wizardAnalogias.innerHTML = list.length
+            ? list.map(a => `<p>• ${a}</p>`).join("")
+            : "<p class='liora-muted'>Nenhuma analogia gerada para esta sessão.</p>";
+        }
       
-            const input = opt.querySelector("input");
-            if (input) input.checked = true;
+        // ----------------------- ATIVAÇÃO -----------------------
+        if (els.wizardAtivacao) {
+          const list = Array.isArray(s.ativacao) ? s.ativacao : [];
+          els.wizardAtivacao.innerHTML = list.length
+            ? `<ul>${list.map(q => `<li>${q}</li>`).join("")}</ul>`
+            : "<p class='liora-muted'>Nenhuma pergunta de ativação disponível.</p>";
+        }
       
-            if (!els.wizardQuizFeedback) return;
-            els.wizardQuizFeedback.style.opacity = 0;
+        // ----------------------- QUIZ (Premium + Correções) -----------------------
+        if (els.wizardQuiz) {
+          els.wizardQuiz.innerHTML = "";
       
-            // Busca explicação ESPECÍFICA da alternativa (pelo índice ORIGINAL)
-            const expEspecifica = explicacoesArr[altObj.indiceOriginal]
-              ? String(explicacoesArr[altObj.indiceOriginal])
-              : "";
+          const q = s.quiz || {};
       
-            const baseFallback = q.explicacao || "";
+          let alternativasBrutas = Array.isArray(q.alternativas)
+            ? q.alternativas.filter(a => !!String(a || "").trim())
+            : [];
       
-            setTimeout(() => {
-             let textoFinal = "";
-
-if (altObj.correta) {
-        opt.classList.add("correct");
+          const explicacoesArr = Array.isArray(q.explicacoes)
+            ? q.explicacoes
+            : [];
       
-        textoFinal = expEspecifica || baseFallback || "";
-        textoFinal = textoFinal
-          ? `✅ Correto! ${textoFinal}`
-          : "✅ Correto!";
+          // fallback mínimo
+          if (!q.pergunta && alternativasBrutas.length) {
+            q.pergunta = "Analise as alternativas e escolha a melhor resposta.";
+          }
       
-        els.wizardQuizFeedback.style.color = "var(--brand)";
+          if (alternativasBrutas.length < 2) {
+            console.warn("A3.2: Quiz muito fraco → fallback ativado");
+            q.pergunta = q.pergunta || "Qual das opções abaixo está mais correta?";
+            alternativasBrutas = [
+              alternativasBrutas[0] || "Resposta considerada correta.",
+              "Não sei responder."
+            ];
+            q.corretaIndex = 0;
+          }
       
-      } else {
-        opt.classList.add("incorrect");
+          // pergunta
+          if (q.pergunta) {
+            const pergunta = document.createElement("p");
+            pergunta.className = "liora-quiz-question";
+            pergunta.textContent = q.pergunta;
+            els.wizardQuiz.appendChild(pergunta);
+          }
       
-        textoFinal = expEspecifica || baseFallback || "";
-        textoFinal = textoFinal
-          ? `❌ Errado. ${textoFinal}`
-          : "❌ Errado. Releia a pergunta e tente novamente.";
+          // construção preservando índice original
+          let alternativas = alternativasBrutas.map((alt, i) => ({
+            texto: String(alt)
+              .replace(/\n/g, " ")
+              .replace(/<\/?[^>]+(>|$)/g, ""),
+            indiceOriginal: i,
+            corretaOriginal: i === Number(q.corretaIndex)
+          }));
       
-        els.wizardQuizFeedback.style.color = "var(--muted)";
-      }
+          // garante correto
+          if (!alternativas.some(a => a.corretaOriginal)) {
+            alternativas[0].corretaOriginal = true;
+          }
       
-      // ---------------------------
-      // A3.3 — Fade elegante
-      // ---------------------------
-      els.wizardQuizFeedback.innerHTML = textoFinal;
+          // embaralha
+          alternativas = shuffle(alternativas);
       
-      // remove a classe para reiniciar a animação
-      els.wizardQuizFeedback.classList.remove("fade");
+          // reindexa
+          alternativas = alternativas.map((alt, idx) => ({
+            ...alt,
+            idx,
+            correta: alt.corretaOriginal
+          }));
       
-      // força reflow (reset da animação)
-      void els.wizardQuizFeedback.offsetWidth;
+          // render das alternativas
+          alternativas.forEach(altObj => {
+            const opt = document.createElement("div");
+            opt.className = "liora-quiz-option";
+            opt.dataset.index = altObj.idx;
       
-      // aplica o fade
-      els.wizardQuizFeedback.classList.add("fade");
-
+            opt.innerHTML = `
+              <input type="radio" name="quiz-${wizard.atual}" value="${altObj.idx}">
+              <span class="liora-quiz-option-text">${altObj.texto}</span>
+              <span class="liora-quiz-dot"></span>
+            `;
       
-              els.wizardQuizFeedback.style.opacity = 1;
-            }, 140);
-          });
+            opt.addEventListener("click", () => {
+              els.wizardQuiz
+                .querySelectorAll(".liora-quiz-option")
+                .forEach(o => o.classList.remove("selected", "correct", "incorrect"));
       
-          els.wizardQuiz.appendChild(opt);
-        });
-      }
-
-     // ----------------------- FLASHCARDS (accordion premium + normalização universal) -----------------------
-      if (els.wizardFlashcards) {
-        let cards = Array.isArray(s.flashcards) ? s.flashcards : [];
+              opt.classList.add("selected");
       
-        // 🔥 Normalização inteligente
-        cards = cards
-          .map((fc) => {
-            // Caso { q: "...", a: "..." }
-            if (fc?.q && fc?.a) return fc;
+              const expEspecifica =
+                explicacoesArr[altObj.indiceOriginal]
+                  ? String(explicacoesArr[altObj.indiceOriginal])
+                  : "";
       
-            // Caso { pergunta: "...", resposta: "..." }
-            if (fc?.pergunta && fc?.resposta)
-              return { q: fc.pergunta, a: fc.resposta };
+              const baseFallback = q.explicacao || "";
       
-            // Caso string "Pergunta: ... | Resposta: ..."
-            if (typeof fc === "string") {
-              const partes = fc.split("|");
-              if (partes.length >= 2) {
-                return {
-                  q: partes[0].replace(/Pergunta:?/i, "").trim(),
-                  a: partes[1].replace(/Resposta:?/i, "").trim(),
-                };
+              let textoFinal = "";
+      
+              if (altObj.correta) {
+                opt.classList.add("correct");
+      
+                textoFinal = expEspecifica || baseFallback || "";
+                textoFinal = textoFinal
+                  ? `✅ Correto! ${textoFinal}`
+                  : "✅ Correto!";
+      
+                els.wizardQuizFeedback.style.color = "var(--brand)";
+      
+              } else {
+                opt.classList.add("incorrect");
+      
+                textoFinal = expEspecifica || baseFallback || "";
+                textoFinal = textoFinal
+                  ? `❌ Errado. ${textoFinal}`
+                  : "❌ Errado. Releia a pergunta e tente novamente.";
+      
+                els.wizardQuizFeedback.style.color = "var(--muted)";
               }
-            }
       
-            // Ignorar conteúdo inválido
-            return null;
-          })
-          .filter((x) => x && x.q && x.a);
-      
-        // Se ainda não sobrou nada
-        if (!cards.length) {
-          els.wizardFlashcards.innerHTML =
-            "<p class='liora-muted'>Nenhum flashcard gerado para esta sessão.</p>";
-        } else {
-          els.wizardFlashcards.innerHTML = cards
-            .map(
-              (f, i) => `
-                <article class="liora-flashcard" data-index="${i}">
-                  <div class="liora-flashcard-q">${f.q}</div>
-                  <div class="liora-flashcard-a">${f.a}</div>
-                </article>
-              `
-            )
-            .join("");
-      
-          // Habilita animações
-          els.wizardFlashcards
-            .querySelectorAll(".liora-flashcard")
-            .forEach((card) => {
-              card.addEventListener("click", () => {
-                card.classList.toggle("open");
-              });
+              // efeito fade premium A3.3
+              els.wizardQuizFeedback.innerHTML = textoFinal;
+              els.wizardQuizFeedback.classList.remove("fade");
+              void els.wizardQuizFeedback.offsetWidth;
+              els.wizardQuizFeedback.classList.add("fade");
             });
+      
+            els.wizardQuiz.appendChild(opt);
+          });
         }
+      
+        // ----------------------- FLASHCARDS PREMIUM -----------------------
+        if (els.wizardFlashcards) {
+          let cards = Array.isArray(s.flashcards) ? s.flashcards : [];
+      
+          cards = cards
+            .map(fc => {
+              if (fc?.q && fc?.a) return fc;
+              if (fc?.pergunta && fc?.resposta)
+                return { q: fc.pergunta, a: fc.resposta };
+              if (typeof fc === "string") {
+                const partes = fc.split("|");
+                if (partes.length >= 2) {
+                  return {
+                    q: partes[0].replace(/Pergunta:?/i, "").trim(),
+                    a: partes[1].replace(/Resposta:?/i, "").trim()
+                  };
+                }
+              }
+              return null;
+            })
+            .filter(x => x && x.q && x.a);
+      
+          if (!cards.length) {
+            els.wizardFlashcards.innerHTML =
+              "<p class='liora-muted'>Nenhum flashcard gerado para esta sessão.</p>";
+          } else {
+            els.wizardFlashcards.innerHTML = cards
+              .map(
+                (f, i) => `
+                  <article class="liora-flashcard" data-index="${i}">
+                    <div class="liora-flashcard-q">
+                      <span class="liora-flashcard-icon">▸</span>
+                      ${f.q}
+                    </div>
+                    <div class="liora-flashcard-a">${f.a}</div>
+                  </article>
+                `
+              )
+              .join("");
+      
+            els.wizardFlashcards
+              .querySelectorAll(".liora-flashcard")
+              .forEach(card => {
+                card.addEventListener("click", () => {
+                  card.classList.toggle("open");
+                });
+              });
+          }
+        }
+      
+        // ----------------------- MAPA MENTAL PREMIUM -----------------------
+        if (els.wizardMapa) {
+          const mapa = construirMapaMental(s);
+          els.wizardMapa.innerHTML = `
+            <pre class="liora-mindmap-block">${
+              mapa || "Mapa mental gerado automaticamente não pôde ser exibido."
+            }</pre>
+          `;
+        }
+      
+        // Study Manager (progresso interno)
+        if (window.lioraEstudos?.updateSessionProgress && s?.id) {
+          window.lioraEstudos.updateSessionProgress(s.id, 0.5);
+        }
+      
+        // atualiza cards laterais
+        renderPlanoResumo(wizard.plano);
       }
-
-      // ----------------------- MAPA MENTAL -----------------------
-      if (els.wizardMapa) {
-        const mapa = construirMapaMental(s);
-        els.wizardMapa.innerHTML = `
-          <pre class="liora-mindmap-block">${
-            mapa || "Mapa mental gerado automaticamente não pôde ser exibido."
-          }</pre>
-        `;
-      }
-
-      // Study Manager: sessão em andamento
-      if (window.lioraEstudos?.updateSessionProgress && s?.id) {
-        window.lioraEstudos.updateSessionProgress(s.id, 0.5);
-      }
-
-      // Atualiza cards laterais (active)
-      renderPlanoResumo(wizard.plano);
-    }
 
     // --------------------------------------------------------
     // NAVEGAÇÃO DO WIZARD
