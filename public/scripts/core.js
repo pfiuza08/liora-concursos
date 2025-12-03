@@ -1246,10 +1246,12 @@
         cards.forEach((c) => c.classList.remove("active"));
         if (cards[index]) {
           cards[index].classList.add("active");
-          cards[index].scrollIntoView({
+         setTimeout(() => {
+          cards[index]?.scrollIntoView({
             behavior: "smooth",
             block: "center",
           });
+        }, 80);
         }
 
         const cont = document.getElementById("liora-sessoes");
