@@ -758,25 +758,43 @@
             const baseFallback = q.explicacao || "";
       
             setTimeout(() => {
-              if (altObj.correta) {
-                opt.classList.add("correct");
+             let textoFinal = "";
+
+if (altObj.correta) {
+        opt.classList.add("correct");
       
-                const textoFinal =
-                  expEspecifica || baseFallback || "";
-                els.wizardQuizFeedback.textContent = textoFinal
-                  ? `✅ Correto! ${textoFinal}`
-                  : "✅ Correto!";
-                els.wizardQuizFeedback.style.color = "var(--brand)";
-              } else {
-                opt.classList.add("incorrect");
+        textoFinal = expEspecifica || baseFallback || "";
+        textoFinal = textoFinal
+          ? `✅ Correto! ${textoFinal}`
+          : "✅ Correto!";
       
-                const textoFinal =
-                  expEspecifica || baseFallback || "";
-                els.wizardQuizFeedback.textContent = textoFinal
-                  ? `❌ Errado. ${textoFinal}`
-                  : "❌ Errado. Releia a pergunta e tente novamente.";
-                els.wizardQuizFeedback.style.color = "var(--muted)";
-              }
+        els.wizardQuizFeedback.style.color = "var(--brand)";
+      
+      } else {
+        opt.classList.add("incorrect");
+      
+        textoFinal = expEspecifica || baseFallback || "";
+        textoFinal = textoFinal
+          ? `❌ Errado. ${textoFinal}`
+          : "❌ Errado. Releia a pergunta e tente novamente.";
+      
+        els.wizardQuizFeedback.style.color = "var(--muted)";
+      }
+      
+      // ---------------------------
+      // A3.3 — Fade elegante
+      // ---------------------------
+      els.wizardQuizFeedback.innerHTML = textoFinal;
+      
+      // remove a classe para reiniciar a animação
+      els.wizardQuizFeedback.classList.remove("fade");
+      
+      // força reflow (reset da animação)
+      void els.wizardQuizFeedback.offsetWidth;
+      
+      // aplica o fade
+      els.wizardQuizFeedback.classList.add("fade");
+
       
               els.wizardQuizFeedback.style.opacity = 1;
             }, 140);
