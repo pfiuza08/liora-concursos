@@ -715,3 +715,13 @@ button:active,
   color: #eee;
 }
 
+#liora-sessao-quiz-feedback.fade {
+  transition: opacity 0.2s ease;
+  opacity: 1 !important;
+}
+.liora-flashcard-icon {
+  transition: transform 0.25s ease;
+}
+.liora-flashcard.open .liora-flashcard-icon {
+  transform: rotate(90deg);
+}
