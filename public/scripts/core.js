@@ -531,6 +531,67 @@
       if (cards[wizard.atual]) cards[wizard.atual].classList.add("active");
     }
 
+    // ==========================================================
+    // 🧩 A3.1 — Reforço Inteligente de Sessões Fracas
+    // ==========================================================
+    async function reforcarSessaoSeNecessario(sessao, temaGeral) {
+    
+      function isVazio(x) {
+        return !x || (Array.isArray(x) && x.length === 0);
+      }
+    
+      const fraca =
+        isVazio(sessao.conteudo?.conceitos) ||
+        isVazio(sessao.conteudo?.exemplos) ||
+        isVazio(sessao.conteudo?.aplicacoes) ||
+        isVazio(sessao.ativacao) ||
+        isVazio(sessao.analogias) ||
+        isVazio(sessao.resumoRapido) ||
+        !sessao.quiz?.pergunta ||
+        isVazio(sessao.flashcards);
+    
+      if (!fraca) return sessao;
+    
+      // ------------------------------------------------------
+      // MICRO-PROMPT DE REFORÇO
+      // ------------------------------------------------------
+      const system = `
+    Você é a IA educacional da Liora.  
+    Você deve **APENAS enriquecer** a sessão abaixo, mantendo tudo o que
+    já existe e completando apenas partes fracas.
+    
+    NUNCA reescreva tudo do zero.
+    NUNCA mude a estrutura da sessão existente.
+    
+    Retorne APENAS JSON válido no formato da sessão.
+    `;
+    
+      const user = `
+    SESSÃO ATUAL:
+    ${JSON.stringify(sessao, null, 2)}
+    
+    TEMA GERAL: ${temaGeral}
+    
+    Reforce conteúdo pobre, crie analogias úteis,
+    aumente exemplos e aplicações, melhore a ativação,
+    e sempre inclua de 3 a 6 flashcards.
+    `;
+    
+      try {
+        const raw = await callLLM(system, user);
+        const improved = safeJsonParse(raw);
+    
+        return {
+          ...sessao,
+          ...improved,
+          conteudo: { ...sessao.conteudo, ...improved.conteudo }
+        };
+      } catch (e) {
+        console.warn("A3.1: falha no reforço, usando versão original", e);
+        return sessao;
+      }
+    }
+  
     // --------------------------------------------------------
     // RENDERIZAÇÃO DO WIZARD (PREMIUM)
     // --------------------------------------------------------
@@ -897,11 +958,12 @@
 
         atualizarStatus("tema", "Construindo sessões...", 60);
 
-        const sessoesNorm = parsed.map((s, i) => ({
-          id: `S${i + 1}`,
-          ordem: i + 1,
-          ...s,
-        }));
+        const sessoesNorm = await Promise.all(
+          parsed.map(async (s, i) => {
+            const sessaoBase = { id: `S${i + 1}`, ordem: i + 1, ...s };
+            return await reforcarSessaoSeNecessario(sessaoBase, tema);
+          })
+        );
 
         wizard = {
           tema,
