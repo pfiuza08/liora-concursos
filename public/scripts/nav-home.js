@@ -149,33 +149,10 @@
     // ⭐ CONTINUE STUDY ENGINE
     // ------------------------------------------------------
     window.lioraContinueStudy = function () {
-      try {
-        const sm = window.lioraEstudos;
-        console.log("▶ continueStudy(): sm =", !!sm);
+    console.log("A2: ContinueStudy desativado (modo padrão).");
+    return;
+   };
 
-        if (!sm?.getPlanoAtivo) return;
-
-        const plano = sm.getPlanoAtivo();
-        console.log("▶ Plano ativo encontrado:", plano);
-
-        if (!plano || !plano.sessoes?.length) return;
-
-        // primeira sessão não concluída
-        let alvo = plano.sessoes.find(s => (s.progresso || 0) < 100);
-        if (!alvo) alvo = plano.sessoes[plano.sessoes.length - 1];
-
-        const index = (alvo.ordem || 1) - 1;
-
-        // abre a origem correta
-        (plano.origem === "tema" ? btnHomeTema : btnHomeUpload)?.click();
-
-        setTimeout(() => {
-          window.lioraIrParaSessao?.(index);
-        }, 350);
-      } catch (e) {
-        console.error("❌ Erro no continueStudy:", e);
-      }
-    };
 
     // ------------------------------------------------------
     // BOTÃO: CONTINUAR ESTUDO
@@ -202,35 +179,16 @@
     // ------------------------------------------------------
     // HOME INTELIGENTE
     // ------------------------------------------------------
-    function atualizarHomeEstudo(from = "manual") {
-      try {
-        const sm = window.lioraEstudos;
-        const plano = sm?.getPlanoAtivo?.();
-
-        console.log(
-          `🏠 atualizarHomeEstudo(${from}) → sm:`, !!sm,
-          "plano:", !!plano
-        );
-
-        if (!btnContinue || !resumoEstudoEl) return;
-
-        if (!plano) {
-          btnContinue.classList.add("hidden");
-          btnContinue.style.display = "none";
-          resumoEstudoEl.textContent =
-            "Crie um plano de estudo por Tema ou PDF para começar.";
-          return;
-        }
-
-        // Plano existe → força exibir botão (especialmente no mobile)
-        btnContinue.classList.remove("hidden");
-        btnContinue.style.display = "block";
-
-        resumoEstudoEl.textContent =
-          `Você está estudando: ${plano.tema} (${plano.sessoes.length} sessões)`;
-      } catch (e) {
-        console.error("Erro atualizarHomeEstudo:", e);
-      }
+     function atualizarHomeEstudo(from = "manual") {
+      console.log(`A2: atualizarHomeEstudo(${from}) desativado no modo padrão.`);
+    
+      if (!btnContinue || !resumoEstudoEl) return;
+    
+      // Home deve permanecer neutra
+      btnContinue.classList.add("hidden");
+      btnContinue.style.display = "none";
+      resumoEstudoEl.textContent =
+        "Crie um plano de estudo por Tema ou PDF para começar.";
     }
 
     // ------------------------------------------------------
@@ -404,10 +362,13 @@
     });
 
     // ------------------------------------------------------
-    // ESTADO INICIAL
+    // A2 — ESTADO INICIAL NEUTRO (sem auto-reset, sem auto-estudo)
     // ------------------------------------------------------
-    window.lioraHardReset();
-    setTimeout(() => atualizarHomeEstudo("startup"), 150);
+    console.log("A2: Estado inicial neutro (nav-home). Home permanece limpa.");
+    hideAllPanels();
+    showHome();
+    btnContinue?.classList.add("hidden");
+    resumoEstudoEl.textContent = "Crie um plano de estudo por Tema ou PDF para começar.";
 
     console.log("🟢 NAV-HOME v79 pronto!");
   });
@@ -415,14 +376,8 @@
   // ------------------------------------------------------
   // LOAD REAL — GARANTE MOBILE E LOCALSTORAGE
   // ------------------------------------------------------
-  window.addEventListener("load", () => {
-    console.log("🌐 NAV-HOME: window.load → safe sync");
+    window.addEventListener("load", () => {
+    console.log("A2: safe-sync desativado.");
+   });
 
-    const safe = from =>
-      window.dispatchEvent(new Event("liora:plan-updated"));
-
-    setTimeout(() => safe("load+300"), 300);
-    setTimeout(() => safe("load+1000"), 1000);
-    setTimeout(() => safe("load+2500"), 2500);
-  });
 })();
