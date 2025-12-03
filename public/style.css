@@ -719,9 +719,25 @@ button:active,
   transition: opacity 0.2s ease;
   opacity: 1 !important;
 }
+
+#liora-sessao-quiz-feedback {
+  opacity: 0;
+}
+
 .liora-flashcard-icon {
   transition: transform 0.25s ease;
 }
 .liora-flashcard.open .liora-flashcard-icon {
   transform: rotate(90deg);
+}
+.liora-mindmap-block {
+  background: #111;
+  border: 1px solid #333;
+  border-radius: 8px;
+  padding: 14px;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 13px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  color: #eee;
 }
