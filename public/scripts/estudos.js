@@ -1,26 +1,31 @@
 // ==========================================================
-// 📘 LIORA — STUDY MANAGER v2
+// 📘 LIORA — STUDY MANAGER v2-PREMIUM-A3.4
 // ----------------------------------------------------------
 // Responsável por:
 // - Armazenar planos de estudo (tema / upload)
 // - Controlar progresso das sessões
-// - Controlar revisões (Modelo A — estilo Duolingo)
+// - Controlar revisões (SRS Lite adaptativo)
+// - Medir retenção (retentionScore 0–100)
 // - Expor dados para:
 //   • Home Inteligente
 //   • Continue Study Engine
 //   • Simulados (prefill)
 //   • Dashboard
 //
-// API pública (usada atualmente):
+// API pública (compatível + expandida):
 // - definirPlano({ tema, origem, sessoes })
 // - getPlanoAtivo()
 // - listarRecentes(limit)
 // - recomendarSimulado()
 // - registrarAbertura(sessaoId)
-// - registrarProgresso(sessaoId)
+// - registrarProgresso(sessaoId, delta?)
 // - marcarRevisada(sessaoId)
 // - agendarRevisao(sessaoId)
 // - listarRevisoesPendentes(limit)
+// - getRevisoesPendentes(limit)   (alias)
+// - registrarQuizResultado(sessaoId, { acertou, tentativas })
+// - registrarFlashcardUso(sessaoId, { qtd })
+// - registrarAbandono(sessaoId, { tempoSegundos })
 //
 // Compatibilidade com versões antigas:
 // - updateSessionProgress(id, frac)
@@ -29,7 +34,7 @@
 // ==========================================================
 
 (function () {
-  console.log("🔵 Liora Estudos v2 carregado...");
+  console.log("🔵 Liora Estudos v2-PREMIUM-A3.4 carregado...");
 
   const STORAGE_KEY = "liora:estudos:v2";
 
@@ -54,8 +59,8 @@
     return Math.floor(diffMs / (1000 * 60 * 60 * 24));
   }
 
-  // Modelo A — intervalos de revisão progressivos
-  function calcIntervaloDias(numRevisoes) {
+  // Modelo base — intervalos de revisão progressivos
+  function calcIntervaloDiasBase(numRevisoes) {
     if (numRevisoes <= 0) return 2;
     if (numRevisoes === 1) return 3;
     if (numRevisoes === 2) return 5;
@@ -63,21 +68,76 @@
     return 10; // estabiliza
   }
 
+  // --------------------------------------------------------
+  // Retenção e força da sessão
+  // --------------------------------------------------------
+  function clamp(num, min, max) {
+    return Math.max(min, Math.min(max, num));
+  }
+
+  function ensureSessaoDefaults(sessao) {
+    // Garante campos para sessões antigas ou novos planos
+    if (typeof sessao.progresso !== "number") sessao.progresso = 0;
+    if (typeof sessao.revisoes !== "number") sessao.revisoes = 0;
+    if (!sessao.lastAccess) sessao.lastAccess = null;
+    if (!sessao.ultimaRevisao) sessao.ultimaRevisao = null;
+    if (!sessao.proximaRevisao) sessao.proximaRevisao = null;
+
+    if (typeof sessao.retentionScore !== "number") {
+      // baseline: se já estava concluída, assume retenção um pouco maior
+      sessao.retentionScore = sessao.progresso >= 100 ? 65 : 45;
+    }
+
+    if (typeof sessao.acertosQuiz !== "number") sessao.acertosQuiz = 0;
+    if (typeof sessao.errosQuiz !== "number") sessao.errosQuiz = 0;
+    if (typeof sessao.flashcardsVistos !== "number")
+      sessao.flashcardsVistos = 0;
+
+    return sessao;
+  }
+
+  function ajustarRetention(sessao, delta) {
+    sessao = ensureSessaoDefaults(sessao);
+    sessao.retentionScore = clamp(
+      Math.round(sessao.retentionScore + delta),
+      0,
+      100
+    );
+  }
+
   function calcForcaSessao(sessao) {
+    sessao = ensureSessaoDefaults(sessao);
     const hoje = hojeISO();
-    if (!sessao.ultimaRevisao) {
-      // se nunca revisou: baseia na proximidade da primeira revisão
-      if (!sessao.proximaRevisao) return "fraca";
-      const diff = diffDaysISO(hoje, sessao.proximaRevisao);
-      if (diff >= 4) return "forte";
-      if (diff >= 2) return "media";
+
+    const ultimaBase = sessao.ultimaRevisao || sessao.lastAccess;
+    const diasDesde = ultimaBase ? diffDaysISO(ultimaBase, hoje) : Infinity;
+    const r = sessao.retentionScore;
+
+    // Se nunca foi vista direito
+    if (!ultimaBase && sessao.progresso < 50) {
       return "fraca";
     }
 
-    const diasDesdeUltima = diffDaysISO(sessao.ultimaRevisao, hoje);
-    if (diasDesdeUltima <= 2) return "forte";
-    if (diasDesdeUltima <= 5) return "media";
+    // Combinação de retenção e tempo desde última revisão/acesso
+    if (r >= 75 && diasDesde <= 5) return "forte";
+    if (r >= 50 && diasDesde <= 7) return "media";
     return "fraca";
+  }
+
+  function calcularProximaRevisaoInteligente(sessao) {
+    sessao = ensureSessaoDefaults(sessao);
+    const hoje = hojeISO();
+
+    const baseIntervalo = calcIntervaloDiasBase(sessao.revisoes || 0);
+    let ajuste = 0;
+
+    // Se retenção está alta, alonga um pouco
+    if (sessao.retentionScore >= 75) ajuste += 2;
+    else if (sessao.retentionScore < 40) ajuste -= 1;
+
+    // Limites mínimos e máximos
+    let dias = clamp(baseIntervalo + ajuste, 1, 14);
+    return addDaysISO(hoje, dias);
   }
 
   // --------------------------------------------------------
@@ -138,12 +198,6 @@
       const ultimaRevisao = s.ultimaRevisao || null;
       let proximaRevisao = s.proximaRevisao || null;
 
-      if (!proximaRevisao && progresso >= 100) {
-        // se terminou a sessão, agenda primeira revisão
-        const dias = calcIntervaloDias(revisoes);
-        proximaRevisao = addDaysISO(hoje, dias);
-      }
-
       const sessaoNorm = {
         id,
         ordem,
@@ -161,7 +215,25 @@
         proximaRevisao,
         forca: "media",
         lastAccess: s.lastAccess || null,
+        retentionScore:
+          typeof s.retentionScore === "number"
+            ? s.retentionScore
+            : progresso >= 100
+            ? 65
+            : 45,
+        acertosQuiz: s.acertosQuiz || 0,
+        errosQuiz: s.errosQuiz || 0,
+        flashcardsVistos: s.flashcardsVistos || 0,
       };
+
+      // se terminou a sessão e não tinha proximaRevisao, agenda primeira
+      if (!sessaoNorm.proximaRevisao && sessaoNorm.progresso >= 100) {
+        sessaoNorm.revisoes = sessaoNorm.revisoes || 1;
+        sessaoNorm.ultimaRevisao = sessaoNorm.ultimaRevisao || hoje;
+        sessaoNorm.proximaRevisao = calcularProximaRevisaoInteligente(
+          sessaoNorm
+        );
+      }
 
       sessaoNorm.forca = calcForcaSessao(sessaoNorm);
       return sessaoNorm;
@@ -182,8 +254,8 @@
     if (!idOrTema) return null;
     const lower = String(idOrTema).toLowerCase();
     return (
-      state.planos.find(p => p.id === idOrTema) ||
-      state.planos.find(p => (p.tema || "").toLowerCase() === lower) ||
+      state.planos.find((p) => p.id === idOrTema) ||
+      state.planos.find((p) => (p.tema || "").toLowerCase() === lower) ||
       null
     );
   }
@@ -191,18 +263,20 @@
   function getPlanoAtivoInterno(state) {
     // hack para _forcarAtivo (usado pelo nav-home)
     if (window.lioraEstudos && window.lioraEstudos._forcarAtivo) {
-      const forced = state.planos.find(p => p.id === window.lioraEstudos._forcarAtivo);
+      const forced = state.planos.find(
+        (p) => p.id === window.lioraEstudos._forcarAtivo
+      );
       if (forced) return forced;
     }
 
     if (state.ativoId) {
-      const p = state.planos.find(p => p.id === state.ativoId);
+      const p = state.planos.find((p) => p.id === state.ativoId);
       if (p) return p;
     }
 
     if (!state.planos.length) return null;
 
-    // fallback: último criado
+    // fallback: último atualizado
     const ordenados = state.planos.slice().sort((a, b) => {
       const da = a.atualizadoEm || a.criadoEm || "";
       const db = b.atualizadoEm || b.criadoEm || "";
@@ -212,8 +286,8 @@
   }
 
   function salvarPlanoAtualizado(state, plano) {
-    const idx = state.planos.findIndex(p => p.id === plano.id);
     plano.atualizadoEm = hojeISO();
+    const idx = state.planos.findIndex((p) => p.id === plano.id);
     if (idx >= 0) {
       state.planos[idx] = plano;
     } else {
@@ -266,7 +340,7 @@
 
       // dificuldade aproximada pela média da força
       let score = 0;
-      plano.sessoes.forEach(s => {
+      plano.sessoes.forEach((s) => {
         if (s.forca === "forte") score += 2;
         else if (s.forca === "media") score += 1;
       });
@@ -294,7 +368,7 @@
       const plano = getPlanoAtivoInterno(state);
       if (!plano) return;
 
-      const s = plano.sessoes.find(s => s.id === sessaoId);
+      const s = plano.sessoes.find((s) => s.id === sessaoId);
       if (!s) return;
 
       s.lastAccess = hojeISO();
@@ -311,24 +385,33 @@
       const plano = getPlanoAtivoInterno(state);
       if (!plano) return;
 
-      const s = plano.sessoes.find(s => s.id === sessaoId);
+      const s = plano.sessoes.find((s) => s.id === sessaoId);
       if (!s) return;
 
+      ensureSessaoDefaults(s);
+
       const novo = Math.min(100, Number(s.progresso || 0) + delta);
+      const antes = s.progresso;
       s.progresso = novo;
 
-      // se terminou a sessão, já agenda primeira revisão
-      if (novo >= 100) {
+      // Ajusta retenção levemente para cada progresso
+      if (novo > antes) {
+        ajustarRetention(s, 4); // estudou mais → sobe um pouco
+      }
+
+      // se terminou a sessão, agenda revisão inicial inteligente
+      if (antes < 100 && novo >= 100) {
         const hoje = hojeISO();
         s.ultimaRevisao = s.ultimaRevisao || hoje;
         s.revisoes = Number(s.revisoes || 0) + 1;
-        const dias = calcIntervaloDias(s.revisoes);
-        s.proximaRevisao = addDaysISO(hoje, dias);
+        ajustarRetention(s, 10); // conclusão dá boost
+        s.proximaRevisao = calcularProximaRevisaoInteligente(s);
       }
 
       s.forca = calcForcaSessao(s);
       salvarPlanoAtualizado(state, plano);
       console.log("📈 Progresso registrado para", sessaoId, "=>", s.progresso);
+      window.dispatchEvent(new Event("liora:plan-updated"));
     },
 
     // Marca sessão como revisada (modo revisão)
@@ -338,34 +421,42 @@
       const plano = getPlanoAtivoInterno(state);
       if (!plano) return;
 
-      const s = plano.sessoes.find(s => s.id === sessaoId);
+      const s = plano.sessoes.find((s) => s.id === sessaoId);
       if (!s) return;
+
+      ensureSessaoDefaults(s);
 
       const hoje = hojeISO();
       s.ultimaRevisao = hoje;
       s.revisoes = Number(s.revisoes || 0) + 1;
-      const dias = calcIntervaloDias(s.revisoes);
-      s.proximaRevisao = addDaysISO(hoje, dias);
+
+      // Revisão bem sucedida melhora bastante retenção
+      ajustarRetention(s, 12);
+
+      s.proximaRevisao = calcularProximaRevisaoInteligente(s);
       s.forca = calcForcaSessao(s);
 
       salvarPlanoAtualizado(state, plano);
       console.log("🔁 Revisão registrada para", sessaoId);
       window.dispatchEvent(new Event("liora:review-updated"));
+      window.dispatchEvent(new Event("liora:plan-updated"));
     },
 
-    // Mantemos separado caso queira usar manualmente
+    // Agendar revisão sem marcar como feita (ex.: antecipar)
     agendarRevisao(sessaoId) {
       if (!sessaoId) return;
       const state = loadState();
       const plano = getPlanoAtivoInterno(state);
       if (!plano) return;
 
-      const s = plano.sessoes.find(s => s.id === sessaoId);
+      const s = plano.sessoes.find((s) => s.id === sessaoId);
       if (!s) return;
 
+      ensureSessaoDefaults(s);
+
       const hoje = hojeISO();
-      const dias = calcIntervaloDias(Number(s.revisoes || 0));
-      s.proximaRevisao = addDaysISO(hoje, dias);
+      const baseIntervalo = calcIntervaloDiasBase(Number(s.revisoes || 0));
+      s.proximaRevisao = addDaysISO(hoje, baseIntervalo);
       s.forca = calcForcaSessao(s);
 
       salvarPlanoAtualizado(state, plano);
@@ -380,12 +471,17 @@
       if (!plano) return [];
 
       const hoje = hojeISO();
-      const pendentes = plano.sessoes.filter(s => {
-        if (!s.proximaRevisao) return false;
-        return s.proximaRevisao <= hoje;
-      });
+      const pendentes = plano.sessoes
+        .map((s) => ensureSessaoDefaults(s))
+        .filter((s) => s.proximaRevisao && s.proximaRevisao <= hoje);
 
+      // Ordena priorizando:
+      // 1) menor retentionScore
+      // 2) data de proximaRevisao mais antiga
       pendentes.sort((a, b) => {
+        if (a.retentionScore !== b.retentionScore) {
+          return a.retentionScore - b.retentionScore;
+        }
         const da = a.proximaRevisao || "";
         const db = b.proximaRevisao || "";
         return da.localeCompare(db);
@@ -394,15 +490,92 @@
       return pendentes.slice(0, limit).map(clonar);
     },
 
+    // Alias para compatibilidade com nav-home v79
+    getRevisoesPendentes(limit = 10) {
+      return api.listarRevisoesPendentes(limit);
+    },
+
     // Marca conclusão total do plano (usado quando termina todas sessões)
     finalizarPlano(idOuTema) {
       const state = loadState();
-      const plano = findPlanoByIdOrTema(state, idOuTema) || getPlanoAtivoInterno(state);
+      const plano =
+        findPlanoByIdOrTema(state, idOuTema) || getPlanoAtivoInterno(state);
       if (!plano) return;
 
       plano.concluidoEm = hojeISO();
       salvarPlanoAtualizado(state, plano);
       console.log("🏁 Plano concluído:", plano.tema);
+      window.dispatchEvent(new Event("liora:plan-updated"));
+    },
+
+    // ------------------------------------------------------
+    // Eventos de aprendizado (A3.4) — para uso futuro
+    // ------------------------------------------------------
+    registrarQuizResultado(sessaoId, { acertou, tentativas = 1 } = {}) {
+      if (!sessaoId) return;
+      const state = loadState();
+      const plano = getPlanoAtivoInterno(state);
+      if (!plano) return;
+      const s = plano.sessoes.find((s) => s.id === sessaoId);
+      if (!s) return;
+
+      ensureSessaoDefaults(s);
+
+      if (acertou) {
+        s.acertosQuiz = (s.acertosQuiz || 0) + 1;
+        if (tentativas <= 1) ajustarRetention(s, 10);
+        else ajustarRetention(s, 6);
+      } else {
+        s.errosQuiz = (s.errosQuiz || 0) + 1;
+        ajustarRetention(s, -10);
+        // se errou muito, traz revisão mais cedo
+        s.proximaRevisao = addDaysISO(hojeISO(), 1);
+      }
+
+      s.forca = calcForcaSessao(s);
+      salvarPlanoAtualizado(state, plano);
+      window.dispatchEvent(new Event("liora:plan-updated"));
+    },
+
+    registrarFlashcardUso(sessaoId, { qtd = 1 } = {}) {
+      if (!sessaoId) return;
+      const state = loadState();
+      const plano = getPlanoAtivoInterno(state);
+      if (!plano) return;
+      const s = plano.sessoes.find((s) => s.id === sessaoId);
+      if (!s) return;
+
+      ensureSessaoDefaults(s);
+
+      const incremento = clamp(qtd, 1, 5);
+      s.flashcardsVistos = (s.flashcardsVistos || 0) + incremento;
+      ajustarRetention(s, 3 + incremento); // estudar flashcards ajuda bem
+
+      s.forca = calcForcaSessao(s);
+      salvarPlanoAtualizado(state, plano);
+      window.dispatchEvent(new Event("liora:plan-updated"));
+    },
+
+    registrarAbandono(sessaoId, { tempoSegundos = 0 } = {}) {
+      if (!sessaoId) return;
+      const state = loadState();
+      const plano = getPlanoAtivoInterno(state);
+      if (!plano) return;
+      const s = plano.sessoes.find((s) => s.id === sessaoId);
+      if (!s) return;
+
+      ensureSessaoDefaults(s);
+
+      if (tempoSegundos < 60 && s.progresso < 50) {
+        // abandono precoce
+        ajustarRetention(s, -15);
+        s.proximaRevisao = addDaysISO(hojeISO(), 1);
+      } else {
+        ajustarRetention(s, -5);
+      }
+
+      s.forca = calcForcaSessao(s);
+      salvarPlanoAtualizado(state, plano);
       window.dispatchEvent(new Event("liora:plan-updated"));
     },
 
@@ -417,15 +590,23 @@
       const plano = getPlanoAtivoInterno(state);
       if (!plano) return;
 
-      const s = plano.sessoes.find(s => s.id === sessaoId);
+      const s = plano.sessoes.find((s) => s.id === sessaoId);
       if (!s) return;
 
-      const alvo = Math.max(Number(s.progresso || 0), Math.floor((frac || 0) * 100));
+      ensureSessaoDefaults(s);
+
+      const alvo = Math.max(
+        Number(s.progresso || 0),
+        Math.floor((frac || 0) * 100)
+      );
       s.progresso = Math.min(100, alvo);
+
+      ajustarRetention(s, 3); // abrir sessão e navegar já conta um pouco
       s.forca = calcForcaSessao(s);
 
       salvarPlanoAtualizado(state, plano);
       console.log("📊 updateSessionProgress", sessaoId, "=>", s.progresso);
+      window.dispatchEvent(new Event("liora:plan-updated"));
     },
 
     // versão antiga — tratar como conclusão da sessão
