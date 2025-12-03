@@ -624,6 +624,13 @@
 
       if (els.wizardTema) els.wizardTema.textContent = wizard.tema || "";
       if (els.wizardTitulo) els.wizardTitulo.textContent = s.titulo || "";
+      // Progresso da sessão (UX Premium)
+      const progressoTopEl = document.getElementById("liora-sessao-progress");
+      if (progressoTopEl) {
+        progressoTopEl.textContent =
+          `Sessão ${wizard.atual + 1} de ${wizard.sessoes.length}`;
+      }
+      
       if (els.wizardObjetivo) els.wizardObjetivo.textContent = s.objetivo || "";
 
       const c = s.conteudo || {};
