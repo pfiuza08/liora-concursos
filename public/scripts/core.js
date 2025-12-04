@@ -1022,6 +1022,15 @@
         renderWizard();
         saveProgress();
 
+        // 🔥 SALVAR NO STUDY MANAGER (Tema)
+        if (window.lioraEstudos?.definirPlano) {
+          window.lioraEstudos.definirPlano({
+            tema: wizard.tema,
+            origem: "tema",
+            sessoes: wizard.sessoes,
+          });
+        }
+      
         window.lioraLoading.hide();
         atualizarStatus("tema", "Plano gerado!", 100);
       } catch (err) {
