@@ -1,5 +1,5 @@
 // ==========================================================
-// 🧠 LIORA — CORE v74-FIX-COMMERCIAL-PREMIUM-STUDY-MANAGER
+// 🧠 LIORA — CORE v74-FIX-COMMERCIAL-PREMIUM-STUDY-MANAGER-CONTINUE-FINAL
 // ----------------------------------------------------------
 // Inclui:
 // ✔ Tema: plano + sessões completas (via /api/gerarPlano)
@@ -13,7 +13,7 @@
 // ✔ Salvamento incremental das sessões (wizard)
 // ✔ Normalização das sessões geradas (id, ordem)
 // ✔ FIX: não reseta lioraEstudos nem memória ao carregar
-// ✔ NOVO: window.lioraRenderWizard() e window.lioraSetWizardFromPlano()
+// ✔ FIX: após reload, Continue Study reconstrói wizard a partir do Study Manager
 // ==========================================================
 
 (function () {
@@ -153,16 +153,12 @@
     window.lioraModoRevisao = false;
 
     const key = (tema, nivel) =>
-      `liora:wizard:${(tema || "").toLowerCase()}::${(nivel || "")
-        .toLowerCase()}`;
+      `liora:wizard:${(tema || "").toLowerCase()}::${(nivel || "").toLowerCase()}`;
 
     const saveProgress = () => {
       if (!wizard.tema || !wizard.nivel) return;
       try {
-        localStorage.setItem(
-          key(wizard.tema, wizard.nivel),
-          JSON.stringify(wizard)
-        );
+        localStorage.setItem(key(wizard.tema, wizard.nivel), JSON.stringify(wizard));
       } catch (e) {
         console.warn("⚠️ Não foi possível salvar no localStorage", e);
       }
@@ -182,7 +178,7 @@
     };
 
     // --------------------------------------------------------
-    // 🌗 THEME (LIGHT / DARK)
+    // 🌗 THEME (LIGHT / DARK) — versão estável
     // --------------------------------------------------------
     (function themeSetup() {
       const btn = els.themeBtn;
@@ -213,9 +209,7 @@
     (function setupEstudosMemory() {
       const api = window.lioraEstudos;
       if (!api) {
-        console.log(
-          "ℹ️ Estudos ainda não disponível no Core (carrega em estudos.js)."
-        );
+        console.log("ℹ️ Estudos ainda não disponível no Core (carrega em estudos.js).");
         return;
       }
       // Integração principal acontece nas chamadas definirPlano / registrarProgresso etc.
@@ -373,15 +367,9 @@
       if (mapaStr) {
         linhas.push(titulo);
 
-        const blocos = mapaStr
-          .split("|")
-          .map((b) => b.trim())
-          .filter(Boolean);
+        const blocos = mapaStr.split("|").map((b) => b.trim()).filter(Boolean);
         blocos.forEach((bloco) => {
-          const parts = bloco
-            .split(">")
-            .map((p) => p.trim())
-            .filter(Boolean);
+          const parts = bloco.split(">").map((p) => p.trim()).filter(Boolean);
           if (!parts.length) return;
 
           linhas.push("├─ " + parts[0]);
@@ -642,9 +630,8 @@ e sempre inclua de 3 a 6 flashcards.
       // progresso no topo da sessão (novo UX Premium)
       const progressoTopEl = document.getElementById("liora-sessao-progress");
       if (progressoTopEl) {
-        progressoTopEl.textContent = `Sessão ${
-          wizard.atual + 1
-        } de ${wizard.sessoes.length}`;
+        progressoTopEl.textContent =
+          `Sessão ${wizard.atual + 1} de ${wizard.sessoes.length}`;
       }
 
       // OBJETIVO
@@ -690,8 +677,7 @@ e sempre inclua de 3 a 6 flashcards.
 
         if (alternativasBrutas.length < 2) {
           console.warn("A3.2: Quiz muito fraco → fallback ativado");
-          q.pergunta =
-            q.pergunta || "Qual das opções abaixo está mais correta?";
+          q.pergunta = q.pergunta || "Qual das opções abaixo está mais correta?";
           alternativasBrutas = [
             alternativasBrutas[0] || "Resposta considerada correta.",
             "Não sei responder.",
@@ -861,80 +847,6 @@ e sempre inclua de 3 a 6 flashcards.
       renderPlanoResumo(wizard.plano);
     }
 
-    // ======================================================
-    // 🌟 APIs PÚBLICAS DO WIZARD (para nav-home / Continue Study)
-    // ======================================================
-
-    // Permite chamar o renderizador diretamente (debug / integração)
-    window.lioraRenderWizard = function () {
-      try {
-        renderWizard();
-      } catch (e) {
-        console.error("❌ Erro em window.lioraRenderWizard:", e);
-      }
-    };
-
-    // Reconstrói o estado interno do wizard a partir de um plano do Study Manager
-    // Usado pelo nav-home (Continue Study)
-    window.lioraSetWizardFromPlano = function (plano, sessaoIndex) {
-      try {
-        if (!plano || !Array.isArray(plano.sessoes) || !plano.sessoes.length) {
-          console.warn("lioraSetWizardFromPlano: plano inválido:", plano);
-          return false;
-        }
-
-        const sessoes = plano.sessoes.map((s, i) => ({
-          id: s.id || `S${i + 1}`,
-          ordem: s.ordem || i + 1,
-          ...s,
-        }));
-
-        const planoResumo = sessoes.map((s, i) => ({
-          id: s.id,
-          ordem: s.ordem || i + 1,
-          titulo: s.titulo || `Sessão ${i + 1}`,
-          objetivo:
-            s.objetivo ||
-            (Array.isArray(s.objetivos) ? s.objetivos[0] : "") ||
-            "",
-        }));
-
-        const alvoIndex =
-          typeof sessaoIndex === "number"
-            ? sessaoIndex
-            : typeof plano.sessaoAtual === "number"
-            ? plano.sessaoAtual
-            : 0;
-
-        const idx = Math.max(
-          0,
-          Math.min(alvoIndex, (plano.sessoes.length || 1) - 1)
-        );
-
-        wizard = {
-          tema: plano.tema || "Plano de Estudo",
-          nivel: plano.nivel || "tema",
-          origem: plano.origem || "tema",
-          plano: planoResumo,
-          sessoes,
-          atual: idx,
-        };
-
-        renderPlanoResumo(wizard.plano);
-        renderWizard();
-        saveProgress();
-
-        console.log(
-          "🔄 lioraSetWizardFromPlano aplicado. Sessão atual:",
-          wizard.atual + 1
-        );
-        return true;
-      } catch (e) {
-        console.error("❌ Erro em lioraSetWizardFromPlano:", e);
-        return false;
-      }
-    };
-
     // --------------------------------------------------------
     // NAVEGAÇÃO DO WIZARD
     // --------------------------------------------------------
@@ -1055,9 +967,7 @@ e sempre inclua de 3 a 6 flashcards.
         div.className = "liora-sessao-card";
 
         div.innerHTML = `
-          <h3>Sessão ${sessao.numero || idx + 1} — ${
-          sessao.titulo || ""
-        }</h3>
+          <h3>Sessão ${sessao.numero || idx + 1} — ${sessao.titulo || ""}</h3>
           ${
             sessao.duracao
               ? `<p><strong>Duração:</strong> ${sessao.duracao}</p>`
@@ -1261,12 +1171,94 @@ com boa didática, exemplos práticos e foco em aplicação real dos conceitos.
       }
     });
 
+    // ======================================================
+    // ⭐ FUNÇÃO OFICIAL — RECONSTRUIR WIZARD A PARTIR DO PLANO
+    // ======================================================
+    function setWizardFromPlanoInterno(plano, startIndex) {
+      try {
+        if (!plano || !Array.isArray(plano.sessoes) || plano.sessoes.length === 0) {
+          console.error("⚠️ setWizardFromPlanoInterno: plano inválido", plano);
+          return false;
+        }
+
+        const idxSan = Math.max(
+          0,
+          Math.min(
+            Number(startIndex) || 0,
+            plano.sessoes.length - 1
+          )
+        );
+
+        wizard = {
+          tema: plano.tema || "Meu Estudo",
+          nivel: plano.nivel || "tema",
+          origem: plano.origem || "tema",
+          sessoes: plano.sessoes.map((s, i) => ({
+            id: s.id || `S${i + 1}`,
+            ordem: s.ordem || i + 1,
+            titulo: s.titulo || `Sessão ${i + 1}`,
+            objetivo: s.objetivo || "",
+            conteudo: s.conteudo || {},
+            analogias: s.analogias || [],
+            ativacao: s.ativacao || [],
+            quiz: s.quiz || {},
+            flashcards: s.flashcards || [],
+            mindmap: s.mindmap || s.mapaMental || "",
+            progresso: s.progresso || 0,
+            forca: s.forca || "media",
+          })),
+          plano: plano.sessoes.map((s, i) => ({
+            id: s.id || `S${i + 1}`,
+            ordem: s.ordem || i + 1,
+            titulo: s.titulo || `Sessão ${i + 1}`,
+            objetivo: s.objetivo || "",
+          })),
+          atual: idxSan,
+        };
+
+        console.log("🔄 Wizard reconstruído a partir do plano ativo:", wizard);
+
+        renderPlanoResumo(wizard.plano);
+        renderWizard();
+        saveProgress();
+
+        return true;
+      } catch (e) {
+        console.error("❌ Erro em setWizardFromPlanoInterno:", e);
+        return false;
+      }
+    }
+
+    // Expor versão pública (opcional, para uso futuro no nav se quiser)
+    window.lioraSetWizardFromPlano = function (plano, startIndex) {
+      return setWizardFromPlanoInterno(plano, startIndex);
+    };
+
     // --------------------------------------------------------
     // ⭐ JUMP-TO-SESSION ÚNICO (Continue Study + cards + revisão)
     // --------------------------------------------------------
     window.lioraIrParaSessao = function (index, isReview = false) {
       try {
-        if (!wizard?.sessoes?.length) return;
+        // Se wizard ainda estiver vazio (cenário: reload + Continue Study),
+        // tenta reconstruir a partir do Study Manager.
+        if (!wizard?.sessoes || !wizard.sessoes.length) {
+          if (window.lioraEstudos?.getPlanoAtivo) {
+            const planoAtivo = window.lioraEstudos.getPlanoAtivo();
+            if (!planoAtivo || !planoAtivo.sessoes?.length) {
+              console.warn("⚠️ lioraIrParaSessao: sem plano ativo no Study Manager.");
+              return;
+            }
+            setWizardFromPlanoInterno(planoAtivo, index);
+          } else {
+            console.warn("⚠️ lioraIrParaSessao: wizard vazio e Study Manager indisponível.");
+            return;
+          }
+        }
+
+        if (!wizard?.sessoes || !wizard.sessoes.length) {
+          console.warn("⚠️ lioraIrParaSessao: wizard continua vazio após tentativa de reconstrução.");
+          return;
+        }
 
         const total = wizard.sessoes.length;
         index = Math.max(0, Math.min(Number(index) || 0, total - 1));
