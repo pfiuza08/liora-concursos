@@ -20,23 +20,20 @@
 
   document.addEventListener("DOMContentLoaded", () => {
   
-    // ======================================================
-  // 🌱 A2-PADRÃO — Reset Seguro de Estado Inicial
-  // - impede carregamentos automáticos de sessões antigas
-  // - evita que home chame estudos automaticamente
-  // ======================================================
-  
-  window.liora = window.liora || {};
-  window.lioraPlano = null;
-  window.lioraSessoes = [];
-  window.lioraEstudos = null;
-  window.lioraCache = {};
-  
-  console.log("🌱 A2: Estado inicial limpo carregado.");
- 
-  
-   
+    // 🌱 A4 — Inicialização Segura (não destrói estudos salvos)
+    console.log("🌱 A4: Inicialização segura — sem reset automático.");
     
+    // Garante apenas que os objetos existam sem APAGAR dados
+    window.liora = window.liora || {};
+    window.lioraCache = window.lioraCache || {};
+    
+    // NÃO sobrescreve mais!
+    if (window.lioraPlano === undefined) window.lioraPlano = null;
+    if (window.lioraSessoes === undefined) window.lioraSessoes = [];
+    // 🔥 Estudo NÃO é mais resetado aqui
+    // if (window.lioraEstudos === undefined) window.lioraEstudos = null;
+
+         
     // --------------------------------------------------------
     // 🌟 UI GLOBAL: Loading & Erro
     // --------------------------------------------------------
