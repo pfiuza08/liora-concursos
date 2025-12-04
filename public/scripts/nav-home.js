@@ -1,17 +1,18 @@
 // ==========================================================
-// 🧭 LIORA — NAV-HOME v81-COMMERCIAL-PREMIUM
+// 🧭 LIORA — NAV-HOME v82-COMMERCIAL-PREMIUM (FINAL)
 // ----------------------------------------------------------
-// Correções incluídas:
+// Correções definitivas:
 //
-// ✔ Continue Study reconstruindo wizard no Core
-// ✔ Sem tela preta após reload
-// ✔ Wizard aparece corretamente
-// ✔ Suporte total ao Study Manager v2
-// ✔ Home atualizada automaticamente
+// ✔ NÃO sobrescreve wizard interno do Core
+// ✔ Continue Study chama apenas lioraIrParaSessao()
+// ✔ Wizard aparece normalmente após "Continuar Estudo"
+// ✔ Home sempre reflete plano ativo do Study Manager
+// ✔ FAB restaurado
+// ✔ Suporte total ao Core v74 + Estudos v2
 // ==========================================================
 
 (function () {
-  console.log("🔵 nav-home.js (v81) carregado...");
+  console.log("🔵 nav-home.js (v82) carregado...");
 
   document.addEventListener("DOMContentLoaded", () => {
 
@@ -45,7 +46,7 @@
     }
 
     // ------------------------------------------------------
-    // A4 — Atualiza Home (exibe "Continuar Estudo" quando existe)
+    // A4 — Atualiza Home com plano ativo
     // ------------------------------------------------------
     function atualizarHome() {
       try {
@@ -77,43 +78,13 @@
       }
     }
 
+    // atualizar ao abrir a home
     setTimeout(atualizarHome, 150);
     window.addEventListener("liora:plan-updated", atualizarHome);
     window.addEventListener("liora:review-updated", atualizarHome);
 
     // ======================================================
-    // ⭐ PATCH v81 — Reconstrução do Wizard dentro do Core
-    // ======================================================
-    function reconstruirWizardNoCore(plano) {
-      try {
-        if (!plano || !plano.sessoes || !plano.sessoes.length) return false;
-
-        // ⚡ Recria o estado usado pelo Core
-        window.wizard = {
-          tema: plano.tema,
-          nivel: plano.nivel || "tema",
-          origem: plano.origem || "tema",
-          plano: plano.sessoes.map(s => ({
-            id: s.id,
-            ordem: s.ordem,
-            titulo: s.titulo,
-            objetivo: s.objetivo || s.objetivos?.[0] || ""
-          })),
-          sessoes: plano.sessoes,
-          atual: plano.sessaoAtual || 0
-        };
-
-        console.log("🔄 Wizard reconstruído no CORE:", window.wizard);
-        return true;
-
-      } catch (e) {
-        console.error("❌ Erro reconstruindo wizard:", e);
-        return false;
-      }
-    }
-
-    // ======================================================
-    // ⭐ CONTINUE STUDY ENGINE — AGORA 100% FUNCIONAL
+    // ⭐ CONTINUE STUDY — VERSÃO FINAL
     // ======================================================
     window.lioraContinueStudy = function () {
       try {
@@ -131,25 +102,20 @@
         let idx = plano.sessoes.findIndex(s => (s.progresso || 0) < 100);
         if (idx < 0) idx = plano.sessoes.length - 1;
 
-        // 2️⃣ Reconstruir wizard dentro do Core
-        const ok = reconstruirWizardNoCore(plano);
-        if (!ok) {
-          alert("Erro ao reconstruir sessão de estudo.");
-          return;
-        }
+        console.log("➡ Selecionada sessão:", idx + 1);
 
-        console.log("➡ Indo para sessão:", idx + 1);
-
+        // 2️⃣ Garantir modo normal
         window.lioraModoRevisao = false;
 
-        // 3️⃣ Exibir área do APP
+        // 3️⃣ Abrir app
         showApp();
 
-        // 4️⃣ Agora sim — chamar função do Core
+        // 4️⃣ Agora sim — chamar função nativa do Core
         if (typeof window.lioraIrParaSessao === "function") {
           window.lioraIrParaSessao(idx, false);
         } else {
           console.error("❌ window.lioraIrParaSessao não existe! Core não carregou?");
+          alert("Erro ao abrir sessão. Recarregue a página.");
         }
 
       } catch (e) {
@@ -166,6 +132,7 @@
       document.getElementById("painel-tema")?.classList.remove("hidden");
       document.getElementById("painel-upload")?.classList.add("hidden");
       document.getElementById("liora-sessoes")?.classList.add("hidden");
+      document.getElementById("area-plano")?.classList.add("hidden");
     });
 
     btnUpload?.addEventListener("click", () => {
@@ -174,6 +141,7 @@
       document.getElementById("painel-tema")?.classList.add("hidden");
       document.getElementById("painel-upload")?.classList.remove("hidden");
       document.getElementById("liora-sessoes")?.classList.add("hidden");
+      document.getElementById("area-plano")?.classList.add("hidden");
     });
 
     btnSimulados?.addEventListener("click", () => {
@@ -200,11 +168,12 @@
       window.lioraContinueStudy();
     });
 
+    // FAB HOME
     fabHome?.addEventListener("click", () => {
       showHome();
       setTimeout(atualizarHome, 200);
     });
 
-    console.log("🟢 NAV-HOME v81 pronto!");
+    console.log("🟢 NAV-HOME v82 pronto!");
   });
 })();
