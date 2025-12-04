@@ -50,6 +50,11 @@ html, body {
   transition: background .3s ease, color .3s ease;
 }
 
+/* Visibilidade padrão usada pelo Tailwind */
+.hidden {
+  display: none !important;
+}
+
 /* --------------------------------------------------------------
    BOTÕES
 -------------------------------------------------------------- */
