@@ -33,6 +33,8 @@
 // - completeSession(id)
 // ==========================================================
 
+console.log(">>> estudos.js INICIOU <<<");
+
 (function () {
   console.log("🔵 Liora Estudos v2-PREMIUM-A3.4 carregado...");
 
