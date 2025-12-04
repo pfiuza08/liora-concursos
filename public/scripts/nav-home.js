@@ -1,20 +1,23 @@
 // ==========================================================
-// 🧭 LIORA — NAV-HOME v80-COMMERCIAL-PREMIUM
+// 🧭 LIORA — NAV-HOME v81-COMMERCIAL-PREMIUM
 // ----------------------------------------------------------
-// Funções incluídas:
+// Correções incluídas:
 //
-// ✔ Render inicial da HOME
-// ✔ Continue Study Engine com fallback inteligente
-// ✔ Integração total com Study Manager (lioraEstudos v2)
-// ✔ Exibe botão "Continuar Estudo" automaticamente
-// ✔ Mostra resumo do plano ativo
-// ✔ Atualiza home ao receber eventos de update
+// ✔ Continue Study reconstruindo wizard no Core
+// ✔ Sem tela preta após reload
+// ✔ Wizard aparece corretamente
+// ✔ Suporte total ao Study Manager v2
+// ✔ Home atualizada automaticamente
 // ==========================================================
 
 (function () {
-  console.log("🔵 nav-home.js (v80) carregado...");
+  console.log("🔵 nav-home.js (v81) carregado...");
 
   document.addEventListener("DOMContentLoaded", () => {
+
+    // ------------------------------------------------------
+    // ELEMENTOS
+    // ------------------------------------------------------
     const home = document.getElementById("liora-home");
     const app = document.getElementById("liora-app");
 
@@ -28,9 +31,9 @@
 
     const fabHome = document.getElementById("fab-home");
 
-    // ======================================================
-    // UTIL
-    // ======================================================
+    // ------------------------------------------------------
+    // UI helpers
+    // ------------------------------------------------------
     function showApp() {
       home.classList.add("hidden");
       app.classList.remove("hidden");
@@ -41,9 +44,9 @@
       home.classList.remove("hidden");
     }
 
-    // ======================================================
-    // A4 — Inicialização da HOME
-    // ======================================================
+    // ------------------------------------------------------
+    // A4 — Atualiza Home (exibe "Continuar Estudo" quando existe)
+    // ------------------------------------------------------
     function atualizarHome() {
       try {
         const sm = window.lioraEstudos;
@@ -64,51 +67,91 @@
           return;
         }
 
-        // há plano ativo
         btnContinue?.classList.remove("hidden");
         resumoEl.textContent = `Tema ativo: ${plano.tema} — ${plano.sessoes.length} sessões`;
 
         console.log("A4: Plano ativo identificado:", plano);
+
       } catch (e) {
         console.warn("Erro ao atualizar home:", e);
       }
     }
 
-    // Atualiza quando a página carrega
     setTimeout(atualizarHome, 150);
-
-    // Atualiza quando o plano muda
     window.addEventListener("liora:plan-updated", atualizarHome);
     window.addEventListener("liora:review-updated", atualizarHome);
 
     // ======================================================
-    // ⭐ CONTINUE STUDY ENGINE — ATIVADO
+    // ⭐ PATCH v81 — Reconstrução do Wizard dentro do Core
+    // ======================================================
+    function reconstruirWizardNoCore(plano) {
+      try {
+        if (!plano || !plano.sessoes || !plano.sessoes.length) return false;
+
+        // ⚡ Recria o estado usado pelo Core
+        window.wizard = {
+          tema: plano.tema,
+          nivel: plano.nivel || "tema",
+          origem: plano.origem || "tema",
+          plano: plano.sessoes.map(s => ({
+            id: s.id,
+            ordem: s.ordem,
+            titulo: s.titulo,
+            objetivo: s.objetivo || s.objetivos?.[0] || ""
+          })),
+          sessoes: plano.sessoes,
+          atual: plano.sessaoAtual || 0
+        };
+
+        console.log("🔄 Wizard reconstruído no CORE:", window.wizard);
+        return true;
+
+      } catch (e) {
+        console.error("❌ Erro reconstruindo wizard:", e);
+        return false;
+      }
+    }
+
+    // ======================================================
+    // ⭐ CONTINUE STUDY ENGINE — AGORA 100% FUNCIONAL
     // ======================================================
     window.lioraContinueStudy = function () {
       try {
         const sm = window.lioraEstudos;
         console.log("🟦 CONTINUAR ESTUDO clicado. sm =", sm);
 
-        if (!sm) {
-          return alert("Aguarde o carregamento dos dados de estudo.");
-        }
+        if (!sm) return alert("Aguarde o carregamento dos dados de estudo.");
 
         const plano = sm.getPlanoAtivo();
-        if (!plano) {
-          return alert("Você ainda não tem um plano criado neste dispositivo.");
-        }
+        if (!plano) return alert("Você ainda não tem um plano criado.");
 
         console.log("▶ ContinueStudy: plano ativo encontrado:", plano.tema);
 
-        // calcula próxima sessão incompleta
+        // 1️⃣ Encontrar próxima sessão incompleta
         let idx = plano.sessoes.findIndex(s => (s.progresso || 0) < 100);
-        if (idx < 0) idx = plano.sessoes.length - 1; // tudo completo → última sessão
+        if (idx < 0) idx = plano.sessoes.length - 1;
+
+        // 2️⃣ Reconstruir wizard dentro do Core
+        const ok = reconstruirWizardNoCore(plano);
+        if (!ok) {
+          alert("Erro ao reconstruir sessão de estudo.");
+          return;
+        }
 
         console.log("➡ Indo para sessão:", idx + 1);
 
         window.lioraModoRevisao = false;
+
+        // 3️⃣ Exibir área do APP
         showApp();
-        window.lioraIrParaSessao(idx, false);
+
+        // 4️⃣ Agora sim — chamar função do Core
+        if (typeof window.lioraIrParaSessao === "function") {
+          window.lioraIrParaSessao(idx, false);
+        } else {
+          console.error("❌ window.lioraIrParaSessao não existe! Core não carregou?");
+        }
+
       } catch (e) {
         console.error("❌ Erro no ContinueStudy:", e);
       }
@@ -141,7 +184,6 @@
       document.getElementById("painel-estudo")?.classList.add("hidden");
       document.getElementById("area-plano")?.classList.add("hidden");
 
-      // Prefill do simulado (Study Manager → IA)
       if (window.lioraPreFillSimulado) window.lioraPreFillSimulado();
     });
 
@@ -154,19 +196,15 @@
       document.getElementById("area-plano")?.classList.add("hidden");
     });
 
-    // CONTINUAR ESTUDO
-    if (btnContinue) {
-      btnContinue.addEventListener("click", () => {
-        window.lioraContinueStudy();
-      });
-    }
+    btnContinue?.addEventListener("click", () => {
+      window.lioraContinueStudy();
+    });
 
-    // FAB HOME
     fabHome?.addEventListener("click", () => {
       showHome();
       setTimeout(atualizarHome, 200);
     });
 
-    console.log("🟢 NAV-HOME v80 pronto!");
+    console.log("🟢 NAV-HOME v81 pronto!");
   });
 })();
