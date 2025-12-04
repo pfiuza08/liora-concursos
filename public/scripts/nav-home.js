@@ -1,23 +1,22 @@
 // ==========================================================
-// 🧭 LIORA — NAV-HOME v82-COMMERCIAL-PREMIUM (FINAL)
+// 🧭 LIORA — NAV-HOME v83-COMMERCIAL-PREMIUM (FINAL)
 // ----------------------------------------------------------
-// Correções definitivas:
-//
-// ✔ NÃO sobrescreve wizard interno do Core
-// ✔ Continue Study chama apenas lioraIrParaSessao()
-// ✔ Wizard aparece normalmente após "Continuar Estudo"
-// ✔ Home sempre reflete plano ativo do Study Manager
-// ✔ FAB restaurado
-// ✔ Suporte total ao Core v74 + Estudos v2
+// Versão estável FINAL:
+// ✔ Continue Study 100% funcional
+// ✔ Reconstrução correta do wizard via Core
+// ✔ Não sobrescreve wizard interno
+// ✔ Home reflete plano ativo sempre
+// ✔ FAB e botões totalmente operacionais
+// ✔ Compatível com Core v74 + Estudos v2
 // ==========================================================
 
 (function () {
-  console.log("🔵 nav-home.js (v82) carregado...");
+  console.log("🔵 nav-home.js (v83) carregado...");
 
   document.addEventListener("DOMContentLoaded", () => {
 
     // ------------------------------------------------------
-    // ELEMENTOS
+    // ELEMENTOS DA INTERFACE
     // ------------------------------------------------------
     const home = document.getElementById("liora-home");
     const app = document.getElementById("liora-app");
@@ -33,7 +32,7 @@
     const fabHome = document.getElementById("fab-home");
 
     // ------------------------------------------------------
-    // UI helpers
+    // UI HELPERS
     // ------------------------------------------------------
     function showApp() {
       home.classList.add("hidden");
@@ -46,7 +45,7 @@
     }
 
     // ------------------------------------------------------
-    // A4 — Atualiza Home com plano ativo
+    // ATUALIZAÇÃO DA HOME
     // ------------------------------------------------------
     function atualizarHome() {
       try {
@@ -78,23 +77,27 @@
       }
     }
 
-    // atualizar ao abrir a home
     setTimeout(atualizarHome, 150);
     window.addEventListener("liora:plan-updated", atualizarHome);
     window.addEventListener("liora:review-updated", atualizarHome);
 
     // ======================================================
-    // ⭐ CONTINUE STUDY — VERSÃO FINAL
+    // ⭐ CONTINUE STUDY — VERSÃO FINAL E CORRETA
     // ======================================================
     window.lioraContinueStudy = function () {
       try {
         const sm = window.lioraEstudos;
+
         console.log("🟦 CONTINUAR ESTUDO clicado. sm =", sm);
 
-        if (!sm) return alert("Aguarde o carregamento dos dados de estudo.");
+        if (!sm) {
+          return alert("Aguarde o carregamento dos dados de estudo.");
+        }
 
         const plano = sm.getPlanoAtivo();
-        if (!plano) return alert("Você ainda não tem um plano criado.");
+        if (!plano) {
+          return alert("Você ainda não tem um plano criado.");
+        }
 
         console.log("▶ ContinueStudy: plano ativo encontrado:", plano.tema);
 
@@ -102,19 +105,33 @@
         let idx = plano.sessoes.findIndex(s => (s.progresso || 0) < 100);
         if (idx < 0) idx = plano.sessoes.length - 1;
 
-        console.log("➡ Selecionada sessão:", idx + 1);
+        console.log("➡ Próxima sessão selecionada:", idx + 1);
 
-        // 2️⃣ Garantir modo normal
+        // 2️⃣ Desativa revisão
         window.lioraModoRevisao = false;
 
-        // 3️⃣ Abrir app
+        // 3️⃣ RECONSTRUIR WIZARD — ESSENCIAL
+        if (typeof window.lioraSetWizardFromPlano === "function") {
+          const ok = window.lioraSetWizardFromPlano(plano, idx);
+          if (!ok) {
+            console.error("❌ Falha ao reconstruir wizard");
+            alert("Erro ao abrir sessão. Recarregue a página.");
+            return;
+          }
+        } else {
+          console.error("❌ lioraSetWizardFromPlano não existe! Core não carregou?");
+          alert("Erro interno. Recarregue a página.");
+          return;
+        }
+
+        // 4️⃣ Abre a área de estudo
         showApp();
 
-        // 4️⃣ Agora sim — chamar função nativa do Core
+        // 5️⃣ Agora sim: move para a sessão
         if (typeof window.lioraIrParaSessao === "function") {
           window.lioraIrParaSessao(idx, false);
         } else {
-          console.error("❌ window.lioraIrParaSessao não existe! Core não carregou?");
+          console.error("❌ lioraIrParaSessao não existe!");
           alert("Erro ao abrir sessão. Recarregue a página.");
         }
 
@@ -124,7 +141,7 @@
     };
 
     // ======================================================
-    // BOTÕES DA HOME
+    // BOTÕES DE NAVEGAÇÃO
     // ======================================================
     btnTema?.addEventListener("click", () => {
       showApp();
@@ -174,6 +191,6 @@
       setTimeout(atualizarHome, 200);
     });
 
-    console.log("🟢 NAV-HOME v82 pronto!");
+    console.log("🟢 NAV-HOME v83 pronto!");
   });
 })();
