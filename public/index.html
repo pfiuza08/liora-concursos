@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Liora — Estudo Inteligente</title>
 
-  <!-- Tailwind (temporário enquanto finalizamos build) -->
+  <!-- Tailwind (temporário; será removido no build final) -->
   <script src="https://cdn.tailwindcss.com"></script>
 
   <!-- PDF.js -->
@@ -16,7 +16,7 @@
   </script>
 
   <!-- CSS -->
-  <link rel="stylesheet" href="/style.css?v=79">
+  <link rel="stylesheet" href="/style.css?v=80">
   <link rel="stylesheet" href="/style-simulados.css?v=5">
 
 </head>
@@ -100,7 +100,7 @@
 
 
   <!-- ============================================
-       APP — WORKSPACE ÚNICO
+       APP — WORKSPACE
   ============================================= -->
   <section id="liora-app" class="space-y-10 hidden">
 
@@ -166,7 +166,7 @@
 
 
     <!-- ============================================
-         PLANO DE ESTUDO (lista lateral)
+         PLANO DE ESTUDO — LISTA LATERAL
     ============================================= -->
     <div id="area-plano" class="space-y-6 hidden">
       <div class="flex justify-between items-baseline">
@@ -187,53 +187,50 @@
 
       <div class="liora-wizard-card">
 
-        <div id="liora-sessao-progress"
-        class="text-sm text-[var(--muted)] mb-2"></div>
+        <div id="liora-sessao-progress" class="text-sm text-[var(--muted)] mb-2"></div>
 
         <h4 id="liora-sessao-titulo" class="liora-wizard-title"></h4>
 
         <!-- OBJETIVO -->
         <div class="liora-wizard-section">
-          <h5 id="liora-sessao-objetivo-label">OBJETIVO</h5>
+          <h5>OBJETIVO</h5>
           <p id="liora-sessao-objetivo"></p>
         </div>
 
         <!-- CONTEÚDO -->
         <div class="liora-wizard-section">
-          <h5 id="liora-sessao-conteudo-label">CONTEÚDO</h5>
+          <h5>CONTEÚDO</h5>
           <div id="liora-sessao-conteudo"></div>
         </div>
 
         <!-- ANALOGIAS -->
         <div class="liora-wizard-section">
-          <h5 id="liora-sessao-analogias-label">ANALOGIAS</h5>
+          <h5>ANALOGIAS</h5>
           <div id="liora-sessao-analogias"></div>
         </div>
 
         <!-- ATIVAÇÃO -->
         <div class="liora-wizard-section">
-          <h5 id="liora-sessao-ativacao-label">ATIVAÇÃO</h5>
+          <h5>ATIVAÇÃO</h5>
           <ul id="liora-sessao-ativacao"></ul>
         </div>
 
-        <!-- TESTE RÁPIDO -->
+        <!-- QUIZ -->
         <div class="liora-wizard-section">
-          <h5 id="liora-sessao-quiz-label">TESTE RÁPIDO</h5>
+          <h5>TESTE RÁPIDO</h5>
           <div id="liora-sessao-quiz"></div>
           <p id="liora-sessao-quiz-feedback" class="liora-quiz-feedback"></p>
         </div>
 
-        <!-- FLASHCARDS NOVOS -->
+        <!-- FLASHCARDS -->
         <div class="liora-wizard-section">
-          <h5 id="liora-sessao-flashcards-label">FLASHCARDS</h5>
+          <h5>FLASHCARDS</h5>
           <div id="liora-sessao-flashcards" class="liora-flashcards-box"></div>
         </div>
 
-        <div class="liora-flashcard-icon">▸</div>
-       
         <!-- MAPA MENTAL -->
         <div class="liora-wizard-section">
-          <h5 id="liora-sessao-mapa-label">MAPA MENTAL</h5>
+          <h5>MAPA MENTAL</h5>
           <pre id="liora-sessao-mapa" class="liora-mapa-mental"></pre>
         </div>
 
@@ -248,9 +245,8 @@
     </div>
 
 
-
     <!-- ============================================
-         SIMULADOS (v97-PREMIUM-C3)
+         SIMULADOS
     ============================================= -->
     <div id="area-simulado" class="hidden space-y-8">
 
@@ -276,9 +272,8 @@
     </div>
 
 
-
     <!-- ============================================
-         DASHBOARD DE DESEMPENHO
+         DASHBOARD
     ============================================= -->
     <div id="area-dashboard" class="hidden space-y-8">
 
@@ -296,42 +291,16 @@
       <div id="dash-ultimos" class="mt-4"></div>
     </div>
 
-
-
-    <!-- ============================================
-         REVISÕES PENDENTES
-    ============================================= -->
-    <div id="liora-revisoes-box" class="hidden mt-10 w-full max-w-xl mx-auto">
-      <h3 class="text-xl font-semibold flex items-center gap-2 mb-4">
-        🔁 Revisões Pendentes
-      </h3>
-
-      <div id="liora-revisoes-list" class="flex flex-col gap-3"></div>
-    </div>
-
-
-    <!-- ============================================
-         ESTUDOS RECENTES
-    ============================================= -->
-    <div id="liora-estudos-recentes" class="hidden mt-6">
-      <h3 class="text-lg font-semibold mb-2">📘 Estudos Recentes</h3>
-      <div id="liora-estudos-list" class="flex flex-col gap-2"></div>
-    </div>
-
   </section>
 
 </main>
 
 
-<!-- ============================================
-     FAB HOME
-============================================ -->
-<button id="fab-home" class="liora-fab-home">⬅ Início</button>
+<!-- FAB HOME -->
+<button id="fab-home" class="liora-fab-home hidden">⬅ Início</button>
 
 
-<!-- ============================================
-     MODAL DE CONFIGURAÇÃO DO SIMULADO
-============================================ -->
+<!-- SIMULADO MODAL -->
 <div id="sim-modal-backdrop" class="sim-modal-backdrop hidden">
   <div class="sim-modal">
 
@@ -382,17 +351,11 @@
   </div>
 </div>
 
-
-<!-- ============================================
-     FAB DO SIMULADO
-============================================ -->
-<button id="sim-fab" class="sim-fab">⚙</button>
+<!-- FAB SIMULADO -->
+<button id="sim-fab" class="sim-fab hidden">⚙</button>
 
 
-
-<!-- ============================================
-     OVERLAY DE ERRO
-============================================ -->
+<!-- ERRO -->
 <div id="liora-error" class="liora-error hidden">
   <div class="liora-error-card">
     <div class="liora-error-icon">⚠️</div>
@@ -408,9 +371,7 @@
 </div>
 
 
-<!-- ============================================
-     OVERLAY DE LOADING
-============================================ -->
+<!-- LOADING -->
 <div id="liora-loading" class="liora-loading hidden">
   <div class="liora-loading-card">
     <div class="liora-spinner"></div>
@@ -419,7 +380,7 @@
 </div>
 
 
-
+<!-- SCRIPTS -->
 <script src="/scripts/liora-ui.js?v=1" defer></script>
 <script src="/scripts/pdf-extractor.js?v=1" defer></script>
 <script src="/scripts/pdf-structure.js?v=1" defer></script>
@@ -431,16 +392,15 @@
 <!-- Core SEMPRE antes do Study Manager -->
 <script src="/scripts/core.js?v=75" defer></script>
 
-<!-- Study Manager precisa rodar ANTES do nav-home -->
+<!-- Study Manager -->
 <script src="/scripts/estudos.js?v=2" defer></script>
 
-<!-- Nav-Home depende do Study Manager -->
-<script src="/scripts/nav-home.js?v=79" defer></script>
+<!-- Nav-Home -->
+<script src="/scripts/nav-home.js?v=80" defer></script>
 
-<!-- Reset secreto com caminho absoluto -->
+<!-- Reset secreto -->
 <script src="/scripts/reset-secret.js" defer></script>
 
-  
 <div id="liora-build-info">Liora v74-PREMIUM-C7.2</div>
 
 </body>
