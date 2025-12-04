@@ -420,22 +420,26 @@
 
 
 
-<!-- ============================================
-     SCRIPTS (Carregados do /public/scripts)
-============================================ -->
-<script src="/scripts/liora-ui.js?v=1"></script>
-<script src="/scripts/pdf-extractor.js?v=1"></script>
-<script src="/scripts/pdf-structure.js?v=1"></script>
-<script src="/scripts/outline-generator.js?v=1"></script>
-<script src="/scripts/semantic.js?v=1"></script>
-<script src="/scripts/simulados.js?v=1"></script>
-<script src="/scripts/dashboard.js?v=2"></script>
-<script src="/scripts/core.js?v=75"></script>  
-<script src="/scripts/estudos.js?v=2"></script>
-<script src="/scripts/nav-home.js?v=79"></script>
+<script src="/scripts/liora-ui.js?v=1" defer></script>
+<script src="/scripts/pdf-extractor.js?v=1" defer></script>
+<script src="/scripts/pdf-structure.js?v=1" defer></script>
+<script src="/scripts/outline-generator.js?v=1" defer></script>
+<script src="/scripts/semantic.js?v=1" defer></script>
+<script src="/scripts/simulados.js?v=1" defer></script>
+<script src="/scripts/dashboard.js?v=2" defer></script>
 
-<!-- 🔐 Reset secreto -->
-<script src="/scripts/reset-secret.js"></script>
+<!-- Core SEMPRE antes do Study Manager -->
+<script src="/scripts/core.js?v=75" defer></script>
+
+<!-- Study Manager precisa rodar ANTES do nav-home -->
+<script src="/scripts/estudos.js?v=2" defer></script>
+
+<!-- Nav-Home depende do Study Manager -->
+<script src="/scripts/nav-home.js?v=79" defer></script>
+
+<!-- Reset secreto com caminho absoluto -->
+<script src="/scripts/reset-secret.js" defer></script>
+
   
 <div id="liora-build-info">Liora v74-PREMIUM-C7.2</div>
 
