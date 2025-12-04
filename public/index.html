@@ -97,153 +97,140 @@
 
   </section>
 
+ <!-- ============================================
+     APP — WORKSPACE
+============================================= -->
+<section id="liora-app" class="space-y-10 hidden">
 
+  <!-- HEADER DO WORKSPACE -->
+  <div class="space-y-1">
+    <h2 id="liora-view-title" class="section-title"></h2>
+    <p id="liora-view-subtitle" class="text-sm text-[var(--muted)]"></p>
+  </div>
 
   <!-- ============================================
-       APP — WORKSPACE
+       PAINEL DE ESTUDO
   ============================================= -->
-  <section id="liora-app" class="space-y-10 hidden">
+  <div id="painel-estudo" class="space-y-8 hidden">
 
-    <!-- HEADER DO WORKSPACE -->
-    <div class="space-y-1">
-      <h2 id="liora-view-title" class="section-title"></h2>
-      <p id="liora-view-subtitle" class="text-sm text-[var(--muted)]"></p>
+    <!-- PAINEL TEMA -->
+    <div id="painel-tema" class="space-y-3 hidden">
+      <label class="text-sm font-medium">Tema de estudo</label>
+      <input id="inp-tema" type="text"
+             placeholder="Ex.: Direito Constitucional — Controle de Constitucionalidade">
+
+      <label class="text-sm font-medium">Nível</label>
+      <select id="sel-nivel">
+        <option value="iniciante">Iniciante</option>
+        <option value="intermediario">Intermediário</option>
+        <option value="avancado">Avançado</option>
+      </select>
+
+      <button id="btn-gerar" class="btn w-full mt-2">Gerar plano</button>
+
+      <p id="status" class="text-xs text-[var(--muted)] mt-1"></p>
+
+      <div id="barra-tema" class="liora-progress mt-1">
+        <div id="barra-tema-fill" class="liora-progress__bar"></div>
+      </div>
     </div>
 
+    <!-- PAINEL UPLOAD -->
+    <div id="painel-upload" class="space-y-3 hidden">
 
-    <!-- ============================================
-         PAINEL DE ESTUDO
-    ============================================= -->
-    <div id="painel-estudo" class="space-y-8 hidden">
+      <label class="text-sm font-medium">Envie seu PDF</label>
 
-      <!-- PAINEL TEMA -->
-      <div id="painel-tema" class="space-y-3 hidden">
-        <label class="text-sm font-medium">Tema de estudo</label>
-        <input id="inp-tema" type="text"
-               placeholder="Ex.: Direito Constitucional — Controle de Constitucionalidade">
+      <label id="upload-zone" class="upload-zone">
+        <p id="upload-text">Clique ou arraste um PDF</p>
+        <div id="upload-spinner"></div>
+        <input id="inp-file" type="file" accept="application/pdf" />
+      </label>
 
-        <label class="text-sm font-medium">Nível</label>
-        <select id="sel-nivel">
-          <option value="iniciante">Iniciante</option>
-          <option value="intermediario">Intermediário</option>
-          <option value="avancado">Avançado</option>
-        </select>
+      <p class="text-xs text-[var(--muted)]">
+        PDFs com até 80 páginas funcionam melhor nesta versão.
+      </p>
 
-        <button id="btn-gerar" class="btn w-full mt-2">Gerar plano</button>
+      <button id="btn-gerar-upload" class="btn w-full mt-1">Gerar plano</button>
 
-        <p id="status" class="text-xs text-[var(--muted)] mt-1"></p>
-
-        <div id="barra-tema" class="liora-progress mt-1">
-          <div id="barra-tema-fill" class="liora-progress__bar"></div>
-        </div>
-      </div>
-
-      <!-- PAINEL UPLOAD -->
-      <div id="painel-upload" class="space-y-3 hidden">
-
-        <label class="text-sm font-medium">Envie seu PDF</label>
-
-        <label id="upload-zone" class="upload-zone">
-          <p id="upload-text">Clique ou arraste um PDF</p>
-          <div id="upload-spinner"></div>
-          <input id="inp-file" type="file" accept="application/pdf" />
-        </label>
-
-        <p class="text-xs text-[var(--muted)]">
-          PDFs com até 80 páginas funcionam melhor nesta versão.
-        </p>
-
-        <button id="btn-gerar-upload" class="btn w-full mt-1">Gerar plano</button>
-
-        <p id="status-upload" class="text-xs text-[var(--muted)] mt-1"></p>
-        <div id="barra-upload" class="liora-progress mt-1">
-          <div id="barra-upload-fill" class="liora-progress__bar"></div>
-        </div>
-
+      <p id="status-upload" class="text-xs text-[var(--muted)] mt-1"></p>
+      <div id="barra-upload" class="liora-progress mt-1">
+        <div id="barra-upload-fill" class="liora-progress__bar"></div>
       </div>
 
     </div>
 
+  </div>
 
-    <!-- ============================================
-         PLANO DE ESTUDO — LISTA LATERAL
-    ============================================= -->
-    <div id="area-plano" class="space-y-6 hidden">
-      <div class="flex justify-between items-baseline">
-        <h3 class="section-title">Seu Plano de Estudo</h3>
-        <p id="ctx" class="text-sm text-[var(--muted)]"></p>
-      </div>
-
-      <div id="plano" class="space-y-4"></div>
+  <!-- ============================================
+       LISTA LATERAL DO PLANO
+  ============================================= -->
+  <div id="area-plano" class="space-y-6 hidden">
+    <div class="flex justify-between items-baseline">
+      <h3 class="section-title">Seu Plano de Estudo</h3>
+      <p id="ctx" class="text-sm text-[var(--muted)]"></p>
     </div>
 
+    <div id="plano" class="space-y-4"></div>
+  </div>
 
-    <!-- ============================================
-         WIZARD DE SESSÕES — PREMIUM
-    ============================================= -->
-    <div id="liora-sessoes" class="hidden space-y-6">
+  <!-- ============================================
+       WIZARD — (DEVE VIR DEPOIS DE #area-plano)
+  ============================================= -->
+  <div id="liora-sessoes" class="hidden space-y-6">
 
-      <h3 id="liora-tema-ativo" class="text-lg font-semibold"></h3>
+    <h3 id="liora-tema-ativo" class="text-lg font-semibold"></h3>
 
-      <div class="liora-wizard-card">
+    <div class="liora-wizard-card">
 
-        <div id="liora-sessao-progress" class="text-sm text-[var(--muted)] mb-2"></div>
+      <div id="liora-sessao-progress" class="text-sm text-[var(--muted)] mb-2"></div>
 
-        <h4 id="liora-sessao-titulo" class="liora-wizard-title"></h4>
+      <h4 id="liora-sessao-titulo" class="liora-wizard-title"></h4>
 
-        <!-- OBJETIVO -->
-        <div class="liora-wizard-section">
-          <h5>OBJETIVO</h5>
-          <p id="liora-sessao-objetivo"></p>
-        </div>
-
-        <!-- CONTEÚDO -->
-        <div class="liora-wizard-section">
-          <h5>CONTEÚDO</h5>
-          <div id="liora-sessao-conteudo"></div>
-        </div>
-
-        <!-- ANALOGIAS -->
-        <div class="liora-wizard-section">
-          <h5>ANALOGIAS</h5>
-          <div id="liora-sessao-analogias"></div>
-        </div>
-
-        <!-- ATIVAÇÃO -->
-        <div class="liora-wizard-section">
-          <h5>ATIVAÇÃO</h5>
-          <ul id="liora-sessao-ativacao"></ul>
-        </div>
-
-        <!-- QUIZ -->
-        <div class="liora-wizard-section">
-          <h5>TESTE RÁPIDO</h5>
-          <div id="liora-sessao-quiz"></div>
-          <p id="liora-sessao-quiz-feedback" class="liora-quiz-feedback"></p>
-        </div>
-
-        <!-- FLASHCARDS -->
-        <div class="liora-wizard-section">
-          <h5>FLASHCARDS</h5>
-          <div id="liora-sessao-flashcards" class="liora-flashcards-box"></div>
-        </div>
-
-        <!-- MAPA MENTAL -->
-        <div class="liora-wizard-section">
-          <h5>MAPA MENTAL</h5>
-          <pre id="liora-sessao-mapa" class="liora-mapa-mental"></pre>
-        </div>
-
+      <div class="liora-wizard-section">
+        <h5>OBJETIVO</h5>
+        <p id="liora-sessao-objetivo"></p>
       </div>
 
-      <div class="flex justify-between gap-3">
-        <button id="liora-btn-voltar" class="btn-secondary">◀ Voltar</button>
-        <button id="liora-btn-revisar" class="btn-secondary">✓ Revisar</button>
-        <button id="liora-btn-proxima" class="btn-primary">Próxima ▶</button>
+      <div class="liora-wizard-section">
+        <h5>CONTEÚDO</h5>
+        <div id="liora-sessao-conteudo"></div>
+      </div>
+
+      <div class="liora-wizard-section">
+        <h5>ANALOGIAS</h5>
+        <div id="liora-sessao-analogias"></div>
+      </div>
+
+      <div class="liora-wizard-section">
+        <h5>ATIVAÇÃO</h5>
+        <ul id="liora-sessao-ativacao"></ul>
+      </div>
+
+      <div class="liora-wizard-section">
+        <h5>TESTE RÁPIDO</h5>
+        <div id="liora-sessao-quiz"></div>
+        <p id="liora-sessao-quiz-feedback" class="liora-quiz-feedback"></p>
+      </div>
+
+      <div class="liora-wizard-section">
+        <h5>FLASHCARDS</h5>
+        <div id="liora-sessao-flashcards" class="liora-flashcards-box"></div>
+      </div>
+
+      <div class="liora-wizard-section">
+        <h5>MAPA MENTAL</h5>
+        <pre id="liora-sessao-mapa" class="liora-mapa-mental"></pre>
       </div>
 
     </div>
 
+    <div class="flex justify-between gap-3">
+      <button id="liora-btn-voltar" class="btn-secondary">◀ Voltar</button>
+      <button id="liora-btn-revisar" class="btn-secondary">✓ Revisar</button>
+      <button id="liora-btn-proxima" class="btn-primary">Próxima ▶</button>
+    </div>
+
+  </div>
 
     <!-- ============================================
          SIMULADOS
