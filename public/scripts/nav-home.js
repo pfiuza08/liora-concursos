@@ -1,16 +1,18 @@
 // ==========================================================
-// 🧭 LIORA — NAV-HOME v84-COMMERCIAL-PREMIUM (FINAL)
+// 🧭 LIORA — NAV-HOME v85-COMMERCIAL-PREMIUM (FINAL)
 // ----------------------------------------------------------
-// Versão estável com fixes de navegação:
+// Novidades v85:
+// ✔ Botão "📚 Meus Planos" ao lado de "Continuar estudo"
+// ✔ Modal "Meus Planos" listando planos recentes (Study Manager)
+// ✔ Ao escolher um plano, ele vira ATIVO e já abre o wizard na sessão 1
 // ✔ FAB "Início" aparece sempre que estiver no app (fora da home)
-// ✔ FAB do Simulado (⚙) aparece ao entrar em Simulados
-// ✔ FAB do Simulado some ao voltar para Estudo/Dashboard/Home
-// ✔ Continue Study 100% funcional com Core v74/75 + Estudos v2
+// ✔ FAB do Simulado (⚙) aparece ao entrar em Simulados e some ao sair
+// ✔ Continue Study 100% funcional com Core v75 + Estudos v2
 // ✔ Home sempre reflete o plano ativo do Study Manager
 // ==========================================================
 
 (function () {
-  console.log("🔵 nav-home.js (v84) carregado...");
+  console.log("🔵 nav-home.js (v85) carregado...");
 
   document.addEventListener("DOMContentLoaded", () => {
     // ------------------------------------------------------
@@ -25,18 +27,25 @@
     const btnDashboard = document.getElementById("home-dashboard");
 
     const btnContinue = document.getElementById("home-continuar-estudo");
+    const btnMeusPlanos = document.getElementById("home-meus-planos");
     const resumoEl = document.getElementById("home-resumo-estudo");
 
     const fabHome = document.getElementById("fab-home");
     const simFab = document.getElementById("sim-fab");
     const simModalBackdrop = document.getElementById("sim-modal-backdrop");
 
+    // Modal "Meus Planos"
+    const meusPlanosModal = document.getElementById("meus-planos-modal");
+    const meusPlanosList = document.getElementById("meus-planos-list");
+    const meusPlanosFechar = document.getElementById("meus-planos-fechar");
+
     // Estado inicial dos FABs
     if (fabHome) fabHome.classList.add("hidden");
     if (simFab) simFab.classList.add("hidden");
+    if (meusPlanosModal) meusPlanosModal.classList.add("hidden");
 
     // ------------------------------------------------------
-    // UI HELPERS
+    // UI HELPERS GERAIS
     // ------------------------------------------------------
     function showApp() {
       if (!home || !app) return;
@@ -223,6 +232,150 @@
     };
 
     // ======================================================
+    // 📚 MEUS PLANOS — MODAL
+    // ======================================================
+    function fecharMeusPlanosModal() {
+      if (meusPlanosModal) meusPlanosModal.classList.add("hidden");
+    }
+
+    function abrirMeusPlanosModal() {
+      try {
+        const sm = window.lioraEstudos;
+        if (!sm) {
+          alert("Os dados de estudo ainda estão carregando. Tente novamente em alguns segundos.");
+          return;
+        }
+
+        if (!meusPlanosModal || !meusPlanosList) {
+          console.warn("Modal 'Meus Planos' não está no HTML.");
+          return;
+        }
+
+        const planos =
+          typeof sm.listarRecentes === "function"
+            ? sm.listarRecentes(10)
+            : [];
+
+        meusPlanosList.innerHTML = "";
+
+        if (!planos || !planos.length) {
+          meusPlanosList.innerHTML =
+            "<p class='liora-modal-empty'>Você ainda não tem planos salvos.</p>";
+          meusPlanosModal.classList.remove("hidden");
+          return;
+        }
+
+        planos.forEach((plano) => {
+          const total = (plano.sessoes || []).length;
+          const concluidas = (plano.sessoes || []).filter(
+            (s) => (s.progresso || 0) >= 100
+          ).length;
+          const somaProgresso = (plano.sessoes || []).reduce(
+            (acc, s) => acc + (s.progresso || 0),
+            0
+          );
+          const progressoMedio = total ? Math.round(somaProgresso / total) : 0;
+
+          const item = document.createElement("button");
+          item.type = "button";
+          item.className = "liora-plan-item";
+          item.dataset.id = plano.id;
+
+          const criadoEm = plano.criadoEm || "";
+          const atualizadoEm = plano.atualizadoEm || "";
+
+          item.innerHTML = `
+            <div class="liora-plan-item-top">
+              <h3 class="liora-plan-title">${plano.tema}</h3>
+              <span class="liora-plan-badge">${total} sessão(ões)</span>
+            </div>
+            <div class="liora-plan-item-middle">
+              <span class="liora-plan-progress">
+                Progresso médio: ${progressoMedio}%
+              </span>
+              <span class="liora-plan-status">
+                Concluídas: ${concluidas}/${total}
+              </span>
+            </div>
+            <div class="liora-plan-item-footer">
+              <span class="liora-plan-dates">
+                Criado em: ${criadoEm || "—"}
+                ${
+                  atualizadoEm && atualizadoEm !== criadoEm
+                    ? ` • Atualizado em: ${atualizadoEm}`
+                    : ""
+                }
+              </span>
+              <span class="liora-plan-cta">Ativar plano</span>
+            </div>
+          `;
+
+          item.addEventListener("click", () => {
+            ativarPlanoEIr(plano.id);
+          });
+
+          meusPlanosList.appendChild(item);
+        });
+
+        meusPlanosModal.classList.remove("hidden");
+      } catch (e) {
+        console.error("❌ Erro ao abrir modal Meus Planos:", e);
+      }
+    }
+
+    function ativarPlanoEIr(planoId) {
+      try {
+        const sm = window.lioraEstudos;
+        if (!sm) return;
+
+        // Recarrega a lista para pegar o objeto completo do plano
+        const planos =
+          typeof sm.listarRecentes === "function"
+            ? sm.listarRecentes(20)
+            : [];
+        const plano = planos.find((p) => p.id === planoId);
+        if (!plano) {
+          console.warn("Plano não encontrado para ativar:", planoId);
+          return;
+        }
+
+        // Marca como ativo no Study Manager (se existir o método novo)
+        if (typeof sm.ativarPlano === "function") {
+          sm.ativarPlano(planoId);
+        } else {
+          // fallback: força ativo apenas em memória
+          sm._forcarAtivo = planoId;
+          window.dispatchEvent(new Event("liora:plan-updated"));
+        }
+
+        // Reconstrói wizard a partir do plano escolhido
+        if (typeof window.lioraSetWizardFromPlano === "function") {
+          window.lioraSetWizardFromPlano(plano, 0);
+        }
+
+        // Abre o app já na área de estudo + wizard do plano
+        showApp();
+        hideAllAppSections();
+        document.getElementById("liora-sessoes")?.classList.remove("hidden");
+        document.getElementById("area-plano")?.classList.remove("hidden");
+
+        if (typeof window.lioraIrParaSessao === "function") {
+          window.lioraIrParaSessao(0, false);
+        }
+
+        fecharMeusPlanosModal();
+      } catch (e) {
+        console.error("❌ Erro ao ativar plano:", e);
+      }
+    }
+
+    // Listeners do modal
+    meusPlanosFechar?.addEventListener("click", fecharMeusPlanosModal);
+    meusPlanosModal?.addEventListener("click", (ev) => {
+      if (ev.target === meusPlanosModal) fecharMeusPlanosModal();
+    });
+
+    // ======================================================
     // BOTÕES DE NAVEGAÇÃO
     // ======================================================
     btnTema?.addEventListener("click", () => {
@@ -245,12 +398,16 @@
       window.lioraContinueStudy();
     });
 
+    btnMeusPlanos?.addEventListener("click", () => {
+      abrirMeusPlanosModal();
+    });
+
     // FAB HOME
     fabHome?.addEventListener("click", () => {
       showHome();
       setTimeout(atualizarHome, 200);
     });
 
-    console.log("🟢 NAV-HOME v84 pronto!");
+    console.log("🟢 NAV-HOME v85 pronto!");
   });
 })();
