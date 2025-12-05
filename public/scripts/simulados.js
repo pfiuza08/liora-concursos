@@ -1,18 +1,18 @@
 // ==============================================================
-// 🧠 LIORA — SIMULADOS v97-PREMIUM-C3
+// 🧠 LIORA — SIMULADOS v98-PREMIUM-COMMERCIAL
 // - IA /api/liora para gerar questões reais
 // - Seletor de IAs auxiliares (modo C3)
 // - Badges de IA
 // - Timer, navegação, resultado, histórico
 // - Perfil de banca + dificuldade + modo tema opcional
-// - Compatível com core v74 (Study Manager + Prefill)
+// - Integrado com Study Manager v2 (recomendarSimulado + listarRecentes)
+// - Compatível com nav-home (homeDashboard + FAB + modal)
 // ==============================================================
 
 (function () {
-  console.log("🔵 Liora Simulados v97-PREMIUM-C3 carregado...");
+  console.log("🔵 Liora Simulados v98-PREMIUM-COMMERCIAL carregado...");
 
   document.addEventListener("DOMContentLoaded", () => {
-
     // -------------------------------------------------------
     // ELEMENTOS
     // -------------------------------------------------------
@@ -38,7 +38,7 @@
       selDif: document.getElementById("sim-modal-dificuldade"),
       inpTema: document.getElementById("sim-modal-tema"),
 
-      avisoEstudos: document.getElementById("sim-modal-aviso-estudos")
+      avisoEstudos: document.getElementById("sim-modal-aviso-estudos"),
     };
 
     if (!els.areaSim || !els.fabSim) {
@@ -56,7 +56,7 @@
         emoji: "🏛️",
         badgeClass: "sim-ia-badge--banca",
         prompt:
-          "refine vocabulário, estilo e pegadinhas para refletir fielmente o padrão da banca."
+          "refine vocabulário, estilo e pegadinhas para refletir fielmente o padrão da banca.",
       },
       explica: {
         id: "explica",
@@ -64,7 +64,7 @@
         emoji: "💡",
         badgeClass: "sim-ia-badge--explica",
         prompt:
-          "garanta gabarito robusto, consistente e explicações objetivas quando solicitado."
+          "garanta gabarito robusto, consistente e explicações objetivas quando solicitado.",
       },
       reforco: {
         id: "reforco",
@@ -72,13 +72,13 @@
         emoji: "📈",
         badgeClass: "sim-ia-badge--reforco",
         prompt:
-          "aumente levemente a complexidade em tópicos chave, evitando trivialidades."
-      }
+          "aumente levemente a complexidade em tópicos chave, evitando trivialidades.",
+      },
     };
 
     // IA ativa por padrão: Banca + Explica
     const iaState = {
-      selecionadas: new Set(["banca", "explica"])
+      selecionadas: new Set(["banca", "explica"]),
     };
 
     // -------------------------------------------------------
@@ -97,7 +97,7 @@
       tempoRestante: 0,
       timerID: null,
       loadingIA: false,
-      loadingIntervalID: null
+      loadingIntervalID: null,
     };
 
     function loadHistorico() {
@@ -125,7 +125,9 @@
     // IA SELECTOR (chips C3)
     // -------------------------------------------------------
     function setupIaSelector() {
-      const modalBody = document.querySelector("#sim-modal-backdrop .sim-modal-body");
+      const modalBody = document.querySelector(
+        "#sim-modal-backdrop .sim-modal-body"
+      );
       if (!modalBody) return;
       if (modalBody.querySelector(".sim-ia-row")) return;
 
@@ -153,7 +155,7 @@
 
         chip.onclick = () => {
           if (iaState.selecionadas.has(cfg.id)) {
-            if (iaState.selecionadas.size === 1) return;
+            if (iaState.selecionadas.size === 1) return; // garante ao menos 1 IA ativa
             iaState.selecionadas.delete(cfg.id);
             chip.classList.remove("active");
           } else {
@@ -217,19 +219,23 @@
       const extra = getIaPromptFragment();
 
       const prompt = `
-Gere ${qtd} questões inéditas da banca ${banca} sobre "${tema || "tema geral"}".
+Gere ${qtd} questões inéditas da banca ${banca} sobre "${
+        tema || "tema geral"
+      }".
 Dificuldade: ${dificuldade}.
-Estrutura obrigatória:
-{
-  "enunciado": "...",
-  "alternativas": ["A...", "B...", "C...", "D..."],
-  "corretaIndex": 0-3,
-  "nivel": "facil|medio|dificil"
-}
+Estrutura obrigatória (array de objetos):
+[
+  {
+    "enunciado": "...",
+    "alternativas": ["A...", "B...", "C...", "D..."],
+    "corretaIndex": 0-3,
+    "nivel": "facil|medio|dificil"
+  }
+]
 Regras:
 - Sem markdown.
 - Não repetir alternativas.
-- Pode usar <u> e <mark>.
+- Pode usar <u> e <mark> no enunciado.
 ${extra}
 Retorne apenas JSON válido.
 `;
@@ -239,8 +245,8 @@ Retorne apenas JSON válido.
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           system: "Você é Liora, criadora de simulados premium.",
-          user: prompt
-        })
+          user: prompt,
+        }),
       });
 
       const json = await res.json().catch(() => ({}));
@@ -249,11 +255,11 @@ Retorne apenas JSON válido.
       try {
         let raw = json.output;
         const block =
-          raw.match(/```json([\\s\\S]*?)```/i) ||
-          raw.match(/```([\\s\\S]*?)```/i);
+          raw.match(/```json([\s\S]*?)```/i) ||
+          raw.match(/```([\s\S]*?)```/i);
         if (block) raw = block[1];
 
-        const first = raw.search(/[\\[\\{]/);
+        const first = raw.search(/[\[\{]/);
         const last = Math.max(raw.lastIndexOf("]"), raw.lastIndexOf("}"));
         raw = raw.slice(first, last + 1);
 
@@ -266,6 +272,7 @@ Retorne apenas JSON válido.
         }
       }
     }
+
     // -------------------------------------------------------
     // LIMPEZA DE QUESTÕES
     // -------------------------------------------------------
@@ -278,7 +285,10 @@ Retorne apenas JSON válido.
 
           q.alternativas.forEach((a) => {
             const o = String(a).trim();
-            const n = o.toLowerCase().replace(/[.,;:!?]/g, "").replace(/\s+/g, " ");
+            const n = o
+              .toLowerCase()
+              .replace(/[.,;:!?]/g, "")
+              .replace(/\s+/g, " ");
             if (!seen.has(n)) {
               seen.add(n);
               alt.push(o);
@@ -299,7 +309,7 @@ Retorne apenas JSON válido.
             corretaIndex: ci,
             nivel: q.nivel || "medio",
             indice: idx + 1,
-            resp: null
+            resp: null,
           };
         });
     }
@@ -308,30 +318,57 @@ Retorne apenas JSON válido.
     // MODAL
     // -------------------------------------------------------
     function abrirModal() {
+      if (!els.modal) return;
+
       els.modal.classList.add("visible");
+      console.log("⚙ Abrindo modal de simulado...");
 
-      if (window.lioraPreFillSimulado) window.lioraPreFillSimulado();
+      // Prefill com Study Manager (se existir)
+      if (window.lioraPreFillSimulado) {
+        try {
+          window.lioraPreFillSimulado();
+        } catch (e) {
+          console.warn("⚠️ Erro no prefill do simulado:", e);
+        }
+      }
 
+      // Aviso sobre planos de estudo — compatível com Study Manager v2
       if (els.avisoEstudos) {
-        if (!window.lioraEstudos || window.lioraEstudos.lista().length === 0) {
+        try {
+          const sm = window.lioraEstudos;
+          const temSM =
+            sm && typeof sm.listarRecentes === "function";
+          const recentes = temSM ? sm.listarRecentes(5) : [];
+
+          if (!temSM || !recentes.length) {
+            els.avisoEstudos.style.display = "block";
+            els.avisoEstudos.textContent =
+              "💡 Gere um plano de estudos (Tema ou PDF) para recomendações personalizadas.";
+          } else {
+            els.avisoEstudos.style.display = "none";
+          }
+        } catch (e) {
+          console.warn("⚠️ Erro ao verificar planos de estudo:", e);
           els.avisoEstudos.style.display = "block";
           els.avisoEstudos.textContent =
-            "💡 Gere um plano de estudos (Tema ou PDF) para recomendações personalizadas.";
-        } else {
-          els.avisoEstudos.style.display = "none";
+            "💡 Gere um plano de estudos (Tema ou PDF) para aproveitar recomendações da Liora.";
         }
       }
     }
 
     function fecharModal() {
+      if (!els.modal) return;
       els.modal.classList.remove("visible");
     }
 
+    // Ligações do FAB e do modal
     els.fabSim.onclick = abrirModal;
-    els.modalClose.onclick = fecharModal;
-    els.modal.onclick = (e) => {
-      if (e.target === els.modal) fecharModal();
-    };
+    if (els.modalClose) els.modalClose.onclick = fecharModal;
+    if (els.modal) {
+      els.modal.onclick = (e) => {
+        if (e.target === els.modal) fecharModal();
+      };
+    }
 
     // -------------------------------------------------------
     // LOADING IA
@@ -341,7 +378,9 @@ Retorne apenas JSON válido.
 
       if (active) {
         if (window.lioraLoading) {
-          const msg = `Gerando questões${STATE.tema ? ` para "${STATE.tema}"` : ""}...`;
+          const msg = `Gerando questões${
+            STATE.tema ? ` para "${STATE.tema}"` : ""
+          }...`;
           window.lioraLoading.show(msg);
         }
 
@@ -349,7 +388,9 @@ Retorne apenas JSON válido.
           els.questaoContainer.innerHTML = `
             <div class="sim-questao-card">
               <p class="text-sm text-[var(--muted)] mb-2">
-                Gerando questões com IA${STATE.tema ? ` para <b>${STATE.tema}</b>` : ""}...
+                Gerando questões com IA${
+                  STATE.tema ? ` para <b>${STATE.tema}</b>` : ""
+                }...
               </p>
               <div class="sim-progress w-full mb-1">
                 <div id="sim-ia-loading-bar" class="sim-progress-fill" style="width:10%;"></div>
@@ -366,11 +407,13 @@ Retorne apenas JSON válido.
           if (bar) bar.style.width = pct + "%";
         }, 350);
 
-        els.nav.classList.add("hidden");
-        els.resultado.classList.add("hidden");
+        if (els.nav) els.nav.classList.add("hidden");
+        if (els.resultado) els.resultado.classList.add("hidden");
       } else {
-        clearInterval(STATE.loadingIntervalID);
-        STATE.loadingIntervalID = null;
+        if (STATE.loadingIntervalID) {
+          clearInterval(STATE.loadingIntervalID);
+          STATE.loadingIntervalID = null;
+        }
 
         if (window.lioraLoading) window.lioraLoading.hide();
       }
@@ -380,28 +423,38 @@ Retorne apenas JSON válido.
     // TIMER
     // -------------------------------------------------------
     const fmt = (s) =>
-      `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
+      `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(
+        s % 60
+      ).padStart(2, "0")}`;
 
     function startTimer() {
       STATE.tempoRestante = STATE.tempoMin * 60;
-      els.timer.textContent = fmt(STATE.tempoRestante);
-      els.timer.classList.remove("hidden");
+      if (els.timer) {
+        els.timer.textContent = fmt(STATE.tempoRestante);
+        els.timer.classList.remove("hidden");
+      }
 
       STATE.timerID = setInterval(() => {
         STATE.tempoRestante--;
-        els.timer.textContent = fmt(Math.max(STATE.tempoRestante, 0));
+        if (els.timer) {
+          els.timer.textContent = fmt(Math.max(STATE.tempoRestante, 0));
+        }
 
         if (STATE.tempoRestante <= 0) {
           clearInterval(STATE.timerID);
+          STATE.timerID = null;
           finalizarSimulado(true);
         }
       }, 1000);
     }
 
     function stopTimer() {
-      clearInterval(STATE.timerID);
-      STATE.timerID = null;
+      if (STATE.timerID) {
+        clearInterval(STATE.timerID);
+        STATE.timerID = null;
+      }
     }
+
     // -------------------------------------------------------
     // RENDERIZAR QUESTÃO ATUAL
     // -------------------------------------------------------
@@ -411,8 +464,13 @@ Retorne apenas JSON válido.
 
       const q = STATE.questoes[STATE.atual];
 
+      if (!els.questaoContainer) return;
+
       els.questaoContainer.innerHTML = "";
-      els.progressBar.style.width = ((STATE.atual + 1) / total) * 100 + "%";
+      if (els.progressBar) {
+        els.progressBar.style.width =
+          ((STATE.atual + 1) / total) * 100 + "%";
+      }
 
       const header = document.createElement("div");
       header.className =
@@ -449,10 +507,14 @@ Retorne apenas JSON válido.
 
       els.questaoContainer.appendChild(card);
 
-      els.nav.classList.remove("hidden");
-      els.btnProxima.textContent =
-        STATE.atual === total - 1 ? "Finalizar ▶" : "Próxima ▶";
-      els.btnVoltar.disabled = STATE.atual === 0;
+      if (els.nav) els.nav.classList.remove("hidden");
+      if (els.btnProxima) {
+        els.btnProxima.textContent =
+          STATE.atual === total - 1 ? "Finalizar ▶" : "Próxima ▶";
+      }
+      if (els.btnVoltar) {
+        els.btnVoltar.disabled = STATE.atual === 0;
+      }
     }
 
     // -------------------------------------------------------
@@ -469,40 +531,48 @@ Retorne apenas JSON válido.
       const perc = total > 0 ? Math.round((acertos / total) * 100) : 0;
       const tempoUsado = STATE.tempoMin * 60 - STATE.tempoRestante;
 
-      els.questaoContainer.innerHTML = "";
-      els.nav.classList.add("hidden");
+      if (els.questaoContainer) els.questaoContainer.innerHTML = "";
+      if (els.nav) els.nav.classList.add("hidden");
 
-      els.resultado.innerHTML = `
-        <div class="sim-resultado-card">
-          <div class="flex justify-between items-start gap-3">
-            <div>
-              <div class="sim-resultado-titulo">Resultado do simulado</div>
-              <p class="text-xs text-[var(--muted)] mb-1">
-                ${STATE.banca} · ${STATE.tema || "Tema não informado"}
-              </p>
-              <div>${renderIaBadges()}</div>
+      if (els.resultado) {
+        els.resultado.innerHTML = `
+          <div class="sim-resultado-card">
+            <div class="flex justify-between items-start gap-3">
+              <div>
+                <div class="sim-resultado-titulo">Resultado do simulado</div>
+                <p class="text-xs text-[var(--muted)] mb-1">
+                  ${STATE.banca} · ${STATE.tema || "Tema não informado"}
+                </p>
+                <div>${renderIaBadges()}</div>
+              </div>
+              <div class="text-right">
+                <div class="sim-score">${perc}%</div>
+                <p class="text-[0.7rem] text-[var(--muted)]">
+                  ${acertos} / ${total} questões
+                </p>
+              </div>
             </div>
-            <div class="text-right">
-              <div class="sim-score">${perc}%</div>
-              <p class="text-[0.7rem] text-[var(--muted)]">
-                ${acertos} / ${total} questões
-              </p>
+
+            <p class="sim-feedback">
+              Tempo: ${fmt(tempoUsado)}${
+          porTempo ? " · Encerrado por tempo." : ""
+        }
+            </p>
+
+            <div class="mt-4 flex flex-wrap gap-2">
+              <button type="button" id="sim-refazer" class="btn-secondary">
+                Fazer outro simulado
+              </button>
+              <button type="button" id="sim-dashboard" class="btn-primary">
+                Ver meu desempenho
+              </button>
             </div>
           </div>
+        `;
+        els.resultado.classList.remove("hidden");
+      }
 
-          <p class="sim-feedback">
-            Tempo: ${fmt(tempoUsado)}${porTempo ? " · Encerrado por tempo." : ""}
-          </p>
-
-          <div class="mt-4 flex flex-wrap gap-2">
-            <button type="button" id="sim-refazer" class="btn-secondary">Fazer outro simulado</button>
-            <button type="button" id="sim-dashboard" class="btn-primary">Ver meu desempenho</button>
-          </div>
-        </div>
-      `;
-      els.resultado.classList.remove("hidden");
-
-      // salva no histórico local
+      // salva no histórico local (lido pelo Dashboard v6/v7)
       salvarNoHistorico({
         dataISO: new Date().toISOString(),
         banca: STATE.banca,
@@ -519,20 +589,20 @@ Retorne apenas JSON válido.
 
       if (refazer) {
         refazer.onclick = () => {
-          // reseta estado mínimo e volta pro modal
           STATE.questoes = [];
           STATE.atual = 0;
-          els.resultado.classList.add("hidden");
+          if (els.resultado) els.resultado.classList.add("hidden");
           abrirModal();
         };
       }
 
       if (dashBtn) {
         dashBtn.onclick = () => {
+          // Integração com nav-home (global homeDashboard)
           if (window.homeDashboard) {
             window.homeDashboard();
           } else {
-            // fallback: rola para área do dashboard se existir
+            // Fallback simples: scroll até o dashboard se existir
             const dash = document.getElementById("area-dashboard");
             if (dash) {
               dash.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -545,83 +615,101 @@ Retorne apenas JSON válido.
     // -------------------------------------------------------
     // NAVEGAÇÃO ENTRE QUESTÕES
     // -------------------------------------------------------
-    els.btnVoltar.onclick = () => {
-      if (STATE.atual > 0) {
-        STATE.atual--;
-        renderQuestao();
-      }
-    };
+    if (els.btnVoltar) {
+      els.btnVoltar.onclick = () => {
+        if (STATE.atual > 0) {
+          STATE.atual--;
+          renderQuestao();
+        }
+      };
+    }
 
-    els.btnProxima.onclick = () => {
-      if (STATE.atual < STATE.questoes.length - 1) {
-        STATE.atual++;
-        renderQuestao();
-      } else {
-        finalizarSimulado(false);
-      }
-    };
+    if (els.btnProxima) {
+      els.btnProxima.onclick = () => {
+        if (STATE.atual < STATE.questoes.length - 1) {
+          STATE.atual++;
+          renderQuestao();
+        } else {
+          finalizarSimulado(false);
+        }
+      };
+    }
+
     // -------------------------------------------------------
     // AUTO-PREENCHIMENTO VIA MEMÓRIA DE ESTUDOS
     // -------------------------------------------------------
     window.lioraPreFillSimulado = function () {
-      if (!window.lioraEstudos || !window.lioraEstudos.recomendarSimulado) return;
+      if (!window.lioraEstudos || !window.lioraEstudos.recomendarSimulado)
+        return;
 
-      const rec = window.lioraEstudos.recomendarSimulado();
-      if (!rec) return;
+      try {
+        const rec = window.lioraEstudos.recomendarSimulado();
+        console.log("🎯 recomendação de simulado:", rec);
+        if (!rec) return;
 
-      if (els.inpTema) els.inpTema.value = rec.tema;
-      if (els.selQtd) els.selQtd.value = rec.qtd;
-      if (els.selDif) els.selDif.value = rec.dificuldade;
-      if (els.selBanca) els.selBanca.value = rec.banca;
+        if (els.inpTema) els.inpTema.value = rec.tema;
+        if (els.selQtd) els.selQtd.value = rec.qtd;
+        if (els.selDif) els.selDif.value = rec.dificuldade;
+        if (els.selBanca) els.selBanca.value = rec.banca;
+      } catch (e) {
+        console.warn("⚠️ Erro ao recomendar simulado:", e);
+      }
     };
 
     // -------------------------------------------------------
     // BOTÃO INICIAR SIMULADO
     // -------------------------------------------------------
-    els.btnIniciar.onclick = async () => {
-      STATE.banca = els.selBanca.value || "FGV";
-      STATE.qtd = Number(els.selQtd.value || "10");
-      STATE.tempoMin = Number(els.selTempo.value || "30");
-      STATE.dificuldade = els.selDif.value || "misturado";
-      STATE.tema = (els.inpTema.value || "").trim();
+    if (els.btnIniciar) {
+      els.btnIniciar.onclick = async () => {
+        STATE.banca = els.selBanca.value || "FGV";
+        STATE.qtd = Number(els.selQtd.value || "10");
+        STATE.tempoMin = Number(els.selTempo.value || "30");
+        STATE.dificuldade = els.selDif.value || "misturado";
+        STATE.tema = (els.inpTema.value || "").trim();
 
-      fecharModal();
-      setIaLoading(true);
+        fecharModal();
+        setIaLoading(true);
 
-      try {
-        let raw = await gerarQuestoesIA(
-          STATE.banca,
-          STATE.qtd,
-          STATE.tema,
-          STATE.dificuldade
-        );
+        try {
+          let raw = await gerarQuestoesIA(
+            STATE.banca,
+            STATE.qtd,
+            STATE.tema,
+            STATE.dificuldade
+          );
 
-        const limpas = limparQuestoes(raw);
-        if (!limpas.length) {
-          els.questaoContainer.innerHTML =
-            `<p class="text-sm text-[var(--muted)]">A IA não conseguiu gerar questões agora. Tente novamente.</p>`;
+          const limpas = limparQuestoes(raw);
+          if (!limpas.length) {
+            if (els.questaoContainer) {
+              els.questaoContainer.innerHTML = `
+                <p class="text-sm text-[var(--muted)]">
+                  A IA não conseguiu gerar questões agora. Tente novamente.
+                </p>
+              `;
+            }
+            setIaLoading(false);
+            window.lioraError?.show(
+              "Não foi possível gerar questões neste momento. Tente novamente em alguns instantes."
+            );
+            return;
+          }
+
+          STATE.questoes = limpas;
+          STATE.atual = 0;
+
+          setIaLoading(false);
+          renderQuestao();
+          startTimer();
+        } catch (e) {
+          console.error("❌ Erro ao gerar questões IA", e);
           setIaLoading(false);
           window.lioraError?.show(
-            "Não foi possível gerar questões neste momento. Tente novamente em alguns instantes."
+            "Erro ao gerar simulado com IA. Verifique sua conexão e tente novamente."
           );
-          return;
         }
+      };
+    }
 
-        STATE.questoes = limpas;
-        STATE.atual = 0;
-
-        setIaLoading(false);
-        renderQuestao();
-        startTimer();
-      } catch (e) {
-        console.error("❌ Erro ao gerar questões IA", e);
-        setIaLoading(false);
-        window.lioraError?.show(
-          "Erro ao gerar simulado com IA. Verifique sua conexão e tente novamente."
-        );
-      }
-    };
-
-    console.log("🟢 Liora Simulados v97-PREMIUM-C3 inicializado.");
+    console.log("🟢 Liora Simulados v98-PREMIUM-COMMERCIAL inicializado.");
   });
 })();
