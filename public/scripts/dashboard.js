@@ -1,23 +1,21 @@
 // ==========================================================
-// 📊 LIORA — DASHBOARD PREMIUM (v6-COMMERCIAL-DIA2)
+// 📊 LIORA — DASHBOARD PREMIUM (v7-COMMERCIAL-COMPAT)
 // - UI refinada + microinterações
 // - Estados vazios premium (simulados + estudos)
 // - Mini-gráficos nativos HTML/CSS
-// - Lê histórico de simulados (localStorage)
-// - Lê memória de estudos (window.lioraEstudos)
+// - Lê histórico de simulados (localStorage, mesma chave do v97)
+// - Lê memória de estudos via lioraEstudos.listarRecentes()
 // - Insights extras:
 //    • Evolução recente
 //    • Melhor tema
 //    • Tema que pede atenção
-// - Integra com lioraLoading e lioraError
 // - Integrado ao nav-home via window.lioraDashboard.atualizar()
 // ==========================================================
 
 (function () {
-  console.log("🔵 Liora Dashboard PREMIUM v6 carregado...");
+  console.log("🔵 Liora Dashboard PREMIUM v7 carregado...");
 
   document.addEventListener("DOMContentLoaded", () => {
-
     const HIST_KEY = "liora:simulados:historico";
 
     const els = {
@@ -33,30 +31,78 @@
     }
 
     // ==========================================================
-    // HELPERS
+    // HELPERS — SIMULADOS
     // ==========================================================
 
     function carregarHistoricoSimulados() {
       try {
         const raw = localStorage.getItem(HIST_KEY);
-        if (!raw) return [];
+        if (!raw) {
+          console.log("📊 Dashboard: nenhum histórico de simulados encontrado.");
+          return [];
+        }
         const parsed = JSON.parse(raw);
-        return Array.isArray(parsed) ? parsed : [];
-      } catch {
+        const arr = Array.isArray(parsed) ? parsed : [];
+        console.log("📊 Dashboard: histórico de simulados carregado:", arr.length);
+        return arr;
+      } catch (e) {
+        console.warn("⚠️ Erro ao carregar histórico de simulados", e);
         return [];
       }
     }
 
+    // ==========================================================
+    // HELPERS — ESTUDOS (Study Manager v2)
+    // ==========================================================
+
+    /**
+     * Constrói um "snapshot" dos planos de estudo a partir
+     * do Study Manager v2 (estudos.js), usando listarRecentes().
+     *
+     * Cada item retornado tem a forma:
+     * {
+     *   tema,
+     *   origem,
+     *   nivel,
+     *   sessoesTotal,
+     *   sessoesConcluidas,
+     *   atualizadoEm
+     * }
+     */
     function carregarEstudos() {
       try {
-        if (!window.lioraEstudos || typeof window.lioraEstudos.getAll !== "function") {
+        if (!window.lioraEstudos || typeof window.lioraEstudos.listarRecentes !== "function") {
+          console.log("📚 Dashboard: lioraEstudos.listarRecentes não disponível.");
           return [];
         }
-        return window.lioraEstudos.getAll();
-      } catch {
+
+        const planos = window.lioraEstudos.listarRecentes(20) || [];
+        const estudos = planos.map((plano) => {
+          const sessoes = Array.isArray(plano.sessoes) ? plano.sessoes : [];
+          const total = sessoes.length;
+          const concluidas = sessoes.filter((s) => (s.progresso || 0) >= 100).length;
+
+          return {
+            tema: plano.tema || "Plano de estudo",
+            origem: plano.origem || "tema",
+            nivel: plano.nivel || null,
+            sessoesTotal: total,
+            sessoesConcluidas: concluidas,
+            atualizadoEm: plano.atualizadoEm || plano.criadoEm || new Date().toISOString(),
+          };
+        });
+
+        console.log("📚 Dashboard: estudos carregados do Study Manager:", estudos.length);
+        return estudos;
+      } catch (e) {
+        console.warn("⚠️ Erro ao carregar estudos (Study Manager)", e);
         return [];
       }
     }
+
+    // ==========================================================
+    // OUTROS HELPERS
+    // ==========================================================
 
     function formatarData(value) {
       let d;
@@ -107,7 +153,7 @@
 
     function buildTemaStats(hist) {
       const m = {};
-      hist.forEach(h => {
+      hist.forEach((h) => {
         const tema = (h.tema || "").trim() || "Tema não informado";
         if (!m[tema]) m[tema] = { qtd: 0, somaPerc: 0 };
         m[tema].qtd++;
@@ -243,17 +289,11 @@
             (hist.reduce((acc, h) => acc + Number(h.perc || 0), 0) / totalSimulados) * 10
           ) / 10;
 
-        totalQuestoes = hist.reduce(
-          (acc, h) => acc + Number(h.qtd || 0),
-          0
-        );
+        totalQuestoes = hist.reduce((acc, h) => acc + Number(h.qtd || 0), 0);
 
-        tempoSeg = hist.reduce(
-          (acc, h) => acc + Number(h.tempoSeg || 0),
-          0
-        );
+        tempoSeg = hist.reduce((acc, h) => acc + Number(h.tempoSeg || 0), 0);
 
-        hist.forEach(h => {
+        hist.forEach((h) => {
           const b = (h.banca || "OUTRA").toUpperCase();
           freqBanca[b] = (freqBanca[b] || 0) + 1;
 
@@ -269,7 +309,7 @@
         : "—";
 
       const temaTopSim = temSimulados
-        ? (Object.entries(freqTemaSim).sort((a, b) => b[1] - a[1])[0]?.[0] || "Diversos")
+        ? Object.entries(freqTemaSim).sort((a, b) => b[1] - a[1])[0]?.[0] || "Diversos"
         : "—";
 
       // ESTUDOS
@@ -282,23 +322,29 @@
         totalEstudos > 0
           ? Math.round(
               (estudos.reduce((acc, e) => acc + calcularProgresso(e), 0) /
-                totalEstudos) * 10
+                totalEstudos) *
+                10
             ) / 10
           : 0;
 
       const freqTemaEstudos = {};
-      estudos.forEach(e => {
+      estudos.forEach((e) => {
         const t = (e.tema || "").trim();
         if (!t) return;
         freqTemaEstudos[t] = (freqTemaEstudos[t] || 0) + 1;
       });
 
       const temaTopEstudo = totalEstudos
-        ? (Object.entries(freqTemaEstudos).sort((a, b) => b[1] - a[1])[0]?.[0] || "Diversos")
+        ? Object.entries(freqTemaEstudos).sort((a, b) => b[1] - a[1])[0]?.[0] ||
+          "Diversos"
         : "—";
 
       // INSIGHTS ADICIONAIS
-      let evolucao = { tipo: "neutro", texto: "Ainda não há dados de evolução.", diff: 0 };
+      let evolucao = {
+        tipo: "neutro",
+        texto: "Ainda não há dados de evolução.",
+        diff: 0,
+      };
       let melhorTema = null;
       let temaCritico = null;
 
@@ -319,7 +365,11 @@
             ${temSimulados ? `${mediaPerc}%` : "—"}
           </div>
           <p class="sim-desc">
-            ${temSimulados ? evolucao.texto : "Faça seu primeiro simulado para ver a evolução aqui."}
+            ${
+              temSimulados
+                ? evolucao.texto
+                : "Faça seu primeiro simulado para ver a evolução aqui."
+            }
           </p>
           <p class="sim-detail mt-1">
             Simulados realizados: <strong>${temSimulados ? totalSimulados : 0}</strong><br>
@@ -335,16 +385,18 @@
             ${
               melhorTema
                 ? `${melhorTema.media}%`
-                : (temSimulados ? `${mediaPerc}%` : "—")
+                : temSimulados
+                ? `${mediaPerc}%`
+                : "—"
             }
           </div>
           <p class="sim-desc">
             ${
               melhorTema
                 ? `Você vai muito bem em <strong>${melhorTema.tema}</strong> (${melhorTema.qtd} simulado(s)).`
-                : (temSimulados
-                    ? `Ainda não há tema destacado. Continue fazendo simulados para descobrir seu ponto forte.`
-                    : `Comece um simulado para identificar em quais temas você se destaca.`)
+                : temSimulados
+                ? `Ainda não há tema destacado. Continue fazendo simulados para descobrir seu ponto forte.`
+                : `Comece um simulado para identificar em quais temas você se destaca.`
             }
           </p>
           <p class="sim-detail mt-1">
@@ -360,22 +412,26 @@
             ${
               temaCritico
                 ? `${temaCritico.media}%`
-                : (temSimulados ? `${mediaPerc}%` : "—")
+                : temSimulados
+                ? `${mediaPerc}%`
+                : "—"
             }
           </div>
           <p class="sim-desc">
             ${
               temaCritico
                 ? `Vale revisar <strong>${temaCritico.tema}</strong> (${temaCritico.qtd} simulado(s)).`
-                : (temSimulados
-                    ? `Nenhum tema crítico evidente ainda. Observe os próximos simulados.`
-                    : `Gere um plano de estudo ou faça simulados para ver recomendações aqui.`)
+                : temSimulados
+                ? `Nenhum tema crítico evidente ainda. Observe os próximos simulados.`
+                : `Gere um plano de estudo ou faça simulados para ver recomendações aqui.`
             }
           </p>
           <p class="sim-detail mt-1">
-            Planos ativos: <strong>${totalEstudos}</strong><br>
+            Planos ativos/recentes: <strong>${totalEstudos}</strong><br>
             Sessões planejadas: <strong>${totalSessoes}</strong><br>
-            Progresso médio nos planos: <strong>${totalEstudos ? `${mediaProgresso}%` : "—"}</strong><br>
+            Progresso médio nos planos: <strong>${
+              totalEstudos ? `${mediaProgresso}%` : "—"
+            }</strong><br>
             Tema mais estudado: <strong>${temaTopEstudo}</strong>
           </p>
         </div>
@@ -386,7 +442,7 @@
       // ======================================================
       if (temSimulados) {
         const stats = {};
-        hist.forEach(h => {
+        hist.forEach((h) => {
           const b = (h.banca || "OUTRA").toUpperCase();
           if (!stats[b]) stats[b] = { qtd: 0, soma: 0 };
           stats[b].qtd++;
@@ -449,10 +505,13 @@
             <h4 class="sim-subtitulo">Últimos simulados</h4>
             <ul class="sim-lista-resultados">
               ${ultimos
-                .map(h => `
+                .map(
+                  (h) => `
                   <li class="sim-resultado-item">
                     <div class="sim-resultado-header">
-                      <span class="sim-resultado-data">${formatarData(h.dataISO)}</span>
+                      <span class="sim-resultado-data">${formatarData(
+                        h.dataISO
+                      )}</span>
                       <span class="sim-resultado-banca">${h.banca}</span>
                     </div>
 
@@ -467,7 +526,8 @@
 
                     ${criarBarra(h.perc)}
                   </li>
-                `)
+                `
+                )
                 .join("")}
             </ul>
           </div>
@@ -484,7 +544,7 @@
             <h4 class="sim-subtitulo">Estudos recentes</h4>
             <ul class="sim-lista-resultados">
               ${recentes
-                .map(e => {
+                .map((e) => {
                   const prog = calcularProgresso(e);
                   const labelOrigem =
                     e.origem === "upload" ? "Plano por PDF" : "Plano por tema";
@@ -500,7 +560,9 @@
                       </div>
 
                       <p class="sim-resultado-tema text-xs text-[var(--muted)]">
-                        Tema: ${e.tema} · Nível: ${e.nivel || "—"}
+                        Tema: ${e.tema} ${
+                    e.nivel ? `· Nível: ${e.nivel}` : ""
+                  }
                       </p>
 
                       <div class="sim-resultado-info">
@@ -536,7 +598,9 @@
       } catch (e) {
         console.error("❌ Erro ao atualizar dashboard:", e);
         if (window.lioraError && typeof window.lioraError.show === "function") {
-          window.lioraError.show("Não foi possível carregar o dashboard agora. Tente novamente em instantes.");
+          window.lioraError.show(
+            "Não foi possível carregar o dashboard agora. Tente novamente em instantes."
+          );
         }
       } finally {
         if (window.lioraLoading && typeof window.lioraLoading.hide === "function") {
@@ -549,6 +613,6 @@
       atualizar: atualizarDashboard,
     };
 
-    console.log("🟢 Dashboard PREMIUM v6 inicializado.");
+    console.log("🟢 Dashboard PREMIUM v7 inicializado.");
   });
 })();
