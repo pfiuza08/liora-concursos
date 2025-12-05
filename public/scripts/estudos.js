@@ -302,6 +302,9 @@ console.log(">>> estudos.js INICIOU <<<");
   // --------------------------------------------------------
   // API pública
   // --------------------------------------------------------
+   // --------------------------------------------------------
+  // API pública
+  // --------------------------------------------------------
   const api = {
     // Define / substitui o plano ativo
     definirPlano({ tema, origem, sessoes }) {
@@ -312,12 +315,30 @@ console.log(">>> estudos.js INICIOU <<<");
       window.dispatchEvent(new Event("liora:plan-updated"));
     },
 
+    // Ativa um plano existente pelo ID (usado pelo "Meus Planos")
+    ativarPlano(planoId) {
+      if (!planoId) return;
+      const state = loadState();
+      const plano = state.planos.find((p) => p.id === planoId);
+      if (!plano) {
+        console.warn("⚠️ ativarPlano: plano não encontrado:", planoId);
+        return;
+      }
+
+      // atualiza data e marca como ativo
+      plano.atualizadoEm = hojeISO();
+      salvarPlanoAtualizado(state, plano);
+      console.log("✅ Plano ativado:", plano.tema, plano.id);
+      window.dispatchEvent(new Event("liora:plan-updated"));
+    },
+
     // Retorna o plano ativo (ou null)
     getPlanoAtivo() {
       const state = loadState();
       const plano = getPlanoAtivoInterno(state);
       return plano ? clonar(plano) : null;
     },
+
 
     // Lista planos recentes (para Estudos Recentes)
     listarRecentes(limit = 5) {
