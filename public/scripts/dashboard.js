@@ -250,20 +250,26 @@
       // ------------------------------------------------------
       // ESTADO VAZIO PREMIUM
       // ------------------------------------------------------
-      if (!temSimulados && !temEstudos) {
-        if (els.dashEmpty) {
-          els.dashEmpty.classList.remove("hidden");
-          els.dashEmpty.innerHTML = `
-            <div class="text-center opacity-80">
-              <p class="text-sm">Você ainda não fez simulados nem gerou planos de estudo.</p>
-              <p class="text-xs text-[var(--muted)] mt-1">
-                Assim que criar um plano ou concluir um simulado, sua evolução aparecerá aqui.
-              </p>
-            </div>
-          `;
-        }
+      // Estado realmente vazio: nenhum simulado E nenhum estudo
+      if (hist.length === 0 && estudos.length === 0) {
+        els.dashEmpty.classList.remove("hidden");
+        els.dashEmpty.innerHTML = `
+          <div class="text-center opacity-80">
+            <p class="text-sm">Você ainda não fez simulados nem gerou planos de estudo.</p>
+            <p class="text-xs text-[var(--muted)] mt-1">
+              Assim que criar um plano ou concluir um simulado, sua evolução aparecerá aqui.
+            </p>
+          </div>
+        `;
         return;
       }
+
+    // Se há simulados, sempre esconde o estado vazio
+    if (hist.length > 0) {
+      els.dashEmpty.classList.add("hidden");
+      els.dashEmpty.innerHTML = "";
+    }
+
 
       if (els.dashEmpty) {
         els.dashEmpty.classList.add("hidden");
