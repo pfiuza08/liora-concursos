@@ -29,9 +29,13 @@
 
     const fabHome = document.getElementById("fab-home");
     const simFab = document.getElementById("sim-fab");
-    const simModalBackdrop = document.getElementById("sim-modal-backdrop");
-    const simModalClose = document.getElementById("sim-modal-close");
+   const simModalBackdrop = document.getElementById("sim-modal-backdrop");
 
+    // Botão de fechar: agora suporta ambos nomes
+    const simModalClose =
+    document.getElementById("sim-modal-close-btn") ||
+    document.getElementById("sim-modal-close");
+    
     // Modal "Meus Planos"
     const meusPlanosModal = document.getElementById("meus-planos-modal");
     const meusPlanosList = document.getElementById("meus-planos-list");
@@ -272,26 +276,38 @@
     }
 
     // ------------------------------------------------------
-    // ⭐ FAB DO SIMULADO — ABRIR E FECHAR MODAL
+    // ⭐ FAB DO SIMULADO — ABRIR E FECHAR MODAL (VERSÃO CORRIGIDA)
     // ------------------------------------------------------
+    
+    // Suporte a ambos botões de fechar: id="sim-modal-close-btn" ou id="sim-modal-close"
+    const simModalClose =
+      document.getElementById("sim-modal-close-btn") ||
+      document.getElementById("sim-modal-close");
+    
+    // Abrir modal ao clicar no FAB ⚙
     if (simFab && simModalBackdrop) {
-      // Abrir modal ao clicar no FAB ⚙
       simFab.addEventListener("click", () => {
+        simModalBackdrop.classList.remove("hidden");
         simModalBackdrop.classList.add("visible");
       });
-
-      // Fechar ao clicar no fundo
+    
+      // Fechar ao clicar no fundo escuro
       simModalBackdrop.addEventListener("click", (ev) => {
         if (ev.target === simModalBackdrop) {
           simModalBackdrop.classList.remove("visible");
+          simModalBackdrop.classList.add("hidden");
         }
       });
     }
+    
+    // Fechar no botão X
+    if (simModalClose && simModalBackdrop) {
+      simModalClose.addEventListener("click", () => {
+        simModalBackdrop.classList.remove("visible");
+        simModalBackdrop.classList.add("hidden");
+      });
+    }
 
-    // Fechar no botão X (se existir)
-    simModalClose?.addEventListener("click", () => {
-      simModalBackdrop.classList.remove("visible");
-    });
 
     // ------------------------------------------------------
     // BOTÕES DE NAVEGAÇÃO
