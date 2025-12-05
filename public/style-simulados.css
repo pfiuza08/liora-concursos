@@ -728,7 +728,7 @@ html.light .sim-bar-outer {
   cursor: pointer;
   z-index: 50;
   box-shadow: 0 10px 30px rgba(0,0,0,0.35);
-  display: none; /* controlado via JS/nav-home */
+  display: flex; /* controlado via JS/nav-home */
   align-items: center;
   justify-content: center;
   transition: 180ms ease;
