@@ -1,15 +1,15 @@
 // ==========================================================
-// 🧭 LIORA — NAV-HOME v90-COMMERCIAL-PREMIUM (FINAL)
+// 🧭 LIORA — NAV-HOME v91-COMMERCIAL-PREMIUM (FINAL)
 // ----------------------------------------------------------
-// Melhorias v90:
-// ✔ FAB Simulado agora SEMPRE abre o modal corretamente
-// ✔ Sem interferência nos fluxos de Simulados.js
-// ✔ Mantém todos os fixes do v89 (Dashboard, Continue Study, Meus Planos)
-// ✔ Navegação ultra estável entre Home → App → Simulados → Dashboard
+// Melhorias v91:
+// ✔ Exposto window.homeDashboard para integração com Simulados v99
+// ✔ "Ver meu desempenho" funciona 100% em todas as telas
+// ✔ Mantido fix do FAB Simulado
+// ✔ Mantidos todos os ajustes de estabilidade do v89–v90
 // ==========================================================
 
 (function () {
-  console.log("🔵 nav-home.js (v90) carregado...");
+  console.log("🔵 nav-home.js (v91) carregado...");
 
   document.addEventListener("DOMContentLoaded", () => {
 
@@ -77,6 +77,7 @@
     function goToEstudoTema() {
       showApp();
       hideAllAppSections();
+
       document.getElementById("painel-estudo")?.classList.remove("hidden");
       document.getElementById("painel-tema")?.classList.remove("hidden");
       simFab?.classList.add("hidden");
@@ -87,6 +88,7 @@
     function goToEstudoUpload() {
       showApp();
       hideAllAppSections();
+
       document.getElementById("painel-estudo")?.classList.remove("hidden");
       document.getElementById("painel-upload")?.classList.remove("hidden");
       simFab?.classList.add("hidden");
@@ -97,29 +99,32 @@
     function goToSimulados() {
       showApp();
       hideAllAppSections();
-      document.getElementById("area-simulado")?.classList.remove("hidden");
 
+      document.getElementById("area-simulado")?.classList.remove("hidden");
       simFab?.classList.remove("hidden");
 
       window.dispatchEvent(new Event("liora:enter-simulado"));
 
-      // Preenchimento inteligente (Study Manager)
       if (window.lioraPreFillSimulado) window.lioraPreFillSimulado();
     }
 
     function goToDashboard() {
       showApp();
       hideAllAppSections();
+
       document.getElementById("area-dashboard")?.classList.remove("hidden");
       simFab?.classList.add("hidden");
 
       if (window.lioraDashboard?.atualizar) {
-        console.log("📊 Chamando lioraDashboard.atualizar()…");
+        console.log("📊 Atualizando Dashboard…");
         window.lioraDashboard.atualizar();
       } else {
         console.warn("⚠️ lioraDashboard.atualizar não disponível.");
       }
     }
+
+    // Expor globalmente — FIX v91
+    window.homeDashboard = goToDashboard;
 
     // ------------------------------------------------------
     // ATUALIZAR HOME
@@ -171,6 +176,7 @@
 
         showApp();
         hideAllAppSections();
+
         document.getElementById("liora-sessoes")?.classList.remove("hidden");
         document.getElementById("area-plano")?.classList.remove("hidden");
 
@@ -242,7 +248,6 @@
       if (!sm) return;
 
       sm.ativarPlano?.(id);
-
       const plano = sm.listarRecentes?.(20).find((p) => p.id === id);
       if (!plano) return;
 
@@ -250,6 +255,7 @@
 
       showApp();
       hideAllAppSections();
+
       document.getElementById("liora-sessoes")?.classList.remove("hidden");
       document.getElementById("area-plano")?.classList.remove("hidden");
 
@@ -268,16 +274,20 @@
     btnUpload?.addEventListener("click", goToEstudoUpload);
     btnSimulados?.addEventListener("click", goToSimulados);
     btnDashboard?.addEventListener("click", goToDashboard);
+
     btnContinue?.addEventListener("click", () => window.lioraContinueStudy());
     btnMeusPlanos?.addEventListener("click", abrirMeusPlanosModal);
 
+    // ------------------------------------------------------
+    // FAB HOME
+    // ------------------------------------------------------
     fabHome?.addEventListener("click", () => {
       showHome();
       setTimeout(atualizarHome, 200);
     });
 
     // ------------------------------------------------------
-    // ⭐ NOVO FIX v90 — FAB DO SIMULADO
+    // ⭐ FIX DO FAB DO SIMULADO
     // ------------------------------------------------------
     if (simFab && simModalBackdrop) {
       simFab.addEventListener("click", () => {
@@ -287,15 +297,14 @@
     }
 
     // ------------------------------------------------------
-    // GLOBAL CLICK LISTENER — NÃO INTERFERE NO MODAL
+    // GLOBAL CLICK LISTENER
     // ------------------------------------------------------
     document.addEventListener("click", (ev) => {
       if (ev.target?.id === "home-dashboard") {
-        console.log("📊 (GLOBAL) home-dashboard clicado → Dashboard");
-        goToDashboard();
+        window.homeDashboard();
       }
     });
 
-    console.log("🟢 NAV-HOME v90 pronto!");
+    console.log("🟢 NAV-HOME v91 pronto!");
   });
 })();
