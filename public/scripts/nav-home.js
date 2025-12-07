@@ -1,15 +1,15 @@
 // ==========================================================
-// 🧭 LIORA — NAV-HOME v89-COMMERCIAL-PREMIUM (FINAL)
+// 🧭 LIORA — NAV-HOME v90-COMMERCIAL-PREMIUM (FINAL)
 // ----------------------------------------------------------
-// Correções v89:
-// ✔ Dashboard agora atualiza SEMPRE que clicado
-// ✔ Event listener global corrigido
-// ✔ FAB Home + FAB Simulado estáveis
-// ✔ Continue Study, Meus Planos e Estudo por PDF funcionando
+// Melhorias v90:
+// ✔ FAB Simulado agora SEMPRE abre o modal corretamente
+// ✔ Sem interferência nos fluxos de Simulados.js
+// ✔ Mantém todos os fixes do v89 (Dashboard, Continue Study, Meus Planos)
+// ✔ Navegação ultra estável entre Home → App → Simulados → Dashboard
 // ==========================================================
 
 (function () {
-  console.log("🔵 nav-home.js (v89) carregado...");
+  console.log("🔵 nav-home.js (v90) carregado...");
 
   document.addEventListener("DOMContentLoaded", () => {
 
@@ -80,6 +80,7 @@
       document.getElementById("painel-estudo")?.classList.remove("hidden");
       document.getElementById("painel-tema")?.classList.remove("hidden");
       simFab?.classList.add("hidden");
+
       window.dispatchEvent(new Event("liora:enter-estudo-tema"));
     }
 
@@ -89,6 +90,7 @@
       document.getElementById("painel-estudo")?.classList.remove("hidden");
       document.getElementById("painel-upload")?.classList.remove("hidden");
       simFab?.classList.add("hidden");
+
       window.dispatchEvent(new Event("liora:enter-estudo-upload"));
     }
 
@@ -96,10 +98,12 @@
       showApp();
       hideAllAppSections();
       document.getElementById("area-simulado")?.classList.remove("hidden");
+
       simFab?.classList.remove("hidden");
 
       window.dispatchEvent(new Event("liora:enter-simulado"));
 
+      // Preenchimento inteligente (Study Manager)
       if (window.lioraPreFillSimulado) window.lioraPreFillSimulado();
     }
 
@@ -109,12 +113,11 @@
       document.getElementById("area-dashboard")?.classList.remove("hidden");
       simFab?.classList.add("hidden");
 
-      // 🔥 FIX CRÍTICO DO DASHBOARD
       if (window.lioraDashboard?.atualizar) {
         console.log("📊 Chamando lioraDashboard.atualizar()…");
         window.lioraDashboard.atualizar();
       } else {
-        console.warn("⚠️ lioraDashboard.atualizar não está disponível.");
+        console.warn("⚠️ lioraDashboard.atualizar não disponível.");
       }
     }
 
@@ -125,14 +128,13 @@
       try {
         const sm = window.lioraEstudos;
         if (!sm) {
-          console.log("A4: Estudos ainda não carregado.");
           btnContinue?.classList.add("hidden");
           resumoEl.textContent =
             "Gere um plano de estudo por Tema ou PDF para começar.";
           return;
         }
 
-        const plano = sm.getPlanoAtivo();
+        const plano = sm.getPlanoAtivo?.();
         if (!plano) {
           btnContinue?.classList.add("hidden");
           resumoEl.textContent =
@@ -159,15 +161,13 @@
         const sm = window.lioraEstudos;
         if (!sm) return alert("Aguarde o carregamento dos dados.");
 
-        const plano = sm.getPlanoAtivo();
+        const plano = sm.getPlanoAtivo?.();
         if (!plano) return alert("Você ainda não tem um plano criado.");
 
         let idx = plano.sessoes.findIndex((s) => (s.progresso || 0) < 100);
         if (idx < 0) idx = plano.sessoes.length - 1;
 
-        if (typeof window.lioraSetWizardFromPlano === "function") {
-          window.lioraSetWizardFromPlano(plano, idx);
-        }
+        window.lioraSetWizardFromPlano?.(plano, idx);
 
         showApp();
         hideAllAppSections();
@@ -190,7 +190,6 @@
       if (!sm) return;
 
       const planos = sm.listarRecentes?.(20) || [];
-
       meusPlanosList.innerHTML = "";
 
       if (!planos.length) {
@@ -214,7 +213,14 @@
             </div>
             <div class="liora-plan-item-middle">
               <span>Progresso médio: ${
-                total ? Math.round((plano.sessoes.reduce((a, s) => a + (s.progresso || 0), 0) / total)) : 0
+                total
+                  ? Math.round(
+                      plano.sessoes.reduce(
+                        (a, s) => a + (s.progresso || 0),
+                        0
+                      ) / total
+                    )
+                  : 0
               }%</span>
               <span>Concluídas: ${concluidas}/${total}</span>
             </div>
@@ -271,19 +277,25 @@
     });
 
     // ------------------------------------------------------
-    // GLOBAL CLICK LISTENER — FIX CRÍTICO DO DASHBOARD
+    // ⭐ NOVO FIX v90 — FAB DO SIMULADO
+    // ------------------------------------------------------
+    if (simFab && simModalBackdrop) {
+      simFab.addEventListener("click", () => {
+        console.log("⚙ FAB Simulado clicado → abrir modal");
+        simModalBackdrop.classList.add("visible");
+      });
+    }
+
+    // ------------------------------------------------------
+    // GLOBAL CLICK LISTENER — NÃO INTERFERE NO MODAL
     // ------------------------------------------------------
     document.addEventListener("click", (ev) => {
-      const target = ev.target;
-
-      if (!target) return;
-
-      if (target.id === "home-dashboard") {
+      if (ev.target?.id === "home-dashboard") {
         console.log("📊 (GLOBAL) home-dashboard clicado → Dashboard");
         goToDashboard();
       }
     });
 
-    console.log("🟢 NAV-HOME v89 pronto!");
+    console.log("🟢 NAV-HOME v90 pronto!");
   });
 })();
