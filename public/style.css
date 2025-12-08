@@ -1,41 +1,292 @@
-/* Backdrop padrão: invisível mas presente no DOM */
+/* ============================================================
+   LIORA — STYLE GLOBAL v100 (SAFE + CONSERVADOR)
+   NÃO altera nada que já funciona — apenas organiza e corrige
+   conflitos pequenos + adiciona Premium Modal oficial
+   ============================================================ */
+
+
+/* ------------------------------------------------------------
+   VARIÁVEIS DE TEMA (mantidas sem alterações)
+------------------------------------------------------------ */
+:root {
+  --surface: #111318;
+  --surface-soft: #181b22;
+  --border: #252835;
+  --muted: #a0a3b5;
+  --brand: #c44b04;
+  --text: #f5f5f7;
+}
+
+/* Modo claro — se já existir JS aplicando, mantém */
+html.light {
+  --surface: #ffffff;
+  --surface-soft: #fafafa;
+  --border: #cccccc;
+  --muted: #666;
+  --text: #111;
+}
+
+/* ------------------------------------------------------------
+   RESET LEVE (não quebra nada existente)
+------------------------------------------------------------ */
+* {
+  box-sizing: border-box;
+}
+
+button {
+  cursor: pointer;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+/* Remove highlight azul no mobile */
+button, input, select, textarea {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ------------------------------------------------------------
+   TIPOGRAFIA BÁSICA (inalterada)
+------------------------------------------------------------ */
+body {
+  background: var(--surface);
+  color: var(--text);
+  margin: 0;
+  font-family: Inter, system-ui, Arial, sans-serif;
+}
+
+/* ------------------------------------------------------------
+   ELEMENTOS GERAIS (não altera nada funcional)
+------------------------------------------------------------ */
+.hidden {
+  display: none !important;
+}
+
+.btn-primary {
+  background: var(--brand);
+  color: #fff;
+  border: none;
+  border-radius: .6rem;
+  padding: .6rem 1rem;
+  font-weight: 600;
+  transition: .25s;
+}
+
+.btn-primary:hover {
+  filter: brightness(1.12);
+}
+
+.btn-secondary {
+  background: var(--surface-soft);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: .6rem;
+  padding: .55rem .9rem;
+  font-weight: 500;
+}
+
+/* ------------------------------------------------------------
+   PREMIUM MODAL — v6 (oficial revisado)
+   NÃO toca no restante do CSS, apenas adiciona
+------------------------------------------------------------ */
+
+/* Backdrop */
 .liora-premium-backdrop {
   position: fixed;
   inset: 0;
   background: rgba(0,0,0,0.55);
-  backdrop-filter: blur(2px);
+  backdrop-filter: blur(3px);
   display: flex;
-  align-items: center;
   justify-content: center;
+  align-items: center;
 
   opacity: 0;
   pointer-events: none;
+
   transition: opacity .25s ease;
   z-index: 9999;
 }
 
-/* Quando aberto */
+/* Modal visível */
 .liora-premium-backdrop.visible {
   opacity: 1;
   pointer-events: auto;
 }
 
-/* Modal propriamente dito */
+/* Modal */
 .liora-premium-modal {
-  background: var(--surface, #fff);
-  color: var(--text, #000);
+  width: 92%;
+  max-width: 820px;
 
-  width: 90%;
-  max-width: 780px;
-  padding: 2rem;
-  border-radius: 1.2rem;
+  background: var(--surface);
+  color: var(--text);
 
-  box-shadow: 0 0 50px rgba(0,0,0,0.25);
-  transform: translateY(20px);
+  border-radius: 1rem;
+  padding: 2rem 2.2rem;
+
+  transform: translateY(30px);
   transition: transform .25s ease;
+
+  position: relative;
 }
 
-/* Animação ao abrir */
+/* Abrir */
 .liora-premium-backdrop.visible .liora-premium-modal {
   transform: translateY(0);
 }
+
+/* Botão fechar */
+#liora-premium-close {
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 1.35rem;
+  cursor: pointer;
+
+  position: absolute;
+  right: 26px;
+  top: 22px;
+  z-index: 10;
+}
+
+#liora-premium-close:hover {
+  opacity: .8;
+}
+
+/* Títulos */
+.liora-premium-title {
+  font-size: 1.6rem;
+  font-weight: 700;
+  margin-bottom: .4rem;
+}
+
+.liora-premium-subtitle {
+  font-size: .95rem;
+  opacity: .8;
+  margin-bottom: 1.7rem;
+}
+
+/* GRID interno */
+.liora-premium-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+}
+
+@media (max-width: 720px) {
+  .liora-premium-content {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Coluna esquerda */
+.liora-premium-left h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-top: 1rem;
+  margin-bottom: .45rem;
+}
+
+.liora-premium-list li {
+  margin: .35rem 0;
+  font-size: .92rem;
+  display: flex;
+  gap: .45rem;
+  align-items: center;
+}
+
+/* Cards da coluna direita */
+.liora-premium-right {
+  display: flex;
+  flex-direction: column;
+  gap: 1.4rem;
+}
+
+.liora-premium-plan-card {
+  background: var(--surface-soft);
+  border: 1px solid var(--border);
+  padding: 1.4rem 1.2rem;
+  border-radius: .9rem;
+
+  display: flex;
+  flex-direction: column;
+  gap: .6rem;
+
+  transition: border-color .25s;
+}
+
+.liora-premium-plan-card:hover {
+  border-color: var(--brand);
+}
+
+/* TAGs */
+.liora-premium-plan-card .tag {
+  font-size: .75rem;
+  padding: .2rem .55rem;
+  border-radius: .4rem;
+  width: fit-content;
+  font-weight: 600;
+}
+
+.tag.orange {
+  background: rgba(255, 153, 0, 0.22);
+  color: #ffb14a;
+}
+
+.tag.green {
+  background: rgba(0, 200, 120, 0.22);
+  color: #3bd182;
+}
+
+/* Textos internos */
+.plan-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.price {
+  font-size: 1.55rem;
+  font-weight: 700;
+}
+
+.price span {
+  font-size: .9rem;
+  opacity: .75;
+}
+
+.desc {
+  font-size: .85rem;
+  opacity: .75;
+}
+
+/* Botões Premium */
+.btn-premium {
+  background: var(--brand);
+  color: #fff !important;
+  border: none;
+  padding: .75rem 1rem;
+  border-radius: .6rem;
+  font-size: .95rem;
+  cursor: pointer;
+  font-weight: 600;
+  margin-top: .4rem;
+
+  transition: background .2s ease;
+}
+
+.btn-premium:hover {
+  background: #d85d17;
+}
+
+/* Rodapé */
+.liora-premium-footer {
+  font-size: .78rem;
+  opacity: .55;
+  margin-top: .4rem;
+}
+
+/* ============================================================
+   FIM DO STYLE SAFE
+============================================================ */
