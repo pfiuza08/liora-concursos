@@ -1,66 +1,131 @@
 // ===============================================================
-// 🟠 LIORA PREMIUM — v5 (FINAL)
-// - Mantém 100% da funcionalidade do v4
-// - Adiciona: verificação de login via Firebase Auth
-// - Se o usuário não estiver logado → abre modal de login
-// - Integrado com nav-home v92+ e auth.js
+// 💎 LIORA PREMIUM — v6 (FLUXO COMPLETO LOGIN → PREMIUM → ATIVAÇÃO)
 // ===============================================================
 
 (function () {
-  console.log("🔵 Liora Premium v5 carregado...");
+  console.log("🔵 Liora Premium v6 carregado…");
 
   document.addEventListener("DOMContentLoaded", () => {
     const backdrop = document.getElementById("liora-premium-backdrop");
     const closeBtn = document.getElementById("liora-premium-close");
 
+    const inpCodigo = document.getElementById("liora-upgrade-codigo");
+    const btnAtivar = document.getElementById("liora-upgrade-ativar");
+    const btnSouPremium = document.getElementById("liora-upgrade-sou-premium");
+    const statusEl = document.getElementById("liora-upgrade-status");
+
     if (!backdrop) {
-      console.error("❌ ERRO: Modal Premium NÃO encontrado no DOM!");
+      console.error("❌ ERRO: Modal Premium não encontrado!");
       return;
     }
 
     // ---------------------------------------------------------
-    // FUNÇÃO PARA ABRIR O MODAL PREMIUM
+    // FUNÇÕES INTERNAS
     // ---------------------------------------------------------
+
+    function getUser() {
+      try {
+        return JSON.parse(localStorage.getItem("liora_user"));
+      } catch {
+        return null;
+      }
+    }
+
+    function saveUser(u) {
+      localStorage.setItem("liora_user", JSON.stringify(u));
+      window.dispatchEvent(new Event("liora:user-update"));
+    }
+
+    function openModalPremium() {
+      console.log("💎 Exibindo modal Premium…");
+      backdrop.classList.add("visible");
+    }
+
+    function closeModalPremium() {
+      backdrop.classList.remove("visible");
+    }
+
     function openUpgradeModal(origem = "unknown") {
       console.log("✨ Solicitado modal Premium… Origem:", origem);
 
-      // 🔐 Se o usuário NÃO estiver logado → abrir login
-      if (!window.lioraAuth?.user) {
+      const user = getUser();
+
+      if (!user) {
         console.log("🔐 Usuário não logado → abrir modal de login primeiro");
-        window.dispatchEvent(new Event("liora:open-login"));
+        window.lioraLogin?.openLoginModal();
+
+        // Após login → abrir premium automaticamente
+        window.addEventListener("liora:user-login", () => {
+          setTimeout(() => openModalPremium(), 150);
+        }, { once: true });
+
         return;
       }
 
-      // Caso esteja logado → abrir modal normalmente
-      console.log("🟢 Usuário autenticado → abrindo Premium");
-      backdrop.classList.add("visible");
-      backdrop.style.pointerEvents = "auto";
+      // Se for Premium → só exibe instrução
+      if (user.premium) {
+        alert("Você já é Premium! Obrigada 💛");
+        return;
+      }
+
+      // Se está logado mas não premium → abre modal
+      openModalPremium();
     }
 
-    // ---------------------------------------------------------
-    // FECHAR MODAL
-    // ---------------------------------------------------------
-    function closeUpgradeModal() {
-      backdrop.classList.remove("visible");
-      backdrop.style.pointerEvents = "none";
-    }
-
-    if (closeBtn) {
-      closeBtn.addEventListener("click", closeUpgradeModal);
-    }
-
-    backdrop.addEventListener("click", (ev) => {
-      if (ev.target === backdrop) closeUpgradeModal();
-    });
-
-    // ---------------------------------------------------------
-    // EXPOR GLOBALMENTE
-    // ---------------------------------------------------------
+    // Expor globalmente
     window.lioraPremium = {
       openUpgradeModal,
-      closeUpgradeModal,
+      closeUpgradeModal: closeModalPremium,
     };
 
-    console.log("🟢 Liora Premium v5 totalmente funcional.");
+    // ---------------------------------------------------------
+    // ATIVAÇÃO DO CÓDIGO
+    // ---------------------------------------------------------
+
+    btnAtivar?.addEventListener("click", () => {
+      const codigo = inpCodigo.value.trim();
+      if (!codigo) {
+        statusEl.textContent = "Digite um código válido.";
+        statusEl.classList.remove("hidden");
+        return;
+      }
+
+      // Simulação — depois integramos com API real
+      if (codigo === "LIORA2025" || codigo === "MASTERKEY") {
+        const user = getUser() || {};
+        user.premium = true;
+        saveUser(user);
+
+        statusEl.textContent = "🎉 Premium ativado com sucesso!";
+        statusEl.classList.remove("hidden");
+
+        setTimeout(() => {
+          closeModalPremium();
+          window.location.reload();
+        }, 900);
+      } else {
+        statusEl.textContent = "Código inválido.";
+        statusEl.classList.remove("hidden");
+      }
+    });
+
+    // Atribui premium local caso já seja assinante
+    btnSouPremium?.addEventListener("click", () => {
+      const user = getUser() || {};
+      user.premium = true;
+      saveUser(user);
+
+      alert("Premium ativado neste dispositivo!");
+      closeModalPremium();
+      window.location.reload();
+    });
+
+    // Fechar modal
+    closeBtn?.addEventListener("click", closeModalPremium);
+    backdrop?.addEventListener("click", (ev) => {
+      if (ev.target === backdrop) closeModalPremium();
+    });
+
+    console.log("🟢 Liora Premium v6 totalmente funcional!");
   });
 })();
