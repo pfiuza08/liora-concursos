@@ -1,79 +1,92 @@
-// =============================================================
-// 🔐 LIORA AUTH v1
-// - Firebase Auth (Email + Google)
-// - Estado global window.lioraUser
-// - Eventos: liora:user-login | liora:user-logout
-// =============================================================
+// ======================================================
+// LIORA — AUTENTICAÇÃO v1 (Firebase Auth Oficial)
+// ------------------------------------------------------
+// - Login com email/senha
+// - Cadastro
+// - Logout
+// - Sessão persistente
+// - Exposição global: window.lioraAuth
+// ======================================================
 
-import {
-  initializeApp
-} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
   getAuth,
-  onAuthStateChanged,
+  setPersistence,
+  browserLocalPersistence,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
-  GoogleAuthProvider,
-  signInWithPopup,
   signOut,
-} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 // ------------------------------------------------------
-// 1) CONFIG DO FIREBASE (substituir pelos seus dados)
+// Configuração fornecida por você
 // ------------------------------------------------------
 const firebaseConfig = {
-  apiKey: "SEU_API_KEY",
-  authDomain: "SEU_AUTH_DOMAIN",
-  projectId: "SEU_PROJECT_ID",
-  storageBucket: "SEU_STORAGE_BUCKET",
-  messagingSenderId: "SEU_MSG_ID",
-  appId: "SEU_APP_ID",
+  apiKey: "AIzaSyBG2SFwUH-oebuOieWS5WbUtidbuSYgDLY",
+  authDomain: "liora-d4e3e.firebaseapp.com",
+  projectId: "liora-d4e3e",
+  storageBucket: "liora-d4e3e.firebasestorage.app",
+  messagingSenderId: "545087329216",
+  appId: "1:545087329216:web:7955f259a753f6e2692e25"
 };
 
+// Inicializa Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
-// Estado global
-window.lioraUser = null;
+// Sessão persistente
+setPersistence(auth, browserLocalPersistence);
 
 // ------------------------------------------------------
-// 2) OBSERVADOR DE LOGIN
-// ------------------------------------------------------
-onAuthStateChanged(auth, (user) => {
-  if (user) {
-    window.lioraUser = user;
-    console.log("🔐 Usuário logado:", user.email);
-
-    window.dispatchEvent(new CustomEvent("liora:user-login", { detail: user }));
-  } else {
-    window.lioraUser = null;
-    console.log("🔐 Nenhum usuário logado.");
-
-    window.dispatchEvent(new CustomEvent("liora:user-logout"));
-  }
-});
-
-// ------------------------------------------------------
-// 3) FUNÇÕES DE LOGIN / CADASTRO
+// API de autenticação exposta globalmente
 // ------------------------------------------------------
 window.lioraAuth = {
-  loginEmail: async (email, senha) => {
-    return signInWithEmailAndPassword(auth, email, senha);
+  user: null,
+
+  login: async (email, senha) => {
+    try {
+      const cred = await signInWithEmailAndPassword(auth, email, senha);
+      return cred.user;
+    } catch (err) {
+      console.error("Erro login:", err);
+      throw err;
+    }
   },
 
-  cadastroEmail: async (email, senha) => {
-    return createUserWithEmailAndPassword(auth, email, senha);
-  },
-
-  loginGoogle: async () => {
-    const provider = new GoogleAuthProvider();
-    return signInWithPopup(auth, provider);
+  cadastro: async (email, senha) => {
+    try {
+      const cred = await createUserWithEmailAndPassword(auth, email, senha);
+      return cred.user;
+    } catch (err) {
+      console.error("Erro cadastro:", err);
+      throw err;
+    }
   },
 
   logout: async () => {
-    return signOut(auth);
-  },
-
-  getUser: () => window.lioraUser,
+    return await signOut(auth);
+  }
 };
+
+// ------------------------------------------------------
+// Listener de mudança de usuário
+// ------------------------------------------------------
+onAuthStateChanged(auth, (user) => {
+  window.lioraAuth.user = user;
+
+  if (user) {
+    console.log("🟢 Usuário logado:", user.email);
+    document.body.classList.add("liora-auth-on");
+    document.body.classList.remove("liora-auth-off");
+  } else {
+    console.log("🔴 Usuário deslogado");
+    document.body.classList.add("liora-auth-off");
+    document.body.classList.remove("liora-auth-on");
+  }
+
+  // Dispara evento global
+  window.dispatchEvent(new Event("liora:auth-changed"));
+});
+
+console.log("🔐 Liora Auth v1 carregado.");
