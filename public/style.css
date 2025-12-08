@@ -1138,65 +1138,212 @@ html.light .liora-upgrade-plan-card:hover {
 }
 
 /* ============================================================
-   LIORA PREMIUM – FIX DE CONTRASTE PARA MODO CLARO
+   LIORA PREMIUM MODAL — V2 (PROFISSIONAL)
+   Suporte completo para modo claro e escuro
    ============================================================ */
 
-/* Corrige cor de textos fracos no modo claro */
-html.light .liora-premium-modal {
-  color: #222 !important;
+.liora-premium-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(3px);
+  z-index: 9999;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .25s ease;
 }
 
-/* Títulos e subtítulos */
-html.light .liora-premium-modal h2,
-html.light .liora-premium-modal h3 {
-  color: #111 !important;
+.liora-premium-backdrop.visible {
+  opacity: 1;
+  pointer-events: all;
 }
 
-/* Descrições menores */
-html.light .liora-premium-modal p,
-html.light .liora-premium-modal li {
-  color: #333 !important;
+.liora-premium-modal {
+  width: 90%;
+  max-width: 780px;
+  background: var(--surface, #fff);
+  border-radius: 1rem;
+  padding: 2.2rem;
+  position: relative;
+  animation: premiumFadeUp .30s ease;
+  color: var(--text);
 }
 
-/* Benefícios (lado esquerdo) */
-html.light .liora-premium-benefits li {
-  color: #222 !important;
+@keyframes premiumFadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-/* Blocos de plano – bordas e fundo */
+/* ====================== TITLES ======================= */
+
+.liora-premium-title {
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin-bottom: .4rem;
+  color: var(--text);
+}
+
+.liora-premium-subtitle {
+  font-size: .95rem;
+  opacity: .85;
+  margin-bottom: 1.8rem;
+}
+
+/* ====================== CLOSE BUTTON ======================= */
+
+.liora-premium-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  font-size: 1.1rem;
+  background: transparent;
+  border: none;
+  color: var(--text);
+  cursor: pointer;
+  opacity: .7;
+}
+.liora-premium-close:hover { opacity: 1; }
+
+/* ====================== LAYOUT ======================= */
+
+.liora-premium-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2.2rem;
+}
+
+@media (max-width: 780px) {
+  .liora-premium-content {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ====================== LEFT SIDE ======================= */
+
+.liora-premium-list {
+  list-style: none;
+  padding-left: 0;
+  margin-bottom: 1.5rem;
+}
+.liora-premium-list li {
+  margin-bottom: .5rem;
+  font-size: .93rem;
+}
+
+.liora-premium-list.free li {
+  color: var(--text);
+}
+
+.liora-premium-list.premium li {
+  color: var(--brand, #c44b04);
+  font-weight: 500;
+}
+
+/* ====================== RIGHT SIDE ======================= */
+
+.liora-premium-plan-card {
+  border-radius: .9rem;
+  padding: 1.4rem;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: var(--surface-soft);
+  margin-bottom: 1.3rem;
+  position: relative;
+}
+
 html.light .liora-premium-plan-card {
-  background: #fff !important;
-  border: 1px solid #e5e5e5 !important;
+  background: #fff;
+  border-color: #e6e6e6;
 }
 
-/* Preço */
-html.light .liora-premium-plan-card .price {
-  color: #111 !important;
+.plan-title {
+  font-size: 1.1rem;
+  font-weight: 600;
 }
 
-/* Descrição do plano */
-html.light .liora-premium-plan-card .desc {
-  color: #444 !important;
+.price {
+  margin: .4rem 0;
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--text);
+}
+.price span {
+  font-size: .8rem;
+  opacity: .7;
 }
 
-/* Botões */
-html.light .liora-premium-plan-card .btn-premium {
-  background: #c44b04 !important;
-  color: #fff !important;
+.desc {
+  font-size: .85rem;
+  opacity: .8;
+  margin-bottom: 1rem;
 }
 
-html.light .liora-premium-plan-card .btn-premium:hover {
-  background: #a24003 !important;
+/* TAGS */
+.tag {
+  position: absolute;
+  top: -10px;
+  right: 10px;
+  padding: .25rem .6rem;
+  border-radius: .5rem;
+  font-size: .7rem;
+  font-weight: 600;
+}
+.tag.orange { background: #ffe8d9; color: #c44b04; }
+.tag.green { background: #d8ffe5; color: #0c8a38; }
+
+/* BUTTONS */
+.btn-premium {
+  width: 100%;
+  padding: .7rem;
+  background: var(--brand, #c44b04);
+  color: #fff;
+  border: none;
+  border-radius: .6rem;
+  font-size: .9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: .2s;
+}
+.btn-premium:hover {
+  background: #a23f03;
 }
 
-/* Selo “Mais flexível”, “Econômico”, etc */
-html.light .liora-premium-plan-card .tag {
-  background: #f5f5f5 !important;
-  color: #444 !important;
+.liora-premium-footer {
+  font-size: .75rem;
+  opacity: .7;
+  text-align: center;
+  margin-top: .6rem;
 }
 
-/* Rodapé do modal */
+/* ====================== MODO CLARO – AJUSTES DE CONTRASTE ======================= */
+
+html.light .liora-premium-modal {
+  background: #fff;
+  color: #222;
+}
+
+html.light .liora-premium-title {
+  color: #111;
+}
+
+html.light .liora-premium-subtitle {
+  color: #444;
+}
+
+html.light .liora-premium-list li {
+  color: #222;
+}
+
+html.light .price {
+  color: #111;
+}
+
+html.light .desc {
+  color: #444;
+}
+
 html.light .liora-premium-footer {
-  color: #666 !important;
+  color: #555;
 }
-
