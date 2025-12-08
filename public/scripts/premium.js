@@ -1,12 +1,13 @@
 // ===============================================================
-// 🟠 LIORA PREMIUM — v4 (FINAL)
-// - Controle completo do modal Premium
-// - Sem dependência de ".hidden" do Tailwind
-// - 100% confiável com nav-home v92+
+// 🟠 LIORA PREMIUM — v5 (FINAL)
+// - Mantém 100% da funcionalidade do v4
+// - Adiciona: verificação de login via Firebase Auth
+// - Se o usuário não estiver logado → abre modal de login
+// - Integrado com nav-home v92+ e auth.js
 // ===============================================================
 
 (function () {
-  console.log("🔵 Liora Premium v4 carregado...");
+  console.log("🔵 Liora Premium v5 carregado...");
 
   document.addEventListener("DOMContentLoaded", () => {
     const backdrop = document.getElementById("liora-premium-backdrop");
@@ -18,23 +19,32 @@
     }
 
     // ---------------------------------------------------------
-    // FUNÇÕES GLOBAIS
+    // FUNÇÃO PARA ABRIR O MODAL PREMIUM
     // ---------------------------------------------------------
     function openUpgradeModal(origem = "unknown") {
-      console.log("✨ Abrindo modal Premium… Origem:", origem);
+      console.log("✨ Solicitado modal Premium… Origem:", origem);
 
+      // 🔐 Se o usuário NÃO estiver logado → abrir login
+      if (!window.lioraAuth?.user) {
+        console.log("🔐 Usuário não logado → abrir modal de login primeiro");
+        window.dispatchEvent(new Event("liora:open-login"));
+        return;
+      }
+
+      // Caso esteja logado → abrir modal normalmente
+      console.log("🟢 Usuário autenticado → abrindo Premium");
       backdrop.classList.add("visible");
       backdrop.style.pointerEvents = "auto";
     }
 
+    // ---------------------------------------------------------
+    // FECHAR MODAL
+    // ---------------------------------------------------------
     function closeUpgradeModal() {
       backdrop.classList.remove("visible");
       backdrop.style.pointerEvents = "none";
     }
 
-    // ---------------------------------------------------------
-    // EVENTOS
-    // ---------------------------------------------------------
     if (closeBtn) {
       closeBtn.addEventListener("click", closeUpgradeModal);
     }
@@ -44,13 +54,13 @@
     });
 
     // ---------------------------------------------------------
-    // Expor global
+    // EXPOR GLOBALMENTE
     // ---------------------------------------------------------
     window.lioraPremium = {
       openUpgradeModal,
       closeUpgradeModal,
     };
 
-    console.log("🟢 Liora Premium v4 pronto!");
+    console.log("🟢 Liora Premium v5 totalmente funcional.");
   });
 })();
