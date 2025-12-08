@@ -1,8 +1,8 @@
 // ==========================================================
-// 🧠 LIORA — CORE v75-FIX-COMMERCIAL-PREMIUM-STUDY-MANAGER-CONTINUE-FINAL
+// 🧠 LIORA — CORE v76-FREEMIUM-AGGRESSIVE-COMMERCIAL
 // ----------------------------------------------------------
 // Inclui:
-// ✔ Tema: plano + sessões completas (via /api/gerarPlano)
+// ✔ Tema: plano + sessões completas (via /api/gerarPlano.js)
 // ✔ Upload: Modelo D (outline + sessões via /api/liora)
 // ✔ Wizard Premium (fade, microinterações, quiz bonito)
 // ✔ Loading global / Erro global
@@ -12,57 +12,61 @@
 // ✔ Continue Study Engine — window.lioraIrParaSessao()
 // ✔ Salvamento incremental das sessões (wizard)
 // ✔ Normalização das sessões geradas (id, ordem)
-// ✔ FIX: não reseta lioraEstudos nem memória ao carregar
-// ✔ FIX: após reload, Continue Study reconstrói wizard a partir do Study Manager
-// ✔ Compatível com nav-home v84 + estudos v2
+// ✔ NÃO reseta lioraEstudos nem memória ao carregar
+// ✔ Freemium agressivo: limitações claras no modo gratuito
+// ✔ Compatível com nav-home v93 + premium v6 + estudos v2
 // ==========================================================
 
 (function () {
-  console.log("🔵 Inicializando Liora Core v75...");
+  console.log("🔵 Inicializando Liora Core v76...");
 
-// =====================================================
-// 🔒 BLOQUEIO PREMIUM (versão leve, não invasiva)
-// =====================================================
-
-(function registerPremiumGate() {
-  function isPremium() {
-    try {
-      return JSON.parse(localStorage.getItem("liora_user"))?.premium === true;
-    } catch {
-      return false;
+  // =====================================================
+  // 🔒 BLOQUEIO PREMIUM (versão leve, não invasiva)
+  // =====================================================
+  (function registerPremiumGate() {
+    function isPremium() {
+      try {
+        const raw = localStorage.getItem("liora_user");
+        if (!raw) return false;
+        return JSON.parse(raw).premium === true;
+      } catch {
+        return false;
+      }
     }
-  }
 
-  // Bloqueia “Gerar plano completo”
-  window.lioraGate = {
-    temaAvancado() {
-      if (!isPremium()) {
-        window.lioraPremium?.openUpgradeModal("tema-avancado");
-        return false;
-      }
-      return true;
-    },
+    // Exponho helper global para outras partes do Core/nav
+    window.lioraIsPremium = isPremium;
 
-    pdfCompleto() {
-      if (!isPremium()) {
-        window.lioraPremium?.openUpgradeModal("pdf-completo");
-        return false;
-      }
-      return true;
-    },
+    // Portão genérico (pode ser usado por outros módulos)
+    window.lioraGate = {
+      temaAvancado() {
+        if (!isPremium()) {
+          window.lioraPremium?.openUpgradeModal("tema-avancado");
+          return false;
+        }
+        return true;
+      },
 
-    simuladosPremium() {
-      if (!isPremium()) {
-        window.lioraPremium?.openUpgradeModal("simulados");
-        return false;
-      }
-      return true;
-    },
-  };
+      pdfCompleto() {
+        if (!isPremium()) {
+          window.lioraPremium?.openUpgradeModal("pdf-completo");
+          return false;
+        }
+        return true;
+      },
 
-  console.log("🔒 Premium Gate ativo");
-})();
-  
+      simuladosPremium() {
+        if (!isPremium()) {
+          window.lioraPremium?.openUpgradeModal("simulados");
+          return false;
+        }
+        return true;
+      },
+    };
+
+    console.log("🔒 Premium Gate ativo (v76)");
+  })();
+
   document.addEventListener("DOMContentLoaded", () => {
     // ======================================================
     // 🌱 A4 — Inicialização segura (NÃO destrói estudos salvos)
@@ -180,6 +184,22 @@
     if (els.wizardContainer) {
       els.wizardContainer.classList.add("hidden");
     }
+
+    // --------------------------------------------------------
+    // Helper: checar se usuário é Premium
+    // --------------------------------------------------------
+    const isPremiumUser = () => {
+      try {
+        if (typeof window.lioraIsPremium === "function") {
+          return window.lioraIsPremium();
+        }
+        const raw = localStorage.getItem("liora_user");
+        if (!raw) return false;
+        return JSON.parse(raw).premium === true;
+      } catch {
+        return false;
+      }
+    };
 
     // --------------------------------------------------------
     // ESTADO (Wizard)
@@ -388,7 +408,7 @@
         .map((t) => String(t || "").trim())
         .filter((t) => t.length > 0);
 
-      console.log("📘 Core v75 — tópicos extraídos do outline:", topicos);
+      console.log("📘 Core v76 — tópicos extraídos do outline:", topicos);
       return topicos;
     }
 
@@ -577,7 +597,7 @@
     }
 
     // ==========================================================
-    // 🧩 A3.1 — Reforço Inteligente de Sessões Fracas
+    // 🧩 A3.1 — Reforço Inteligente de Sessões Fracas (Premium)
     // ==========================================================
     async function reforcarSessaoSeNecessario(sessao, temaGeral) {
       function isVazio(x) {
@@ -1023,46 +1043,104 @@ e sempre inclua de 3 a 6 flashcards.
       });
     }
 
+    // --------------------------------------------------------
+    // FREEMIUM AGRESSIVO — BOTÃO "Gerar plano" (Tema)
+    // --------------------------------------------------------
     els.btnGerar?.addEventListener("click", async () => {
       const tema = els.inpTema.value.trim();
-      const nivel = els.selNivel.value;
-      const sessoes = 6;
+      let nivel = els.selNivel.value;
 
       if (!tema) {
-        window.lioraError.show("Digite um tema.");
+        window.lioraError.show("Digite um tema para o plano de estudo.");
         return;
       }
 
+      const premium = isPremiumUser();
+
+      // 🔒 Regras Freemium para TEMA
+      if (!premium) {
+        // 1) Nível apenas iniciante
+        if (nivel !== "iniciante") {
+          els.selNivel.value = "iniciante";
+          window.lioraError.show(
+            "Na versão gratuita, apenas o nível Iniciante está disponível. Ajustamos o plano para Iniciante."
+          );
+          return;
+        }
+
+        // 2) Apenas 1 plano por dia
+        try {
+          const today = new Date().toISOString().slice(0, 10);
+          const last = localStorage.getItem("liora_free_tema_date");
+          if (last === today) {
+            // Já gerou plano hoje → abre modal premium
+            window.lioraPremium?.openUpgradeModal("limite-plano-tema-dia");
+            return;
+          }
+        } catch (e) {
+          console.warn("⚠️ Não foi possível ler limite diário do free:", e);
+        }
+      }
+
+      const sessoesFree = 3;
+      const sessoesPremium = 8;
+      const sessoes = premium ? sessoesPremium : sessoesFree;
+
       try {
         window.lioraLoading.show("Gerando plano...");
-        atualizarStatus("tema", "Chamando IA...", 20);
+        atualizarStatus(
+          "tema",
+          premium
+            ? "Chamando IA para gerar plano completo..."
+            : "Versão gratuita: gerando plano resumido...",
+          20
+        );
 
         const parsed = await lioraGerarPlanoTema({ tema, nivel, sessoes });
 
         atualizarStatus("tema", "Construindo sessões...", 60);
 
+        // Garante limite de sessões já na base
+        const baseArray = parsed.slice(0, sessoes);
+
         const sessoesNorm = await Promise.all(
-          parsed.map(async (s, i) => {
+          baseArray.map(async (s, i) => {
             const sessaoBase = { id: `S${i + 1}`, ordem: i + 1, ...s };
+
+            // Apenas Premium usa reforço A3.1
+            if (!premium) return sessaoBase;
+
             return await reforcarSessaoSeNecessario(sessaoBase, tema);
           })
         );
+
+        // Com freemium agressivo, o free fica limitado aqui mesmo
+        const sessoesFinal = premium
+          ? sessoesNorm
+          : sessoesNorm.slice(0, sessoesFree);
 
         wizard = {
           tema,
           nivel,
           origem: "tema",
-          plano: sessoesNorm.map((s) => ({
+          plano: sessoesFinal.map((s) => ({
             id: s.id,
             ordem: s.ordem,
             titulo: s.titulo,
             objetivo: s.objetivos?.[0] || s.objetivo || "",
           })),
-          sessoes: sessoesNorm,
+          sessoes: sessoesFinal,
           atual: 0,
         };
 
-        lioraSalvarEExibirPlano(sessoesNorm);
+        // Contexto no topo da lista
+        if (els.ctx) {
+          els.ctx.textContent = premium
+            ? `Tema: ${wizard.tema}`
+            : `Tema: ${wizard.tema} — plano resumido (versão gratuita)`;
+        }
+
+        lioraSalvarEExibirPlano(sessoesFinal);
         renderPlanoResumo(wizard.plano);
         renderWizard();
         saveProgress();
@@ -1076,8 +1154,25 @@ e sempre inclua de 3 a 6 flashcards.
           });
         }
 
+        // Evento para home atualizar
+        window.dispatchEvent(new Event("liora:plan-updated"));
+
+        // Marca uso diário do free
+        if (!premium) {
+          try {
+            const today = new Date().toISOString().slice(0, 10);
+            localStorage.setItem("liora_free_tema_date", today);
+          } catch (e) {
+            console.warn("⚠️ Não foi possível salvar limite diário do free:", e);
+          }
+        }
+
         window.lioraLoading.hide();
-        atualizarStatus("tema", "Plano gerado!", 100);
+        atualizarStatus(
+          "tema",
+          premium ? "Plano completo gerado!" : "Plano resumido gerado!",
+          100
+        );
       } catch (err) {
         console.error(err);
         window.lioraLoading.hide();
@@ -1095,9 +1190,17 @@ e sempre inclua de 3 a 6 flashcards.
         return;
       }
 
+      const premium = isPremiumUser();
+
       try {
         window.lioraLoading.show("Lendo PDF...");
-        atualizarStatus("upload", "Extraindo conteúdo...", 10);
+        atualizarStatus(
+          "upload",
+          premium
+            ? "Extraindo conteúdo do PDF..."
+            : "Versão gratuita: gerando plano resumido a partir do PDF...",
+          10
+        );
 
         const rawBlocks = await window.lioraPDFExtractor.extract(file);
         if (!rawBlocks || !rawBlocks.length)
@@ -1123,7 +1226,13 @@ e sempre inclua de 3 a 6 flashcards.
           throw new Error("Não foi possível identificar tópicos.");
         }
 
-        atualizarStatus("upload", "Gerando sessões com IA...", 55);
+        atualizarStatus(
+          "upload",
+          premium
+            ? "Gerando sessões completas com IA..."
+            : "Gerando sessões resumidas com IA...",
+          55
+        );
 
         const system = `
 Você é a IA da Liora e deve transformar tópicos em sessões de estudo.
@@ -1168,10 +1277,10 @@ com boa didática, exemplos práticos e foco em aplicação real dos conceitos.
 
         atualizarStatus("upload", "Finalizando...", 80);
 
-        const sessoesNorm = (parsed.sessoes || []).map((s, i) => ({
-          id: `S${i + 1}`,
-          ordem: i + 1,
-          progresso: 0,
+        let sessoesNorm = (parsed.sessoes || []).map((s, i) => ({
+          id: s.id || `S${i + 1}`,
+          ordem: s.ordem || i + 1,
+          progresso: s.progresso || 0,
           ...s,
         }));
 
@@ -1179,23 +1288,33 @@ com boa didática, exemplos práticos e foco em aplicação real dos conceitos.
           throw new Error("A IA não retornou sessões válidas a partir do PDF.");
         }
 
+        // Freemium agressivo: PDF free = plano resumido (até 3 sessões)
+        const maxFreeUploadSessions = 3;
+        const sessoesFinal = premium
+          ? sessoesNorm
+          : sessoesNorm.slice(0, maxFreeUploadSessions);
+
         wizard = {
           tema: parsed.tema || file.name.replace(/\.pdf$/i, ""),
           nivel: "PDF",
           origem: "upload",
-          plano: sessoesNorm.map((s) => ({
+          plano: sessoesFinal.map((s) => ({
             id: s.id,
             ordem: s.ordem,
             titulo: s.titulo,
             objetivo: s.objetivo,
           })),
-          sessoes: sessoesNorm,
+          sessoes: sessoesFinal,
           atual: 0,
         };
 
         renderPlanoResumo(wizard.plano);
         renderWizard();
-        if (els.ctx) els.ctx.textContent = `PDF: ${wizard.tema}`;
+        if (els.ctx) {
+          els.ctx.textContent = premium
+            ? `PDF: ${wizard.tema}`
+            : `PDF: ${wizard.tema} — plano resumido (versão gratuita)`;
+        }
         saveProgress();
 
         if (window.lioraEstudos?.definirPlano) {
@@ -1206,7 +1325,13 @@ com boa didática, exemplos práticos e foco em aplicação real dos conceitos.
           });
         }
 
-        atualizarStatus("upload", "Plano gerado!", 100);
+        window.dispatchEvent(new Event("liora:plan-updated"));
+
+        atualizarStatus(
+          "upload",
+          premium ? "Plano gerado a partir do PDF!" : "Plano resumido gerado a partir do PDF!",
+          100
+        );
         window.lioraLoading.hide();
       } catch (e) {
         console.error(e);
@@ -1217,7 +1342,7 @@ com boa didática, exemplos práticos e foco em aplicação real dos conceitos.
 
     // ======================================================
     // ⭐ FUNÇÃO OFICIAL — RECONSTRUIR WIZARD A PARTIR DO PLANO
-    //    (usada pelo nav-home v84 via window.lioraSetWizardFromPlano)
+    //    (usada pelo nav-home v93 via window.lioraSetWizardFromPlano)
     // ======================================================
     function setWizardFromPlanoInterno(plano, startIndex) {
       try {
@@ -1274,7 +1399,7 @@ com boa didática, exemplos práticos e foco em aplicação real dos conceitos.
       }
     }
 
-    // Expor versão pública — usada pelo nav-home v84 (Continue Study)
+    // Expor versão pública — usada pelo nav-home v93 (Continue Study)
     window.lioraSetWizardFromPlano = function (plano, startIndex) {
       return setWizardFromPlanoInterno(plano, startIndex);
     };
@@ -1360,6 +1485,6 @@ com boa didática, exemplos práticos e foco em aplicação real dos conceitos.
     // --------------------------------------------------------
     // FIM DO CORE
     // --------------------------------------------------------
-    console.log("🟢 Liora Core v75 totalmente carregado.");
+    console.log("🟢 Liora Core v76 totalmente carregado.");
   });
 })();
