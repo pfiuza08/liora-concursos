@@ -1,15 +1,14 @@
 // ==========================================================
-// 🧭 LIORA — NAV-HOME v91-COMMERCIAL-PREMIUM (FINAL)
+// 🧭 LIORA — NAV-HOME v92-COMMERCIAL-PREMIUM (FINAL)
 // ----------------------------------------------------------
-// Melhorias v91:
-// ✔ Exposto window.homeDashboard para integração com Simulados v99
-// ✔ "Ver meu desempenho" funciona 100% em todas as telas
-// ✔ Mantido fix do FAB Simulado
-// ✔ Mantidos todos os ajustes de estabilidade do v89–v90
+// Melhorias v92:
+// ✔ Botão "Conhecer Liora Premium" funcionando em TODAS as telas
+// ✔ Listener global com fallback automático
+// ✔ Mantida total estabilidade do fluxo v90–v91
 // ==========================================================
 
 (function () {
-  console.log("🔵 nav-home.js (v91) carregado...");
+  console.log("🔵 nav-home.js (v92) carregado…");
 
   document.addEventListener("DOMContentLoaded", () => {
 
@@ -123,7 +122,7 @@
       }
     }
 
-    // Expor globalmente — FIX v91
+    // Expor globalmente — integração com Simulados
     window.homeDashboard = goToDashboard;
 
     // ------------------------------------------------------
@@ -287,7 +286,7 @@
     });
 
     // ------------------------------------------------------
-    // ⭐ FIX DO FAB DO SIMULADO
+    // FIX — FAB DO SIMULADO
     // ------------------------------------------------------
     if (simFab && simModalBackdrop) {
       simFab.addEventListener("click", () => {
@@ -306,17 +305,29 @@
     });
 
     // ------------------------------------------------------
-    // BOTÃO "CONHECER O PREMIUM" NA HOME
+    // ⭐ FIX DEFINITIVO — Botão "Conhecer o Premium"
     // ------------------------------------------------------
-    const btnUpgradeOpen = document.getElementById("liora-upgrade-open");
-    if (btnUpgradeOpen) {
-      btnUpgradeOpen.addEventListener("click", () => {
-        if (window.lioraPremium?.openUpgradeModal) {
-          window.lioraPremium.openUpgradeModal("home");
-        }
-      });
+    function bindPremiumButton() {
+      const btn = document.getElementById("liora-upgrade-open");
+      if (!btn) return;
+
+      if (!btn.dataset.bound) {
+        btn.dataset.bound = "1";
+        btn.addEventListener("click", () => {
+          console.log("✨ Abrindo modal Premium (v92)...");
+          window.lioraPremium?.openUpgradeModal?.("home");
+        });
+        console.log("🔥 Premium button listener registrado!");
+      }
     }
-   
-    console.log("🟢 NAV-HOME v91 pronto!");
+
+    // Tenta imediatamente, e depois em eventos chave
+    bindPremiumButton();
+    document.addEventListener("liora:enter-estudo-tema", bindPremiumButton);
+    document.addEventListener("liora:enter-estudo-upload", bindPremiumButton);
+    document.addEventListener("liora:enter-simulado", bindPremiumButton);
+    document.addEventListener("click", bindPremiumButton);
+
+    console.log("🟢 NAV-HOME v92 pronto!");
   });
 })();
