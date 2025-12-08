@@ -305,6 +305,18 @@
       }
     });
 
+    // ------------------------------------------------------
+    // BOTÃO "CONHECER O PREMIUM" NA HOME
+    // ------------------------------------------------------
+    const btnUpgradeOpen = document.getElementById("liora-upgrade-open");
+    if (btnUpgradeOpen) {
+      btnUpgradeOpen.addEventListener("click", () => {
+        if (window.lioraPremium?.openUpgradeModal) {
+          window.lioraPremium.openUpgradeModal("home");
+        }
+      });
+    }
+   
     console.log("🟢 NAV-HOME v91 pronto!");
   });
 })();
