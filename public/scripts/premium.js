@@ -1,24 +1,24 @@
 // ==========================================================
-// 💎 LIORA — PREMIUM v2
-// - Controla o modal de upgrade da Liora
-// - Tolerante: funciona mesmo se o modal for carregado depois
-// - Integra com nav-home (window.lioraPremium.openUpgradeModal)
+// 💎 LIORA — PREMIUM v3 (compatível com seu HTML atual)
+// - Busca o modal por #liora-premium-backdrop
+// - Resistente: funciona mesmo se o modal carregar depois
+// - Integra com nav-home (openUpgradeModal / closeUpgradeModal)
 // ==========================================================
 
 (function () {
-  console.log("🔵 Liora Premium v2 carregado...");
+  console.log("🔵 Liora Premium v3 carregado...");
 
   document.addEventListener("DOMContentLoaded", () => {
 
     // ------------------------------------------------------
-    // HELPERS PARA PEGAR ELEMENTOS SEMPRE ATUALIZADOS
+    // HELPERS: sempre obtêm elementos atuais do DOM
     // ------------------------------------------------------
     function getEls() {
       return {
-        backdrop: document.getElementById("liora-premium-modal"),
+        backdrop: document.getElementById("liora-premium-backdrop"),
         close: document.getElementById("liora-premium-close"),
-        btnMensal: document.getElementById("liora-premium-mensal"),
-        btnTrimestral: document.getElementById("liora-premium-trimestral"),
+        btnMensal: document.getElementById("premium-mensal"),
+        btnTrimestral: document.getElementById("premium-trimestral"),
       };
     }
 
@@ -26,73 +26,74 @@
     // ABRIR / FECHAR MODAL
     // ------------------------------------------------------
     function openUpgradeModal(origin) {
-      const els = getEls();
-      const backdrop = els.backdrop;
+      const { backdrop } = getEls();
 
       if (!backdrop) {
         console.warn(
-          "⚠️ Modal Premium não encontrado no DOM (openUpgradeModal). ID esperado: #liora-premium-modal"
+          "⚠️ Modal Premium não encontrado (ID esperado: #liora-premium-backdrop)"
         );
         return;
       }
 
       backdrop.classList.remove("hidden");
       backdrop.classList.add("liora-premium-open");
-      backdrop.dataset.origin = origin || "";
+      backdrop.dataset.origin = origin || "unknown";
+
       document.body.classList.add("liora-premium-lock");
+
       console.log("✨ Modal Premium aberto. Origem:", origin || "desconhecida");
     }
 
     function closeUpgradeModal() {
-      const els = getEls();
-      const backdrop = els.backdrop;
+      const { backdrop } = getEls();
       if (!backdrop) return;
 
       backdrop.classList.add("hidden");
       backdrop.classList.remove("liora-premium-open");
+
       document.body.classList.remove("liora-premium-lock");
+
       console.log("✨ Modal Premium fechado.");
     }
 
     // ------------------------------------------------------
-    // WIRE DOS BOTÕES DO MODAL (SE EXISTIR)
+    // INICIALIZAR LISTENERS DO MODAL (se existir)
     // ------------------------------------------------------
-    (function initModalWiring() {
+    (function init() {
       const els = getEls();
 
       if (!els.backdrop) {
-        console.warn(
-          "⚠️ Modal Premium não encontrado no DOM (init). ID esperado: #liora-premium-modal"
-        );
-        // mesmo assim expomos a API global para funcionar quando o modal existir
-      } else {
-        // Fechar no X
-        if (els.close) {
-          els.close.addEventListener("click", closeUpgradeModal);
-        }
-
-        // Fechar ao clicar fora do card
-        els.backdrop.addEventListener("click", (ev) => {
-          if (ev.target === els.backdrop) {
-            closeUpgradeModal();
-          }
-        });
-
-        // CTAs (aqui você coloca o link real do checkout)
-        if (els.btnMensal) {
-          els.btnMensal.addEventListener("click", () => {
-            console.log("🛒 Clique no plano Mensal.");
-            // window.location.href = "https://seu-checkout-mensal.com";
-          });
-        }
-
-        if (els.btnTrimestral) {
-          els.btnTrimestral.addEventListener("click", () => {
-            console.log("🛒 Clique no plano Trimestral.");
-            // window.location.href = "https://seu-checkout-trimestral.com";
-          });
-        }
+        console.warn("⚠️ Modal Premium não encontrado ao iniciar.");
+        return;
       }
+
+      // Fechar ao clicar no X
+      if (els.close) {
+        els.close.addEventListener("click", closeUpgradeModal);
+      }
+
+      // Fechar ao clicar fora do card
+      els.backdrop.addEventListener("click", (ev) => {
+        if (ev.target === els.backdrop) closeUpgradeModal();
+      });
+
+      // Botão Mensal
+      if (els.btnMensal) {
+        els.btnMensal.addEventListener("click", () => {
+          console.log("🛒 Clicou no plano Mensal");
+          // window.location.href = "https://checkout.mensal.com";
+        });
+      }
+
+      // Botão Trimestral
+      if (els.btnTrimestral) {
+        els.btnTrimestral.addEventListener("click", () => {
+          console.log("🛒 Clicou no plano Trimestral");
+          // window.location.href = "https://checkout.trimestral.com";
+        });
+      }
+
+      console.log("🟢 Modal Premium pronto no DOM.");
     })();
 
     // ------------------------------------------------------
@@ -103,6 +104,6 @@
       closeUpgradeModal,
     };
 
-    console.log("🟢 Liora Premium v2 pronto.");
+    console.log("🟢 Liora Premium v3 totalmente funcional.");
   });
 })();
