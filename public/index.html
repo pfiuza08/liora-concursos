@@ -367,7 +367,108 @@
 <!-- FAB SIMULADO -->
 <button id="sim-fab" class="sim-fab hidden">⚙</button>
 
+<!-- =========================================
+     MODAL PREMIUM — LIORA
+     ========================================= -->
+<div id="liora-upgrade-modal-backdrop" class="liora-upgrade-backdrop hidden">
+  <div class="liora-upgrade-modal">
 
+    <!-- HEADER -->
+    <div class="liora-upgrade-header">
+      <div>
+        <h2 class="liora-upgrade-title">Desbloqueie a Liora Premium</h2>
+        <p class="liora-upgrade-subtitle">
+          Planos completos, simulados ilimitados e tudo o que você precisa para estudar com estratégia.
+        </p>
+      </div>
+      <button id="liora-upgrade-close" class="liora-upgrade-close" aria-label="Fechar">
+        ✕
+      </button>
+    </div>
+
+    <!-- BODY -->
+    <div class="liora-upgrade-body">
+
+      <!-- LADO ESQUERDO: comparativo -->
+      <div class="liora-upgrade-col liora-upgrade-col-left">
+        <h3 class="liora-upgrade-section-title">Plano gratuito</h3>
+        <ul class="liora-upgrade-list">
+          <li>✅ 1 plano de estudo por dia (Tema)</li>
+          <li>✅ Até 3 sessões por plano</li>
+          <li>✅ Simulados básicos com IA</li>
+          <li>✅ Upload de PDF pequeno</li>
+        </ul>
+
+        <h3 class="liora-upgrade-section-title mt-6">Liora Premium</h3>
+        <ul class="liora-upgrade-list liora-upgrade-list-premium">
+          <li>🔥 Planos ilimitados (Tema + PDF)</li>
+          <li>🔥 Sessões completas, resumo e mapa mental</li>
+          <li>🔥 Simulados avançados com IA C3 (banca, explica, reforço)</li>
+          <li>🔥 Dashboard de desempenho detalhado</li>
+          <li>🔥 Histórico completo de simulados e estudos</li>
+          <li>🔥 Prioridade nas melhorias da Liora</li>
+        </ul>
+      </div>
+
+      <!-- LADO DIREITO: planos -->
+      <div class="liora-upgrade-col liora-upgrade-col-right">
+        <p class="liora-upgrade-highlight">
+          Comece hoje, cancele quando quiser.
+        </p>
+
+        <div class="liora-upgrade-plans">
+
+          <!-- PLANO MENSAL -->
+          <button
+            class="liora-upgrade-plan-card liora-upgrade-plan-main"
+            type="button"
+            data-liora-plano="mensal"
+          >
+            <div class="liora-upgrade-plan-header">
+              <span class="liora-upgrade-plan-name">Plano Mensal</span>
+              <span class="liora-upgrade-pill">Mais flexível</span>
+            </div>
+            <div class="liora-upgrade-price-row">
+              <span class="liora-upgrade-price">R$ 39</span>
+              <span class="liora-upgrade-price-period">/mês</span>
+            </div>
+            <p class="liora-upgrade-plan-desc">
+              Ideal para testar a Liora Premium no ritmo dos seus estudos.
+            </p>
+            <span class="liora-upgrade-cta">Começar agora</span>
+          </button>
+
+          <!-- PLANO TRIMESTRAL -->
+          <button
+            class="liora-upgrade-plan-card"
+            type="button"
+            data-liora-plano="trimestral"
+          >
+            <div class="liora-upgrade-plan-header">
+              <span class="liora-upgrade-plan-name">Plano Trimestral</span>
+              <span class="liora-upgrade-pill pill-save">Economize</span>
+            </div>
+            <div class="liora-upgrade-price-row">
+              <span class="liora-upgrade-price">R$ 99</span>
+              <span class="liora-upgrade-price-period">/3 meses</span>
+            </div>
+            <p class="liora-upgrade-plan-desc">
+              Para quem leva o projeto de aprovação a sério e quer foco.
+            </p>
+            <span class="liora-upgrade-cta">Garantir 3 meses</span>
+          </button>
+
+        </div>
+
+        <p class="liora-upgrade-footnote">
+          Pagamento seguro. Acesso liberado imediatamente após confirmação.
+        </p>
+      </div>
+
+    </div>
+  </div>
+</div>
+  
 <!-- ERRO -->
 <div id="liora-error" class="liora-error hidden">
   <div class="liora-error-card">
@@ -586,7 +687,7 @@
     </div>
 
     <div class="mt-4 border-t border-white/10 pt-4">
-      <p class="text-xs mb-2">Já sou aluna/premium:</p>
+      <p class="text-xs mb-2">Já sou premium:</p>
       <div class="flex gap-2 items-center">
         <input
           id="liora-upgrade-codigo"
