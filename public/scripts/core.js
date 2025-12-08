@@ -20,6 +20,49 @@
 (function () {
   console.log("🔵 Inicializando Liora Core v75...");
 
+// =====================================================
+// 🔒 BLOQUEIO PREMIUM (versão leve, não invasiva)
+// =====================================================
+
+(function registerPremiumGate() {
+  function isPremium() {
+    try {
+      return JSON.parse(localStorage.getItem("liora_user"))?.premium === true;
+    } catch {
+      return false;
+    }
+  }
+
+  // Bloqueia “Gerar plano completo”
+  window.lioraGate = {
+    temaAvancado() {
+      if (!isPremium()) {
+        window.lioraPremium?.openUpgradeModal("tema-avancado");
+        return false;
+      }
+      return true;
+    },
+
+    pdfCompleto() {
+      if (!isPremium()) {
+        window.lioraPremium?.openUpgradeModal("pdf-completo");
+        return false;
+      }
+      return true;
+    },
+
+    simuladosPremium() {
+      if (!isPremium()) {
+        window.lioraPremium?.openUpgradeModal("simulados");
+        return false;
+      }
+      return true;
+    },
+  };
+
+  console.log("🔒 Premium Gate ativo");
+})();
+  
   document.addEventListener("DOMContentLoaded", () => {
     // ======================================================
     // 🌱 A4 — Inicialização segura (NÃO destrói estudos salvos)
