@@ -348,4 +348,89 @@ body {
   }
 }
 
+/* ============================================================
+   LOGIN MODAL — compatível com Premium Modal
+   Mantém o mesmo comportamento: fade + translateY + scroll-safe
+   ============================================================ */
+
+/* Backdrop do login — mesmo estilo do Premium */
+#liora-login-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(3px);
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .25s ease;
+
+  /* 🔥 Importante: ficar acima de tudo */
+  z-index: 12000 !important;
+}
+
+/* Quando visível */
+#liora-login-backdrop.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Caixa do login */
+#liora-login-backdrop .liora-premium-modal {
+  background: var(--surface);
+  color: var(--text);
+
+  width: 90%;
+  max-width: 420px;
+
+  padding: 2rem;
+  border-radius: 1rem;
+
+  box-shadow: 0 0 40px rgba(0,0,0,0.3);
+
+  transform: translateY(20px);
+  transition: transform .25s ease;
+
+  /* Evitar corte no mobile */
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+/* Animação do modal */
+#liora-login-backdrop.visible .liora-premium-modal {
+  transform: translateY(0);
+}
+
+/* Botão fechar */
+#liora-login-close {
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 1.3rem;
+
+  position: absolute;
+  right: 22px;
+  top: 18px;
+
+  cursor: pointer;
+}
+
+#liora-login-close:hover {
+  opacity: .8;
+}
+
+/* Inputs do login */
+#liora-login-backdrop .liora-input {
+  width: 100%;
+  padding: .7rem .9rem;
+  border-radius: .6rem;
+  border: 1px solid var(--border);
+  background: var(--surface-soft);
+  color: var(--text);
+  margin-top: .8rem;
+  font-size: .95rem;
+}
 
