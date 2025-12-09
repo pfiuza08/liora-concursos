@@ -1,5 +1,5 @@
 // ==========================================================
-// 🧠 LIORA — CORE v76-FREEMIUM-A4-COMMERCIAL
+// 🧠 LIORA — CORE v77-FREEMIUM-A4-COMMERCIAL
 // ----------------------------------------------------------
 // Inclui:
 // ✔ Tema: plano + sessões completas (via /api/gerarPlano.js)
@@ -15,10 +15,11 @@
 // ✔ Integração com eventos cognitivos (quiz + flashcards → Estudos)
 // ✔ NÃO reseta estudos salvos (memória preservada)
 // ✔ Compatível com nav-home v93 + premium.js v6 + estudos v2.1
+// ✔ NOVO: exibe nome do PDF (arquivo) no contexto lateral e no wizard
 // ==========================================================
 
 (function () {
-  console.log("🔵 Inicializando Liora Core v76...");
+  console.log("🔵 Inicializando Liora Core v77...");
 
   // =====================================================
   // 🔒 BLOQUEIO PREMIUM (versão leve, não invasiva)
@@ -58,14 +59,14 @@
       },
     };
 
-    console.log("🔒 Premium Gate ativo (Core v76).");
+    console.log("🔒 Premium Gate ativo (Core v77).");
   })();
 
   document.addEventListener("DOMContentLoaded", () => {
     // ======================================================
     // 🌱 Inicialização segura (NÃO destrói estudos salvos)
     // ======================================================
-    console.log("🌱 Core v76: inicialização segura — sem reset automático de estudos.");
+    console.log("🌱 Core v77: inicialização segura — sem reset automático de estudos.");
 
     window.liora = window.liora || {};
     window.lioraCache = window.lioraCache || {};
@@ -187,6 +188,7 @@
       sessoes: [],
       atual: 0,
       origem: "tema",
+      pdfNome: null, // 👈 NOVO: nome real do arquivo PDF (quando origem = upload)
     };
 
     window.lioraModoRevisao = false;
@@ -374,7 +376,7 @@
         .map((t) => String(t || "").trim())
         .filter((t) => t.length > 0);
 
-      console.log("📘 Core v76 — tópicos extraídos do outline:", topicos);
+      console.log("📘 Core v77 — tópicos extraídos do outline:", topicos);
       return topicos;
     }
 
@@ -517,6 +519,21 @@
     }
 
     // --------------------------------------------------------
+    // 🌟 CONTEXTO LATERAL (mostra tema ou nome do PDF)
+    // --------------------------------------------------------
+    function atualizarContextoLateral() {
+      if (!els.ctx) return;
+
+      if (wizard.origem === "upload" && wizard.pdfNome) {
+        els.ctx.textContent = `PDF: ${wizard.pdfNome}`;
+      } else if (wizard.tema) {
+        els.ctx.textContent = wizard.tema;
+      } else {
+        els.ctx.textContent = "";
+      }
+    }
+
+    // --------------------------------------------------------
     // RENDERIZAÇÃO DO PLANO (lista lateral)
     // --------------------------------------------------------
     function renderPlanoResumo(plano) {
@@ -526,6 +543,7 @@
       if (!plano || !plano.length) {
         els.plano.innerHTML =
           '<p class="text-sm text-[var(--muted)]">Nenhum plano gerado ainda.</p>';
+        atualizarContextoLateral();
         return;
       }
 
@@ -554,6 +572,8 @@
       const cards = els.plano.querySelectorAll(".liora-card-topico");
       cards.forEach((c) => c.classList.remove("active"));
       if (cards[wizard.atual]) cards[wizard.atual].classList.add("active");
+
+      atualizarContextoLateral();
     }
 
     // ==========================================================
@@ -621,12 +641,14 @@ e sempre inclua de 3 a 6 flashcards.
 
       if (!wizard.sessoes || !wizard.sessoes.length) {
         els.wizardContainer.classList.add("hidden");
+        atualizarContextoLateral();
         return;
       }
 
       const s = wizard.sessoes[wizard.atual];
       if (!s) {
         els.wizardContainer.classList.add("hidden");
+        atualizarContextoLateral();
         return;
       }
 
@@ -643,14 +665,22 @@ e sempre inclua de 3 a 6 flashcards.
         els.wizardQuizFeedback.style.opacity = 0;
       }
 
-      if (els.wizardTema) els.wizardTema.textContent = wizard.tema || "";
-      if (els.wizardTitulo) els.wizardTitulo.textContent = s.titulo || "";
+      // Cabeçalho: tema ou nome do PDF
+      if (els.wizardTema) {
+        if (wizard.origem === "upload" && wizard.pdfNome) {
+          els.wizardTema.textContent = `📄 ${wizard.pdfNome}`;
+        } else {
+          els.wizardTema.textContent = wizard.tema || "";
+        }
+      }
 
       const progressoTopEl = document.getElementById("liora-sessao-progress");
       if (progressoTopEl) {
         progressoTopEl.textContent =
           `Sessão ${wizard.atual + 1} de ${wizard.sessoes.length}`;
       }
+
+      if (els.wizardTitulo) els.wizardTitulo.textContent = s.titulo || "";
 
       if (els.wizardObjetivo) els.wizardObjetivo.textContent = s.objetivo || "";
 
@@ -867,6 +897,7 @@ e sempre inclua de 3 a 6 flashcards.
       }
 
       renderPlanoResumo(wizard.plano);
+      atualizarContextoLateral();
     }
 
     // --------------------------------------------------------
@@ -1034,6 +1065,7 @@ e sempre inclua de 3 a 6 flashcards.
           tema,
           nivel,
           origem: "tema",
+          pdfNome: null,
           plano: sessoesNorm.map((s) => ({
             id: s.id,
             ordem: s.ordem,
@@ -1159,10 +1191,13 @@ com boa didática, exemplos práticos e foco em aplicação real dos conceitos.
           throw new Error("A IA não retornou sessões válidas a partir do PDF.");
         }
 
+        const baseTema = parsed.tema || file.name.replace(/\.pdf$/i, "");
+
         wizard = {
-          tema: parsed.tema || file.name.replace(/\.pdf$/i, ""),
+          tema: baseTema,
           nivel: "PDF",
           origem: "upload",
+          pdfNome: file.name, // 👈 guarda nome real do arquivo
           plano: sessoesNorm.map((s) => ({
             id: s.id,
             ordem: s.ordem,
@@ -1175,7 +1210,7 @@ com boa didática, exemplos práticos e foco em aplicação real dos conceitos.
 
         renderPlanoResumo(wizard.plano);
         renderWizard();
-        if (els.ctx) els.ctx.textContent = `PDF: ${wizard.tema}`;
+        // contexto lateral agora é tratado pelo atualizarContextoLateral()
         saveProgress();
 
         if (window.lioraEstudos?.definirPlano) {
@@ -1217,6 +1252,7 @@ com boa didática, exemplos práticos e foco em aplicação real dos conceitos.
           tema: plano.tema || "Meu Estudo",
           nivel: plano.nivel || "tema",
           origem: plano.origem || "tema",
+          pdfNome: null, // planos vindos do Study Manager ainda não carregam nome de arquivo
           sessoes: plano.sessoes.map((s, i) => ({
             id: s.id || `S${i + 1}`,
             ordem: s.ordem || i + 1,
@@ -1336,6 +1372,6 @@ com boa didática, exemplos práticos e foco em aplicação real dos conceitos.
     // --------------------------------------------------------
     // FIM DO CORE
     // --------------------------------------------------------
-    console.log("🟢 Liora Core v76-FREEMIUM-A4 totalmente carregado.");
+    console.log("🟢 Liora Core v77-FREEMIUM-A4 totalmente carregado.");
   });
 })();
