@@ -450,9 +450,106 @@
   </div>
 </div>
 
+<!-- =========================================================
+     MODAL LOGIN / CADASTRO — PREMIUM BLACK GLASS
+========================================================= -->
+<div id="liora-auth-modal" class="liora-modal-backdrop" aria-hidden="true">
+  <div class="liora-modal">
+    <button class="liora-modal-close" id="liora-auth-close" aria-label="Fechar">
+      ✕
+    </button>
+
+    <div class="liora-modal-header">
+      <h2 id="liora-auth-title">Entrar na Liora</h2>
+      <p id="liora-auth-subtitle">Acesse seus planos de estudo em qualquer dispositivo.</p>
+    </div>
+
+    <form id="liora-auth-form" class="liora-modal-body">
+      <div class="liora-input-group">
+        <label for="auth-email">E-mail</label>
+        <input type="email" id="auth-email" required placeholder="voce@exemplo.com" autocomplete="email" />
+      </div>
+
+      <div class="liora-input-group">
+        <label for="auth-senha">Senha</label>
+        <input type="password" id="auth-senha" required placeholder="••••••••" autocomplete="current-password" />
+      </div>
+
+      <div class="liora-auth-error" id="liora-auth-error"></div>
+
+      <button type="submit" id="liora-auth-submit" class="liora-btn-primary liora-btn-full">
+        <span class="liora-btn-text">Entrar</span>
+        <span class="liora-btn-loader"></span>
+      </button>
+
+      <button type="button" id="liora-auth-toggle-mode" class="liora-link-btn">
+        Ainda não tenho conta. Criar conta.
+      </button>
+    </form>
+
+    <div class="liora-modal-footer">
+      <small>Ao continuar, você concorda com os termos de uso da Liora.</small>
+    </div>
+  </div>
+</div>
+
+<!-- =========================================================
+     MODAL PREMIUM — LIORA+
+========================================================= -->
+<div id="liora-premium-modal" class="liora-modal-backdrop" aria-hidden="true">
+  <div class="liora-modal liora-modal-premium">
+    <button class="liora-modal-close" id="liora-premium-close" aria-label="Fechar">
+      ✕
+    </button>
+
+    <div class="liora-modal-header">
+      <span class="liora-pill">Liora+</span>
+      <h2>Desbloqueie todo o potencial da Liora</h2>
+      <p>Planos ilimitados, sessões completas, simulados avançados e muito mais.</p>
+    </div>
+
+    <div class="liora-premium-grid">
+      <div class="liora-premium-card">
+        <h3>Plano Gratuito</h3>
+        <ul>
+          <li>1 plano de estudo por dia</li>
+          <li>Nível iniciante</li>
+          <li>Até 3 sessões por plano</li>
+          <li>Upload de PDFs pequenos</li>
+          <li>Quiz básico</li>
+        </ul>
+      </div>
+
+      <div class="liora-premium-card liora-premium-card-highlight">
+        <h3>Liora+</h3>
+        <ul>
+          <li>Planos ilimitados</li>
+          <li>Todos os níveis</li>
+          <li>Sessões completas e ricas</li>
+          <li>Upload de PDFs grandes</li>
+          <li>Mapa mental, resumo, quiz forte</li>
+          <li>Histórico e progresso avançado</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="liora-premium-cta">
+      <button id="liora-premium-cta" class="liora-btn-primary liora-btn-full">
+        Quero liberar o Liora+
+      </button>
+      <small>Você será direcionado para a página segura de pagamento.</small>
+    </div>
+  </div>
+</div>
+  
 <!-- ============================================================
      SCRIPTS
 ============================================================ -->
+<!-- Firebase Auth + API global da Liora -->
+<script type="module" src="/scripts/auth.js?v=1"></script>
+
+<!-- UI de autenticação (modais + botão topo) -->
+<script src="/scripts/auth-ui.js?v=1" defer></script>
 <script src="/scripts/liora-ui.js?v=1" defer></script>
 <script src="/scripts/pdf-extractor.js?v=1" defer></script>
 <script src="/scripts/pdf-structure.js?v=1" defer></script>
