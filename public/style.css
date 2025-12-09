@@ -1,6 +1,6 @@
 /* =============================================================
    LIORA — PREMIUM HYBRID UI (C3)
-   Versão Consolidada v78-PREMIUM-C9
+   Versão Consolidada v78-PREMIUM-C9.1
    Tema escuro (padrão) + Claro (html.light)
    UI moderna, limpa, responsiva
 ============================================================= */
@@ -23,16 +23,16 @@
 }
 
 /* --------------------------------------------------------------
-   🌞 TEMA CLARO — html.light
+   🌞 TEMA CLARO — html.light (ajustado para paleta Liora)
 -------------------------------------------------------------- */
 html.light {
-  --fg: #1c1c1c;
-  --bg: #faf7f2;
-  --bg2: #ffffff;
+  --fg: #1b120c;
+  --bg: #f7f3ec;
+  --bg2: #fffaf5;
   --card: #ffffff;
-  --hover: #f0efec;
-  --border: #dfddd8;
-  --muted: #6b6b6b;
+  --hover: #f1e4d8;
+  --border: #e1d5c6;
+  --muted: #7b6a5d;
   --shadow: 0 4px 12px rgba(0,0,0,0.08);
 }
 
@@ -208,7 +208,7 @@ input:focus, select:focus {
 }
 
 /* --------------------------------------------------------------
-   NOVO LAYOUT DOS CHIPS (SESSÕES)
+   NOVO LAYOUT DOS CHIPS (SESSÕES) — AJUSTADO
 -------------------------------------------------------------- */
 #plano,
 .liora-plano-wrapper {
@@ -220,35 +220,36 @@ input:focus, select:focus {
 
 /* chip base */
 .liora-card-topico {
-  background: var(--card);
+  background: var(--bg2);
   border: 1px solid var(--border);
   color: var(--fg);
   border-radius: 999px;
-  padding: 10px 18px;
-  font-size: 0.92rem;
+  padding: 8px 18px;
+  font-size: 0.9rem;
   font-weight: 500;
   letter-spacing: 0.2px;
   cursor: pointer;
   transition: all .25s ease;
-  display: flex;
+  display: inline-flex;
   justify-content: center;
   align-items: center;
-  min-width: 140px;
-  max-width: 280px;
-  text-align: center;
+  max-width: 100%;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
 }
 
 /* hover */
 .liora-card-topico:hover {
-  background: rgba(196,75,4,0.12);
+  background: var(--hover);
   border-color: var(--brand);
 }
 
 /* ativo */
 .liora-card-topico.active {
-  background: rgba(196,75,4,0.20);
+  background: var(--brand);
   border-color: var(--brand);
-  color: var(--brand);
+  color: #fff;
   font-weight: 600;
   transform: translateY(-1px);
 }
@@ -262,20 +263,23 @@ input:focus, select:focus {
 @media (max-width: 780px) {
   #plano,
   .liora-plano-wrapper {
-    justify-content: center;
+    justify-content: flex-start;
   }
   .liora-card-topico {
-    min-width: 46%;
-    max-width: 100%;
     font-size: 0.88rem;
+    padding: 7px 14px;
   }
 }
 
 @media (max-width: 520px) {
+  #plano,
+  .liora-plano-wrapper {
+    justify-content: center;
+  }
   .liora-card-topico {
-    min-width: 100%;
-    font-size: 0.9rem;
-    padding: 12px 16px;
+    width: 100%;
+    text-align: center;
+    justify-content: center;
   }
 }
 
@@ -504,7 +508,7 @@ input:focus, select:focus {
 .liora-modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(15,23,42,0.7);
+  background: rgba(0,0,0,0.7); /* tiramos o azul/navy */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -524,7 +528,7 @@ input:focus, select:focus {
   max-width: 640px;
   max-height: 80vh;
   overflow-y: auto;
-  background: var(--bg2);
+  background: var(--card);
   border-radius: 1rem;
   padding: 1.5rem;
   box-shadow: 0 20px 40px rgba(0,0,0,0.45);
@@ -551,18 +555,20 @@ input:focus, select:focus {
   gap: 0.75rem;
 }
 
+/* Item de plano — removido azul, usando paleta Liora */
 .liora-plan-item {
   text-align: left;
   border-radius: .8rem;
-  border: 1px solid rgba(148,163,184,0.4);
-  background: rgba(15,23,42,0.9);
+  border: 1px solid var(--border);
+  background: var(--card);
   padding: 0.75rem 1rem;
   cursor: pointer;
-  transition: background .15s ease, transform .1s ease;
+  transition: background .15s ease, transform .1s ease, border-color .15s ease;
+  color: var(--fg);
 }
 
 .liora-plan-item:hover {
-  background: rgba(30,64,175,0.35);
+  background: rgba(196,75,4,0.12);
   border-color: var(--brand);
   transform: translateY(-1px);
 }
@@ -639,11 +645,12 @@ input:focus, select:focus {
   border: 1px solid var(--border);
   padding: 1.4rem;
   border-radius: .9rem;
-  transition: border-color .25s ease, transform .15s ease;
+  transition: border-color .25s ease, transform .15s ease, box-shadow .2s ease;
 }
 
 .liora-premium-plan-card:hover {
   border-color: var(--brand);
+  box-shadow: 0 8px 18px rgba(0,0,0,0.25);
   transform: translateY(-2px);
 }
 
@@ -655,7 +662,7 @@ input:focus, select:focus {
   font-weight: 600;
 }
 
-.tag.orange { background: rgba(255,153,0,0.22); color: #ffb14a; }
+.tag.orange { background: rgba(196,75,4,0.22); color: #ffb14a; }
 .tag.green  { background: rgba(0,200,120,0.22); color: #3bd182; }
 
 .btn-premium {
