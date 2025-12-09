@@ -684,6 +684,19 @@ e sempre inclua de 3 a 6 flashcards.
         return;
       }
 
+      // --------- ESTADO DOS BOTÕES VOLTAR / PRÓXIMO ---------
+      if (els.wizardVoltar) {
+        els.wizardVoltar.disabled = wizard.atual === 0;
+      }
+      if (els.wizardProxima) {
+        els.wizardProxima.disabled = wizard.sessoes.length === 0 ||
+          wizard.atual === wizard.sessoes.length - 1;
+      }
+ 
+
+
+
+      
       els.wizardContainer.classList.remove("hidden");
 
       const card = els.wizardContainer.querySelector(".liora-wizard-card");
