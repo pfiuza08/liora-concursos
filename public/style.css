@@ -1000,3 +1000,19 @@ input:focus, select:focus {
     transform: rotate(360deg);
   }
 }
+/* Correção — Botão Continuar Estudo */
+#btn-continuar-estudo,
+button.btn-continuar-estudo {
+  width: auto !important;
+  padding: 0.55rem 1rem !important;
+  font-size: 0.9rem !important;
+  border-radius: 12px !important;
+}
+
+@media (max-width: 480px) {
+  #btn-continuar-estudo,
+  button.btn-continuar-estudo {
+    padding: 0.45rem 0.85rem !important;
+    font-size: 0.8rem !important;
+  }
+}
