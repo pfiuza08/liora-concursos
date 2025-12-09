@@ -570,7 +570,7 @@
     // --------------------------------------------------------
     function renderPlanoResumo(plano) {
       if (!els.plano) return;
-
+    
       els.plano.innerHTML = "";
       if (!plano || !plano.length) {
         els.plano.innerHTML =
@@ -578,33 +578,36 @@
         atualizarContextoLateral();
         return;
       }
-
+    
       els.areaPlano?.classList.remove("hidden");
-
+    
       plano.forEach((p, index) => {
         const div = document.createElement("button");
         div.type = "button";
         div.className = "liora-card-topico";
-
+    
         const sessao = wizard.sessoes[index];
+    
         if (sessao?.forca === "forte") div.classList.add("forca-forte");
         else if (sessao?.forca === "media") div.classList.add("forca-media");
         else div.classList.add("forca-fraca");
-
+    
         div.dataset.index = String(index);
-        div.textContent = p.titulo || p.nome || `Sessão ${index + 1}`;
-
+           
+        const tituloLimpo = (p.titulo || p.nome || "").trim() || `Sessão ${index+1}`;
+        div.textContent = tituloLimpo;
+    
         div.addEventListener("click", () => {
           window.lioraIrParaSessao && window.lioraIrParaSessao(index, false);
         });
-
+    
         els.plano.appendChild(div);
       });
-
+    
       const cards = els.plano.querySelectorAll(".liora-card-topico");
       cards.forEach((c) => c.classList.remove("active"));
       if (cards[wizard.atual]) cards[wizard.atual].classList.add("active");
-
+    
       atualizarContextoLateral();
     }
 
