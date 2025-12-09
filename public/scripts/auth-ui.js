@@ -49,26 +49,27 @@
       modal.classList.remove("is-open");
       document.body.style.overflow = "";
     }
-
-    function setModo(novoModo) {
+    
+       function setModo(novoModo) {
       modo = novoModo;
-
+    
       if (modo === "login") {
-        authTitle.textContent = "Entrar na Liora";
-        authSubtitle.textContent = "Acesse seus planos e simulados em qualquer dispositivo.";
+        authTitle.textContent = "Acessar sua conta";
+        authSubtitle.textContent = "Acompanhe seus planos e seu progresso em qualquer dispositivo.";
         authSubmitText.textContent = "Entrar";
         authToggleMode.textContent = "Ainda não tenho conta. Criar conta.";
         authSenha.setAttribute("autocomplete", "current-password");
       } else {
-        authTitle.textContent = "Criar conta na Liora";
+        authTitle.textContent = "Criar sua conta";
         authSubtitle.textContent = "Comece a organizar seus estudos em minutos.";
         authSubmitText.textContent = "Criar conta";
         authToggleMode.textContent = "Já tenho conta. Entrar.";
         authSenha.setAttribute("autocomplete", "new-password");
       }
-
+    
       authError.textContent = "";
     }
+
 
     function atualizarBotaoTopo() {
       const { user, premium } = window.lioraAuth;
