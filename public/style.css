@@ -803,3 +803,32 @@ input:focus, select:focus {
   .price { font-size: 1.4rem; }
 }
 
+/* REMOVER AS BOLINHAS COLORIDAS DOS CARDS DE SESSÃO */
+.liora-card-topico::after {
+  content: none !important;
+}
+
+/* Caso exista um span específico para o ponto de status */
+.liora-card-status-dot,
+.liora-card-topico .status-dot {
+  display: none !important;
+}
+
+/* ESTADO DESATIVADO DOS BOTÕES VOLTAR / PRÓXIMO NO WIZARD */
+#liora-btn-voltar[disabled],
+#liora-btn-proxima[disabled] {
+  background: var(--border);
+  color: var(--muted);
+  cursor: default;
+  opacity: 0.55;
+  transform: none;
+  box-shadow: none;
+}
+
+#liora-btn-voltar[disabled]:hover,
+#liora-btn-proxima[disabled]:hover {
+  filter: none;
+  transform: none;
+}
+
+
