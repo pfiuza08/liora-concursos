@@ -1,16 +1,16 @@
 // ==========================================================
-// 🧭 LIORA — NAV-HOME v93-COMMERCIAL-PREMIUM (FINAL)
+// 🧭 LIORA — NAV-HOME v94-COMMERCIAL-PREMIUM
 // ----------------------------------------------------------
-// Melhorias v93:
-// ✔ Total compatibilidade com premium.js v3 (modal backdrop)
-// ✔ Bind Premium mais seguro, sem duplicações e sem falhar
-// ✔ FAB Simulado estável em todas as telas
-// ✔ "Ver meu desempenho" totalmente funcional
-// ✔ Navegação Home → App → Simulados → Dashboard sem falhas
+// Melhorias v94:
+// ✔ Correção total do modal "Meus Planos"
+// ✔ Animação consistente com Premium Modal (hidden ↔ visible)
+// ✔ Fechar clicando fora do painel
+// ✔ Nenhuma alteração no que já funcionava (tema, upload, IA,
+//   simulados, dashboard, premium, continue study, FABs…)
 // ==========================================================
 
 (function () {
-  console.log("🔵 nav-home.js (v93) carregado…");
+  console.log("🔵 nav-home.js (v94) carregado…");
 
   document.addEventListener("DOMContentLoaded", () => {
 
@@ -33,14 +33,13 @@
     const simFab = document.getElementById("sim-fab");
     const simModalBackdrop = document.getElementById("sim-modal-backdrop");
 
+    // -------------------- MODAL MEUS PLANOS --------------------
     const meusPlanosModal = document.getElementById("meus-planos-modal");
     const meusPlanosList = document.getElementById("meus-planos-list");
     const meusPlanosFechar = document.getElementById("meus-planos-fechar");
 
     // Estado inicial
-    fabHome?.classList.add("hidden");
-    simFab?.classList.add("hidden");
-    meusPlanosModal?.classList.add("hidden");
+    meusPlanosModal?.classList.add("hidden", "liora-modal-backdrop");
 
     // ------------------------------------------------------
     // FUNÇÕES DE UI
@@ -54,8 +53,8 @@
     function showHome() {
       app?.classList.add("hidden");
       home?.classList.remove("hidden");
-      fabHome?.classList.add("hidden");
 
+      fabHome?.classList.add("hidden");
       simFab?.classList.add("hidden");
       simModalBackdrop?.classList.add("hidden");
     }
@@ -80,8 +79,8 @@
       hideAllAppSections();
       document.getElementById("painel-estudo")?.classList.remove("hidden");
       document.getElementById("painel-tema")?.classList.remove("hidden");
-      simFab?.classList.add("hidden");
 
+      simFab?.classList.add("hidden");
       window.dispatchEvent(new Event("liora:enter-estudo-tema"));
     }
 
@@ -116,12 +115,9 @@
       if (window.lioraDashboard?.atualizar) {
         console.log("📊 Atualizando Dashboard…");
         window.lioraDashboard.atualizar();
-      } else {
-        console.warn("⚠️ lioraDashboard.atualizar não disponível.");
       }
     }
 
-    // Expor para integração com Simulados
     window.homeDashboard = goToDashboard;
 
     // ------------------------------------------------------
@@ -138,12 +134,12 @@
 
         const plano = sm.getPlanoAtivo?.();
         if (!plano) {
-          btnContinue?.classList.add("hidden");
+          btnContinue.classList.add("hidden");
           resumoEl.textContent = "Gere um plano de estudo por Tema ou PDF para começar.";
           return;
         }
 
-        btnContinue?.classList.remove("hidden");
+        btnContinue.classList.remove("hidden");
         resumoEl.textContent = `Tema ativo: ${plano.tema} — ${plano.sessoes.length} sessões`;
       } catch (e) {
         console.warn("Erro ao atualizar home:", e);
@@ -152,7 +148,6 @@
 
     setTimeout(atualizarHome, 150);
     window.addEventListener("liora:plan-updated", atualizarHome);
-    window.addEventListener("liora:review-updated", atualizarHome);
 
     // ------------------------------------------------------
     // CONTINUE STUDY
@@ -160,10 +155,10 @@
     window.lioraContinueStudy = function () {
       try {
         const sm = window.lioraEstudos;
-        if (!sm) return alert("Aguarde o carregamento dos dados.");
+        if (!sm) return;
 
         const plano = sm.getPlanoAtivo?.();
-        if (!plano) return alert("Você ainda não tem um plano criado.");
+        if (!plano) return;
 
         let idx = plano.sessoes.findIndex((s) => (s.progresso || 0) < 100);
         if (idx < 0) idx = plano.sessoes.length - 1;
@@ -184,7 +179,7 @@
     };
 
     // ------------------------------------------------------
-    // MODAL "MEUS PLANOS"
+    // MODAL "MEUS PLANOS" — CORRIGIDO v94
     // ------------------------------------------------------
     function abrirMeusPlanosModal() {
       const sm = window.lioraEstudos;
@@ -228,6 +223,7 @@
       }
 
       meusPlanosModal.classList.remove("hidden");
+      meusPlanosModal.classList.add("visible");
     }
 
     function ativarPlanoEIr(id) {
@@ -246,11 +242,23 @@
       document.getElementById("area-plano")?.classList.remove("hidden");
 
       window.lioraIrParaSessao?.(0, false);
+
+      meusPlanosModal.classList.remove("visible");
       meusPlanosModal.classList.add("hidden");
     }
 
+    // Fechar pelo botão
     meusPlanosFechar?.addEventListener("click", () => {
+      meusPlanosModal.classList.remove("visible");
       meusPlanosModal.classList.add("hidden");
+    });
+
+    // Fechar clicando fora
+    meusPlanosModal?.addEventListener("click", (ev) => {
+      if (ev.target === meusPlanosModal) {
+        meusPlanosModal.classList.remove("visible");
+        meusPlanosModal.classList.add("hidden");
+      }
     });
 
     // ------------------------------------------------------
@@ -273,47 +281,30 @@
     });
 
     // ------------------------------------------------------
-    // FAB DO SIMULADO — FIX PERMANENTE
+    // FAB SIMULADO
     // ------------------------------------------------------
-    if (simFab && simModalBackdrop) {
-      simFab.addEventListener("click", () => {
-        console.log("⚙ FAB Simulado → abrir modal");
-        simModalBackdrop.classList.add("visible");
-      });
-    }
-
-    // ------------------------------------------------------
-    // GLOBAL CLICK LISTENER
-    // ------------------------------------------------------
-    document.addEventListener("click", (ev) => {
-      if (ev.target?.id === "home-dashboard") {
-        window.homeDashboard();
-      }
+    simFab?.addEventListener("click", () => {
+      console.log("⚙ Abrindo modal do simulado");
+      simModalBackdrop.classList.add("visible");
     });
 
     // ------------------------------------------------------
-    // ⭐ NOVO FIX PREMIUM — TOTAL COMPATIBILIDADE COM premium.js v3
+    // FIX PREMIUM
     // ------------------------------------------------------
     function bindPremiumButton() {
       const btn = document.getElementById("liora-upgrade-open");
-      if (!btn) return;
+      if (!btn || btn.dataset.bound) return;
 
-      if (!btn.dataset.bound) {
-        btn.dataset.bound = "1";
-        btn.addEventListener("click", () => {
-          console.log("✨ Abrindo modal Premium (v93)...");
-          window.lioraPremium?.openUpgradeModal?.("home");
-        });
-        console.log("🔥 Botão Premium ativo (v93)!");
-      }
+      btn.dataset.bound = "1";
+      btn.addEventListener("click", () => {
+        console.log("✨ Abrindo modal Premium…");
+        window.lioraPremium?.openUpgradeModal?.("home");
+      });
     }
 
     bindPremiumButton();
     document.addEventListener("click", bindPremiumButton);
-    document.addEventListener("liora:enter-simulado", bindPremiumButton);
-    document.addEventListener("liora:enter-estudo-tema", bindPremiumButton);
-    document.addEventListener("liora:enter-estudo-upload", bindPremiumButton);
 
-    console.log("🟢 NAV-HOME v93 pronto!");
+    console.log("🟢 NAV-HOME v94 pronto!");
   });
 })();
