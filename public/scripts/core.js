@@ -565,13 +565,14 @@
       });
     })();
 
-    // --------------------------------------------------------
-    // RENDERIZAÇÃO DO PLANO (lista lateral)
-    // --------------------------------------------------------
+  // --------------------------------------------------------
+// RENDERIZAÇÃO DO PLANO (lista lateral)
+// --------------------------------------------------------
     function renderPlanoResumo(plano) {
       if (!els.plano) return;
     
       els.plano.innerHTML = "";
+    
       if (!plano || !plano.length) {
         els.plano.innerHTML =
           '<p class="text-sm text-[var(--muted)]">Nenhum plano gerado ainda.</p>';
@@ -586,16 +587,27 @@
         div.type = "button";
         div.className = "liora-card-topico";
     
+        // força da sessão (cores/feedbacks)
         const sessao = wizard.sessoes[index];
-    
         if (sessao?.forca === "forte") div.classList.add("forca-forte");
         else if (sessao?.forca === "media") div.classList.add("forca-media");
         else div.classList.add("forca-fraca");
     
         div.dataset.index = String(index);
-           
-        const tituloLimpo = (p.titulo || p.nome || "").trim() || `Sessão ${index+1}`;
-        div.textContent = tituloLimpo;
+    
+        // 🔥 TÍTULO REFINADO — sem numeração
+        let tituloOriginal = (p.titulo || p.nome || "").trim();
+    
+        // Remover qualquer resquício de numeração automática
+        tituloOriginal = tituloOriginal.replace(/^Sessão\s*\d+\s*[:\-]?\s*/i, "");
+    
+        // Se ainda assim vier vazio
+        const tituloLimpo = tituloOriginal || "Sem título";
+    
+        // 🔥 HTML do botão (com estilo semântico)
+        div.innerHTML = `
+          <span class="liora-titulo-sessao">${tituloLimpo}</span>
+        `;
     
         div.addEventListener("click", () => {
           window.lioraIrParaSessao && window.lioraIrParaSessao(index, false);
