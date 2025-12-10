@@ -1843,3 +1843,13 @@ html.light .sim-ia-option.active {
 html.light .liora-wizard-title {
   color: #3d2b1f;
 }
+.liora-estudo-header {
+  display: flex;
+  justify-content: center; /* centraliza horizontalmente */
+  align-items: center;
+}
+
+.liora-estudo-header h3 {
+  margin: 0 auto; /* reforça o centro */
+  text-align: center;
+}
