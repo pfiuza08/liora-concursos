@@ -999,3 +999,765 @@ html.light .sim-ia-badge--historico {
   border-color: #c4b5fd;
   color: #6d28d9;
 }
+/* ============================================================
+   BADGES DE IA — Premium v3
+   ============================================================ */
+
+.sim-ia-badges {
+  display: inline-flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.sim-ia-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+
+  padding: 3px 8px;
+  font-size: 0.72rem;
+  font-weight: 600;
+
+  border-radius: 8px;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  color: var(--fg);
+
+  line-height: 1;
+}
+
+/* Estilo por tipo */
+.sim-ia-badge--banca {
+  border-color: #8b82ff;
+  background: rgba(139,130,255,0.15);
+}
+
+.sim-ia-badge--explica {
+  border-color: #ffc94d;
+  background: rgba(255,201,77,0.18);
+}
+
+.sim-ia-badge--reforco {
+  border-color: #7ddf78;
+  background: rgba(125,223,120,0.18);
+}
+
+/* Light Mode */
+html.light .sim-ia-badge {
+  background: #fff;
+  border-color: #d9c6b7;
+  color: #3d3028;
+}
+/* ============================================================
+   CARD DE QUESTÃO — Premium
+   ============================================================ */
+
+.sim-questao-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  padding: 16px;
+  border-radius: 14px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+}
+/* ============================================================
+   ALTERNATIVAS — Premium Touch
+   ============================================================ */
+
+.sim-alt {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  padding: 10px 14px;
+  border-radius: 12px;
+
+  margin-bottom: 10px;
+  cursor: pointer;
+  transition: all .25s ease;
+}
+
+.sim-alt:hover {
+  border-color: var(--brand);
+  background: rgba(196,75,4,0.10);
+}
+
+.sim-alt.selected {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: #fff;
+  font-weight: 600;
+  transform: translateY(-1px);
+}
+
+.sim-radio {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+}
+
+.sim-alt.selected .sim-radio {
+  border-color: #fff;
+  background: #fff;
+}
+.sim-timer {
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  color: var(--fg);
+  background: var(--bg2);
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+.sim-nav .sim-btn-nav {
+  padding: 10px 18px;
+  border-radius: 12px !important;
+  font-size: 0.9rem !important;
+}
+
+.sim-btn-next {
+  background: var(--brand) !important;
+  color: #fff !important;
+  border-color: var(--brand) !important;
+}
+
+.sim-btn-next:hover {
+  filter: brightness(1.05);
+}
+/* ============================================================
+   FAB SIMULADO — Premium
+   ============================================================ */
+
+#sim-fab {
+  position: fixed;
+  bottom: 26px;
+  right: 26px;
+
+  background: var(--brand);
+  color: #fff;
+
+  padding: 14px 18px;
+  border-radius: 14px;
+
+  font-size: 1.1rem;
+  font-weight: 600;
+
+  box-shadow: 0 10px 32px rgba(0,0,0,0.35);
+  transition: all .25s ease;
+  border: none;
+}
+
+#sim-fab:hover {
+  transform: translateY(-3px);
+  filter: brightness(1.08);
+}
+@media (max-width: 480px) {
+  .sim-questao-card {
+    padding: 12px;
+  }
+  .sim-alt {
+    padding: 8px 12px;
+  }
+  .sim-ia-option {
+    padding: 5px 10px;
+    font-size: 0.78rem;
+  }
+  .sim-ia-badge {
+    font-size: 0.68rem;
+    padding: 3px 6px;
+  }
+}
+/* ============================================================
+   RESULTADO DO SIMULADO — Premium v3
+   ============================================================ */
+
+.sim-resultado-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  padding: 22px;
+  border-radius: 18px;
+  box-shadow: 0 10px 26px rgba(0,0,0,0.28);
+  max-width: 650px;
+}
+
+.sim-resultado-titulo {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 4px;
+  color: var(--fg);
+}
+
+.sim-score {
+  font-size: 2.8rem;
+  font-weight: 800;
+  color: var(--brand);
+  line-height: 1;
+}
+
+.sim-feedback {
+  font-size: 0.9rem;
+  margin-top: 12px;
+  color: var(--muted);
+}
+/* ============================================================
+   PROGRESSO DO SIMULADO — Premium v2
+   ============================================================ */
+
+.sim-progress {
+  position: relative;
+  height: 6px;
+  background: var(--bg2);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.sim-progress-fill {
+  background: var(--brand);
+  height: 100%;
+  transition: width 0.35s ease;
+}
+/* ============================================================
+   DASHBOARD — Cards Premium
+   ============================================================ */
+
+#dash-resumo .dash-card,
+#dash-bancas .dash-card,
+#dash-ultimos .dash-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  padding: 14px 18px;
+  border-radius: 14px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.20);
+  transition: transform .25s ease, box-shadow .25s ease;
+}
+
+#dash-resumo .dash-card:hover,
+#dash-bancas .dash-card:hover,
+#dash-ultimos .dash-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.30);
+}
+.dash-title {
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: 6px;
+  color: var(--fg);
+}
+
+.dash-sub {
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+.dash-score {
+  font-weight: 700;
+  font-size: 1.4rem;
+  color: var(--brand);
+}
+
+html.light .dash-score {
+  color: #b54404;
+}
+/* ============================================================
+   MODAL DE CONFIGURAÇÃO — Premium Glass
+   ============================================================ */
+
+.sim-modal {
+  background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(14px);
+  border-radius: 18px;
+  border: 1px solid rgba(255,255,255,0.06);
+  box-shadow: 0 10px 48px rgba(0,0,0,0.45);
+
+  padding: 22px;
+  max-width: 420px;
+}
+
+.sim-modal-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 6px;
+  color: #fff;
+}
+
+.sim-label {
+  color: var(--fg);
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-top: 14px;
+}
+
+.sim-input {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  padding: 10px 12px;
+  border-radius: 12px;
+  width: 100%;
+  color: var(--fg);
+  margin-top: 4px;
+  font-size: 0.9rem;
+}
+
+.sim-modal-footer .btn-primary {
+  margin-top: 14px;
+}
+html.light .sim-modal {
+  background: rgba(255,255,255,0.8);
+  border: 1px solid #e2d4c6;
+}
+
+html.light .sim-label {
+  color: #3c2b1d;
+}
+
+html.light .sim-input {
+  background: #fff;
+  border-color: #d9c6b7;
+  color: #3a2d22;
+}
+/* ============================================================
+   BADGES GENÉRICAS DO SIMULADO
+   ============================================================ */
+
+.sim-badge {
+  display: inline-flex;
+  padding: 4px 8px;
+  border-radius: 8px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  border: 1px solid var(--border);
+  background: var(--bg2);
+  color: var(--fg);
+}
+
+.sim-badge.banca { border-color:#8b82ff; }
+.sim-badge.dificuldade { border-color:#ffc94d; }
+.sim-badge.tema { border-color:#7ddf78; }
+@media (max-width: 480px) {
+  .sim-modal {
+    padding: 18px;
+    border-radius: 16px;
+  }
+
+  .sim-questao-card {
+    padding: 14px;
+  }
+
+  .sim-score {
+    font-size: 2.3rem;
+  }
+
+  .sim-ia-option {
+    padding: 6px 10px;
+    font-size: 0.78rem;
+  }
+
+  .sim-ia-badge {
+    padding: 2px 6px;
+    font-size: 0.65rem;
+  }
+}
+/* ============================================================
+   IA AUXILIARES (C3) — CHIPS PREMIUM
+   ============================================================ */
+
+.sim-ia-row {
+  margin-top: 1.4rem;
+  padding-top: 0.9rem;
+  border-top: 1px dashed rgba(255,255,255,0.18);
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.sim-ia-label {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.sim-ia-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+/* Chip base (desligado, mas legível) */
+.sim-ia-option {
+  border-radius: 999px;
+  padding: 0.45rem 0.85rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  border: 1px solid rgba(255,255,255,0.16);
+  background: rgba(255,255,255,0.04);
+  color: var(--muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  cursor: pointer;
+  transition:
+    background 0.18s ease,
+    border-color 0.18s ease,
+    color 0.18s ease,
+    transform 0.12s ease,
+    box-shadow 0.18s ease;
+}
+
+.sim-ia-option .emoji {
+  font-size: 0.95rem;
+}
+
+/* Hover no estado desligado */
+.sim-ia-option:hover {
+  background: rgba(255,255,255,0.08);
+  border-color: rgba(255,255,255,0.26);
+  transform: translateY(-1px);
+}
+
+/* Estado ativo (ligado) */
+.sim-ia-option.active {
+  background: rgba(196,75,4,0.18);
+  border-color: var(--brand);
+  color: #fff;
+  box-shadow: 0 0 14px rgba(196,75,4,0.45);
+}
+
+/* Pequeno "press" */
+.sim-ia-option:active {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+/* --------- MODO CLARO --------- */
+
+html.light .sim-ia-row {
+  border-top-color: rgba(0,0,0,0.08);
+}
+
+html.light .sim-ia-label {
+  color: #7b6a5d;
+}
+
+html.light .sim-ia-option {
+  background: #ffffff;
+  border-color: #e3d5c6;
+  color: #6a5544;
+}
+
+html.light .sim-ia-option:hover {
+  background: #f5e7d8;
+  border-color: #d4bda7;
+}
+
+html.light .sim-ia-option.active {
+  background: #c44b04;
+  border-color: #c44b04;
+  color: #fff;
+  box-shadow: 0 0 14px rgba(196,75,4,0.45);
+}
+/* ============================================================
+   BADGES DE IA — SOBRE AS QUESTÕES E RESULTADO
+   ============================================================ */
+
+.sim-ia-badges {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.sim-ia-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.14);
+  color: var(--muted);
+}
+
+/* Variações por tipo */
+.sim-ia-badge--banca {
+  border-color: #8b82ff;
+  background: rgba(139,130,255,0.14);
+  color: #d4d0ff;
+}
+
+.sim-ia-badge--explica {
+  border-color: #ffc94d;
+  background: rgba(255,201,77,0.16);
+  color: #ffe3a2;
+}
+
+.sim-ia-badge--reforco {
+  border-color: #7ddf78;
+  background: rgba(125,223,120,0.15);
+  color: #c3f7bf;
+}
+
+/* Modo claro: suaviza */
+html.light .sim-ia-badge {
+  background: #fff;
+  border-color: #e0d2c4;
+  color: #6b5645;
+}
+
+html.light .sim-ia-badge--banca {
+  background: #f1efff;
+  color: #5149d8;
+  border-color: #b4aefc;
+}
+
+html.light .sim-ia-badge--explica {
+  background: #fff6dd;
+  color: #9a6a00;
+  border-color: #ffdd92;
+}
+
+html.light .sim-ia-badge--reforco {
+  background: #e6ffec;
+  color: #21763c;
+  border-color: #aee9b6;
+}
+/* ============================================================
+   ALTERNATIVAS DO SIMULADO — Refinamento
+   ============================================================ */
+
+.sim-questao-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 16px 18px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.22);
+}
+
+.sim-enunciado {
+  font-size: 0.96rem;
+  color: var(--fg);
+}
+
+/* alternativa base */
+.sim-alt {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  margin-top: 0.55rem;
+  padding: 0.55rem 0.65rem;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.12s ease;
+}
+
+.sim-alt:hover {
+  background: rgba(255,255,255,0.04);
+  transform: translateY(-1px);
+}
+
+/* bolinha à esquerda */
+.sim-radio {
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  border: 2px solid var(--border);
+  margin-top: 3px;
+  flex-shrink: 0;
+  transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+}
+
+.sim-alt-text {
+  font-size: 0.92rem;
+  color: var(--fg);
+}
+
+/* selecionada */
+.sim-alt.selected {
+  background: rgba(196,75,4,0.12);
+}
+
+.sim-alt.selected .sim-radio {
+  border-color: var(--brand);
+  background: radial-gradient(circle at 50% 50%, var(--brand) 0, var(--brand) 50%, transparent 51%);
+  box-shadow: 0 0 0 2px rgba(196,75,4,0.45);
+}
+/* ============================================================
+   DASHBOARD PREMIUM — CARDS, TABELAS, MÉTRICAS
+   ============================================================ */
+
+/* Container geral */
+#area-dashboard {
+  animation: dashFade 0.35s ease forwards;
+  opacity: 0;
+}
+
+@keyframes dashFade {
+  to { opacity: 1; }
+}
+
+/* -------------------------------------------
+   CARDS RESUMO (md:grid-cols-3)
+-------------------------------------------- */
+
+#dash-resumo .dash-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 1rem 1.2rem;
+  box-shadow: 0 6px 14px rgba(0,0,0,0.25);
+  transition: transform .15s ease, box-shadow .2s ease;
+}
+
+#dash-resumo .dash-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 22px rgba(0,0,0,0.32);
+}
+
+.dash-card-title {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+  margin-bottom: 0.45rem;
+  font-weight: 600;
+}
+
+.dash-card-value {
+  font-size: 1.55rem;
+  font-weight: 700;
+  color: var(--fg);
+  margin-bottom: 0.2rem;
+}
+
+.dash-card-sub {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+/* Estado vazio */
+#dash-empty {
+  padding: 1rem;
+  background: rgba(255,255,255,0.05);
+  border-radius: 12px;
+  text-align: center;
+}
+
+/* -------------------------------------------
+   BANCAS — barras horizontais
+-------------------------------------------- */
+
+#dash-bancas .banca-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.6rem 0.8rem;
+  margin-bottom: 0.5rem;
+  transition: background 0.15s ease, transform .12s ease;
+}
+
+#dash-bancas .banca-row:hover {
+  background: rgba(255,255,255,0.05);
+  transform: translateX(2px);
+}
+
+.banca-label {
+  font-weight: 600;
+  color: var(--fg);
+  font-size: 0.9rem;
+}
+
+.banca-score {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--brand);
+}
+
+/* -------------------------------------------
+   ÚLTIMOS SIMULADOS — LISTA PREMIUM
+-------------------------------------------- */
+
+#dash-ultimos .sim-item {
+  border: 1px solid var(--border);
+  background: var(--card);
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.65rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: background .15s ease, transform .12s ease;
+}
+
+#dash-ultimos .sim-item:hover {
+  background: rgba(255,255,255,0.05);
+  transform: translateY(-2px);
+}
+
+.sim-item-left {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sim-item-banca {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.sim-item-linha {
+  font-size: 0.95rem;
+  color: var(--fg);
+  font-weight: 600;
+}
+
+.sim-item-ia {
+  font-size: 0.7rem;
+  opacity: 0.7;
+}
+
+/* Score */
+.sim-item-score {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--brand);
+  text-align: right;
+}
+
+/* -------------------------------------------
+   MODO CLARO — ajustes suaves
+-------------------------------------------- */
+
+html.light #dash-resumo .dash-card {
+  box-shadow: 0 6px 12px rgba(0,0,0,0.08);
+}
+
+html.light #dash-bancas .banca-row {
+  background: #fffaf5;
+}
+
+html.light #dash-ultimos .sim-item {
+  background: #ffffff;
+  border-color: #e1d5c6;
+}
+
+/* -------------------------------------------
+   MICRO-ANIMAÇÕES
+-------------------------------------------- */
+
+@keyframes dashPop {
+  0% { transform: scale(0.96); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+#dash-resumo .dash-card,
+#dash-bancas .banca-row,
+#dash-ultimos .sim-item {
+  animation: dashPop 0.25s ease forwards;
+}
+
