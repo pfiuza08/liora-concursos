@@ -1056,3 +1056,22 @@ button.btn-continuar-estudo {
     border-radius: 10px;
   }
 }
+/* ============================================================
+   CORREÇÃO — Títulos das sessões
+   ============================================================ */
+
+.sessao-titulo,
+.sessao h2,
+#painel-sessao h2 {
+  font-size: 1.4rem !important;     /* antes estava ~2rem */
+  font-weight: 700;
+  margin-bottom: 0.6rem;
+}
+
+@media (max-width: 480px) {
+  .sessao-titulo,
+  .sessao h2,
+  #painel-sessao h2 {
+    font-size: 1.2rem !important;
+  }
+}
