@@ -1075,3 +1075,140 @@ button.btn-continuar-estudo {
     font-size: 1.2rem !important;
   }
 }
+/* ============================================================
+   SEÇÃO "SEU ESTUDO" — ESTÉTICA PREMIUM
+   ============================================================ */
+
+/* Ajuste suave do espaçamento vertical */
+.space-y-3 > * + * {
+  margin-top: 0.85rem !important;
+}
+
+/* Badge de status (acompanhando HTML novo) */
+.liora-status-badge,
+.space-y-3 span.inline-flex {
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  transition: opacity 0.2s ease;
+}
+
+/* Pulsação do ponto colorido */
+@keyframes liora-pulse {
+  0% { opacity: 0.25; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.35); }
+  100% { opacity: 0.25; transform: scale(1); }
+}
+
+.space-y-3 span.inline-flex .animate-pulse {
+  animation: liora-pulse 1.3s infinite ease-in-out;
+}
+
+
+/* ============================================================
+   BOTÃO — Continuar Estudo (Primário)
+   ============================================================ */
+.btn-continuar-estudo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+
+  background: var(--brand);
+  color: #fff;
+
+  font-size: 0.9rem;
+  font-weight: 600;
+
+  padding: 0.55rem 1rem;
+  border-radius: 12px;
+  border: none;
+
+  cursor: pointer;
+  text-align: center;
+
+  box-shadow: 0 0 12px rgba(196, 75, 4, 0.35);
+  transition: transform 0.15s ease, box-shadow 0.2s ease, filter 0.2s ease;
+
+  white-space: nowrap;
+}
+
+.btn-continuar-estudo:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.05);
+  box-shadow: 0 0 20px rgba(196, 75, 4, 0.55);
+}
+
+.btn-continuar-estudo:active {
+  transform: translateY(0);
+  box-shadow: 0 0 10px rgba(196, 75, 4, 0.4);
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+  .btn-continuar-estudo {
+    font-size: 0.82rem;
+    padding: 0.45rem 0.85rem;
+    border-radius: 10px;
+  }
+}
+
+
+/* ============================================================
+   BOTÃO — Meus Planos (Secundário)
+   ============================================================ */
+.btn-meus-planos {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--fg);
+
+  font-size: 0.9rem;
+  font-weight: 600;
+
+  padding: 0.5rem 0.9rem;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+
+  cursor: pointer;
+  text-align: center;
+  white-space: nowrap;
+
+  transition: background 0.15s ease, border 0.15s ease, transform 0.15s ease;
+}
+
+.btn-meus-planos:hover {
+  background: rgba(255,255,255,0.09);
+  border-color: rgba(255,255,255,0.28);
+  transform: translateY(-1px);
+}
+
+.btn-meus-planos:active {
+  transform: translateY(0);
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+ .btn-meus-planos {
+    font-size: 0.82rem;
+    padding: 0.45rem 0.75rem;
+    border-radius: 10px;
+  }
+}
+
+
+/* ============================================================
+   LAYOUT DOS BOTÕES — LADO A LADO NO DESKTOP / EMPILHADOS NO MOBILE
+   ============================================================ */
+
+@media (min-width: 640px) {
+  .space-y-3 .flex {
+    flex-direction: row;
+  }
+}
+
+@media (max-width: 639px) {
+  .space-y-3 .flex {
+    flex-direction: column;
+  }
+}
