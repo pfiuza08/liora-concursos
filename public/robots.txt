@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+
+# Bloquear diretórios sensíveis internos
+Disallow: /api/
+Disallow: /scripts/private/
+Disallow: /admin/
+
+# Sitemap oficial
+Sitemap: https://getliora.ia.br/sitemap.xml
