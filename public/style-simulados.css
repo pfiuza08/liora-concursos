@@ -1760,21 +1760,46 @@ html.light #dash-ultimos .sim-item {
 #dash-ultimos .sim-item {
   animation: dashPop 0.25s ease forwards;
 }
+
 /* ============================================================
-   FIX — Modal de Simulado cabendo na tela (desktop e mobile)
+   FIX DEFINITIVO — Modal Simulado com layout profissional
    ============================================================ */
 
 #sim-modal-backdrop .sim-modal {
+  display: flex;
+  flex-direction: column;
   max-height: 90vh !important;
-  overflow-y: auto !important;
-  padding-bottom: 1.5rem; /* espaço para o botão não colar no limite */
+  overflow: hidden !important; /* não deixa o container rolar */
+  padding: 1.2rem;
+  box-sizing: border-box;
 }
 
-/* Em mobile, aumenta leve a margem superior e força scroll suave */
+/* Corpo rola, footer sempre visível */
+#sim-modal-backdrop .sim-modal-body {
+  flex: 1;
+  overflow-y: auto !important;
+  margin-bottom: 1rem;
+  padding-right: 6px; /* evita esconder conteúdo atrás da scrollbar */
+}
+
+/* Footer fixo na base do modal */
+#sim-modal-backdrop .sim-modal-footer {
+  flex-shrink: 0;
+  padding-top: 0.8rem;
+  background: var(--bg2);
+  border-top: 1px solid var(--border);
+  padding-bottom: 0.2rem;
+}
+
+/* Mobile refinado */
 @media (max-width: 640px) {
   #sim-modal-backdrop .sim-modal {
-    max-height: 88vh !important;
-    margin-top: 5vh;
+    max-height: 92vh !important;
+    margin-top: 4vh;
+  }
+
+  #sim-modal-backdrop .sim-modal-body {
+    padding-right: 4px;
   }
 }
 
