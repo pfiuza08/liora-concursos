@@ -1802,4 +1802,43 @@ html.light #dash-ultimos .sim-item {
     padding-right: 4px;
   }
 }
+/* ============================================================
+   FIX MOBILE — Modal de Simulado SEM cortar o botão
+   ============================================================ */
+
+/* O backdrop passa a rolar se o conteúdo for grande */
+#sim-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 1.5rem 1rem;
+  background: rgba(0,0,0,0.65);
+  z-index: 70;
+  overflow-y: auto;              /* ← aqui é a chave */
+}
+
+/* O cartão do modal ganha margem no topo e largura controlada */
+#sim-modal-backdrop .sim-modal {
+  width: 100%;
+  max-width: 480px;
+  margin-top: 4vh;               /* descola do topo, cabe em mobile */
+  background: var(--card);
+  border-radius: 16px;
+  box-shadow: 0 18px 45px rgba(0,0,0,0.6);
+}
+
+/* Em telas maiores ele continua comportado */
+@media (min-width: 768px) {
+  #sim-modal-backdrop {
+    align-items: center;
+    padding: 2rem;
+  }
+
+  #sim-modal-backdrop .sim-modal {
+    margin-top: 0;
+    max-width: 520px;
+  }
+}
 
