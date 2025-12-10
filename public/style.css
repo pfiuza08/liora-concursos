@@ -1,6 +1,6 @@
 /* =============================================================
    LIORA — PREMIUM HYBRID UI (C3)
-   Versão Consolidada v78-PREMIUM-C9.1
+   Versão Consolidada v79-PREMIUM-C10
    Tema escuro (padrão) + Claro (html.light)
    UI moderna, limpa, responsiva
 ============================================================= */
@@ -683,6 +683,7 @@ input:focus, select:focus {
   opacity: .45;
   user-select: none;
 }
+
 /* ============================================================
    LIORA — AUTH & PREMIUM MODALS (BLACK GLASS)
    ============================================================ */
@@ -1000,6 +1001,7 @@ input:focus, select:focus {
     transform: rotate(360deg);
   }
 }
+
 /* Correção — Botão Continuar Estudo */
 #btn-continuar-estudo,
 button.btn-continuar-estudo {
@@ -1016,6 +1018,7 @@ button.btn-continuar-estudo {
     font-size: 0.8rem !important;
   }
 }
+
 /* ============================================================
    CORREÇÃO — Botão "Continuar estudo"
    ============================================================ */
@@ -1056,6 +1059,7 @@ button.btn-continuar-estudo {
     border-radius: 10px;
   }
 }
+
 /* ============================================================
    CORREÇÃO — Títulos das sessões
    ============================================================ */
@@ -1075,6 +1079,7 @@ button.btn-continuar-estudo {
     font-size: 1.2rem !important;
   }
 }
+
 /* ============================================================
    SEÇÃO "SEU ESTUDO" — ESTÉTICA PREMIUM
    ============================================================ */
@@ -1293,64 +1298,6 @@ button.btn-continuar-estudo {
 }
 
 /* ============================================
-   BOTÃO — CONTINUAR ESTUDO (Primário)
-   ============================================ */
-
-.btn-continuar-estudo {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-
-  padding: 0.6rem 1.2rem;
-  border-radius: 12px;
-
-  background: var(--brand);
-  color: #fff;
-  font-size: 0.9rem;
-  font-weight: 600;
-  border: none;
-  cursor: pointer;
-
-  box-shadow: 0 0 12px rgba(196,75,4,0.35);
-  transition: transform .15s ease, box-shadow .2s ease, filter .2s;
-}
-
-.btn-continuar-estudo:hover {
-  transform: translateY(-2px);
-  filter: brightness(1.05);
-  box-shadow: 0 0 20px rgba(196,75,4,0.45);
-}
-
-/* ============================================
-   BOTÃO — MEUS PLANOS (Secundário)
-   ============================================ */
-
-.btn-meus-planos {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-
-  padding: 0.6rem 1.2rem;
-  border-radius: 12px;
-
-  background: rgba(255,255,255,0.05);
-  color: var(--fg);
-  font-size: 0.9rem;
-  font-weight: 600;
-  border: 1px solid rgba(255,255,255,0.16);
-  cursor: pointer;
-
-  transition: background .15s, border .15s, transform .15s ease;
-}
-
-.btn-meus-planos:hover {
-  background: rgba(255,255,255,0.10);
-  border-color: rgba(255,255,255,0.28);
-  transform: translateY(-2px);
-}
-
-
-/* ============================================
    TEXTO DO RESUMO
    ============================================ */
 
@@ -1361,6 +1308,7 @@ button.btn-continuar-estudo {
   padding: 0 0.4rem;
   text-align: center;
 }
+
 /* ============================================
    ÍCONES SVG DOS BOTÕES "SEU ESTUDO"
    ============================================ */
@@ -1388,6 +1336,7 @@ button.btn-continuar-estudo {
 .btn-meus-planos .btn-icone {
   margin-right: 0.15rem;
 }
+
 .btn-meus-planos .btn-icone {
   border-radius: 999px;
   background: rgba(0,0,0,0.18);
@@ -1446,8 +1395,6 @@ html.light .liora-card-topico.active {
   color: #fff;
   border-color: #c44b04;
 }
-
-
 
 /* ============================================================
    "SEU ESTUDO" — AJUSTES FINAIS DE PROPORÇÃO
@@ -1537,7 +1484,7 @@ html.light {
   --bg2: #ffffff;
   --card: #ffffff;
   --fg: #2e1c12;
-  --muted: #7d6a5d;
+  --muted: #7b6a5d;
   --border: #dccbbb;
 }
 
@@ -1548,4 +1495,101 @@ html.light body {
       transparent 45%
     ),
     var(--bg);
+}
+
+/* ============================================================
+   IA AUXILIAR (C3) — Botões de seleção (Dark + Light)
+   ============================================================ */
+
+.sim-ia-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+
+  padding: 0.45rem 0.9rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  border: 1px solid var(--border);
+  background: var(--bg2);
+  color: var(--fg);
+
+  transition: all .2s ease;
+}
+
+/* Ícone dentro do botão */
+.sim-ia-btn .icon {
+  opacity: 0.55;
+  transition: opacity .2s ease;
+}
+
+/* HOVER */
+.sim-ia-btn:not(.active):hover {
+  background: var(--hover);
+  border-color: var(--brand);
+}
+
+/* ESTADO ATIVO */
+.sim-ia-btn.active {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(196,75,4,0.35);
+}
+
+.sim-ia-btn.active .icon {
+  opacity: 1;
+}
+
+/* ============================================================
+   LIGHT MODE — IA AUXILIAR (melhor contraste)
+   ============================================================ */
+
+html.light .sim-ia-btn {
+  background: #ffffff;
+  border-color: #e0d4c4;
+  color: #4b3a2a;
+}
+
+html.light .sim-ia-btn .icon {
+  opacity: 0.45;
+}
+
+html.light .sim-ia-btn:hover {
+  background: #f4e8db;
+  border-color: var(--brand);
+}
+
+html.light .sim-ia-btn.active {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(196,75,4,0.35);
+}
+
+html.light .sim-ia-btn.active .icon {
+  opacity: 1;
+}
+
+/* ============================================================
+   UNIFORMIZAÇÃO EXTRA — TÍTULOS DAS SESSÕES
+   (garante consistência mesmo com variações da IA)
+   ============================================================ */
+
+#liora-sessao-titulo,
+#painel-sessao h2,
+.sessao h2 {
+  font-size: 1.45rem !important;
+  line-height: 1.25 !important;
+  font-weight: 700 !important;
+}
+
+@media (max-width: 480px) {
+  #liora-sessao-titulo,
+  #painel-sessao h2,
+  .sessao h2 {
+    font-size: 1.25rem !important;
+  }
 }
