@@ -95,22 +95,39 @@
 
   
     <!-- SEU ESTUDO -->
-    <div class="space-y-3 w-full max-w-md">
-      <h3 class="text-base font-medium text-[var(--muted)]">SEU ESTUDO</h3>
-
-      <button id="home-continuar-estudo" class="liora-btn liora-btn-primary w-full sm:w-auto">
-        ▶ Continuar estudo
-      </button>
-
-      <button id="home-meus-planos" class="liora-btn liora-btn-ghost w-full sm:w-auto">
-        📚 Meus planos
-      </button>
-
+      <div class="space-y-3 w-full max-w-md">
+      <div class="flex items-center justify-between gap-2">
+        <h3 class="text-xs tracking-[0.18em] font-semibold text-[var(--muted)] uppercase">
+          Seu estudo
+        </h3>
+    
+        <!-- Badge de status do estudo -->
+        <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-medium
+                     bg-[rgba(255,255,255,0.04)] text-[var(--muted)] border border-[rgba(255,255,255,0.08)]">
+          <span class="w-1.5 h-1.5 rounded-full bg-[var(--brand)] animate-pulse"></span>
+          Em andamento
+        </span>
+      </div>
+    
+      <!-- Área dos botões de ação -->
+      <div class="flex flex-col sm:flex-row gap-2">
+        <button id="home-continuar-estudo" class="btn-continuar-estudo flex-1 sm:flex-none justify-center">
+          <span class="text-sm">▶</span>
+          <span>Continuar estudo</span>
+        </button>
+    
+        <button id="home-meus-planos" class="btn-meus-planos flex-1 sm:flex-none justify-center">
+          <span class="text-sm">📚</span>
+          <span>Meus planos</span>
+        </button>
+      </div>
+    
       <p id="home-resumo-estudo"
-         class="text-xs text-[var(--muted)] leading-tight px-3">
-        Gere um plano de estudo por Tema ou PDF para começar.
+         class="text-xs text-[var(--muted)] leading-tight px-1">
+        Retome de onde parou ou escolha um plano anterior para revisar seus estudos.
       </p>
     </div>
+
 
   </section>
 
