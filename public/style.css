@@ -1392,3 +1392,160 @@ button.btn-continuar-estudo {
   border-radius: 999px;
   background: rgba(0,0,0,0.18);
 }
+
+/* ============================================================
+   AJUSTE FINAL — BOTÃO "ENTRAR" (Modo Claro + Escuro)
+   ============================================================ */
+
+html.light .liora-auth-btn {
+  background: rgba(255,255,255,0.85);
+  color: #55321c;
+  border-color: rgba(0,0,0,0.12);
+}
+
+html.light .liora-auth-btn:hover {
+  background: rgba(255,255,255,1);
+  border-color: rgba(0,0,0,0.22);
+  transform: translateY(-1px);
+}
+
+html.light #btn-entrar,
+html.light button#btn-entrar {
+  background: #c44b04 !important;
+  color: white !important;
+}
+
+
+/* ============================================================
+   AJUSTE FINAL — CHIPS DAS SESSÕES (Sessão atual estava maior)
+   ============================================================ */
+
+.liora-card-topico {
+  font-size: 0.92rem !important;
+  padding: 8px 18px !important;
+  line-height: 1 !important;
+}
+
+.liora-card-topico.active {
+  transform: translateY(-1px);
+  font-weight: 600 !important;
+}
+
+/* Modo claro – suaviza o contraste dos chips */
+html.light .liora-card-topico {
+  background: #ffffff;
+  border-color: #e3d6c7;
+  color: #4e3a2a;
+}
+html.light .liora-card-topico:hover {
+  background: #f3e6d9;
+  border-color: #c44b04;
+}
+html.light .liora-card-topico.active {
+  background: #c44b04;
+  color: #fff;
+  border-color: #c44b04;
+}
+
+
+
+/* ============================================================
+   "SEU ESTUDO" — AJUSTES FINAIS DE PROPORÇÃO
+   ============================================================ */
+.liora-estudo-acoes {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (min-width: 720px) {
+  .liora-estudo-acoes {
+    flex-direction: row;
+  }
+}
+
+.btn-continuar-estudo,
+.btn-meus-planos {
+  min-width: 165px;
+  padding: 0.55rem 1.15rem;
+  font-size: 0.88rem;
+}
+
+@media (max-width: 480px) {
+  .btn-continuar-estudo,
+  .btn-meus-planos {
+    min-width: 130px;
+    padding: 0.45rem 0.9rem;
+    font-size: 0.8rem;
+  }
+}
+
+
+/* ============================================================
+   AJUSTE FINAL — TÍTULO DA PRIMEIRA SESSÃO
+   (antes parecia maior do que os demais)
+   ============================================================ */
+
+#liora-sessao-titulo,
+.sessao h2,
+#painel-sessao h2 {
+  font-size: 1.45rem !important;
+  font-weight: 700;
+  margin-bottom: 0.7rem;
+}
+
+@media (max-width: 480px) {
+  #liora-sessao-titulo,
+  .sessao h2,
+  #painel-sessao h2 {
+    font-size: 1.25rem !important;
+  }
+}
+
+
+/* ============================================================
+   AJUSTE VISUAL DARK MODE PREMIUM v2
+   ============================================================ */
+:root {
+  --bg: #0b0b0b;
+  --bg2: #151515;
+  --card: #181818;
+  --fg: #ffffff;
+  --muted: #b9b9b9;
+  --border: #272727;
+}
+
+/* Toque sutil de textura radial */
+body:not(.light) {
+  background: radial-gradient(
+      circle at top center,
+      rgba(196,75,4,0.07),
+      transparent 55%
+    ),
+    var(--bg);
+}
+
+
+/* ============================================================
+   AJUSTE VISUAL LIGHT MODE PREMIUM V2
+   ============================================================ */
+html.light {
+  --bg: #f6f1e9;
+  --bg2: #ffffff;
+  --card: #ffffff;
+  --fg: #2e1c12;
+  --muted: #7d6a5d;
+  --border: #dccbbb;
+}
+
+html.light body {
+  background: radial-gradient(
+      circle at top center,
+      rgba(196,75,4,0.08),
+      transparent 45%
+    ),
+    var(--bg);
+}
