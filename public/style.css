@@ -1593,3 +1593,133 @@ html.light .sim-ia-btn.active .icon {
     font-size: 1.25rem !important;
   }
 }
+/* ============================================================
+   PATCH — Chips das Sessões (Correção Final)
+   ============================================================ */
+
+/* Todos os chips gerados pelo JS no plano */
+#plano button,
+#plano .liora-card-topico {
+  background: var(--bg2) !important;
+  border: 1px solid var(--border) !important;
+  color: var(--fg) !important;
+
+  font-size: 0.92rem !important;
+  line-height: 1 !important;
+
+  padding: 8px 18px !important;
+  border-radius: 999px !important;
+
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  cursor: pointer !important;
+  transition: all 0.25s ease !important;
+
+  max-width: 100% !important;
+  white-space: nowrap !important;
+}
+
+/* Estado ativo garantido */
+#plano button.active,
+#plano .liora-card-topico.active {
+  background: var(--brand) !important;
+  border-color: var(--brand) !important;
+  color: #fff !important;
+  transform: translateY(-1px);
+  font-weight: 600 !important;
+}
+
+/* Hover consistente */
+#plano button:hover,
+#plano .liora-card-topico:hover {
+  background: var(--hover) !important;
+  border-color: var(--brand) !important;
+}
+
+/* Light Mode refinado */
+html.light #plano button,
+html.light #plano .liora-card-topico {
+  background: #ffffff !important;
+  border-color: #e3d6c7 !important;
+  color: #4e3a2a !important;
+}
+
+html.light #plano button.active,
+html.light #plano .liora-card-topico.active {
+  background: #c44b04 !important;
+  color: #ffffff !important;
+  border-color: #c44b04 !important;
+}
+/* ============================================================
+   PATCH — Botões de IA no Simulado (100% aplicável)
+   ============================================================ */
+
+.sim-ia-btn,
+button.sim-ia,
+.sim-modal .sim-ia-btn,
+.sim-modal button[data-ia] {
+  background: var(--bg2) !important;
+  color: var(--fg) !important;
+  border: 1px solid var(--border) !important;
+
+  padding: 8px 14px !important;
+  border-radius: 10px !important;
+
+  font-size: 0.85rem !important;
+  font-weight: 500 !important;
+
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px;
+
+  cursor: pointer !important;
+  transition: all 0.25s ease !important;
+}
+
+/* IA ativa */
+.sim-ia-btn.active,
+button.sim-ia.active,
+.sim-modal button[data-ia].active {
+  background: var(--brand) !important;
+  border-color: var(--brand) !important;
+  color: #fff !important;
+  font-weight: 600 !important;
+}
+
+/* IA desligada (legível no modo claro e escuro) */
+.sim-ia-btn.off,
+button.sim-ia.off,
+.sim-modal button[data-ia].off {
+  background: var(--card) !important;
+  border-color: var(--border) !important;
+  color: var(--muted) !important;
+  opacity: 0.6 !important;
+}
+
+/* Hover */
+.sim-ia-btn:hover:not(.active),
+button.sim-ia:hover:not(.active),
+.sim-modal button[data-ia]:hover:not(.active) {
+  border-color: var(--brand) !important;
+  background: rgba(196,75,4,0.12) !important;
+}
+
+/* Light Mode */
+html.light .sim-ia-btn,
+html.light button.sim-ia,
+html.light .sim-modal button[data-ia] {
+  background: #ffffff !important;
+  border-color: #ddcdbf !important;
+  color: #4e3a2a !important;
+}
+
+html.light .sim-ia-btn.off,
+html.light button.sim-ia.off,
+html.light .sim-modal button[data-ia].off {
+  background: #f2e6d9 !important;
+  border-color: #d6c7b7 !important;
+  color: #a38975 !important;
+  opacity: 0.7 !important;
+}
