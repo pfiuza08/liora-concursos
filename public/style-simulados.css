@@ -1760,4 +1760,21 @@ html.light #dash-ultimos .sim-item {
 #dash-ultimos .sim-item {
   animation: dashPop 0.25s ease forwards;
 }
+/* ============================================================
+   FIX — Modal de Simulado cabendo na tela (desktop e mobile)
+   ============================================================ */
+
+#sim-modal-backdrop .sim-modal {
+  max-height: 90vh !important;
+  overflow-y: auto !important;
+  padding-bottom: 1.5rem; /* espaço para o botão não colar no limite */
+}
+
+/* Em mobile, aumenta leve a margem superior e força scroll suave */
+@media (max-width: 640px) {
+  #sim-modal-backdrop .sim-modal {
+    max-height: 88vh !important;
+    margin-top: 5vh;
+  }
+}
 
