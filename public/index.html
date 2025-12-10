@@ -95,36 +95,49 @@
 
   
     <!-- SEU ESTUDO -->
-      <div class="space-y-3 w-full max-w-md">
-      <div class="flex items-center justify-between gap-2">
-        <h3 class="text-xs tracking-[0.18em] font-semibold text-[var(--muted)] uppercase">
-          Seu estudo
-        </h3>
+    <div class="liora-estudo-bloco">
+      <div class="liora-estudo-header">
+        <h3>Seu Estudo</h3>
     
-        <!-- Badge de status do estudo -->
-        <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-medium
-                     bg-[rgba(255,255,255,0.04)] text-[var(--muted)] border border-[rgba(255,255,255,0.08)]">
-          <span class="w-1.5 h-1.5 rounded-full bg-[var(--brand)] animate-pulse"></span>
+        <span class="liora-estudo-status">
+          <span class="ponto"></span>
           Em andamento
         </span>
       </div>
     
-      <!-- Área dos botões de ação -->
-      <div class="flex flex-col sm:flex-row gap-2">
-        <button id="home-continuar-estudo" class="btn-continuar-estudo flex-1 sm:flex-none justify-center">
-          <span class="text-sm">▶</span>
+      <div class="liora-estudo-acoes">
+        <!-- Botão CONTINUAR ESTUDO com ícone SVG -->
+        <button id="home-continuar-estudo" class="btn-continuar-estudo">
+          <span class="btn-icone" aria-hidden="true">
+            <svg viewBox="0 0 24 24" focusable="false">
+              <circle cx="12" cy="12" r="10" fill="rgba(0,0,0,0.28)"></circle>
+              <path d="M10 8l6 4-6 4V8z" fill="currentColor"></path>
+            </svg>
+          </span>
           <span>Continuar estudo</span>
         </button>
     
-        <button id="home-meus-planos" class="btn-meus-planos flex-1 sm:flex-none justify-center">
-          <span class="text-sm">📚</span>
+        <!-- Botão MEUS PLANOS com ícone SVG -->
+        <button id="home-meus-planos" class="btn-meus-planos">
+          <span class="btn-icone" aria-hidden="true">
+            <svg viewBox="0 0 24 24" focusable="false">
+              <rect x="5" y="6" width="10" height="12" rx="2"
+                    fill="none" stroke="currentColor" stroke-width="1.6"></rect>
+              <path d="M15 8h2.2c0.99 0 1.8 0.81 1.8 1.8v7.4"
+                    fill="none" stroke="currentColor" stroke-width="1.6"
+                    stroke-linecap="round"></path>
+              <path d="M8 10h6" fill="none" stroke="currentColor" stroke-width="1.4"
+                    stroke-linecap="round"></path>
+              <path d="M8 13h4" fill="none" stroke="currentColor" stroke-width="1.4"
+                    stroke-linecap="round"></path>
+            </svg>
+          </span>
           <span>Meus planos</span>
         </button>
       </div>
     
-      <p id="home-resumo-estudo"
-         class="text-xs text-[var(--muted)] leading-tight px-1">
-        Retome de onde parou ou escolha um plano anterior para revisar seus estudos.
+      <p id="home-resumo-estudo" class="liora-estudo-resumo">
+        Tema ativo: Matemática Financeira — 6 sessões
       </p>
     </div>
 
