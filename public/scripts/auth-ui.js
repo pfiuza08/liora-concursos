@@ -1,9 +1,9 @@
 // ==========================================================
-// 🧠 LIORA — AUTH UI v8 (Estável, sem erros, sincronização real)
+// 🧠 LIORA — AUTH UI v9 (Estável, sem loops, sync perfeito)
 // ==========================================================
 
 (function () {
-  console.log("🔐 Liora Auth UI v8 carregado...");
+  console.log("🔐 Liora Auth UI v9 carregado...");
 
   document.addEventListener("DOMContentLoaded", () => {
 
@@ -35,7 +35,7 @@
       premiumBadge: document.getElementById("liora-premium-badge")
     };
 
-    // Função de acesso global ao usuário
+    // Helper
     function currentUser() {
       return window.lioraAuth?.user || null;
     }
@@ -108,10 +108,12 @@
       const logged = !!user;
       const plan = window.lioraUserPlan || "free";
 
+      // Botão do topo (Entrar/Conta)
       els.btnAuthToggles.forEach((btn) => {
         btn.textContent = logged ? "Conta" : "Entrar";
       });
 
+      // Badge
       if (els.premiumBadge) {
         els.premiumBadge.textContent =
           plan === "premium"
@@ -119,6 +121,7 @@
             : "Versão gratuita — recursos limitados";
       }
 
+      // Painel conta
       if (logged) {
         els.userName.textContent = user.email.split("@")[0];
         els.userStatus.textContent = plan === "premium" ? "Liora+ ativo" : "Conta gratuita";
@@ -126,14 +129,18 @@
 
       els.userInfo?.classList.toggle("hidden", !logged);
       els.btnLogout?.classList.toggle("hidden", !logged);
+
+      document.body.classList.toggle("liora-premium-on", plan === "premium");
+      document.body.classList.toggle("liora-premium-off", plan !== "premium");
     }
 
     // -------------------------------------------------------
-    // 🔄 SYNC PLANO
+    // 🔄 SYNC PLANO (SEM loops)
     // -------------------------------------------------------
     async function syncPlano(user) {
       if (!user) {
-        window.lioraSetPlan("free");
+        window.lioraUserPlan = "free";
+        updateAuthUI(null);
         return;
       }
 
@@ -144,15 +151,18 @@
         });
 
         const json = await res.json();
-        window.lioraSetPlan(json.plano);
+        window.lioraUserPlan = json.plano || "free";
+        updateAuthUI(user);
+
       } catch (err) {
         console.warn("⚠️ Erro ao consultar plano:", err);
-        window.lioraSetPlan("free");
+        window.lioraUserPlan = "free";
+        updateAuthUI(user);
       }
     }
 
     // -------------------------------------------------------
-    // SUBMIT LOGIN / CADASTRO
+    // LOGIN / CADASTRO
     // -------------------------------------------------------
     els.authForm?.addEventListener("submit", async (e) => {
       e.preventDefault();
@@ -160,6 +170,7 @@
 
       const email = els.authEmail.value.trim();
       const senha = els.authSenha.value;
+
       if (!email || !senha) return showError("Digite e-mail e senha.");
 
       setLoading(true);
@@ -218,24 +229,25 @@
     proteger(els.homeDashboard);
 
     // -------------------------------------------------------
-    // 🔥 AUTH CHANGED
+    // 🔥 AUTH CHANGED (disparado pelo auth.js)
     // -------------------------------------------------------
-    window.addEventListener("liora:auth-changed", (ev) => {
-      const user = ev.detail;
+    window.addEventListener("liora:auth-changed", () => {
+      const user = currentUser();
       updateAuthUI(user);
       syncPlano(user);
     });
 
+    // Primeira carga
     updateAuthUI(currentUser());
     applyMode();
   });
 
   // --------------------------------------------------------
-  // 🌟 FUNÇÃO GLOBAL DO PLANO (SEM getUser!)
+  // 🌟 FUNÇÃO GLOBAL PARA DEFINIR PLANO (SEM LOOP)
   // --------------------------------------------------------
   window.lioraSetPlan = function (newPlan) {
     window.lioraUserPlan = newPlan || "free";
-    window.dispatchEvent(new CustomEvent("liora:auth-changed", { detail: window.lioraAuth?.user || null }));
+    updateAuthUI(window.lioraAuth?.user || null);
   };
 
 })();
