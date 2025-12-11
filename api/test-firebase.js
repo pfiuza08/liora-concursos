@@ -1,55 +1,52 @@
-// /api/test-firebase.js
-import * as admin from "firebase-admin";
+// /api/test-admin.js
+// Teste definitivo para Firebase Admin no Vercel.
+// Se isso falhar, o problema é AMBIENTE (variáveis) ou FORMATO DA CHAVE.
+
+import { db, adminAuth } from "../../lib/firebaseAdmin.js";
 
 export default async function handler(req, res) {
   try {
-    console.log("🟦 Teste Firebase Admin iniciado");
+    console.log("🔥 Teste: Início /api/test-admin");
 
-    // 1. Verifica se o Admin já existe
-    if (admin.apps.length === 0) {
-      console.log("🟨 Nenhum app Firebase Admin encontrado. Inicializando...");
-      admin.initializeApp({
-        credential: admin.credential.cert({
-          projectId: process.env.FIREBASE_PROJECT_ID,
-          clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-          privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, "\n"),
-        }),
-      });
-      console.log("🟩 Firebase Admin inicializado com sucesso");
-    } else {
-      console.log("🟩 Firebase Admin já estava inicializado");
+    // 1. Verifica se adminAuth existe
+    if (!adminAuth) {
+      throw new Error("adminAuth NÃO foi carregado!");
     }
 
-    // 2. Teste de Firestore
-    const db = admin.firestore();
-    console.log("🟦 Conectado ao Firestore. Testando leitura...");
+    console.log("🟢 adminAuth carregado com sucesso.");
 
-    // 3. Testa leitura simples
-    const testDoc = await db.collection("debug_test").doc("ping").get();
+    // 2. Tenta pegar o App atual
+    const user = await adminAuth.getUserByEmail("pfiuza.castro@gmail.com")
+      .catch(() => null);
 
-    let data;
-    if (testDoc.exists) {
-      data = testDoc.data();
-      console.log("🟩 Documento encontrado:", data);
-    } else {
-      console.log("🟨 Documento não existe, criando...");
-      await testDoc.ref.set({ ok: true, timestamp: Date.now() });
-      data = { created: true };
-    }
+    console.log("👤 Resultado getUserByEmail:", user?.uid || "Usuário não encontrado (mas Admin funciona)");
+
+    // 3. Teste Firestore básico
+    console.log("📚 Testando Firestore...");
+    const testDoc = db.collection("debug").doc("vercel-admin-test");
+
+    await testDoc.set({
+      ok: true,
+      timestamp: Date.now()
+    });
+
+    const snap = await testDoc.get();
+
+    console.log("📄 Leitura Firestore:", snap.data());
 
     return res.status(200).json({
-      ok: true,
-      firebaseAdminLoaded: true,
-      firestoreWorking: true,
-      data,
+      status: "ok",
+      admin: true,
+      firestoreWrite: snap.data(),
+      message: "Firebase Admin funcionando no Vercel!"
     });
 
   } catch (err) {
-    console.error("❌ TESTE FALHOU:", err);
+    console.error("❌ ERRO TESTE ADMIN:", err);
     return res.status(500).json({
-      ok: false,
-      error: err.message,
-      stack: err.stack,
+      status: "erro",
+      message: err.message,
+      stack: err.stack
     });
   }
 }
