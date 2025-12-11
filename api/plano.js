@@ -1,33 +1,44 @@
-import { auth, db } from "../../lib/firebaseAdmin";
+import { initializeApp, getApps } from "firebase-admin/app";
+import { getFirestore } from "firebase-admin/firestore";
+import { getAuth } from "firebase-admin/auth";
 
 export default async function handler(req, res) {
   try {
-    const token = req.headers.authorization?.split("Bearer ")[1];
-
-    if (!token) {
-      return res.status(401).json({ plano: "free" });
+    // Inicializa Admin SDK uma única vez
+    if (!getApps().length) {
+      initializeApp({
+        credential: {
+          projectId: process.env.FIREBASE_PROJECT_ID,
+          clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+          privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, "\n"),
+        },
+      });
     }
 
-    // 1. Validar token via Firebase Admin
-    const decoded = await auth.verifyIdToken(token);
+    const auth = getAuth();
+    const db = getFirestore();
 
+    // Recuperar token enviado pelo front
+    const token = req.headers.authorization?.split(" ")[1];
+    if (!token) return res.status(401).json({ plano: "free" });
+
+    // Verificar token
+    const decoded = await auth.verifyIdToken(token);
     const uid = decoded.uid;
 
-    // 2. Consultar Firestore
-    const ref = db.collection("users").doc(uid);
-    const snap = await ref.get();
+    // Consultar Firestore
+    const snap = await db.collection("users").doc(uid).get();
 
     if (!snap.exists) {
       return res.status(200).json({ plano: "free" });
     }
 
-    const data = snap.data();
-    const plano = data?.plano || "free";
+    return res.status(200).json({
+      plano: snap.data().plano || "free",
+    });
 
-    return res.status(200).json({ plano });
-  } catch (err) {
-    console.error("🔥 Erro ao consultar plano:", err);
+  } catch (e) {
+    console.error("🔥 ERRO /api/plano:", e);
     return res.status(500).json({ plano: "free" });
   }
 }
-
