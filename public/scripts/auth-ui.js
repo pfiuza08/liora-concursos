@@ -1,22 +1,24 @@
 // ==========================================================
-// 🧠 LIORA — AUTH UI v3 (Commercial Ready)
-// - Integra com window.lioraAuth (Firebase)
+// 🧠 LIORA — AUTH UI v4 (Commercial Ready + Plano Universal)
+// ----------------------------------------------------------
+// - Integra com window.lioraAuth (Firebase Auth)
 // - Modal de login/cadastro (black glass)
-// - Pós-login inteligente: vai para estudo ativo se existir
-// - Mostra nome do usuário no topo + botão Sair
-// - Bloqueia Simulados e Dashboard para não logados
-// - Não quebra módulos existentes (nav-home, core, premium…)
+// - Pós-login inteligente
+// - Estado global premium/free sincronizado
+// - Atualização automática da UI quando login muda (2.4)
+// - Função universal de mudança de plano (2.3)
+// - Proteção de simulados/dashboard para não logados
 // ==========================================================
 
 (function () {
-  console.log("🔐 Liora Auth UI v3 carregado...");
+  console.log("🔐 Liora Auth UI v4 carregado...");
 
   document.addEventListener("DOMContentLoaded", () => {
+
     // -------------------------------------------------------
     // ELEMENTOS
     // -------------------------------------------------------
     const els = {
-      // Modal black-glass de login/cadastro
       authModal: document.getElementById("liora-auth-modal"),
       authClose: document.getElementById("liora-auth-close"),
       authTitle: document.getElementById("liora-auth-title"),
@@ -28,55 +30,50 @@
       authSubmit: document.getElementById("liora-auth-submit"),
       authToggleMode: document.getElementById("liora-auth-toggle-mode"),
 
-      // Botões "Entrar" (pode haver mais de um com o mesmo ID)
       btnAuthToggles: document.querySelectorAll("#btn-auth-toggle"),
 
-      // Botão Sair (header)
       btnLogout: document.getElementById("btn-logout"),
-
-      // Info do usuário no topo
       userInfo: document.getElementById("liora-user-info"),
       userName: document.getElementById("liora-user-name"),
       userStatus: document.getElementById("liora-user-status"),
 
-      // Ações da home que queremos proteger
       homeSimulados: document.getElementById("home-simulados"),
-      homeDashboard: document.getElementById("home-dashboard")
+      homeDashboard: document.getElementById("home-dashboard"),
+
+      premiumBadge: document.getElementById("liora-premium-badge")
     };
 
-    // Pode existir o login antigo: mantemos escondido
+    // Remove login antigo, se existir
     const legacyLogin = document.getElementById("liora-login-backdrop");
-    if (legacyLogin) {
-      legacyLogin.classList.add("hidden");
-    }
+    if (legacyLogin) legacyLogin.classList.add("hidden");
 
     // -------------------------------------------------------
     // ESTADO
     // -------------------------------------------------------
-    let mode = "login"; // "login" | "signup"
-
+    let mode = "login";
     function getUser() {
-      return (window.lioraAuth && window.lioraAuth.user) || null;
+      return window.lioraAuth?.user || null;
     }
 
     // -------------------------------------------------------
-    // UI DO MODAL — MODO LOGIN / CADASTRO
+    // MODO LOGIN / CADASTRO
     // -------------------------------------------------------
     function applyMode() {
-      if (!els.authTitle || !els.authSubtitle || !els.authSubmit || !els.authToggleMode) return;
+      if (!els.authTitle) return;
 
       if (mode === "login") {
         els.authTitle.textContent = "Acesse sua conta";
         els.authSubtitle.textContent =
-          "Use seu e-mail para acessar seus planos de estudo e simulados.";
+          "Entre para continuar seus planos de estudo em qualquer dispositivo.";
         els.authSubmit.querySelector(".liora-btn-text").textContent = "Entrar";
-        els.authToggleMode.textContent = "Ainda não tenho conta. Criar conta.";
+        els.authToggleMode.textContent = "Criar conta";
       } else {
-        els.authTitle.textContent = "Criar conta Liora";
+        els.authTitle.textContent = "Criar conta";
         els.authSubtitle.textContent =
-          "Leva poucos segundos: informe seu e-mail e defina uma senha segura.";
-        els.authSubmit.querySelector(".liora-btn-text").textContent = "Criar conta";
-        els.authToggleMode.textContent = "Já tenho conta. Fazer login.";
+          "Leva segundos. Use seu melhor e-mail.";
+        els.authSubmit.querySelector(".liora-btn-text").textContent =
+          "Criar conta";
+        els.authToggleMode.textContent = "Já tenho conta";
       }
     }
 
@@ -89,33 +86,18 @@
     // -------------------------------------------------------
     // ABRIR / FECHAR MODAL
     // -------------------------------------------------------
-    function openAuthModal(initialMode) {
-      if (!els.authModal) return;
-
-      if (initialMode) {
-        setMode(initialMode);
-      } else {
-        setMode("login");
-      }
-
+    function openAuthModal(initialMode = "login") {
+      setMode(initialMode);
       els.authModal.classList.add("is-open");
       els.authModal.setAttribute("aria-hidden", "false");
 
-      // Ajuste de acessibilidade: foco no e-mail
-      setTimeout(() => {
-        els.authEmail && els.authEmail.focus();
-      }, 50);
+      setTimeout(() => els.authEmail?.focus(), 120);
     }
 
     function closeAuthModal() {
-      if (!els.authModal) return;
-
       els.authModal.classList.remove("is-open");
       els.authModal.setAttribute("aria-hidden", "true");
-
-      if (els.authForm) {
-        els.authForm.reset();
-      }
+      els.authForm?.reset();
       clearError();
       setLoading(false);
     }
@@ -123,306 +105,198 @@
     // -------------------------------------------------------
     // LOADING
     // -------------------------------------------------------
-    function setLoading(isLoading) {
-      if (!els.authSubmit) return;
-
-      if (isLoading) {
-        els.authSubmit.classList.add("is-loading");
-        els.authSubmit.disabled = true;
-        if (els.authEmail) els.authEmail.disabled = true;
-        if (els.authSenha) els.authSenha.disabled = true;
-      } else {
-        els.authSubmit.classList.remove("is-loading");
-        els.authSubmit.disabled = false;
-        if (els.authEmail) els.authEmail.disabled = false;
-        if (els.authSenha) els.authSenha.disabled = false;
-      }
+    function setLoading(active) {
+      els.authSubmit.classList.toggle("is-loading", active);
+      els.authSubmit.disabled = active;
+      els.authEmail.disabled = active;
+      els.authSenha.disabled = active;
     }
 
     // -------------------------------------------------------
     // ERROS
     // -------------------------------------------------------
     function showError(msg) {
-      if (!els.authError) return;
-      els.authError.textContent = msg || "";
+      els.authError.textContent = msg;
     }
-
     function clearError() {
-      if (!els.authError) return;
       els.authError.textContent = "";
     }
 
     function traduzErroFirebase(err) {
-      if (!err || !err.code) return "Não foi possível concluir a operação. Tente novamente.";
+      if (!err?.code) return "Erro inesperado. Tente novamente.";
 
-      switch (err.code) {
-        case "auth/invalid-email":
-          return "O e-mail informado não é válido.";
-        case "auth/user-not-found":
-        case "auth/wrong-password":
-          return "E-mail ou senha incorretos.";
-        case "auth/weak-password":
-          return "A senha é muito fraca. Use pelo menos 6 caracteres.";
-        case "auth/email-already-in-use":
-          return "Este e-mail já está em uso. Tente fazer login.";
-        case "auth/too-many-requests":
-          return "Muitas tentativas. Aguarde um pouco e tente novamente.";
-        default:
-          return "Algo deu errado com a autenticação. Tente novamente.";
-      }
+      const map = {
+        "auth/invalid-email": "O e-mail informado não é válido.",
+        "auth/user-not-found": "E-mail não encontrado.",
+        "auth/wrong-password": "Senha incorreta.",
+        "auth/email-already-in-use": "E-mail já cadastrado.",
+        "auth/weak-password": "A senha é muito fraca.",
+        "auth/too-many-requests": "Muitas tentativas. Aguarde um pouco."
+      };
+      return map[err.code] || "Erro de autenticação. Tente novamente.";
     }
 
     // -------------------------------------------------------
-    // UI DO HEADER / HOME QUANDO LOGA / DESLOGA
+    // UI GLOBAL — login/logout + plano free/premium
     // -------------------------------------------------------
     function updateAuthUI(user) {
-      const isLogged = !!user;
+      const logged = !!user;
+      const plan = window.lioraUserPlan || "free";
 
-      // Atualiza botões "Entrar"
+      // Botões Entrar
       els.btnAuthToggles.forEach((btn) => {
-        if (!btn) return;
-        if (isLogged) {
-          btn.textContent = "Conta";
-        } else {
-          btn.textContent = "Entrar";
-        }
+        btn.textContent = logged ? "Conta" : "Entrar";
       });
 
-      // Botão Sair + info do usuário no topo
-      if (els.btnLogout) {
-        els.btnLogout.classList.toggle("hidden", !isLogged);
+      // Badge de plano
+      if (els.premiumBadge) {
+        els.premiumBadge.textContent =
+          plan === "premium"
+            ? "Liora+ ativo — recursos liberados"
+            : "Versão gratuita — recursos limitados";
       }
-      if (els.userInfo) {
-        els.userInfo.classList.toggle("hidden", !isLogged);
+
+      // Avatar / nome
+      if (logged && els.userName && els.userStatus) {
+        els.userName.textContent = user.email.split("@")[0];
+        els.userStatus.textContent =
+          plan === "premium" ? "Liora+ ativo" : "Conta gratuita";
       }
 
-      if (isLogged && els.userName && els.userStatus) {
-        const nome = user.displayName || user.email || "Usuário";
-        els.userName.textContent = nome;
+      if (els.userInfo) els.userInfo.classList.toggle("hidden", !logged);
+      if (els.btnLogout) els.btnLogout.classList.toggle("hidden", !logged);
 
-      // Leitura do status real vinda do backend/fake backend
-        const plan = window.lioraUserPlan || "free";
-        
-        const labels = {
-          free: "Conta gratuita",
-          premium: "Liora+ ativo",
-          plus: "Liora Plus — acesso total"
-        };
-
-els.userStatus.textContent = labels[plan] || "Conta gratuita";
-
-      }
+      // Classe de plano no body (útil para estilos)
+      document.body.classList.toggle("liora-premium-on", plan === "premium");
+      document.body.classList.toggle("liora-premium-off", plan !== "premium");
     }
 
     // -------------------------------------------------------
-    // PÓS-LOGIN INTELIGENTE (OPÇÃO 3)
-    // → Se tiver estudo ativo: vai para o estudo
-    // → Caso contrário: volta para a Home
+    // PÓS LOGIN
     // -------------------------------------------------------
     function navegarPosLogin() {
-      const estudos = window.lioraEstudos || null;
-      let temPlanoAtivo = false;
+      const sm = window.lioraEstudos;
 
       try {
-        if (estudos) {
-          if (typeof estudos.temPlanoAtivo === "function") {
-            temPlanoAtivo = !!estudos.temPlanoAtivo();
-          } else if (typeof estudos.listarRecentes === "function") {
-            const rec = estudos.listarRecentes(1);
-            temPlanoAtivo = Array.isArray(rec) && rec.length > 0;
-          }
+        if (sm?.temPlanoAtivo?.()) {
+          sm.abrirUltimoPlano?.();
+          return;
         }
-      } catch (e) {
-        console.warn("⚠️ Erro checando plano ativo:", e);
-      }
+      } catch {}
 
-      if (temPlanoAtivo) {
-        try {
-          if (estudos && typeof estudos.abrirUltimoPlano === "function") {
-            estudos.abrirUltimoPlano();
-            return;
-          }
-          if (window.homeEstudoAtual) {
-            window.homeEstudoAtual();
-            return;
-          }
-        } catch (e) {
-          console.warn("⚠️ Erro ao abrir estudo ativo:", e);
-        }
-      }
-
-      // Fallback: vai para home
+      // Fallback para home
       try {
-        if (window.homeInicio) {
-          window.homeInicio();
+        window.homeInicio?.();
+      } catch {}
+    }
+
+    // -------------------------------------------------------
+    // SUBMIT LOGIN/CADASTRO
+    // -------------------------------------------------------
+    els.authForm?.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      clearError();
+
+      const email = els.authEmail.value.trim();
+      const senha = els.authSenha.value;
+
+      if (!email || !senha) {
+        showError("Digite e-mail e senha.");
+        return;
+      }
+
+      setLoading(true);
+      try {
+        if (mode === "login") {
+          await window.lioraAuth.login(email, senha);
         } else {
-          const home = document.getElementById("liora-home");
-          if (home) home.scrollIntoView({ behavior: "smooth" });
+          await window.lioraAuth.cadastro(email, senha);
         }
-      } catch (e) {
-        console.warn("⚠️ Erro ao navegar para home:", e);
+        closeAuthModal();
+        navegarPosLogin();
+      } catch (err) {
+        showError(traduzErroFirebase(err));
+      } finally {
+        setLoading(false);
       }
-    }
+    });
 
     // -------------------------------------------------------
-    // SUBMIT DO FORM (LOGIN / CADASTRO)
+    // TOGGLE LOGIN/CADASTRO
     // -------------------------------------------------------
-    if (els.authForm) {
-      els.authForm.addEventListener("submit", async (e) => {
-        e.preventDefault();
-        clearError();
-
-        const email = els.authEmail ? els.authEmail.value.trim() : "";
-        const senha = els.authSenha ? els.authSenha.value : "";
-
-        if (!email || !senha) {
-          showError("Preencha e-mail e senha.");
-          return;
-        }
-
-        if (!window.lioraAuth) {
-          showError("Sistema de autenticação não disponível.");
-          return;
-        }
-
-        setLoading(true);
-
-        try {
-          let userCred;
-
-          if (mode === "login") {
-            userCred = await window.lioraAuth.login(email, senha);
-          } else {
-            userCred = await window.lioraAuth.cadastro(email, senha);
-          }
-
-          const user = userCred || getUser();
-
-          closeAuthModal();
-          navegarPosLogin();
-
-          // O onAuthStateChanged em auth.js vai disparar o updateAuthUI
-          console.log("✅ Auth OK:", user && user.email);
-        } catch (err) {
-          console.error("❌ Erro auth:", err);
-          showError(traduzErroFirebase(err));
-        } finally {
-          setLoading(false);
-        }
-      });
-    }
+    els.authToggleMode?.addEventListener("click", () => {
+      setMode(mode === "login" ? "signup" : "login");
+    });
 
     // -------------------------------------------------------
-    // TOGGLE LOGIN / CADASTRO
-    // -------------------------------------------------------
-    if (els.authToggleMode) {
-      els.authToggleMode.addEventListener("click", () => {
-        setMode(mode === "login" ? "signup" : "login");
-      });
-    }
-
-    // -------------------------------------------------------
-    // ABERTURA DO MODAL PELOS BOTÕES "ENTRAR"
+    // AÇÃO: BOTÕES "ENTRAR"
     // -------------------------------------------------------
     els.btnAuthToggles.forEach((btn) => {
-      if (!btn) return;
-      btn.addEventListener("click", (e) => {
-        e.preventDefault();
+      btn.addEventListener("click", () => {
         const user = getUser();
-        if (user) {
-          // Já logado: poderíamos abrir um "gerenciar conta" no futuro.
-          // Por enquanto, apenas mostra o modal em modo login.
-          openAuthModal("login");
-        } else {
-          openAuthModal("login");
-        }
+        openAuthModal(user ? "login" : "login");
       });
     });
 
     // -------------------------------------------------------
-    // BOTÃO SAIR (LOGOUT)
+    // LOGOUT
     // -------------------------------------------------------
-    if (els.btnLogout) {
-      els.btnLogout.addEventListener("click", async (e) => {
-        e.preventDefault();
-        if (!window.lioraAuth || !window.lioraAuth.logout) return;
-
-        try {
-          await window.lioraAuth.logout();
-          console.log("👋 Usuário desconectado.");
-          navegarPosLogin();
-        } catch (err) {
-          console.error("❌ Erro ao sair:", err);
-        }
-      });
-    }
+    els.btnLogout?.addEventListener("click", async () => {
+      try {
+        await window.lioraAuth.logout();
+        navegarPosLogin();
+      } catch (e) {
+        console.warn("Erro ao sair:", e);
+      }
+    });
 
     // -------------------------------------------------------
-    // FECHAR MODAL (X + clique fora)
+    // FECHAR MODAL
     // -------------------------------------------------------
-    if (els.authClose) {
-      els.authClose.addEventListener("click", (e) => {
-        e.preventDefault();
-        closeAuthModal();
-      });
-    }
-
-    if (els.authModal) {
-      els.authModal.addEventListener("click", (e) => {
-        if (e.target === els.authModal) {
-          closeAuthModal();
-        }
-      });
-    }
+    els.authClose?.addEventListener("click", closeAuthModal);
+    els.authModal?.addEventListener("click", (e) => {
+      if (e.target === els.authModal) closeAuthModal();
+    });
 
     // -------------------------------------------------------
-    // BLOQUEIO DE RECURSOS PREMIUM QUANDO NÃO LOGADO
-    // - Simulados
-    // - Dashboard
-    // Usamos captura para interceptar antes do nav-home.js
+    // BLOQUEAR recursos premium se não logado
     // -------------------------------------------------------
-    function protegerBotaoPremium(btn) {
+    function proteger(btn) {
       if (!btn) return;
       btn.addEventListener(
         "click",
         (e) => {
-          const user = getUser();
-          if (!user) {
+          if (!getUser()) {
             e.preventDefault();
             e.stopImmediatePropagation();
             openAuthModal("signup");
           }
         },
-        true // captura
+        true
       );
     }
 
-    protegerBotaoPremium(els.homeSimulados);
-    protegerBotaoPremium(els.homeDashboard);
+    proteger(els.homeSimulados);
+    proteger(els.homeDashboard);
 
     // -------------------------------------------------------
-    // REAÇÃO AO onAuthStateChanged (auth.js)
+    // (2.4) LISTENER GLOBAL AUTH-CHANGED
     // -------------------------------------------------------
     window.addEventListener("liora:auth-changed", () => {
-      const user = getUser();
-      updateAuthUI(user);
+      updateAuthUI(getUser());
     });
 
-    // Chamada inicial (caso o Firebase já tenha restaurado a sessão)
+    // Chamada inicial
     updateAuthUI(getUser());
     applyMode();
-
-    console.log("🟢 Liora Auth UI v3 inicializado.");
   });
+
   // --------------------------------------------------------
-  // 🔥 Função Universal: Atualizar plano do usuário (free/premium/etc.)
+  // (2.3) FUNÇÃO UNIVERSAL DE MUDANÇA DE PLANO
   // --------------------------------------------------------
   window.lioraSetPlan = function (newPlan) {
     window.lioraUserPlan = newPlan || "free";
-  
-    // Dispara evento global para atualizar UI automaticamente
-    const evt = new Event("liora:auth-changed");
-    window.dispatchEvent(evt);
+    window.dispatchEvent(new Event("liora:auth-changed"));
   };
- 
+
 })();
