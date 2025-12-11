@@ -1,51 +1,33 @@
-// /api/plano.js — Consulta real do plano do usuário (free/premium)
-// =========================================================================
-// Import Firebase (modo server-side em rotas Vercel)
-// =========================================================================
-import { initializeApp, getApps } from "firebase/app";
-import { getFirestore, doc, getDoc } from "firebase/firestore";
+import { auth, db } from "../../lib/firebaseAdmin";
 
-// Configurações via variáveis de ambiente
-const firebaseConfig = {
-  apiKey: process.env.FIREBASE_API,
-  authDomain: process.env.FIREBASE_AUTH,
-  projectId: process.env.FIREBASE_PROJECT,
-};
-
-// Evitar inicializações duplicadas
-if (!getApps().length) initializeApp(firebaseConfig);
-const db = getFirestore();
-
-// =========================================================================
-// HANDLER DA ROTA
-// =========================================================================
 export default async function handler(req, res) {
   try {
-    const { uid } = req.query;
+    const token = req.headers.authorization?.split("Bearer ")[1];
 
-    if (!uid) {
-      return res.status(400).json({
-        plano: "free",
-        error: "UID não informado",
-      });
+    if (!token) {
+      return res.status(401).json({ plano: "free" });
     }
 
-    // users/{uid}
-    const ref = doc(db, "users", uid);
-    const snap = await getDoc(ref);
+    // 1. Validar token via Firebase Admin
+    const decoded = await auth.verifyIdToken(token);
 
-    if (!snap.exists()) {
+    const uid = decoded.uid;
+
+    // 2. Consultar Firestore
+    const ref = db.collection("users").doc(uid);
+    const snap = await ref.get();
+
+    if (!snap.exists) {
       return res.status(200).json({ plano: "free" });
     }
 
     const data = snap.data();
+    const plano = data?.plano || "free";
 
-    return res.status(200).json({
-      plano: data.plano || "free",
-      atualizado: data.updatedAt || null,
-    });
+    return res.status(200).json({ plano });
   } catch (err) {
-    console.error("🔥 Erro no /api/plano:", err);
+    console.error("🔥 Erro ao consultar plano:", err);
     return res.status(500).json({ plano: "free" });
   }
 }
+
