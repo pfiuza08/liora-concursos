@@ -1,36 +1,31 @@
 import { db, adminAuth } from "../../lib/firebaseAdmin.js";
 
 export default async function handler(req, res) {
-  console.log("📡 /api/plano chamado");
-
   try {
-    const header = req.headers.authorization;
-    if (!header) {
-      console.log("⚠️ Sem token → free");
+    console.log("📌 /api/plano — início");
+
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+      console.log("📌 Sem token → free");
       return res.status(200).json({ plano: "free" });
     }
 
-    const token = header.split(" ")[1];
-    if (!token) {
-      console.log("⚠️ Token vazio → free");
-      return res.status(200).json({ plano: "free" });
-    }
+    const token = authHeader.split(" ")[1];
+    if (!token) return res.status(200).json({ plano: "free" });
 
+    // Verifica o token
     const decoded = await adminAuth.verifyIdToken(token);
-    console.log("👤 UID:", decoded.uid);
+    const uid = decoded.uid;
 
-    const snap = await db.collection("users").doc(decoded.uid).get();
+    console.log("📌 UID:", uid);
 
-    if (!snap.exists) {
-      console.log("📄 Usuário sem doc → free");
-      return res.status(200).json({ plano: "free" });
-    }
+    const snap = await db.collection("users").doc(uid).get();
 
-    console.log("🏷️ Plano Firestore:", snap.data().plano);
+    const plano = snap.exists ? snap.data().plano || "free" : "free";
 
-    return res.status(200).json({
-      plano: snap.data().plano || "free",
-    });
+    console.log("📌 Plano encontrado:", plano);
+
+    return res.status(200).json({ plano });
 
   } catch (err) {
     console.error("🔥 ERRO /api/plano:", err);
