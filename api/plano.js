@@ -1,51 +1,39 @@
-// =========================================================
-// 🔍 /api/plano — Consulta segura do plano do usuário
-// =========================================================
-
-import { db, adminAuth } from "../lib/firebaseAdmin.js";
+import { db, adminAuth } from "../../lib/firebaseAdmin.js";
 
 export default async function handler(req, res) {
-  console.log("🟠 [/api/plano] Iniciado...");
+  console.log("📡 /api/plano chamado");
 
   try {
-    const authHeader = req.headers.authorization;
-
-    if (!authHeader) {
-      console.log("🟡 Sem Authorization header → FREE");
+    const header = req.headers.authorization;
+    if (!header) {
+      console.log("⚠️ Sem token → free");
       return res.status(200).json({ plano: "free" });
     }
 
-    const token = authHeader.split(" ")[1];
+    const token = header.split(" ")[1];
     if (!token) {
-      console.log("🟡 Authorization sem token → FREE");
+      console.log("⚠️ Token vazio → free");
       return res.status(200).json({ plano: "free" });
     }
 
-    console.log("🔑 Token recebido:", token.substring(0, 25) + "...");
-
-    // Verifica o token JWT
     const decoded = await adminAuth.verifyIdToken(token);
-    const uid = decoded.uid;
+    console.log("👤 UID:", decoded.uid);
 
-    console.log("👤 UID decodificado:", uid);
-
-    // Consulta Firestore
-    const ref = db.collection("users").doc(uid);
-    const snap = await ref.get();
+    const snap = await db.collection("users").doc(decoded.uid).get();
 
     if (!snap.exists) {
-      console.log("📄 Usuário sem documento → FREE");
+      console.log("📄 Usuário sem doc → free");
       return res.status(200).json({ plano: "free" });
     }
 
-    const plano = snap.data().plano || "free";
-    console.log("🏅 Plano encontrado:", plano);
+    console.log("🏷️ Plano Firestore:", snap.data().plano);
 
-    return res.status(200).json({ plano });
+    return res.status(200).json({
+      plano: snap.data().plano || "free",
+    });
 
   } catch (err) {
-    console.error("🔥 ERRO FINAL EM /api/plano:", err);
-    // O frontend sempre deve receber JSON válido
+    console.error("🔥 ERRO /api/plano:", err);
     return res.status(200).json({ plano: "free" });
   }
 }
