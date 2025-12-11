@@ -3,7 +3,6 @@ import { db, adminAuth } from "../../lib/firebaseAdmin.js";
 export default async function handler(req, res) {
   try {
     const tokenHeader = req.headers.authorization;
-
     if (!tokenHeader) return res.status(200).json({ plano: "free" });
 
     const token = tokenHeader.split(" ")[1];
