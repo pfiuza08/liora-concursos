@@ -1,7 +1,11 @@
 {
   "name": "liora",
+  "version": "1.0.0",
   "type": "module",
+  "private": true,
   "dependencies": {
+    "firebase-admin": "^12.0.0",
     "openai": "^4.67.0"
   }
 }
+
