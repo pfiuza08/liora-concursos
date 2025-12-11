@@ -2,17 +2,20 @@ import { db, adminAuth } from "../../lib/firebaseAdmin.js";
 
 export default async function handler(req, res) {
   try {
-    const tokenHeader = req.headers.authorization;
-    if (!tokenHeader) return res.status(200).json({ plano: "free" });
+    const authHeader = req.headers.authorization;
 
-    const token = tokenHeader.split(" ")[1];
-    if (!token) return res.status(200).json({ plano: "free" });
+    if (!authHeader) {
+      return res.status(200).json({ plano: "free" });
+    }
 
-    // Verifica token Firebase
+    const token = authHeader.split(" ")[1];
+    if (!token) {
+      return res.status(200).json({ plano: "free" });
+    }
+
     const decoded = await adminAuth.verifyIdToken(token);
     const uid = decoded.uid;
 
-    // Consulta Firestore
     const snap = await db.collection("users").doc(uid).get();
 
     return res.status(200).json({
