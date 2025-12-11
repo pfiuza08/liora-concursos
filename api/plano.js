@@ -1,44 +1,27 @@
-import { initializeApp, getApps, cert } from "firebase-admin/app";
-import { getFirestore } from "firebase-admin/firestore";
-import { getAuth } from "firebase-admin/auth";
+import { db, adminAuth } from "../../lib/firebaseAdmin.js";
 
 export default async function handler(req, res) {
   try {
-    // Inicializa Admin SDK uma única vez
-    if (!getApps().length) {
-      initializeApp({
-        credential: cert({
-          projectId: process.env.FIREBASE_PROJECT_ID,
-          clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-          privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, "\n"),
-        }),
-      });
-    }
+    const tokenHeader = req.headers.authorization;
 
-    const auth = getAuth();
-    const db = getFirestore();
+    if (!tokenHeader) return res.status(200).json({ plano: "free" });
 
-    // Recuperar token enviado pelo front
-    const token = req.headers.authorization?.split(" ")[1];
-    if (!token) return res.status(401).json({ plano: "free" });
+    const token = tokenHeader.split(" ")[1];
+    if (!token) return res.status(200).json({ plano: "free" });
 
-    // Verificar token
-    const decoded = await auth.verifyIdToken(token);
+    // Verifica token Firebase
+    const decoded = await adminAuth.verifyIdToken(token);
     const uid = decoded.uid;
 
-    // Consultar Firestore
+    // Consulta Firestore
     const snap = await db.collection("users").doc(uid).get();
 
-    if (!snap.exists) {
-      return res.status(200).json({ plano: "free" });
-    }
-
     return res.status(200).json({
-      plano: snap.data().plano || "free",
+      plano: snap.exists ? snap.data().plano || "free" : "free",
     });
 
-  } catch (e) {
-    console.error("🔥 ERRO /api/plano:", e);
-    return res.status(500).json({ plano: "free" });
+  } catch (err) {
+    console.error("🔥 ERRO /api/plano:", err);
+    return res.status(200).json({ plano: "free" });
   }
 }
