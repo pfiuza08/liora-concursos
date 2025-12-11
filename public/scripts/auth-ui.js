@@ -1,5 +1,5 @@
 // ==========================================================
-// 🧠 LIORA — AUTH UI v6 (Premium Real + Plano Universal)
+// 🧠 LIORA — AUTH UI v7 (Premium Real + Plano Universal)
 // ----------------------------------------------------------
 // - Integra com window.lioraAuth (Firebase Auth)
 // - Modal de login/cadastro
@@ -7,11 +7,11 @@
 // - Premium real via Firestore (/api/plano)
 // - UI atualizada automaticamente
 // - Proteção de recursos premium
-// - Fluxo sem duplicações de eventos
+// - Fluxo sem duplicações
 // ==========================================================
 
 (function () {
-  console.log("🔐 Liora Auth UI v6 carregado...");
+  console.log("🔐 Liora Auth UI v7 carregado...");
 
   document.addEventListener("DOMContentLoaded", () => {
 
@@ -43,7 +43,7 @@
       premiumBadge: document.getElementById("liora-premium-badge")
     };
 
-    // Remove login antigo
+    // Remove overlay antigo
     document.getElementById("liora-login-backdrop")?.classList.add("hidden");
 
     // -------------------------------------------------------
@@ -147,7 +147,7 @@
             : "Versão gratuita — recursos limitados";
       }
 
-      // Nome e status
+      // Dados do usuário
       if (logged) {
         els.userName.textContent = user.email.split("@")[0];
         els.userStatus.textContent =
@@ -164,12 +164,15 @@
     // -------------------------------------------------------
     // 🔄 SYNC PLANO (REAL FIRESTORE VIA /api/plano)
     // -------------------------------------------------------
-    async function syncPlano() {
-      const user = window.lioraAuth?.user;
-      if (!user) return window.lioraSetPlan("free");
+    async function syncPlano(user) {
+      if (!user) {
+        window.lioraSetPlan("free");
+        return;
+      }
 
       try {
         const token = await user.getIdToken();
+
         const res = await fetch("/api/plano", {
           headers: { Authorization: `Bearer ${token}` }
         });
@@ -188,10 +191,12 @@
     // -------------------------------------------------------
     function navegarPosLogin() {
       const sm = window.lioraEstudos;
+
       if (sm?.temPlanoAtivo?.()) {
         sm.abrirUltimoPlano?.();
         return;
       }
+
       window.homeInicio?.();
     }
 
@@ -208,6 +213,7 @@
       if (!email || !senha) return showError("Digite e-mail e senha.");
 
       setLoading(true);
+
       try {
         if (mode === "login") {
           await window.lioraAuth.login(email, senha);
@@ -233,7 +239,7 @@
     });
 
     // -------------------------------------------------------
-    // ABRIR LOGIN
+    // BOTÕES "ENTRAR"
     // -------------------------------------------------------
     els.btnAuthToggles.forEach((btn) => {
       btn.addEventListener("click", () => openAuthModal("login"));
@@ -279,24 +285,23 @@
     // -------------------------------------------------------
     // 🔥 AUTH CHANGED → Atualiza UI + Sincroniza Plano
     // -------------------------------------------------------
-    window.addEventListener("liora:auth-changed", () => {
-      const user = getUser();
+    window.addEventListener("liora:auth-changed", (ev) => {
+      const user = ev.detail || getUser();
       updateAuthUI(user);
-      syncPlano();   // única chamada
+      syncPlano(user);
     });
 
     // Primeira carga
     updateAuthUI(getUser());
     applyMode();
-
   });
 
   // --------------------------------------------------------
-  // 🌟 FUNÇÃO UNIVERSAL (2.3)
+  // 🌟 FUNÇÃO GLOBAL DO PLANO
   // --------------------------------------------------------
   window.lioraSetPlan = function (newPlan) {
     window.lioraUserPlan = newPlan || "free";
-    window.dispatchEvent(new Event("liora:auth-changed"));
+    window.dispatchEvent(new CustomEvent("liora:auth-changed", { detail: getUser?.() }));
   };
 
 })();
