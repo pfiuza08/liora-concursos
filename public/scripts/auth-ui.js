@@ -167,23 +167,29 @@
     // -------------------------------------------------------
     // 🔄 SINCRONIZAR PLANO REAL VIA FIRESTORE (/api/plano)
     // -------------------------------------------------------
-    async function syncPlano(uid) {
+      async function syncPlano() {
+      const user = window.lioraAuth?.user;
+      if (!user) return window.lioraSetPlan("free");
+    
       try {
-        const res = await fetch(`/api/plano?uid=${uid}`);
+        const token = await user.getIdToken();
+        const res = await fetch("/api/plano", {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+    
         const json = await res.json();
-
-        if (json?.plan) {
-          console.log("🎁 Plano sincronizado:", json.plan);
-          window.lioraSetPlan(json.plan);
-        } else {
-          console.warn("⚠️ Nenhum plano encontrado. Usando free.");
-          window.lioraSetPlan("free");
-        }
-      } catch (err) {
-        console.warn("⚠️ Erro ao consultar plano:", err);
+        window.lioraSetPlan(json.plano);
+    
+      } catch (e) {
+        console.warn("⚠️ Erro ao consultar plano:", e);
+        window.lioraSetPlan("free");
       }
     }
-
+    // Disparar sync sempre que o login mudar
+    window.addEventListener("liora:auth-changed", syncPlano);
+    
     // -------------------------------------------------------
     // PÓS LOGIN
     // -------------------------------------------------------
