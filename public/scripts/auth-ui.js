@@ -1,17 +1,17 @@
 // ==========================================================
-// 🧠 LIORA — AUTH UI v5 (Premium Real + Plano Universal)
+// 🧠 LIORA — AUTH UI v6 (Premium Real + Plano Universal)
 // ----------------------------------------------------------
 // - Integra com window.lioraAuth (Firebase Auth)
 // - Modal de login/cadastro
 // - Pós-login inteligente
-// - Plano premium sincronizado via Firestore (/api/plano)
-// - Atualização automática de UI quando login muda
-// - Função universal lioraSetPlan()
+// - Premium real via Firestore (/api/plano)
+// - UI atualizada automaticamente
 // - Proteção de recursos premium
+// - Fluxo sem duplicações de eventos
 // ==========================================================
 
 (function () {
-  console.log("🔐 Liora Auth UI v5 carregado...");
+  console.log("🔐 Liora Auth UI v6 carregado...");
 
   document.addEventListener("DOMContentLoaded", () => {
 
@@ -58,11 +58,9 @@
     // UI LOGIN / CADASTRO
     // -------------------------------------------------------
     function applyMode() {
-      if (!els.authTitle) return;
-
       if (mode === "login") {
         els.authTitle.textContent = "Acesse sua conta";
-        els.authSubtitle.textContent = "Acesse seus planos e simulados em qualquer dispositivo.";
+        els.authSubtitle.textContent = "Continue seus estudos em qualquer dispositivo.";
         els.authSubmit.querySelector(".liora-btn-text").textContent = "Entrar";
         els.authToggleMode.textContent = "Criar conta";
       } else {
@@ -118,20 +116,19 @@
     }
 
     function traduzErroFirebase(err) {
-      if (!err?.code) return "Erro inesperado. Tente novamente.";
-      const map = {
+      if (!err?.code) return "Erro inesperado.";
+      return {
         "auth/invalid-email": "E-mail inválido.",
         "auth/user-not-found": "E-mail não encontrado.",
         "auth/wrong-password": "Senha incorreta.",
         "auth/email-already-in-use": "E-mail já cadastrado.",
         "auth/weak-password": "Senha muito fraca.",
         "auth/too-many-requests": "Muitas tentativas. Aguarde.",
-      };
-      return map[err.code] || "Erro de autenticação.";
+      }[err.code] || "Erro de autenticação.";
     }
 
     // -------------------------------------------------------
-    // UI GLOBAL DE LOGIN + PLANO
+    // UI GLOBAL LOGIN + PLANO
     // -------------------------------------------------------
     function updateAuthUI(user) {
       const logged = !!user;
@@ -142,7 +139,7 @@
         btn.textContent = logged ? "Conta" : "Entrar";
       });
 
-      // Badge do topo
+      // Badge topo
       if (els.premiumBadge) {
         els.premiumBadge.textContent =
           plan === "premium"
@@ -150,8 +147,8 @@
             : "Versão gratuita — recursos limitados";
       }
 
-      // Nome + status
-      if (logged && els.userName && els.userStatus) {
+      // Nome e status
+      if (logged) {
         els.userName.textContent = user.email.split("@")[0];
         els.userStatus.textContent =
           plan === "premium" ? "Liora+ ativo" : "Conta gratuita";
@@ -165,43 +162,36 @@
     }
 
     // -------------------------------------------------------
-    // 🔄 SINCRONIZAR PLANO REAL VIA FIRESTORE (/api/plano)
+    // 🔄 SYNC PLANO (REAL FIRESTORE VIA /api/plano)
     // -------------------------------------------------------
-      async function syncPlano() {
+    async function syncPlano() {
       const user = window.lioraAuth?.user;
       if (!user) return window.lioraSetPlan("free");
-    
+
       try {
         const token = await user.getIdToken();
         const res = await fetch("/api/plano", {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
+          headers: { Authorization: `Bearer ${token}` }
         });
-    
+
         const json = await res.json();
         window.lioraSetPlan(json.plano);
-    
+
       } catch (e) {
         console.warn("⚠️ Erro ao consultar plano:", e);
         window.lioraSetPlan("free");
       }
     }
-    // Disparar sync sempre que o login mudar
-    window.addEventListener("liora:auth-changed", syncPlano);
-    
+
     // -------------------------------------------------------
     // PÓS LOGIN
     // -------------------------------------------------------
     function navegarPosLogin() {
       const sm = window.lioraEstudos;
-      try {
-        if (sm?.temPlanoAtivo?.()) {
-          sm.abrirUltimoPlano?.();
-          return;
-        }
-      } catch {}
-
+      if (sm?.temPlanoAtivo?.()) {
+        sm.abrirUltimoPlano?.();
+        return;
+      }
       window.homeInicio?.();
     }
 
@@ -215,10 +205,7 @@
       const email = els.authEmail.value.trim();
       const senha = els.authSenha.value;
 
-      if (!email || !senha) {
-        showError("Digite e-mail e senha.");
-        return;
-      }
+      if (!email || !senha) return showError("Digite e-mail e senha.");
 
       setLoading(true);
       try {
@@ -246,7 +233,7 @@
     });
 
     // -------------------------------------------------------
-    // ABRIR MODAL
+    // ABRIR LOGIN
     // -------------------------------------------------------
     els.btnAuthToggles.forEach((btn) => {
       btn.addEventListener("click", () => openAuthModal("login"));
@@ -290,15 +277,12 @@
     proteger(els.homeDashboard);
 
     // -------------------------------------------------------
-    // 🔥 AUTH CHANGED (carrega plano real aqui!)
+    // 🔥 AUTH CHANGED → Atualiza UI + Sincroniza Plano
     // -------------------------------------------------------
     window.addEventListener("liora:auth-changed", () => {
       const user = getUser();
       updateAuthUI(user);
-
-      if (user?.uid) {
-        syncPlano(user.uid);   // <<— AQUI ATIVA PREMIUM REAL
-      }
+      syncPlano();   // única chamada
     });
 
     // Primeira carga
