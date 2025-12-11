@@ -200,9 +200,17 @@
         const nome = user.displayName || user.email || "Usuário";
         els.userName.textContent = nome;
 
-        // Futuro: ler status premium do backend.
-        // Por enquanto, fixo como "Conta gratuita".
-        els.userStatus.textContent = "Conta gratuita";
+      // Leitura do status real vinda do backend/fake backend
+        const plan = window.lioraUserPlan || "free";
+        
+        const labels = {
+          free: "Conta gratuita",
+          premium: "Liora+ ativo",
+          plus: "Liora Plus — acesso total"
+        };
+
+els.userStatus.textContent = labels[plan] || "Conta gratuita";
+
       }
     }
 
@@ -406,4 +414,15 @@
 
     console.log("🟢 Liora Auth UI v3 inicializado.");
   });
+  // --------------------------------------------------------
+  // 🔥 Função Universal: Atualizar plano do usuário (free/premium/etc.)
+  // --------------------------------------------------------
+  window.lioraSetPlan = function (newPlan) {
+    window.lioraUserPlan = newPlan || "free";
+  
+    // Dispara evento global para atualizar UI automaticamente
+    const evt = new Event("liora:auth-changed");
+    window.dispatchEvent(evt);
+  };
+ 
 })();
