@@ -1,35 +1,51 @@
+// /api/plano.js — Consulta real do plano do usuário (free/premium)
+// =========================================================================
+// Import Firebase (modo server-side em rotas Vercel)
+// =========================================================================
 import { initializeApp, getApps } from "firebase/app";
 import { getFirestore, doc, getDoc } from "firebase/firestore";
-import { getAuth } from "firebase/auth";
 
+// Configurações via variáveis de ambiente
 const firebaseConfig = {
   apiKey: process.env.FIREBASE_API,
   authDomain: process.env.FIREBASE_AUTH,
   projectId: process.env.FIREBASE_PROJECT,
 };
 
+// Evitar inicializações duplicadas
 if (!getApps().length) initializeApp(firebaseConfig);
 const db = getFirestore();
 
+// =========================================================================
+// HANDLER DA ROTA
+// =========================================================================
 export default async function handler(req, res) {
   try {
-    const auth = getAuth();
-    const user = auth.currentUser;
+    const { uid } = req.query;
 
-    if (!user) {
-      return res.status(401).json({ plano: "free" });
+    if (!uid) {
+      return res.status(400).json({
+        plano: "free",
+        error: "UID não informado",
+      });
     }
 
-    const ref = doc(db, "users", user.uid);
+    // users/{uid}
+    const ref = doc(db, "users", uid);
     const snap = await getDoc(ref);
 
     if (!snap.exists()) {
       return res.status(200).json({ plano: "free" });
     }
 
-    return res.status(200).json({ plano: snap.data().plano || "free" });
-  } catch (e) {
-    console.error(e);
+    const data = snap.data();
+
+    return res.status(200).json({
+      plano: data.plano || "free",
+      atualizado: data.updatedAt || null,
+    });
+  } catch (err) {
+    console.error("🔥 Erro no /api/plano:", err);
     return res.status(500).json({ plano: "free" });
   }
 }
