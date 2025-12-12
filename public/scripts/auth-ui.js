@@ -143,7 +143,7 @@
     // -------------------------------------------------------
     // LISTENER AUTH
     // -------------------------------------------------------
-    window.addEventListener("liora:auth-changed", () => {
+      window.addEventListener("liora:auth-changed", () => {
       const user = currentUser();
       dbg("🌀 Evento auth-changed recebido. User =", user);
       updateAuthUI(user);
@@ -153,12 +153,18 @@
     // -------------------------------------------------------
     // Função global do plano (sem loops!)
     // -------------------------------------------------------
-    window.lioraSetPlan = function (plan) {
-      dbg("📝 SetPlan:", plan);
-      window.lioraUserPlan = plan || "free";
-
+       window.lioraSetPlan = function (newPlan) {
+      const prev = window.lioraUserPlan || "free";
+      const next = newPlan || "free";
+    
+      if (prev === next) return; // 🛑 trava anti-loop
+    
+      window.lioraUserPlan = next;
+    
       window.dispatchEvent(
-        new CustomEvent("liora:auth-changed")
+        new CustomEvent("liora:plan-changed", {
+          detail: { plan: next }
+        })
       );
     };
 
