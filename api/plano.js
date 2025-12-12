@@ -1,27 +1,28 @@
 // /api/plano.js
-import { adminAuth, db } from "../lib/firebaseAdmin.js";
+import { db, adminAuth } from "../lib/firebaseAdmin.js";
 
 export default async function handler(req, res) {
   try {
-    const authHeader = req.headers.authorization || "";
-    const token = authHeader.replace("Bearer ", "");
-
-    if (!token) {
-      return res.status(401).json({ error: "Token ausente" });
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+      return res.status(200).json({ plano: "free" });
     }
 
+    const token = authHeader.replace("Bearer ", "");
     const decoded = await adminAuth.verifyIdToken(token);
     const uid = decoded.uid;
 
-    const doc = await db.collection("users").doc(uid).get();
-    const plano = doc.exists ? doc.data().plano : "free";
+    const snap = await db.collection("users").doc(uid).get();
 
+    if (!snap.exists) {
+      return res.status(200).json({ plano: "free" });
+    }
+
+    const plano = snap.data().plano || "free";
     return res.status(200).json({ plano });
 
   } catch (err) {
-    console.error("❌ Erro /api/plano:", err);
-    return res.status(500).json({
-      error: "Erro interno",
-    });
+    console.error("🔥 /api/plano erro:", err);
+    return res.status(200).json({ plano: "free" });
   }
 }
