@@ -1,33 +1,33 @@
 // ==========================================================
-// 🧠 LIORA — AUTH UI v9 (DEBUG EDITION)
+// 🧠 LIORA — AUTH UI v10 (ESTÁVEL + DEBUG + PREMIUM REAL)
 // ==========================================================
 
 (function () {
-  console.log("🔐 Liora Auth UI v9 DEBUG carregado...");
+  console.log("🔐 Liora Auth UI v10 carregado...");
 
-  // Função debug global
+  // -------------------------------------------------------
+  // 🐞 DEBUG
+  // -------------------------------------------------------
   window.lioraDebug = true;
   function dbg(...args) {
-    if (window.lioraDebug) console.log("🐞[LioraDebug]", ...args);
+    if (window.lioraDebug) {
+      console.log("🐞[LioraDebug]", ...args);
+    }
   }
 
   document.addEventListener("DOMContentLoaded", () => {
-    dbg("📦 DOM pronto, iniciando AUTH UI...");
+    dbg("📦 DOM pronto");
 
     // -------------------------------------------------------
     // ELEMENTOS
     // -------------------------------------------------------
     const els = {
       authModal: document.getElementById("liora-auth-modal"),
-      authClose: document.getElementById("liora-auth-close"),
       authTitle: document.getElementById("liora-auth-title"),
-      authSubtitle: document.getElementById("liora-auth-subtitle"),
       authForm: document.getElementById("liora-auth-form"),
       authEmail: document.getElementById("auth-email"),
       authSenha: document.getElementById("auth-senha"),
-      authError: document.getElementById("liora-auth-error"),
       authSubmit: document.getElementById("liora-auth-submit"),
-      authToggleMode: document.getElementById("liora-auth-toggle-mode"),
 
       btnAuthToggles: document.querySelectorAll("#btn-auth-toggle"),
       btnLogout: document.getElementById("btn-logout"),
@@ -35,11 +35,7 @@
       userInfo: document.getElementById("liora-user-info"),
       userName: document.getElementById("liora-user-name"),
       userStatus: document.getElementById("liora-user-status"),
-
-      homeSimulados: document.getElementById("home-simulados"),
-      homeDashboard: document.getElementById("home-dashboard"),
-
-      premiumBadge: document.getElementById("liora-premium-badge")
+      premiumBadge: document.getElementById("liora-premium-badge"),
     };
 
     function currentUser() {
@@ -47,39 +43,23 @@
     }
 
     // -------------------------------------------------------
-    // MODO LOGIN/CADASTRO
-    // -------------------------------------------------------
-    let mode = "login";
-
-    function applyMode() {
-      dbg("Aplicando modo:", mode);
-
-      if (mode === "login") {
-        els.authTitle.textContent = "Acesse sua conta";
-        els.authSubmit.querySelector(".liora-btn-text").textContent = "Entrar";
-      } else {
-        els.authTitle.textContent = "Criar conta";
-        els.authSubmit.querySelector(".liora-btn-text").textContent = "Criar conta";
-      }
-    }
-
-    function setMode(m) {
-      mode = m === "signup" ? "signup" : "login";
-      dbg("Modo alterado para:", mode);
-      applyMode();
-    }
-
-    // -------------------------------------------------------
-    // UI GLOBAL LOGIN + PLANO
+    // UI
     // -------------------------------------------------------
     function updateAuthUI(user) {
-      dbg("Atualizando UI. User =", user);
-      dbg("Plano atual =", window.lioraUserPlan);
-
       const logged = !!user;
       const plan = window.lioraUserPlan || "free";
 
-      els.btnAuthToggles.forEach((btn) => btn.textContent = logged ? "Conta" : "Entrar");
+      dbg("🎨 updateAuthUI()", { logged, plan });
+
+      els.btnAuthToggles.forEach(btn => {
+        btn.textContent = logged ? "Conta" : "Entrar";
+      });
+
+      if (logged) {
+        els.userName.textContent = user.email.split("@")[0];
+        els.userStatus.textContent =
+          plan === "premium" ? "Liora+ ativo" : "Conta gratuita";
+      }
 
       if (els.premiumBadge) {
         els.premiumBadge.textContent =
@@ -88,89 +68,105 @@
             : "Versão gratuita — recursos limitados";
       }
 
-      if (logged) {
-        els.userName.textContent = user.email.split("@")[0];
-        els.userStatus.textContent = plan === "premium" ? "Liora+ ativo" : "Conta gratuita";
-      }
+      els.userInfo?.classList.toggle("hidden", !logged);
+      els.btnLogout?.classList.toggle("hidden", !logged);
 
-      els.userInfo.classList.toggle("hidden", !logged);
-      els.btnLogout.classList.toggle("hidden", !logged);
+      document.body.classList.toggle("liora-premium-on", plan === "premium");
+      document.body.classList.toggle("liora-premium-off", plan !== "premium");
     }
 
     // -------------------------------------------------------
-    // 🔄 SYNC PLANO (debug total)
+    // 🔄 SYNC PLANO (SÓ BUSCA, NÃO EMITE EVENTOS)
     // -------------------------------------------------------
     async function syncPlano(user) {
-      dbg("🔄 syncPlano() iniciou. User =", user);
+      dbg("🔄 syncPlano()", user);
 
       if (!user) {
-        dbg("Nenhum usuário → plano FREE");
-        window.lioraSetPlan("free");
+        dbg("➡️ Sem usuário → plano FREE");
+        setPlan("free");
         return;
       }
 
       try {
         const token = await user.getIdToken();
-        dbg("Token JWT:", token.substring(0, 15) + "...");
+        dbg("🔑 Token obtido");
 
         const res = await fetch("/api/plano", {
           headers: { Authorization: `Bearer ${token}` }
         });
 
-        dbg("HTTP status:", res.status);
+        dbg("🌐 HTTP", res.status);
 
-        const raw = await res.text();
-        dbg("Raw response:", raw);
-
-        let json;
-        try {
-          json = JSON.parse(raw);
-        } catch (e) {
-          dbg("❌ JSON.parse falhou:", e);
-          return window.lioraSetPlan("free");
+        if (!res.ok) {
+          dbg("❌ HTTP inválido");
+          setPlan("free");
+          return;
         }
 
-        dbg("JSON final:", json);
+        const json = await res.json();
+        dbg("📦 JSON plano", json);
 
-        window.lioraSetPlan(json.plano);
+        setPlan(json.plano);
 
       } catch (err) {
-        dbg("❌ Erro dentro de syncPlano:", err);
-        window.lioraSetPlan("free");
+        dbg("❌ Erro syncPlano", err);
+        setPlan("free");
       }
     }
 
     // -------------------------------------------------------
-    // LISTENER AUTH
+    // 🌟 PLANO — FONTE ÚNICA (ANTI LOOP)
     // -------------------------------------------------------
-      window.addEventListener("liora:auth-changed", () => {
-      const user = currentUser();
-      dbg("🌀 Evento auth-changed recebido. User =", user);
-      updateAuthUI(user);
-      syncPlano(user);
-    });
-
-    // -------------------------------------------------------
-    // Função global do plano (sem loops!)
-    // -------------------------------------------------------
-       window.lioraSetPlan = function (newPlan) {
+    function setPlan(newPlan) {
       const prev = window.lioraUserPlan || "free";
       const next = newPlan || "free";
-    
-      if (prev === next) return; // 🛑 trava anti-loop
-    
+
+      if (prev === next) {
+        dbg("🛑 Plano inalterado:", next);
+        return;
+      }
+
+      dbg("📝 Plano alterado:", prev, "→", next);
       window.lioraUserPlan = next;
-    
+
       window.dispatchEvent(
         new CustomEvent("liora:plan-changed", {
           detail: { plan: next }
         })
       );
-    };
+    }
 
-    // Inicialização
-    dbg("Inicialização final → aplicando UI e modo inicial");
+    // -------------------------------------------------------
+    // 🔥 AUTH CHANGED (SÓ AUTH)
+    // -------------------------------------------------------
+    window.addEventListener("liora:auth-changed", () => {
+      const user = currentUser();
+      dbg("🌀 auth-changed", user);
+
+      updateAuthUI(user);
+      syncPlano(user);
+    });
+
+    // -------------------------------------------------------
+    // 🔔 PLAN CHANGED (SÓ UI)
+    // -------------------------------------------------------
+    window.addEventListener("liora:plan-changed", (e) => {
+      dbg("🔔 plan-changed", e.detail);
+      updateAuthUI(currentUser());
+    });
+
+    // -------------------------------------------------------
+    // LOGOUT
+    // -------------------------------------------------------
+    els.btnLogout?.addEventListener("click", async () => {
+      dbg("🚪 Logout");
+      await window.lioraAuth.logout();
+    });
+
+    // -------------------------------------------------------
+    // INIT
+    // -------------------------------------------------------
+    dbg("🚀 Init final");
     updateAuthUI(currentUser());
-    applyMode();
   });
 })();
