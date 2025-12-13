@@ -121,7 +121,18 @@
         console.warn("⚠️ Erro ao salvar histórico", e);
       }
     }
-
+    // -------------------------------------------------------
+    // 🔐 GATE PREMIUM
+    // -------------------------------------------------------
+    function exigirPremium() {
+      if (window.lioraUserPlan !== "premium") {
+        console.warn("🔒 Simulados bloqueado — plano:", window.lioraUserPlan);
+        window.dispatchEvent(new Event("liora:premium-bloqueado"));
+        return false;
+      }
+      return true;
+    }
+   
     // -------------------------------------------------------
     // IA SELECTOR
     // -------------------------------------------------------
@@ -334,7 +345,11 @@ Retorne somente JSON válido.
     }
 
     // Ligações
-    els.fabSim.onclick = abrirModal;
+    els.fabSim.onclick = () => {
+      if (!exigirPremium()) return;
+      abrirModal();
+    };
+   
     els.modalClose.onclick = fecharModal;
     els.modal.onclick = (e) => {
       if (e.target === els.modal) fecharModal();
@@ -581,15 +596,17 @@ Retorne somente JSON válido.
     // BOTÃO INICIAR SIMULADO
     // -------------------------------------------------------
     els.btnIniciar.onclick = async () => {
+      if (!exigirPremium()) return;
+    
       STATE.banca = els.selBanca.value || "FGV";
       STATE.qtd = Number(els.selQtd.value || "10");
       STATE.tempoMin = Number(els.selTempo.value || "30");
       STATE.dificuldade = els.selDif.value || "misturado";
       STATE.tema = els.inpTema.value.trim();
-
+    
       fecharModal();
       setIaLoading(true);
-
+    
       try {
         const raw = await gerarQuestoesIA(
           STATE.banca,
@@ -597,21 +614,19 @@ Retorne somente JSON válido.
           STATE.tema,
           STATE.dificuldade
         );
-
+    
         const limpas = limparQuestoes(raw);
         if (!limpas.length) {
-          els.questaoContainer.innerHTML =
-            "<p class='text-sm text-[var(--muted)]'>Não foi possível gerar questões. Tente novamente.</p>";
           setIaLoading(false);
           window.lioraError?.show(
             "A IA não conseguiu gerar questões agora. Tente novamente."
           );
           return;
         }
-
+    
         STATE.questoes = limpas;
         STATE.atual = 0;
-
+    
         setIaLoading(false);
         renderQuestao();
         startTimer();
@@ -623,6 +638,7 @@ Retorne somente JSON válido.
         );
       }
     };
+
 
     console.log("🟢 Liora Simulados v99-PREMIUM-COMMERCIAL inicializado.");
   });
