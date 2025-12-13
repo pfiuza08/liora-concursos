@@ -1,19 +1,24 @@
 // ==========================================================
 // 🔐 LIORA — AUTH UI v11 (STABLE)
-// - Login OK
-// - Criar conta OK
-// - Anti-loop
-// - Compatível com Core v78+
+// - Login / Cadastro / Logout
+// - Anti-loop de plano
+// - Modal funcional
+// - Compatível com auth.js v2+
 // ==========================================================
 
 (function () {
   console.log("🔐 Liora Auth UI v11 carregado...");
 
+  // -------------------------------------------------------
+  // DEBUG
+  // -------------------------------------------------------
   window.lioraDebug = true;
-  const dbg = (...a) => window.lioraDebug && console.log("🐞[LioraAuthUI]", ...a);
+  const dbg = (...args) => {
+    if (window.lioraDebug) console.log("🐞[LioraDebug]", ...args);
+  };
 
   document.addEventListener("DOMContentLoaded", () => {
-    dbg("📦 DOM pronto");
+    dbg("📦 DOM pronto — iniciando Auth UI");
 
     // -------------------------------------------------------
     // ELEMENTOS
@@ -24,15 +29,11 @@
 
       title: document.getElementById("liora-auth-title"),
       subtitle: document.getElementById("liora-auth-subtitle"),
-
       form: document.getElementById("liora-auth-form"),
       email: document.getElementById("auth-email"),
       senha: document.getElementById("auth-senha"),
       error: document.getElementById("liora-auth-error"),
-
       submit: document.getElementById("liora-auth-submit"),
-      submitText: document.querySelector("#liora-auth-submit .liora-btn-text"),
-
       toggleMode: document.getElementById("liora-auth-toggle-mode"),
 
       btnAuthToggles: document.querySelectorAll("#btn-auth-toggle"),
@@ -45,8 +46,8 @@
       premiumBadge: document.getElementById("liora-premium-badge")
     };
 
-    if (!els.form) {
-      console.warn("⚠️ Auth UI: elementos não encontrados");
+    if (!els.modal || !els.form) {
+      console.warn("⚠️ Auth UI: elementos essenciais ausentes");
       return;
     }
 
@@ -60,80 +61,125 @@
     }
 
     // -------------------------------------------------------
-    // MODO LOGIN / SIGNUP
+    // MODAL
+    // -------------------------------------------------------
+    function openModal() {
+      els.modal.classList.remove("hidden");
+      els.modal.classList.add("visible");
+    }
+
+    function closeModal() {
+      els.modal.classList.remove("visible");
+      els.modal.classList.add("hidden");
+      els.error.textContent = "";
+    }
+
+    // -------------------------------------------------------
+    // MODO LOGIN / CADASTRO
     // -------------------------------------------------------
     function applyMode() {
-      dbg("🎛️ applyMode:", mode);
-
-      els.error.textContent = "";
+      dbg("🎭 Modo:", mode);
 
       if (mode === "login") {
         els.title.textContent = "Acesse sua conta";
-        els.subtitle.textContent = "Entre para continuar seus estudos";
-        els.submitText.textContent = "Entrar";
-        els.toggleMode.innerHTML = `Não tem conta? <strong>Criar conta</strong>`;
+        els.submit.querySelector(".liora-btn-text").textContent = "Entrar";
+        els.toggleMode.textContent = "Criar conta";
       } else {
         els.title.textContent = "Criar conta";
-        els.subtitle.textContent = "Crie sua conta gratuita na Liora";
-        els.submitText.textContent = "Criar conta";
-        els.toggleMode.innerHTML = `Já tem conta? <strong>Entrar</strong>`;
+        els.submit.querySelector(".liora-btn-text").textContent = "Criar conta";
+        els.toggleMode.textContent = "Já tenho conta";
       }
-    }
-
-    function setMode(m) {
-      mode = m === "signup" ? "signup" : "login";
-      applyMode();
     }
 
     els.toggleMode.onclick = () => {
-      setMode(mode === "login" ? "signup" : "login");
+      mode = mode === "login" ? "signup" : "login";
+      applyMode();
     };
 
     // -------------------------------------------------------
-    // SUBMIT (LOGIN / SIGNUP)
+    // SUBMIT LOGIN / CADASTRO
     // -------------------------------------------------------
     els.form.onsubmit = async (e) => {
       e.preventDefault();
+      els.error.textContent = "";
 
       const email = els.email.value.trim();
-      const senha = els.senha.value;
+      const senha = els.senha.value.trim();
 
       if (!email || !senha) {
-        els.error.textContent = "Informe email e senha.";
+        els.error.textContent = "Preencha e-mail e senha.";
         return;
       }
 
-      els.error.textContent = "";
-
       try {
-        if (mode === "signup") {
-          dbg("🆕 Criando conta...");
-          await window.lioraAuth.signup(email, senha);
-        } else {
-          dbg("🔐 Fazendo login...");
+        dbg("🔐 Enviando auth:", mode);
+
+        if (mode === "login") {
           await window.lioraAuth.login(email, senha);
+        } else {
+          await window.lioraAuth.signup(email, senha);
         }
+
+        closeModal();
       } catch (err) {
-        console.error("❌ Auth erro:", err);
+        console.error(err);
         els.error.textContent =
-          err?.message?.replace("Firebase:", "").trim() ||
-          "Erro ao autenticar.";
+          err.message || "Erro ao autenticar. Tente novamente.";
       }
+    };
+
+    // -------------------------------------------------------
+    // BOTÕES ENTRAR / CONTA
+    // -------------------------------------------------------
+    els.btnAuthToggles.forEach((btn) => {
+      btn.onclick = () => {
+        dbg("🟢 Clique Entrar/Conta");
+        openModal();
+      };
+    });
+
+    // -------------------------------------------------------
+    // LOGOUT
+    // -------------------------------------------------------
+    if (els.btnLogout) {
+      els.btnLogout.onclick = async () => {
+        dbg("🔴 Logout solicitado");
+        try {
+          await window.lioraAuth.logout();
+          window.lioraSetPlan("free");
+        } catch (e) {
+          console.error("Erro no logout:", e);
+        }
+      };
+    }
+
+    // -------------------------------------------------------
+    // FECHAR MODAL
+    // -------------------------------------------------------
+    if (els.close) els.close.onclick = closeModal;
+    els.modal.onclick = (e) => {
+      if (e.target === els.modal) closeModal();
     };
 
     // -------------------------------------------------------
     // UI GLOBAL
     // -------------------------------------------------------
     function updateAuthUI(user) {
+      dbg("🎨 updateAuthUI", user);
+
       const logged = !!user;
       const plan = window.lioraUserPlan || "free";
 
-      els.btnAuthToggles.forEach((b) => {
-        if (b) b.textContent = logged ? "Conta" : "Entrar";
-      });
+      els.btnAuthToggles.forEach(
+        (btn) => (btn.textContent = logged ? "Conta" : "Entrar")
+      );
 
-      if (els.userInfo) els.userInfo.classList.toggle("hidden", !logged);
-      if (els.btnLogout) els.btnLogout.classList.toggle("hidden", !logged);
+      if (els.premiumBadge) {
+        els.premiumBadge.textContent =
+          plan === "premium"
+            ? "Liora+ ativo"
+            : "Versão gratuita";
+      }
 
       if (logged) {
         els.userName.textContent = user.email.split("@")[0];
@@ -141,65 +187,40 @@
           plan === "premium" ? "Liora+ ativo" : "Conta gratuita";
       }
 
-      if (els.premiumBadge) {
-        els.premiumBadge.textContent =
-          plan === "premium"
-            ? "Liora+ ativo — recursos liberados"
-            : "Versão gratuita";
-      }
+      els.userInfo.classList.toggle("hidden", !logged);
+      els.btnLogout?.classList.toggle("hidden", !logged);
     }
 
     // -------------------------------------------------------
-    // SYNC PLANO (SEM LOOP)
+    // ANTI-LOOP PLANO
     // -------------------------------------------------------
-    async function syncPlano(user) {
-      if (!user) {
-        window.lioraSetPlan("free");
-        return;
-      }
-
-      try {
-        const token = await user.getIdToken();
-
-        const res = await fetch("/api/plano", {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-
-        const json = await res.json();
-        window.lioraSetPlan(json?.plano || "free");
-      } catch {
-        window.lioraSetPlan("free");
-      }
-    }
-
-    // -------------------------------------------------------
-    // EVENTOS
-    // -------------------------------------------------------
-    window.addEventListener("liora:auth-changed", () => {
-      const user = currentUser();
-      dbg("🌀 auth-changed:", user);
-      updateAuthUI(user);
-      syncPlano(user);
-    });
-
-    // -------------------------------------------------------
-    // PLANO GLOBAL (ANTI-LOOP)
-    // -------------------------------------------------------
-    window.lioraSetPlan = function (plan) {
+    window.lioraSetPlan = function (newPlan) {
       const prev = window.lioraUserPlan || "free";
-      const next = plan || "free";
+      const next = newPlan || "free";
       if (prev === next) return;
+
+      dbg("📝 SetPlan:", next);
       window.lioraUserPlan = next;
+
       window.dispatchEvent(
         new CustomEvent("liora:plan-changed", { detail: { plan: next } })
       );
     };
 
     // -------------------------------------------------------
+    // EVENTOS GLOBAIS
+    // -------------------------------------------------------
+    window.addEventListener("liora:auth-changed", () => {
+      const user = currentUser();
+      dbg("🌀 auth-changed", user);
+      updateAuthUI(user);
+    });
+
+    // -------------------------------------------------------
     // INIT
     // -------------------------------------------------------
     applyMode();
     updateAuthUI(currentUser());
-    dbg("🚀 Auth UI v11 pronto");
+    dbg("🚀 Auth UI pronto");
   });
 })();
