@@ -249,3 +249,4 @@ Formato JSON puro.
     console.log("🟢 Liora Simulados v100 pronto.");
   });
 })();
+
