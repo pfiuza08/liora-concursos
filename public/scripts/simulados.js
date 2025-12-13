@@ -82,6 +82,20 @@
       selecionadas: new Set(["banca", "explica"])
     };
 
+    function verificarAcessoSimulado() {
+      const plan = window.lioraUserPlan || "free";
+    
+      if (plan === "premium") return { ok: true };
+    
+      const jaUsou = localStorage.getItem("liora:free-simulado-usado");
+      if (jaUsou) {
+        window.dispatchEvent(new Event("liora:premium-bloqueado"));
+        return { ok: false };
+      }
+    
+      return { ok: true, free: true };
+    }
+  
     // -------------------------------------------------------
     // ESTADO GERAL
     // -------------------------------------------------------
@@ -346,6 +360,16 @@ Retorne somente JSON válido.
 
     // Ligações
     els.fabSim.onclick = () => {
+      const acesso = verificarAcessoSimulado();
+      if (!acesso.ok) return;
+    
+      abrirModal();
+    
+      if (acesso.free) {
+        console.warn("⚠️ Modo FREE: simulado limitado a 3 questões (uso único)");
+      }
+    };
+
       if (!exigirPremium()) return;
       abrirModal();
     };
@@ -596,6 +620,15 @@ Retorne somente JSON válido.
     // BOTÃO INICIAR SIMULADO
     // -------------------------------------------------------
     els.btnIniciar.onclick = async () => {
+    const acesso = verificarAcessoSimulado();
+    if (!acesso.ok) return;
+    
+    // Se for free, força limite
+    if (acesso.free) {
+      STATE.qtd = 3;
+      localStorage.setItem(FREE_SIM_KEY, "true");
+    }
+      
       if (!exigirPremium()) return;
     
       STATE.banca = els.selBanca.value || "FGV";
