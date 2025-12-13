@@ -1,67 +1,68 @@
-// ==============================================================
-// 🧠 LIORA — SIMULADOS v100 (LOGIN + FREE TRIAL + PREMIUM)
-// ==============================================================
+// =============================================================
+// 🧠 LIORA — SIMULADOS v100-FREEMIUM-CLEAN
+// =============================================================
 
 (function () {
-  console.log("🔵 Liora Simulados v100 carregado...");
-
-  const FREE_SIM_KEY = "liora:free-simulado-usado";
+  console.log("🟣 Liora Simulados v100 carregado");
 
   document.addEventListener("DOMContentLoaded", () => {
 
-    // -------------------------------------------------------
+    // -------------------------------------------------
     // ELEMENTOS
-    // -------------------------------------------------------
+    // -------------------------------------------------
     const els = {
-      fabSim: document.getElementById("sim-fab"),
+      fab: document.getElementById("sim-fab"),
       modal: document.getElementById("sim-modal-backdrop"),
-      modalClose: document.getElementById("sim-modal-close-btn"),
-      btnIniciar: document.getElementById("sim-modal-iniciar"),
+      close: document.getElementById("sim-modal-close-btn"),
+      iniciar: document.getElementById("sim-modal-iniciar"),
 
-      questaoContainer: document.getElementById("sim-questao-container"),
+      banca: document.getElementById("sim-modal-banca"),
+      qtd: document.getElementById("sim-modal-qtd"),
+      tempo: document.getElementById("sim-modal-tempo"),
+      dif: document.getElementById("sim-modal-dificuldade"),
+      tema: document.getElementById("sim-modal-tema"),
+
+      container: document.getElementById("sim-questao-container"),
       nav: document.getElementById("sim-nav"),
+      btnProx: document.getElementById("sim-btn-proxima"),
       btnVoltar: document.getElementById("sim-btn-voltar"),
-      btnProxima: document.getElementById("sim-btn-proxima"),
       resultado: document.getElementById("sim-resultado"),
       timer: document.getElementById("sim-timer"),
-      progressBar: document.getElementById("sim-progress-bar"),
-
-      selBanca: document.getElementById("sim-modal-banca"),
-      selQtd: document.getElementById("sim-modal-qtd"),
-      selTempo: document.getElementById("sim-modal-tempo"),
-      selDif: document.getElementById("sim-modal-dificuldade"),
-      inpTema: document.getElementById("sim-modal-tema"),
+      progress: document.getElementById("sim-progress-bar")
     };
 
-    if (!els.fabSim || !els.modal) return;
+    if (!els.fab) return;
 
-    // -------------------------------------------------------
-    // 🔐 CONTROLE DE ACESSO
-    // -------------------------------------------------------
-    function checkAccess() {
-      if (!window.lioraAuth?.user) {
-        window.dispatchEvent(new Event("liora:login-required"));
-        return { ok: false };
-      }
-
+    // -------------------------------------------------
+    // REGRAS DE ACESSO
+    // -------------------------------------------------
+    function getSimuladoAccess() {
+      const user = window.lioraAuth?.user || null;
       const plan = window.lioraUserPlan || "free";
 
-      if (plan === "premium") {
-        return { ok: true, premium: true };
-      }
+      if (!user) return { ok: false, reason: "login" };
+      if (plan === "premium") return { ok: true, mode: "premium" };
 
-      const used = localStorage.getItem(FREE_SIM_KEY);
-      if (used) {
-        window.dispatchEvent(new Event("liora:premium-bloqueado"));
-        return { ok: false };
-      }
+      const used = localStorage.getItem("liora:free-simulado-usado");
+      if (used) return { ok: false, reason: "upgrade" };
 
-      return { ok: true, free: true };
+      return { ok: true, mode: "free", maxQuestoes: 3 };
     }
 
-    // -------------------------------------------------------
+    // -------------------------------------------------
+    // ESTADO
+    // -------------------------------------------------
+    const STATE = {
+      questoes: [],
+      atual: 0,
+      tempoRestante: 0,
+      timerID: null,
+      config: {}
+    };
+
+    // -------------------------------------------------
     // MODAL
-    // -------------------------------------------------------
+    // -------------------------------------------------
     function abrirModal() {
       els.modal.classList.remove("hidden");
       els.modal.classList.add("visible");
@@ -72,181 +73,158 @@
       els.modal.classList.add("hidden");
     }
 
-    els.modalClose.onclick = fecharModal;
-    els.modal.onclick = (e) => {
-      if (e.target === els.modal) fecharModal();
-    };
+    els.fab.onclick = () => {
+      const access = getSimuladoAccess();
 
-    // -------------------------------------------------------
-    // FAB SIMULADO
-    // -------------------------------------------------------
-    els.fabSim.onclick = () => {
-      const access = checkAccess();
-      if (!access.ok) return;
-
-      if (access.free) {
-        els.selQtd.value = "3";
-        els.selQtd.disabled = true;
-      } else {
-        els.selQtd.disabled = false;
+      if (!access.ok) {
+        if (access.reason === "login") {
+          window.dispatchEvent(new Event("liora:login-required"));
+        }
+        if (access.reason === "upgrade") {
+          window.dispatchEvent(new Event("liora:premium-bloqueado"));
+        }
+        return;
       }
 
       abrirModal();
+
+      if (access.mode === "free") {
+        els.qtd.value = 3;
+        els.qtd.disabled = true;
+      } else {
+        els.qtd.disabled = false;
+      }
     };
 
-    // -------------------------------------------------------
-    // ESTADO
-    // -------------------------------------------------------
-    const STATE = {
-      questoes: [],
-      atual: 0,
-      tempoMin: 30,
-      tempoRestante: 0,
-      timerID: null
-    };
+    els.close.onclick = fecharModal;
+    els.modal.onclick = e => e.target === els.modal && fecharModal();
 
-    // -------------------------------------------------------
+    // -------------------------------------------------
     // IA
-    // -------------------------------------------------------
-    async function gerarQuestoesIA(banca, qtd, tema, dificuldade) {
-      const prompt = `
-Gere ${qtd} questões inéditas da banca ${banca}.
-Tema: ${tema || "geral"}.
-Dificuldade: ${dificuldade}.
-Formato JSON puro.
-      `;
-
+    // -------------------------------------------------
+    async function gerarQuestoes(config) {
       const res = await fetch("/api/liora", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ user: prompt })
+        body: JSON.stringify({
+          system: "Você é Liora, criadora de simulados premium.",
+          user: `
+Gere ${config.qtd} questões da banca ${config.banca}
+Tema: ${config.tema || "geral"}
+Dificuldade: ${config.dificuldade}
+Formato JSON puro.
+          `
+        })
       });
 
-      const json = await res.json().catch(() => null);
-      if (!json?.output) return [];
-
-      try {
-        return JSON.parse(json.output);
-      } catch {
-        return [];
-      }
+      const json = await res.json();
+      return JSON.parse(json.output);
     }
 
-    // -------------------------------------------------------
+    // -------------------------------------------------
+    // INICIAR
+    // -------------------------------------------------
+    els.iniciar.onclick = async () => {
+      const access = getSimuladoAccess();
+      if (!access.ok) return;
+
+      STATE.config = {
+        banca: els.banca.value,
+        qtd: access.mode === "free" ? 3 : Number(els.qtd.value),
+        dificuldade: els.dif.value,
+        tema: els.tema.value,
+        tempo: Number(els.tempo.value)
+      };
+
+      fecharModal();
+
+      window.lioraLoading?.show("Gerando simulado...");
+
+      try {
+        const raw = await gerarQuestoes(STATE.config);
+        STATE.questoes = raw;
+        STATE.atual = 0;
+
+        if (access.mode === "free") {
+          localStorage.setItem("liora:free-simulado-usado", "1");
+        }
+
+        window.lioraLoading?.hide();
+        renderQuestao();
+        startTimer();
+
+      } catch (e) {
+        window.lioraLoading?.hide();
+        window.lioraError?.show("Erro ao gerar simulado.");
+      }
+    };
+
+    // -------------------------------------------------
     // RENDER
-    // -------------------------------------------------------
+    // -------------------------------------------------
     function renderQuestao() {
       const q = STATE.questoes[STATE.atual];
       if (!q) return;
 
-      els.questaoContainer.innerHTML = `
+      els.container.innerHTML = `
         <div class="sim-questao-card">
           <p>${q.enunciado}</p>
           ${q.alternativas.map((a, i) => `
-            <div class="sim-alt" data-i="${i}">${a}</div>
+            <div class="sim-alt" onclick="this.classList.toggle('selected')">
+              ${a}
+            </div>
           `).join("")}
         </div>
       `;
 
       els.nav.classList.remove("hidden");
-      els.btnVoltar.disabled = STATE.atual === 0;
-      els.btnProxima.textContent =
-        STATE.atual === STATE.questoes.length - 1 ? "Finalizar ▶" : "Próxima ▶";
-
-      document.querySelectorAll(".sim-alt").forEach(el => {
-        el.onclick = () => {
-          q.resp = Number(el.dataset.i);
-          renderQuestao();
-        };
-      });
+      els.btnProx.textContent =
+        STATE.atual === STATE.questoes.length - 1
+          ? "Finalizar ▶"
+          : "Próxima ▶";
     }
 
-    // -------------------------------------------------------
+    els.btnProx.onclick = () => {
+      if (STATE.atual < STATE.questoes.length - 1) {
+        STATE.atual++;
+        renderQuestao();
+      } else {
+        finalizar();
+      }
+    };
+
+    // -------------------------------------------------
     // TIMER
-    // -------------------------------------------------------
+    // -------------------------------------------------
     function startTimer() {
-      STATE.tempoRestante = STATE.tempoMin * 60;
+      STATE.tempoRestante = STATE.config.tempo * 60;
       els.timer.classList.remove("hidden");
 
       STATE.timerID = setInterval(() => {
         STATE.tempoRestante--;
-        if (STATE.tempoRestante <= 0) {
-          clearInterval(STATE.timerID);
-          finalizarSimulado();
-        }
+        if (STATE.tempoRestante <= 0) finalizar();
       }, 1000);
     }
 
-    function finalizarSimulado() {
+    function finalizar() {
       clearInterval(STATE.timerID);
+      els.container.innerHTML = "";
       els.nav.classList.add("hidden");
 
       els.resultado.innerHTML = `
         <div class="sim-resultado-card">
-          <h3>Simulado concluído 🎯</h3>
-          <p>Continue evoluindo com simulados ilimitados.</p>
-          <button class="btn-primary" onclick="window.dispatchEvent(new Event('liora:premium-bloqueado'))">
-            Tornar-se Premium
-          </button>
+          <h3>Simulado concluído</h3>
+          <p>${STATE.questoes.length} questões respondidas</p>
+          ${
+            window.lioraUserPlan !== "premium"
+              ? `<p class="text-brand">Quer simulados ilimitados? Ative o Liora+</p>`
+              : ""
+          }
         </div>
       `;
       els.resultado.classList.remove("hidden");
     }
 
-    // -------------------------------------------------------
-    // BOTÃO INICIAR
-    // -------------------------------------------------------
-    els.btnIniciar.onclick = async () => {
-      const access = checkAccess();
-      if (!access.ok) return;
-
-      const qtd = access.free ? 3 : Number(els.selQtd.value || 10);
-
-      fecharModal();
-
-      const questoes = await gerarQuestoesIA(
-        els.selBanca.value,
-        qtd,
-        els.inpTema.value,
-        els.selDif.value
-      );
-
-      if (!questoes.length) {
-        alert("Não foi possível gerar o simulado.");
-        return;
-      }
-
-      if (access.free) {
-        localStorage.setItem(FREE_SIM_KEY, "true");
-      }
-
-      STATE.questoes = questoes;
-      STATE.atual = 0;
-
-      renderQuestao();
-      startTimer();
-    };
-
-    // -------------------------------------------------------
-    // NAVEGAÇÃO
-    // -------------------------------------------------------
-    els.btnVoltar.onclick = () => {
-      if (STATE.atual > 0) {
-        STATE.atual--;
-        renderQuestao();
-      }
-    };
-
-    els.btnProxima.onclick = () => {
-      if (STATE.atual < STATE.questoes.length - 1) {
-        STATE.atual++;
-        renderQuestao();
-      } else {
-        finalizarSimulado();
-      }
-    };
-
-    console.log("🟢 Liora Simulados v100 pronto.");
+    console.log("🟢 Simulados v100 pronto");
   });
 })();
-
