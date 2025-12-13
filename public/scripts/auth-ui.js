@@ -117,7 +117,7 @@
         if (mode === "login") {
           await window.lioraAuth.login(email, senha);
         } else {
-          await window.lioraAuth.signup(email, senha);
+          await window.lioraAuth.cadastro(email, senha);
         }
 
         closeModal();
