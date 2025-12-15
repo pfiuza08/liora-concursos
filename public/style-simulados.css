@@ -1841,4 +1841,45 @@ html.light #dash-ultimos .sim-item {
     max-width: 520px;
   }
 }
+/* =========================================================
+   FIX DEFINITIVO — MODAL SIMULADOS (z-index + pointer-events)
+========================================================= */
+
+.sim-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  z-index: 9999;
+  pointer-events: auto;
+}
+
+.sim-modal-backdrop.hidden {
+  display: none;
+}
+
+.sim-modal-backdrop.visible {
+  display: flex;
+}
+
+.sim-modal {
+  background: var(--card, #181818);
+  border-radius: 16px;
+  padding: 1.25rem;
+  width: 100%;
+  max-width: 420px;
+
+  position: relative;
+  z-index: 10000;
+  pointer-events: auto;
+}
+
+#sim-modal-iniciar {
+  pointer-events: auto;
+  z-index: 10001;
+}
 
