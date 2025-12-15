@@ -61,30 +61,26 @@
   // -----------------------------
   // MODAL
   // -----------------------------
-  function abrirModal() {
-    const { modal, qtd } = getEls();
-    if (!modal) return;
-
-    modal.classList.remove("hidden");
-    modal.classList.add("visible");
-
-    const access = getSimuladoAccess();
-    if (access.mode === "free" && qtd) {
-      qtd.value = 3;
-      qtd.disabled = true;
-    } else if (qtd) {
-      qtd.disabled = false;
-    }
-
-    console.log("🟢 Modal de simulado aberto");
-  }
-
-  function fecharModal() {
+   function abrirModal() {
     const { modal } = getEls();
     if (!modal) return;
-    modal.classList.remove("visible");
-    modal.classList.add("hidden");
+  
+    modal.classList.remove("hidden");
+    modal.classList.add("visible");
+  
+    modal.style.display = "flex";      // 🔒 força visibilidade
+    modal.style.zIndex = "9999";       // 🔒 acima de tudo
+  
+    console.log("🟢 Modal de simulado FORÇADO a abrir");
   }
+  
+  
+    function fecharModal() {
+      const { modal } = getEls();
+      if (!modal) return;
+      modal.classList.remove("visible");
+      modal.classList.add("hidden");
+    }
 
   // -----------------------------
   // IA
