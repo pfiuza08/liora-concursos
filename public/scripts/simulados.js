@@ -164,7 +164,49 @@
         return parsed;
       }
 
-
+      function limparQuestoes(lista) {
+        return (lista || [])
+          .filter(
+            (q) =>
+              q &&
+              typeof q.enunciado === "string" &&
+              Array.isArray(q.alternativas) &&
+              q.alternativas.length >= 2
+          )
+          .map((q, idx) => {
+            // remove duplicações de alternativas
+            const seen = new Set();
+            const alternativas = [];
+      
+            q.alternativas.forEach((alt) => {
+              const txt = String(alt).trim();
+              const norm = txt.toLowerCase().replace(/[^\w]/g, "");
+              if (!seen.has(norm)) {
+                seen.add(norm);
+                alternativas.push(txt);
+              }
+            });
+      
+            // garante 4 alternativas
+            while (alternativas.length < 4) {
+              alternativas.push("Alternativa não informada");
+            }
+      
+            return {
+              indice: idx + 1,
+              enunciado: q.enunciado.trim(),
+              alternativas: alternativas.slice(0, 4),
+              corretaIndex:
+                Number.isInteger(q.corretaIndex) &&
+                q.corretaIndex >= 0 &&
+                q.corretaIndex < alternativas.length
+                  ? q.corretaIndex
+                  : 0,
+              resp: null
+            };
+          });
+      }
+      
     // -------------------------------------------------
     // INICIAR
     // -------------------------------------------------
