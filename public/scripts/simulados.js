@@ -102,24 +102,68 @@
     // -------------------------------------------------
     // IA
     // -------------------------------------------------
-    async function gerarQuestoes(config) {
-      const res = await fetch("/api/liora", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          system: "Você é Liora, criadora de simulados premium.",
-          user: `
-Gere ${config.qtd} questões da banca ${config.banca}
-Tema: ${config.tema || "geral"}
-Dificuldade: ${config.dificuldade}
-Formato JSON puro.
-          `
-        })
-      });
+         async function gerarQuestoes(config) {
+        const res = await fetch("/api/liora", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            system: "Você é Liora, criadora de simulados premium.",
+            user: `
+      Gere ${config.qtd} questões da banca ${config.banca}.
+      Tema: ${config.tema || "geral"}.
+      Dificuldade: ${config.dificuldade}.
+      
+      Retorne APENAS JSON válido no formato:
+      [
+        {
+          "enunciado": "...",
+          "alternativas": ["A...", "B...", "C...", "D..."],
+          "corretaIndex": 0
+        }
+      ]
+      `
+          })
+        });
+      
+        const json = await res.json();
+      
+        let raw = json.output;
+      
+        console.log("🧪 RAW IA (original):", raw);
+      
+        // ----------------------------------
+        // 🔥 REMOVE MARKDOWN (```json)
+        // ----------------------------------
+        if (typeof raw === "string") {
+          raw = raw
+            .replace(/```json/gi, "")
+            .replace(/```/g, "")
+            .trim();
+        }
+      
+        // ----------------------------------
+        // 🔍 GARANTE RECORTE DO JSON
+        // ----------------------------------
+        const start = raw.indexOf("[");
+        const end = raw.lastIndexOf("]");
+      
+        if (start === -1 || end === -1) {
+          throw new Error("IA não retornou JSON válido");
+        }
+      
+        raw = raw.slice(start, end + 1);
+      
+        console.log("🧪 RAW IA (limpo):", raw);
+      
+        const parsed = JSON.parse(raw);
+      
+        if (!Array.isArray(parsed)) {
+          throw new Error("Formato inválido de questões");
+        }
+      
+        return parsed;
+      }
 
-      const json = await res.json();
-      return JSON.parse(json.output);
-    }
 
     // -------------------------------------------------
     // INICIAR
