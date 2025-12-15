@@ -1,8 +1,8 @@
 // =============================================================
-// 🧠 LIORA — SIMULADOS v103-FREEMIUM-STABLE
+// 🧠 LIORA — SIMULADOS v103.1-FREEMIUM-STABLE
 // =============================================================
 (function () {
-  console.log("🟢 Liora Simulados v103 carregado");
+  console.log("🟢 Liora Simulados v103.1 carregado");
 
   // -----------------------------
   // STATE GLOBAL
@@ -115,17 +115,45 @@ Retorne APENAS JSON válido no formato:
       throw new Error("IA não retornou JSON válido");
     }
 
-    return JSON.parse(raw.slice(start, end + 1));
+    const parsed = JSON.parse(raw.slice(start, end + 1));
+    if (!Array.isArray(parsed) || !parsed.length) {
+      throw new Error("Lista de questões vazia");
+    }
+
+    return parsed;
   }
 
   function limparQuestoes(lista) {
-    return (lista || []).map((q, idx) => ({
-      indice: idx + 1,
-      enunciado: String(q.enunciado),
-      alternativas: q.alternativas.slice(0, 4),
-      corretaIndex: Number.isInteger(q.corretaIndex) ? q.corretaIndex : 0,
-      resp: null
-    }));
+    return (lista || [])
+      .filter(q => q && q.enunciado && Array.isArray(q.alternativas))
+      .map((q, idx) => ({
+        indice: idx + 1,
+        enunciado: String(q.enunciado).trim(),
+        alternativas: q.alternativas.slice(0, 4).map(a => String(a)),
+        corretaIndex:
+          Number.isInteger(q.corretaIndex) &&
+          q.corretaIndex >= 0 &&
+          q.corretaIndex < q.alternativas.length
+            ? q.corretaIndex
+            : 0,
+        resp: null
+      }));
+  }
+
+  // -----------------------------
+  // TIMER
+  // -----------------------------
+  function startTimer() {
+    const { timer } = getEls();
+    clearInterval(STATE.timerID);
+
+    STATE.tempoRestante = (STATE.config.tempo || 30) * 60;
+    timer?.classList.remove("hidden");
+
+    STATE.timerID = setInterval(() => {
+      STATE.tempoRestante--;
+      if (STATE.tempoRestante <= 0) finalizar();
+    }, 1000);
   }
 
   // -----------------------------
@@ -136,12 +164,22 @@ Retorne APENAS JSON válido no formato:
     const q = STATE.questoes[STATE.atual];
     if (!q || !els.container) return;
 
+    els.resultado?.classList.add("hidden");
+    els.nav?.classList.remove("hidden");
+
+    if (els.progress) {
+      els.progress.style.width =
+        ((STATE.atual + 1) / STATE.questoes.length) * 100 + "%";
+    }
+
     els.container.innerHTML = `
       <div class="sim-questao-card">
         <p>${q.enunciado}</p>
         ${q.alternativas.map(
           (a, i) =>
-            `<button class="sim-alt ${q.resp === i ? "selected" : ""}" data-i="${i}">${a}</button>`
+            `<button class="sim-alt ${q.resp === i ? "selected" : ""}" data-i="${i}">
+              ${a}
+            </button>`
         ).join("")}
       </div>
     `;
@@ -153,9 +191,9 @@ Retorne APENAS JSON válido no formato:
       };
     });
 
-    els.nav?.classList.remove("hidden");
     els.btnProx.textContent =
       STATE.atual === STATE.questoes.length - 1 ? "Finalizar ▶" : "Próxima ▶";
+    els.btnVoltar.disabled = STATE.atual === 0;
   }
 
   function finalizar() {
@@ -173,8 +211,11 @@ Retorne APENAS JSON válido no formato:
         <p>${STATE.questoes.length} questões respondidas</p>
         ${
           plan !== "premium"
-            ? `<p class="text-brand">Desbloqueie simulados ilimitados, análise inteligente e questões por banca com o Liora+.</p>`
-            : `<p class="text-brand">✅ Liora+ ativo. Continue evoluindo.</p>`
+            ? `<p class="text-brand">
+                Quer simulados ilimitados, análise inteligente e foco por banca?
+                Ative o <strong>Liora+</strong>.
+              </p>`
+            : `<p class="text-brand">✅ Liora+ ativo. Continue avançando.</p>`
         }
       </div>
     `;
@@ -209,10 +250,7 @@ Retorne APENAS JSON válido no formato:
     }
 
     // FECHAR MODAL
-    if (
-      e.target.closest("#sim-modal-close-btn") ||
-      e.target === els.modal
-    ) {
+    if (e.target.closest("#sim-modal-close-btn") || e.target === els.modal) {
       fecharModal();
       return;
     }
@@ -237,6 +275,8 @@ Retorne APENAS JSON válido no formato:
         const raw = await gerarQuestoes(STATE.config);
         const limpas = limparQuestoes(raw);
 
+        if (!limpas.length) throw new Error("Questões inválidas");
+
         STATE.questoes = limpas;
         STATE.atual = 0;
 
@@ -246,6 +286,7 @@ Retorne APENAS JSON válido no formato:
 
         window.lioraLoading?.hide();
         renderQuestao();
+        startTimer();
       } catch (err) {
         console.error(err);
         window.lioraLoading?.hide();
