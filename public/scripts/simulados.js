@@ -1,9 +1,9 @@
 // =============================================================
-// 🧠 LIORA — SIMULADOS v100-FREEMIUM-CLEAN
+// 🧠 LIORA — SIMULADOS v101-FREEMIUM-STABLE
 // =============================================================
 
 (function () {
-  console.log("🟣 Liora Simulados v100 carregado");
+  console.log("🟣 Liora Simulados v101 carregado");
 
   document.addEventListener("DOMContentLoaded", () => {
 
@@ -73,7 +73,10 @@
       els.modal.classList.add("hidden");
     }
 
-    els.fab.onclick = () => {
+    // -------------------------------------------------
+    // FAB — handler único e estável
+    // -------------------------------------------------
+    function handleAbrirSimulado() {
       const access = getSimuladoAccess();
 
       if (!access.ok) {
@@ -94,121 +97,67 @@
       } else {
         els.qtd.disabled = false;
       }
-    };
+    }
 
+    els.fab.onclick = handleAbrirSimulado;
     els.close.onclick = fecharModal;
     els.modal.onclick = e => e.target === els.modal && fecharModal();
 
     // -------------------------------------------------
-    // IA
+    // IA — geração robusta
     // -------------------------------------------------
-         async function gerarQuestoes(config) {
-        const res = await fetch("/api/liora", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            system: "Você é Liora, criadora de simulados premium.",
-            user: `
-      Gere ${config.qtd} questões da banca ${config.banca}.
-      Tema: ${config.tema || "geral"}.
-      Dificuldade: ${config.dificuldade}.
-      
-      Retorne APENAS JSON válido no formato:
-      [
-        {
-          "enunciado": "...",
-          "alternativas": ["A...", "B...", "C...", "D..."],
-          "corretaIndex": 0
-        }
-      ]
-      `
-          })
-        });
-      
-        const json = await res.json();
-      
-        let raw = json.output;
-      
-        console.log("🧪 RAW IA (original):", raw);
-      
-        // ----------------------------------
-        // 🔥 REMOVE MARKDOWN (```json)
-        // ----------------------------------
-        if (typeof raw === "string") {
-          raw = raw
-            .replace(/```json/gi, "")
-            .replace(/```/g, "")
-            .trim();
-        }
-      
-        // ----------------------------------
-        // 🔍 GARANTE RECORTE DO JSON
-        // ----------------------------------
-        const start = raw.indexOf("[");
-        const end = raw.lastIndexOf("]");
-      
-        if (start === -1 || end === -1) {
-          throw new Error("IA não retornou JSON válido");
-        }
-      
-        raw = raw.slice(start, end + 1);
-      
-        console.log("🧪 RAW IA (limpo):", raw);
-      
-        const parsed = JSON.parse(raw);
-      
-        if (!Array.isArray(parsed)) {
-          throw new Error("Formato inválido de questões");
-        }
-      
-        return parsed;
+    async function gerarQuestoes(config) {
+      const res = await fetch("/api/liora", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          system: "Você é Liora, criadora de simulados premium.",
+          user: `
+Gere ${config.qtd} questões da banca ${config.banca}.
+Tema: ${config.tema || "geral"}.
+Dificuldade: ${config.dificuldade}.
+
+Retorne APENAS JSON válido no formato:
+[
+  {
+    "enunciado": "...",
+    "alternativas": ["A...", "B...", "C...", "D..."],
+    "corretaIndex": 0
+  }
+]
+`
+        })
+      });
+
+      const json = await res.json();
+      let raw = json.output;
+
+      if (typeof raw === "string") {
+        raw = raw.replace(/```json/gi, "").replace(/```/g, "").trim();
       }
 
-      function limparQuestoes(lista) {
-        return (lista || [])
-          .filter(
-            (q) =>
-              q &&
-              typeof q.enunciado === "string" &&
-              Array.isArray(q.alternativas) &&
-              q.alternativas.length >= 2
-          )
-          .map((q, idx) => {
-            // remove duplicações de alternativas
-            const seen = new Set();
-            const alternativas = [];
-      
-            q.alternativas.forEach((alt) => {
-              const txt = String(alt).trim();
-              const norm = txt.toLowerCase().replace(/[^\w]/g, "");
-              if (!seen.has(norm)) {
-                seen.add(norm);
-                alternativas.push(txt);
-              }
-            });
-      
-            // garante 4 alternativas
-            while (alternativas.length < 4) {
-              alternativas.push("Alternativa não informada");
-            }
-      
-            return {
-              indice: idx + 1,
-              enunciado: q.enunciado.trim(),
-              alternativas: alternativas.slice(0, 4),
-              corretaIndex:
-                Number.isInteger(q.corretaIndex) &&
-                q.corretaIndex >= 0 &&
-                q.corretaIndex < alternativas.length
-                  ? q.corretaIndex
-                  : 0,
-              resp: null
-            };
-          });
+      const start = raw.indexOf("[");
+      const end = raw.lastIndexOf("]");
+      if (start === -1 || end === -1) {
+        throw new Error("IA não retornou JSON válido");
       }
-      
+
+      return JSON.parse(raw.slice(start, end + 1));
+    }
+
+    function limparQuestoes(lista) {
+      return (lista || []).map((q, idx) => ({
+        indice: idx + 1,
+        enunciado: q.enunciado,
+        alternativas: q.alternativas.slice(0, 4),
+        corretaIndex:
+          Number.isInteger(q.corretaIndex) ? q.corretaIndex : 0,
+        resp: null
+      }));
+    }
+
     // -------------------------------------------------
-    // INICIAR
+    // INICIAR SIMULADO
     // -------------------------------------------------
     els.iniciar.onclick = async () => {
       const access = getSimuladoAccess();
@@ -223,40 +172,32 @@
       };
 
       fecharModal();
-
       window.lioraLoading?.show("Gerando simulado...");
 
-     try {
-  const raw = await gerarQuestoes(STATE.config);
+      try {
+        const raw = await gerarQuestoes(STATE.config);
+        const limpas = limparQuestoes(raw);
 
-  console.log("🧪 RAW QUESTÕES (IA):", raw);
+        if (!limpas.length) throw new Error("Lista vazia");
 
-  const limpas = limparQuestoes(raw);
-  console.log("🧪 QUESTÕES LIMPAS:", limpas);
+        STATE.questoes = limpas;
+        STATE.atual = 0;
 
-  if (!limpas || !limpas.length) {
-    throw new Error("IA retornou lista vazia ou inválida");
-  }
+        if (access.mode === "free") {
+          localStorage.setItem("liora:free-simulado-usado", "1");
+        }
 
-  STATE.questoes = limpas;
-  STATE.atual = 0;
+        window.lioraLoading?.hide();
+        renderQuestao();
+        startTimer();
 
-  if (access.mode === "free") {
-    localStorage.setItem("liora:free-simulado-usado", "1");
-  }
-
-  window.lioraLoading?.hide();
-  renderQuestao();
-  startTimer();
-
-} catch (e) {
-  console.error("❌ ERRO AO GERAR SIMULADO:", e);
-  window.lioraLoading?.hide();
-  window.lioraError?.show(
-    "Não foi possível gerar o simulado agora. Tente novamente em instantes."
-  );
-}
-
+      } catch (e) {
+        console.error("❌ ERRO AO GERAR SIMULADO:", e);
+        window.lioraLoading?.hide();
+        window.lioraError?.show(
+          "Não foi possível gerar o simulado agora. Tente novamente."
+        );
+      }
     };
 
     // -------------------------------------------------
@@ -270,12 +211,17 @@
         <div class="sim-questao-card">
           <p>${q.enunciado}</p>
           ${q.alternativas.map((a, i) => `
-            <div class="sim-alt" onclick="this.classList.toggle('selected')">
-              ${a}
-            </div>
+            <div class="sim-alt" data-i="${i}">${a}</div>
           `).join("")}
         </div>
       `;
+
+      els.container.querySelectorAll(".sim-alt").forEach(el => {
+        el.onclick = () => {
+          q.resp = Number(el.dataset.i);
+          el.classList.add("selected");
+        };
+      });
 
       els.nav.classList.remove("hidden");
       els.btnProx.textContent =
@@ -325,6 +271,6 @@
       els.resultado.classList.remove("hidden");
     }
 
-    console.log("🟢 Simulados v100 pronto");
+    console.log("🟢 Simulados v101 pronto");
   });
 })();
