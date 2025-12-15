@@ -56,7 +56,8 @@
 
       fabHome?.classList.add("hidden");
       simFab?.classList.add("hidden");
-      simModalBackdrop?.classList.add("hidden");
+      // ❌ NÃO mexer no modal de simulado aqui
+      // simModalBackdrop?.classList.add("hidden");
     }
 
     function hideAllAppSections() {
