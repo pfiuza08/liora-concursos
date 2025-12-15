@@ -140,23 +140,37 @@ Formato JSON puro.
 
       window.lioraLoading?.show("Gerando simulado...");
 
-      try {
-        const raw = await gerarQuestoes(STATE.config);
-        STATE.questoes = raw;
-        STATE.atual = 0;
+     try {
+  const raw = await gerarQuestoes(STATE.config);
 
-        if (access.mode === "free") {
-          localStorage.setItem("liora:free-simulado-usado", "1");
-        }
+  console.log("🧪 RAW QUESTÕES (IA):", raw);
 
-        window.lioraLoading?.hide();
-        renderQuestao();
-        startTimer();
+  const limpas = limparQuestoes(raw);
+  console.log("🧪 QUESTÕES LIMPAS:", limpas);
 
-      } catch (e) {
-        window.lioraLoading?.hide();
-        window.lioraError?.show("Erro ao gerar simulado.");
-      }
+  if (!limpas || !limpas.length) {
+    throw new Error("IA retornou lista vazia ou inválida");
+  }
+
+  STATE.questoes = limpas;
+  STATE.atual = 0;
+
+  if (access.mode === "free") {
+    localStorage.setItem("liora:free-simulado-usado", "1");
+  }
+
+  window.lioraLoading?.hide();
+  renderQuestao();
+  startTimer();
+
+} catch (e) {
+  console.error("❌ ERRO AO GERAR SIMULADO:", e);
+  window.lioraLoading?.hide();
+  window.lioraError?.show(
+    "Não foi possível gerar o simulado agora. Tente novamente em instantes."
+  );
+}
+
     };
 
     // -------------------------------------------------
