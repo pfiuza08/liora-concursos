@@ -1,8 +1,8 @@
 // =============================================================
-// 🧠 LIORA — SIMULADOS v103.1-FREEMIUM-STABLE
+// 🧠 LIORA — SIMULADOS v103.2-FINAL-STABLE
 // =============================================================
 (function () {
-  console.log("🟢 Liora Simulados v103.1 carregado");
+  console.log("🟢 Liora Simulados v103.2 carregado");
 
   // -----------------------------
   // STATE GLOBAL
@@ -22,7 +22,6 @@
 
   function getEls() {
     return {
-      fab: qs("sim-fab"),
       modal: qs("sim-modal-backdrop"),
       close: qs("sim-modal-close-btn"),
       iniciar: qs("sim-modal-iniciar"),
@@ -63,10 +62,21 @@
   // MODAL
   // -----------------------------
   function abrirModal() {
-    const { modal } = getEls();
+    const { modal, qtd } = getEls();
     if (!modal) return;
+
     modal.classList.remove("hidden");
     modal.classList.add("visible");
+
+    const access = getSimuladoAccess();
+    if (access.mode === "free" && qtd) {
+      qtd.value = 3;
+      qtd.disabled = true;
+    } else if (qtd) {
+      qtd.disabled = false;
+    }
+
+    console.log("🟢 Modal de simulado aberto");
   }
 
   function fecharModal() {
@@ -111,49 +121,19 @@ Retorne APENAS JSON válido no formato:
 
     const start = raw.indexOf("[");
     const end = raw.lastIndexOf("]");
-    if (start === -1 || end === -1) {
-      throw new Error("IA não retornou JSON válido");
-    }
+    if (start === -1 || end === -1) throw new Error("IA inválida");
 
-    const parsed = JSON.parse(raw.slice(start, end + 1));
-    if (!Array.isArray(parsed) || !parsed.length) {
-      throw new Error("Lista de questões vazia");
-    }
-
-    return parsed;
+    return JSON.parse(raw.slice(start, end + 1));
   }
 
   function limparQuestoes(lista) {
-    return (lista || [])
-      .filter(q => q && q.enunciado && Array.isArray(q.alternativas))
-      .map((q, idx) => ({
-        indice: idx + 1,
-        enunciado: String(q.enunciado).trim(),
-        alternativas: q.alternativas.slice(0, 4).map(a => String(a)),
-        corretaIndex:
-          Number.isInteger(q.corretaIndex) &&
-          q.corretaIndex >= 0 &&
-          q.corretaIndex < q.alternativas.length
-            ? q.corretaIndex
-            : 0,
-        resp: null
-      }));
-  }
-
-  // -----------------------------
-  // TIMER
-  // -----------------------------
-  function startTimer() {
-    const { timer } = getEls();
-    clearInterval(STATE.timerID);
-
-    STATE.tempoRestante = (STATE.config.tempo || 30) * 60;
-    timer?.classList.remove("hidden");
-
-    STATE.timerID = setInterval(() => {
-      STATE.tempoRestante--;
-      if (STATE.tempoRestante <= 0) finalizar();
-    }, 1000);
+    return lista.map((q, idx) => ({
+      indice: idx + 1,
+      enunciado: q.enunciado,
+      alternativas: q.alternativas.slice(0, 4),
+      corretaIndex: Number.isInteger(q.corretaIndex) ? q.corretaIndex : 0,
+      resp: null
+    }));
   }
 
   // -----------------------------
@@ -162,24 +142,14 @@ Retorne APENAS JSON válido no formato:
   function renderQuestao() {
     const els = getEls();
     const q = STATE.questoes[STATE.atual];
-    if (!q || !els.container) return;
-
-    els.resultado?.classList.add("hidden");
-    els.nav?.classList.remove("hidden");
-
-    if (els.progress) {
-      els.progress.style.width =
-        ((STATE.atual + 1) / STATE.questoes.length) * 100 + "%";
-    }
+    if (!q) return;
 
     els.container.innerHTML = `
       <div class="sim-questao-card">
         <p>${q.enunciado}</p>
         ${q.alternativas.map(
           (a, i) =>
-            `<button class="sim-alt ${q.resp === i ? "selected" : ""}" data-i="${i}">
-              ${a}
-            </button>`
+            `<button class="sim-alt ${q.resp === i ? "selected" : ""}" data-i="${i}">${a}</button>`
         ).join("")}
       </div>
     `;
@@ -191,9 +161,9 @@ Retorne APENAS JSON válido no formato:
       };
     });
 
+    els.nav.classList.remove("hidden");
     els.btnProx.textContent =
       STATE.atual === STATE.questoes.length - 1 ? "Finalizar ▶" : "Próxima ▶";
-    els.btnVoltar.disabled = STATE.atual === 0;
   }
 
   function finalizar() {
@@ -203,19 +173,14 @@ Retorne APENAS JSON válido no formato:
     els.container.innerHTML = "";
     els.nav.classList.add("hidden");
 
-    const plan = window.lioraUserPlan || "free";
-
     els.resultado.innerHTML = `
       <div class="sim-resultado-card">
         <h3>Simulado concluído</h3>
         <p>${STATE.questoes.length} questões respondidas</p>
         ${
-          plan !== "premium"
-            ? `<p class="text-brand">
-                Quer simulados ilimitados, análise inteligente e foco por banca?
-                Ative o <strong>Liora+</strong>.
-              </p>`
-            : `<p class="text-brand">✅ Liora+ ativo. Continue avançando.</p>`
+          window.lioraUserPlan !== "premium"
+            ? `<p class="text-brand">Ative o <strong>Liora+</strong> para simulados ilimitados.</p>`
+            : `<p class="text-brand">✅ Liora+ ativo</p>`
         }
       </div>
     `;
@@ -223,39 +188,35 @@ Retorne APENAS JSON válido no formato:
   }
 
   // =============================================================
-  // 🔘 EVENT DELEGATION ÚNICA (ANTI-BOTÃO-MORTO)
+  // 🔔 EVENTO GLOBAL CANÔNICO
+  // =============================================================
+  window.addEventListener("liora:abrir-simulado", () => {
+    console.log("🟢 Evento liora:abrir-simulado recebido");
+
+    const access = getSimuladoAccess();
+    if (!access.ok) {
+      if (access.reason === "login") {
+        window.dispatchEvent(new Event("liora:login-required"));
+      }
+      if (access.reason === "upgrade") {
+        window.dispatchEvent(new Event("liora:premium-bloqueado"));
+      }
+      return;
+    }
+
+    abrirModal();
+  });
+
+  // =============================================================
+  // EVENTOS INTERNOS
   // =============================================================
   document.addEventListener("click", async (e) => {
     const els = getEls();
 
-    // FAB
-    if (e.target.closest("#sim-fab")) {
-      const access = getSimuladoAccess();
-
-      if (!access.ok) {
-        if (access.reason === "login") window.dispatchEvent(new Event("liora:login-required"));
-        if (access.reason === "upgrade") window.dispatchEvent(new Event("liora:premium-bloqueado"));
-        return;
-      }
-
-      abrirModal();
-
-      if (access.mode === "free" && els.qtd) {
-        els.qtd.value = 3;
-        els.qtd.disabled = true;
-      } else if (els.qtd) {
-        els.qtd.disabled = false;
-      }
-      return;
-    }
-
-    // FECHAR MODAL
     if (e.target.closest("#sim-modal-close-btn") || e.target === els.modal) {
       fecharModal();
-      return;
     }
 
-    // INICIAR
     if (e.target.closest("#sim-modal-iniciar")) {
       const access = getSimuladoAccess();
       if (!access.ok) return;
@@ -273,11 +234,7 @@ Retorne APENAS JSON válido no formato:
 
       try {
         const raw = await gerarQuestoes(STATE.config);
-        const limpas = limparQuestoes(raw);
-
-        if (!limpas.length) throw new Error("Questões inválidas");
-
-        STATE.questoes = limpas;
+        STATE.questoes = limparQuestoes(raw);
         STATE.atual = 0;
 
         if (access.mode === "free") {
@@ -286,29 +243,19 @@ Retorne APENAS JSON válido no formato:
 
         window.lioraLoading?.hide();
         renderQuestao();
-        startTimer();
-      } catch (err) {
-        console.error(err);
+      } catch {
         window.lioraLoading?.hide();
         window.lioraError?.show("Erro ao gerar simulado.");
       }
     }
 
-    // NAVEGAÇÃO
     if (e.target.closest("#sim-btn-proxima")) {
-      if (STATE.atual < STATE.questoes.length - 1) {
-        STATE.atual++;
-        renderQuestao();
-      } else {
-        finalizar();
-      }
+      STATE.atual < STATE.questoes.length - 1 ? (STATE.atual++, renderQuestao()) : finalizar();
     }
 
-    if (e.target.closest("#sim-btn-voltar")) {
-      if (STATE.atual > 0) {
-        STATE.atual--;
-        renderQuestao();
-      }
+    if (e.target.closest("#sim-btn-voltar") && STATE.atual > 0) {
+      STATE.atual--;
+      renderQuestao();
     }
   });
 
