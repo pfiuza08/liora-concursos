@@ -1,8 +1,8 @@
 // =============================================================
-// 🧠 LIORA — SIMULADOS v103.2-FINAL-STABLE
+// 🧠 LIORA — SIMULADOS v103.3-FINAL-STABLE
 // =============================================================
 (function () {
-  console.log("🟢 Liora Simulados v103.2 carregado");
+  console.log("🟢 Liora Simulados v103.3 carregado");
 
   // -----------------------------
   // STATE GLOBAL
@@ -12,7 +12,8 @@
     atual: 0,
     timerID: null,
     tempoRestante: 0,
-    config: {}
+    config: {},
+    modalOpen: false
   };
 
   // -----------------------------
@@ -61,26 +62,33 @@
   // -----------------------------
   // MODAL
   // -----------------------------
-   function abrirModal() {
-    const { modal } = getEls();
-    if (!modal) return;
-  
-    modal.classList.remove("hidden");
-    modal.classList.add("visible");
-  
-    modal.style.display = "flex";      // 🔒 força visibilidade
-    modal.style.zIndex = "9999";       // 🔒 acima de tudo
-  
-    console.log("🟢 Modal de simulado FORÇADO a abrir");
-  }
-  
-  
-    function fecharModal() {
-      const { modal } = getEls();
-      if (!modal) return;
-      modal.classList.remove("visible");
-      modal.classList.add("hidden");
+  function abrirModal(access) {
+    const els = getEls();
+    if (!els.modal || STATE.modalOpen) return;
+
+    STATE.modalOpen = true;
+
+    els.modal.classList.remove("hidden");
+    els.modal.classList.add("visible");
+
+    // prepara campos conforme plano
+    if (access.mode === "free" && els.qtd) {
+      els.qtd.value = 3;
+      els.qtd.disabled = true;
+    } else if (els.qtd) {
+      els.qtd.disabled = false;
     }
+  }
+
+  function fecharModal() {
+    const els = getEls();
+    if (!els.modal) return;
+
+    els.modal.classList.remove("visible");
+    els.modal.classList.add("hidden");
+
+    STATE.modalOpen = false;
+  }
 
   // -----------------------------
   // IA
@@ -119,13 +127,16 @@ Retorne APENAS JSON válido no formato:
     const end = raw.lastIndexOf("]");
     if (start === -1 || end === -1) throw new Error("IA inválida");
 
-    return JSON.parse(raw.slice(start, end + 1));
+    const parsed = JSON.parse(raw.slice(start, end + 1));
+    if (!Array.isArray(parsed) || !parsed.length) throw new Error("Lista vazia");
+
+    return parsed;
   }
 
   function limparQuestoes(lista) {
     return lista.map((q, idx) => ({
       indice: idx + 1,
-      enunciado: q.enunciado,
+      enunciado: String(q.enunciado),
       alternativas: q.alternativas.slice(0, 4),
       corretaIndex: Number.isInteger(q.corretaIndex) ? q.corretaIndex : 0,
       resp: null
@@ -140,12 +151,17 @@ Retorne APENAS JSON válido no formato:
     const q = STATE.questoes[STATE.atual];
     if (!q) return;
 
+    els.resultado?.classList.add("hidden");
+    els.nav?.classList.remove("hidden");
+
     els.container.innerHTML = `
       <div class="sim-questao-card">
         <p>${q.enunciado}</p>
         ${q.alternativas.map(
           (a, i) =>
-            `<button class="sim-alt ${q.resp === i ? "selected" : ""}" data-i="${i}">${a}</button>`
+            `<button class="sim-alt ${q.resp === i ? "selected" : ""}" data-i="${i}">
+              ${a}
+            </button>`
         ).join("")}
       </div>
     `;
@@ -157,9 +173,9 @@ Retorne APENAS JSON válido no formato:
       };
     });
 
-    els.nav.classList.remove("hidden");
     els.btnProx.textContent =
       STATE.atual === STATE.questoes.length - 1 ? "Finalizar ▶" : "Próxima ▶";
+    els.btnVoltar.disabled = STATE.atual === 0;
   }
 
   function finalizar() {
@@ -191,16 +207,12 @@ Retorne APENAS JSON válido no formato:
 
     const access = getSimuladoAccess();
     if (!access.ok) {
-      if (access.reason === "login") {
-        window.dispatchEvent(new Event("liora:login-required"));
-      }
-      if (access.reason === "upgrade") {
-        window.dispatchEvent(new Event("liora:premium-bloqueado"));
-      }
+      if (access.reason === "login") window.dispatchEvent(new Event("liora:login-required"));
+      if (access.reason === "upgrade") window.dispatchEvent(new Event("liora:premium-bloqueado"));
       return;
     }
 
-    abrirModal();
+    abrirModal(access);
   });
 
   // =============================================================
@@ -211,6 +223,7 @@ Retorne APENAS JSON válido no formato:
 
     if (e.target.closest("#sim-modal-close-btn") || e.target === els.modal) {
       fecharModal();
+      return;
     }
 
     if (e.target.closest("#sim-modal-iniciar")) {
