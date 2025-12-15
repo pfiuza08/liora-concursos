@@ -9,7 +9,7 @@
   console.log("🔵 Liora Premium v7 carregado...");
 
   document.addEventListener("DOMContentLoaded", () => {
-    const backdrop = document.getElementById("liora-premium-backdrop");
+    const backdrop = document.getElementById("liora-premium-modal");
     const closeBtn = document.getElementById("liora-premium-close");
 
     if (!backdrop) {
