@@ -1,47 +1,84 @@
 // =============================================================
-// 🧠 LIORA — SIMULADOS v102-ANTI-BOTAO-MORTO (DEBUG)
+// 🧠 LIORA — SIMULADOS v103-FREEMIUM-STABLE
 // =============================================================
 (function () {
-  console.log("🟣 Liora Simulados v102 carregado");
+  console.log("🟢 Liora Simulados v103 carregado");
 
-  const DBG = true;
-  const dlog = (...a) => DBG && console.log("🐞[SimuladosDBG]", ...a);
+  // -----------------------------
+  // STATE GLOBAL
+  // -----------------------------
+  const STATE = {
+    questoes: [],
+    atual: 0,
+    timerID: null,
+    tempoRestante: 0,
+    config: {}
+  };
 
-  function qs(id) { return document.getElementById(id); }
+  // -----------------------------
+  // HELPERS
+  // -----------------------------
+  const qs = (id) => document.getElementById(id);
 
+  function getEls() {
+    return {
+      fab: qs("sim-fab"),
+      modal: qs("sim-modal-backdrop"),
+      close: qs("sim-modal-close-btn"),
+      iniciar: qs("sim-modal-iniciar"),
+
+      banca: qs("sim-modal-banca"),
+      qtd: qs("sim-modal-qtd"),
+      tempo: qs("sim-modal-tempo"),
+      dif: qs("sim-modal-dificuldade"),
+      tema: qs("sim-modal-tema"),
+
+      container: qs("sim-questao-container"),
+      nav: qs("sim-nav"),
+      btnProx: qs("sim-btn-proxima"),
+      btnVoltar: qs("sim-btn-voltar"),
+      resultado: qs("sim-resultado"),
+      timer: qs("sim-timer"),
+      progress: qs("sim-progress-bar")
+    };
+  }
+
+  // -----------------------------
+  // ACESSO (LOGIN + PLANO)
+  // -----------------------------
   function getSimuladoAccess() {
     const user = window.lioraAuth?.user || null;
     const plan = window.lioraUserPlan || "free";
+
     if (!user) return { ok: false, reason: "login" };
     if (plan === "premium") return { ok: true, mode: "premium" };
 
     const used = localStorage.getItem("liora:free-simulado-usado");
     if (used) return { ok: false, reason: "upgrade" };
+
     return { ok: true, mode: "free", maxQuestoes: 3 };
   }
 
-  const STATE = {
-    questoes: [],
-    atual: 0,
-    tempoRestante: 0,
-    timerID: null,
-    config: {}
-  };
-
-  function abrirModal(els) {
-    if (!els.modal) return;
-    els.modal.classList.remove("hidden");
-    els.modal.classList.add("visible");
-    dlog("Modal aberto.");
+  // -----------------------------
+  // MODAL
+  // -----------------------------
+  function abrirModal() {
+    const { modal } = getEls();
+    if (!modal) return;
+    modal.classList.remove("hidden");
+    modal.classList.add("visible");
   }
 
-  function fecharModal(els) {
-    if (!els.modal) return;
-    els.modal.classList.remove("visible");
-    els.modal.classList.add("hidden");
-    dlog("Modal fechado.");
+  function fecharModal() {
+    const { modal } = getEls();
+    if (!modal) return;
+    modal.classList.remove("visible");
+    modal.classList.add("hidden");
   }
 
+  // -----------------------------
+  // IA
+  // -----------------------------
   async function gerarQuestoes(config) {
     const res = await fetch("/api/liora", {
       method: "POST",
@@ -71,227 +108,167 @@ Retorne APENAS JSON válido no formato:
     if (typeof raw === "string") {
       raw = raw.replace(/```json/gi, "").replace(/```/g, "").trim();
     }
+
     const start = raw.indexOf("[");
     const end = raw.lastIndexOf("]");
-    if (start === -1 || end === -1) throw new Error("IA não retornou JSON válido");
+    if (start === -1 || end === -1) {
+      throw new Error("IA não retornou JSON válido");
+    }
 
     return JSON.parse(raw.slice(start, end + 1));
   }
 
   function limparQuestoes(lista) {
-    return (lista || [])
-      .filter(q => q && q.enunciado && Array.isArray(q.alternativas))
-      .map((q, idx) => ({
-        indice: idx + 1,
-        enunciado: String(q.enunciado),
-        alternativas: (q.alternativas || []).slice(0, 4).map(a => String(a)),
-        corretaIndex: Number.isInteger(q.corretaIndex) ? q.corretaIndex : 0,
-        resp: null
-      }));
+    return (lista || []).map((q, idx) => ({
+      indice: idx + 1,
+      enunciado: String(q.enunciado),
+      alternativas: q.alternativas.slice(0, 4),
+      corretaIndex: Number.isInteger(q.corretaIndex) ? q.corretaIndex : 0,
+      resp: null
+    }));
   }
 
-  function renderQuestao(els) {
+  // -----------------------------
+  // RENDER
+  // -----------------------------
+  function renderQuestao() {
+    const els = getEls();
     const q = STATE.questoes[STATE.atual];
     if (!q || !els.container) return;
-
-    els.resultado?.classList.add("hidden");
-    els.nav?.classList.remove("hidden");
-
-    if (els.progress) {
-      els.progress.style.width = ((STATE.atual + 1) / STATE.questoes.length) * 100 + "%";
-    }
 
     els.container.innerHTML = `
       <div class="sim-questao-card">
         <p>${q.enunciado}</p>
-        ${q.alternativas.map((a, i) => `
-          <button type="button" class="sim-alt ${q.resp===i ? "selected" : ""}" data-i="${i}">
-            ${a}
-          </button>
-        `).join("")}
+        ${q.alternativas.map(
+          (a, i) =>
+            `<button class="sim-alt ${q.resp === i ? "selected" : ""}" data-i="${i}">${a}</button>`
+        ).join("")}
       </div>
     `;
 
     els.container.querySelectorAll(".sim-alt").forEach(btn => {
-      btn.addEventListener("click", () => {
+      btn.onclick = () => {
         q.resp = Number(btn.dataset.i);
-        renderQuestao(els);
-      });
+        renderQuestao();
+      };
     });
 
-    if (els.btnProx) {
-      els.btnProx.textContent =
-        STATE.atual === STATE.questoes.length - 1 ? "Finalizar ▶" : "Próxima ▶";
-    }
-    if (els.btnVoltar) els.btnVoltar.disabled = STATE.atual === 0;
+    els.nav?.classList.remove("hidden");
+    els.btnProx.textContent =
+      STATE.atual === STATE.questoes.length - 1 ? "Finalizar ▶" : "Próxima ▶";
   }
 
-  function startTimer(els) {
+  function finalizar() {
+    const els = getEls();
     clearInterval(STATE.timerID);
-    STATE.tempoRestante = (STATE.config.tempo || 30) * 60;
 
-    if (els.timer) els.timer.classList.remove("hidden");
-
-    STATE.timerID = setInterval(() => {
-      STATE.tempoRestante--;
-      if (STATE.tempoRestante <= 0) finalizar(els);
-    }, 1000);
-  }
-
-  function finalizar(els) {
-    clearInterval(STATE.timerID);
-    STATE.timerID = null;
-
-    els.container && (els.container.innerHTML = "");
-    els.nav?.classList.add("hidden");
+    els.container.innerHTML = "";
+    els.nav.classList.add("hidden");
 
     const plan = window.lioraUserPlan || "free";
-    els.resultado && (els.resultado.innerHTML = `
+
+    els.resultado.innerHTML = `
       <div class="sim-resultado-card">
         <h3>Simulado concluído</h3>
         <p>${STATE.questoes.length} questões respondidas</p>
         ${
           plan !== "premium"
-            ? `<p class="text-brand">Você desbloqueia simulados ilimitados, análise de erros e questões por banca com o Liora+.</p>`
-            : `<p class="text-brand">✅ Liora+ ativo. Quer repetir com outro tema?</p>`
+            ? `<p class="text-brand">Desbloqueie simulados ilimitados, análise inteligente e questões por banca com o Liora+.</p>`
+            : `<p class="text-brand">✅ Liora+ ativo. Continue evoluindo.</p>`
         }
       </div>
-    `);
-    els.resultado?.classList.remove("hidden");
+    `;
+    els.resultado.classList.remove("hidden");
   }
 
-  // -------------------------------------------------
-  // INIT + BIND BLINDADO
-  // -------------------------------------------------
-  function init() {
-    const els = {
-      fab: qs("sim-fab"),
-      modal: qs("sim-modal-backdrop"),
-      close: qs("sim-modal-close-btn"),
-      iniciar: qs("sim-modal-iniciar"),
+  // =============================================================
+  // 🔘 EVENT DELEGATION ÚNICA (ANTI-BOTÃO-MORTO)
+  // =============================================================
+  document.addEventListener("click", async (e) => {
+    const els = getEls();
 
-      banca: qs("sim-modal-banca"),
-      qtd: qs("sim-modal-qtd"),
-      tempo: qs("sim-modal-tempo"),
-      dif: qs("sim-modal-dificuldade"),
-      tema: qs("sim-modal-tema"),
+    // FAB
+    if (e.target.closest("#sim-fab")) {
+      const access = getSimuladoAccess();
 
-      container: qs("sim-questao-container"),
-      nav: qs("sim-nav"),
-      btnProx: qs("sim-btn-proxima"),
-      btnVoltar: qs("sim-btn-voltar"),
-      resultado: qs("sim-resultado"),
-      timer: qs("sim-timer"),
-      progress: qs("sim-progress-bar")
-    };
+      if (!access.ok) {
+        if (access.reason === "login") window.dispatchEvent(new Event("liora:login-required"));
+        if (access.reason === "upgrade") window.dispatchEvent(new Event("liora:premium-bloqueado"));
+        return;
+      }
 
-    dlog("Els:", {
-      fab: !!els.fab, modal: !!els.modal, iniciar: !!els.iniciar,
-      close: !!els.close, container: !!els.container
-    });
+      abrirModal();
 
-    if (!els.fab || !els.modal || !els.iniciar) {
-      console.error("❌ Simulados v102: IDs não encontrados. Verifique HTML:", {
-        "sim-fab": !!els.fab,
-        "sim-modal-backdrop": !!els.modal,
-        "sim-modal-iniciar": !!els.iniciar
-      });
+      if (access.mode === "free" && els.qtd) {
+        els.qtd.value = 3;
+        els.qtd.disabled = true;
+      } else if (els.qtd) {
+        els.qtd.disabled = false;
+      }
       return;
     }
 
-    // FAB
-    els.fab.addEventListener("click", (e) => {
-      dlog("Clique no FAB recebido.");
+    // FECHAR MODAL
+    if (
+      e.target.closest("#sim-modal-close-btn") ||
+      e.target === els.modal
+    ) {
+      fecharModal();
+      return;
+    }
+
+    // INICIAR
+    if (e.target.closest("#sim-modal-iniciar")) {
       const access = getSimuladoAccess();
-      if (!access.ok) {
-        if (access.reason === "login") window.dispatchEvent(new Event("liora:login-required"));
-        if (access.reason === "upgrade") window.dispatchEvent(new Event("liora:premium-bloqueado"));
-        return;
-      }
-      abrirModal(els);
-
-      if (access.mode === "free") {
-        if (els.qtd) { els.qtd.value = 3; els.qtd.disabled = true; }
-      } else {
-        if (els.qtd) els.qtd.disabled = false;
-      }
-    }, true);
-
-    // Close
-    els.close && els.close.addEventListener("click", () => fecharModal(els), true);
-    els.modal.addEventListener("click", (ev) => {
-      if (ev.target === els.modal) fecharModal(els);
-    }, true);
-
-    // Iniciar (captura + prevenção de submit)
-    els.iniciar.addEventListener("click", async (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-
-      dlog("✅ Clique no INICIAR chegou!");
-
-      const access = getSimuladoAccess();
-      if (!access.ok) {
-        dlog("Acesso negado:", access.reason);
-        if (access.reason === "login") window.dispatchEvent(new Event("liora:login-required"));
-        if (access.reason === "upgrade") window.dispatchEvent(new Event("liora:premium-bloqueado"));
-        return;
-      }
+      if (!access.ok) return;
 
       STATE.config = {
-        banca: els.banca?.value || "FGV",
-        qtd: access.mode === "free" ? 3 : Number(els.qtd?.value || 10),
-        dificuldade: els.dif?.value || "misturado",
-        tema: (els.tema?.value || "").trim(),
-        tempo: Number(els.tempo?.value || 30)
+        banca: els.banca.value,
+        qtd: access.mode === "free" ? 3 : Number(els.qtd.value),
+        dificuldade: els.dif.value,
+        tema: els.tema.value,
+        tempo: Number(els.tempo.value)
       };
 
-      fecharModal(els);
+      fecharModal();
       window.lioraLoading?.show("Gerando simulado...");
 
       try {
         const raw = await gerarQuestoes(STATE.config);
         const limpas = limparQuestoes(raw);
-        if (!limpas.length) throw new Error("Lista vazia");
 
         STATE.questoes = limpas;
         STATE.atual = 0;
 
-        if (access.mode === "free") localStorage.setItem("liora:free-simulado-usado", "1");
+        if (access.mode === "free") {
+          localStorage.setItem("liora:free-simulado-usado", "1");
+        }
 
         window.lioraLoading?.hide();
-        renderQuestao(els);
-        startTimer(els);
+        renderQuestao();
       } catch (err) {
-        console.error("❌ ERRO AO GERAR SIMULADO:", err);
+        console.error(err);
         window.lioraLoading?.hide();
         window.lioraError?.show("Erro ao gerar simulado.");
       }
-    }, true);
+    }
 
-    // Navegação
-    els.btnVoltar && els.btnVoltar.addEventListener("click", () => {
-      if (STATE.atual > 0) {
-        STATE.atual--;
-        renderQuestao(els);
-      }
-    });
-
-    els.btnProx && els.btnProx.addEventListener("click", () => {
+    // NAVEGAÇÃO
+    if (e.target.closest("#sim-btn-proxima")) {
       if (STATE.atual < STATE.questoes.length - 1) {
         STATE.atual++;
-        renderQuestao(els);
+        renderQuestao();
       } else {
-        finalizar(els);
+        finalizar();
       }
-    });
+    }
 
-    dlog("🟢 Simulados v102 pronto.");
-  }
-
-  // Init agora e também depois (caso scripts carreguem fora de ordem)
-  document.addEventListener("DOMContentLoaded", init);
-  setTimeout(init, 400);
-  setTimeout(init, 1200);
+    if (e.target.closest("#sim-btn-voltar")) {
+      if (STATE.atual > 0) {
+        STATE.atual--;
+        renderQuestao();
+      }
+    }
+  });
 
 })();
