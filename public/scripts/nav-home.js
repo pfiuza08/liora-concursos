@@ -281,11 +281,11 @@
     });
 
     // ------------------------------------------------------
-    // FAB SIMULADO
+    // FAB SIMULADO (delegado ao Simulados.js)
     // ------------------------------------------------------
     simFab?.addEventListener("click", () => {
-      console.log("⚙ Abrindo modal do simulado");
-      simModalBackdrop.classList.add("visible");
+      console.log("⚙ Solicitação para abrir Simulado (evento)");
+      window.dispatchEvent(new Event("liora:abrir-simulado"));
     });
 
     // ------------------------------------------------------
