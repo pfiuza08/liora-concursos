@@ -200,28 +200,48 @@ Retorne APENAS JSON válido no formato:
   }
 
   // =============================================================
-  // 🔔 EVENTO GLOBAL CANÔNICO — ABRIR SIMULADO
+  // 🔔 EVENTO GLOBAL — ABRIR SIMULADO (UX CORRETO)
   // =============================================================
   window.addEventListener("liora:abrir-simulado", () => {
     console.log("🟢 Evento liora:abrir-simulado recebido");
   
     const access = getSimuladoAccess();
   
-    // -----------------------------------------
-    // 🔐 NÃO LOGADO
-    // -----------------------------------------
+    // 1️⃣ NÃO LOGADO → LOGIN
     if (!access.ok && access.reason === "login") {
-      window.lioraError?.show(
-        "Para configurar e gerar simulados, você precisa estar logado na Liora."
-      );
-  
-      // abre modal de login (se existir)
-      setTimeout(() => {
-        window.dispatchEvent(new Event("liora:open-login"));
-      }, 300);
-  
+      window.lioraError?.show({
+        title: "Login necessário",
+        message: "Para configurar e gerar simulados, você precisa estar logado na Liora.",
+        primaryText: "Entrar / Criar conta",
+        primaryAction: () => {
+          window.lioraAuthUI?.open();
+        },
+        secondaryText: "Voltar",
+        secondaryAction: () => {}
+      });
       return;
     }
+  
+    // 2️⃣ LOGADO + FREE → UPGRADE
+    if (!access.ok && access.reason === "upgrade") {
+      window.lioraError?.show({
+        title: "Simulados completos",
+        message:
+          "Seu plano gratuito permite apenas simulados básicos. Para configurar banca, tempo e dificuldade, ative o Liora+.",
+        primaryText: "Ativar Liora+",
+        primaryAction: () => {
+          window.lioraPremium?.openUpgradeModal("simulados");
+        },
+        secondaryText: "Agora não",
+        secondaryAction: () => {}
+      });
+      return;
+    }
+  
+    // 3️⃣ PREMIUM → ABRE MODAL 🔥
+    abrirModal();
+  });
+
   
     // -----------------------------------------
     // 🆓 LOGADO — PLANO FREE
