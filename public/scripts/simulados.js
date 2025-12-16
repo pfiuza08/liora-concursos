@@ -200,20 +200,50 @@ Retorne APENAS JSON válido no formato:
   }
 
   // =============================================================
-  // 🔔 EVENTO GLOBAL CANÔNICO
+  // 🔔 EVENTO GLOBAL CANÔNICO — ABRIR SIMULADO
   // =============================================================
   window.addEventListener("liora:abrir-simulado", () => {
     console.log("🟢 Evento liora:abrir-simulado recebido");
-
+  
     const access = getSimuladoAccess();
-    if (!access.ok) {
-      if (access.reason === "login") window.dispatchEvent(new Event("liora:login-required"));
-      if (access.reason === "upgrade") window.dispatchEvent(new Event("liora:premium-bloqueado"));
+  
+    // -----------------------------------------
+    // 🔐 NÃO LOGADO
+    // -----------------------------------------
+    if (!access.ok && access.reason === "login") {
+      window.lioraError?.show(
+        "Para configurar e gerar simulados, você precisa estar logado na Liora."
+      );
+  
+      // abre modal de login (se existir)
+      setTimeout(() => {
+        window.dispatchEvent(new Event("liora:open-login"));
+      }, 300);
+  
       return;
     }
-
+  
+    // -----------------------------------------
+    // 🆓 LOGADO — PLANO FREE
+    // -----------------------------------------
+    if (!access.ok && access.reason === "upgrade") {
+      window.lioraError?.show(
+        "Simulados completos estão disponíveis apenas no plano Liora+."
+      );
+  
+      setTimeout(() => {
+        window.lioraPremium?.openUpgradeModal?.("simulados");
+      }, 400);
+  
+      return;
+    }
+  
+    // -----------------------------------------
+    // ⭐ PREMIUM — ABRE CONFIGURAÇÃO
+    // -----------------------------------------
     abrirModal(access);
   });
+
 
   // =============================================================
   // EVENTOS INTERNOS
