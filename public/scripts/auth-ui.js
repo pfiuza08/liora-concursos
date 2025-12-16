@@ -201,7 +201,9 @@ window.addEventListener("liora:auth-changed", () => {
       els.userInfo.classList.toggle("hidden", !logged);
       els.btnLogout?.classList.toggle("hidden", !logged);
     }
-
+    // 🌍 Expor atualização global
+     window.lioraAuthUIUpdate = updateAuthUI;
+ 
     // -------------------------------------------------------
     // ANTI-LOOP PLANO
     // -------------------------------------------------------
