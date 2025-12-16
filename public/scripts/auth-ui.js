@@ -5,6 +5,17 @@
 // - Modal funcional
 // - Compatível com auth.js v2+
 // ==========================================================
+// 🔔 Listener GLOBAL — nunca perde evento
+window.addEventListener("liora:auth-changed", () => {
+  const user = window.lioraAuth?.user || null;
+  console.log("🐞[AuthUI FIX] auth-changed recebido:", user);
+
+  if (typeof window.lioraAuthUIUpdate === "function") {
+    window.lioraAuthUIUpdate(user);
+  } else {
+    console.warn("⚠️ AuthUIUpdate ainda não disponível");
+  }
+});
 
 (function () {
   console.log("🔐 Liora Auth UI v11 carregado...");
