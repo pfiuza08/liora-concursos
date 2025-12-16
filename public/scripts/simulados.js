@@ -1,27 +1,29 @@
 // =============================================================
-// 🧠 LIORA — SIMULADOS v103.4-FLOW-STABLE
-// - Fluxo de abertura CANÔNICO (sem depender de Firebase/IA/Premium)
-// - Não logado → mensagem + botão login
-// - Logado free/premium → abre config
+// 🧠 LIORA — SIMULADOS v103.5-FLOW-CANONICAL
+// - Fluxo limpo e previsível
+// - Login verificado centralmente
+// - Modal controlado por estado interno
+// - Pronto para FREE vs PREMIUM
 // =============================================================
 
 (function () {
-  console.log("🟢 Liora Simulados v103.4 carregado");
-   // -----------------------------
-  // STATE GLOBAL
-  // -----------------------------
+  console.log("🟢 Liora Simulados v103.5 carregado");
+
+  // -------------------------------------------------
+  // STATE LOCAL (isolado)
+  // -------------------------------------------------
   const STATE = {
     questoes: [],
     atual: 0,
     timerID: null,
     tempoRestante: 0,
-    config: {},
+    config: null,
     modalOpen: false
   };
 
-  // -----------------------------
+  // -------------------------------------------------
   // HELPERS
-  // -----------------------------
+  // -------------------------------------------------
   const qs = (id) => document.getElementById(id);
 
   function getEls() {
@@ -45,24 +47,27 @@
       progress: qs("sim-progress-bar")
     };
   }
+
+  // -------------------------------------------------
+  // 🔐 ACESSO (login / free / premium)
+  // -------------------------------------------------
   function getSimuladoAccess() {
     const user = window.lioraAuth?.user || null;
-  
+
     if (!user) {
       return { ok: false, reason: "login" };
     }
-  
-    // por enquanto, free e premium se comportam igual
+
+    // por enquanto: free == premium
     return {
       ok: true,
-      mode: "free", // ou "premium" no futuro
+      mode: "free" // futuro: "premium"
     };
   }
 
- 
-  // -----------------------------
+  // -------------------------------------------------
   // MODAL
-  // -----------------------------
+  // -------------------------------------------------
   function abrirModal(access) {
     const els = getEls();
     if (!els.modal || STATE.modalOpen) return;
@@ -72,7 +77,7 @@
     els.modal.classList.remove("hidden");
     els.modal.classList.add("visible");
 
-    // prepara campos conforme modo
+    // restrições FREE (provisórias)
     if (access.mode === "free" && els.qtd) {
       els.qtd.value = 3;
       els.qtd.disabled = true;
@@ -91,42 +96,31 @@
     STATE.modalOpen = false;
   }
 
-  function abrirBloqueioLogin() {
-    // simples e direto por enquanto (você pode trocar por modal depois)
-    alert("Faça login para configurar e iniciar um simulado.");
-
-    // aqui você pluga o seu fluxo real (ex.: abrir modal de login, ir para tela, etc.)
-    console.log("➡ Redirecionar para login (implementar aqui)");
-    // exemplo (se existir):
-    // window.lioraAuth?.openLogin?.();
-  }
-
-  // =============================================================
-  // 🔔 EVENTO GLOBAL CANÔNICO — ABERTURA DO SIMULADO
-  // =============================================================
-    window.addEventListener("liora:abrir-simulado", () => {
+  // -------------------------------------------------
+  // 🔔 EVENTO CANÔNICO — abrir simulado
+  // -------------------------------------------------
+  window.addEventListener("liora:abrir-simulado", () => {
     console.log("🟢 Evento liora:abrir-simulado recebido");
-  
-    const user = window.lioraAuth?.user;
-    if (!user) {
+
+    const access = getSimuladoAccess();
+
+    if (!access.ok) {
       alert("Faça login para iniciar um simulado.");
       return;
     }
-  
-    abrirModal({ mode: "free" });
+
+    abrirModal(access);
   });
 
-
-
-  // -----------------------------
-  // IA (mantido como está)
-  // -----------------------------
+  // -------------------------------------------------
+  // IA — geração das questões
+  // -------------------------------------------------
   async function gerarQuestoes(config) {
     const res = await fetch("/api/liora", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        system: "Você é Liora, criadora de simulados premium.",
+        system: "Você é Liora, criadora de simulados educacionais.",
         user: `
 Gere ${config.qtd} questões da banca ${config.banca}.
 Tema: ${config.tema || "geral"}.
@@ -153,12 +147,11 @@ Retorne APENAS JSON válido no formato:
 
     const start = raw.indexOf("[");
     const end = raw.lastIndexOf("]");
-    if (start === -1 || end === -1) throw new Error("IA inválida");
+    if (start === -1 || end === -1) {
+      throw new Error("Resposta inválida da IA");
+    }
 
-    const parsed = JSON.parse(raw.slice(start, end + 1));
-    if (!Array.isArray(parsed) || !parsed.length) throw new Error("Lista vazia");
-
-    return parsed;
+    return JSON.parse(raw.slice(start, end + 1));
   }
 
   function limparQuestoes(lista) {
@@ -171,9 +164,9 @@ Retorne APENAS JSON válido no formato:
     }));
   }
 
-  // -----------------------------
+  // -------------------------------------------------
   // RENDER
-  // -----------------------------
+  // -------------------------------------------------
   function renderQuestao() {
     const els = getEls();
     const q = STATE.questoes[STATE.atual];
@@ -204,7 +197,10 @@ Retorne APENAS JSON válido no formato:
     });
 
     els.btnProx.textContent =
-      STATE.atual === STATE.questoes.length - 1 ? "Finalizar ▶" : "Próxima ▶";
+      STATE.atual === STATE.questoes.length - 1
+        ? "Finalizar ▶"
+        : "Próxima ▶";
+
     els.btnVoltar.disabled = STATE.atual === 0;
   }
 
@@ -224,52 +220,52 @@ Retorne APENAS JSON válido no formato:
     els.resultado.classList.remove("hidden");
   }
 
-  // =============================================================
-  // EVENTOS INTERNOS
-  // =============================================================
+  // -------------------------------------------------
+  // EVENTOS DE UI
+  // -------------------------------------------------
   document.addEventListener("click", async (e) => {
     const els = getEls();
 
-    // fechar modal por botão ou clicando no backdrop
+    // fechar modal
     if (e.target.closest("#sim-modal-close-btn") || e.target === els.modal) {
       fecharModal();
       return;
     }
 
-   // iniciar simulado
-      if (e.target.closest("#sim-modal-iniciar")) {
-        const access = getSimuladoAccess();
-      
-        if (!access.ok) {
-          alert("Faça login para iniciar o simulado.");
-          return;
-        }
-      
-        STATE.config = {
-          banca: els.banca?.value,
-          qtd: access.mode === "free" ? 3 : Number(els.qtd?.value),
-          dificuldade: els.dif?.value,
-          tema: els.tema?.value,
-          tempo: Number(els.tempo?.value)
-        };
-      
-        fecharModal();
-        window.lioraLoading?.show("Gerando simulado...");
-      
-        try {
-          const raw = await gerarQuestoes(STATE.config);
-          STATE.questoes = limparQuestoes(raw);
-          STATE.atual = 0;
-      
-          window.lioraLoading?.hide();
-          renderQuestao();
-        } catch {
-          window.lioraLoading?.hide();
-          window.lioraError?.show("Erro ao gerar simulado.");
-        }
-      
-        return; // 🔒 encerra o handler aqui
+    // iniciar simulado
+    if (e.target.closest("#sim-modal-iniciar")) {
+      const access = getSimuladoAccess();
+
+      if (!access.ok) {
+        alert("Faça login para iniciar o simulado.");
+        return;
       }
+
+      STATE.config = {
+        banca: els.banca?.value,
+        qtd: access.mode === "free" ? 3 : Number(els.qtd?.value),
+        dificuldade: els.dif?.value,
+        tema: els.tema?.value,
+        tempo: Number(els.tempo?.value)
+      };
+
+      fecharModal();
+      window.lioraLoading?.show("Gerando simulado...");
+
+      try {
+        const raw = await gerarQuestoes(STATE.config);
+        STATE.questoes = limparQuestoes(raw);
+        STATE.atual = 0;
+
+        window.lioraLoading?.hide();
+        renderQuestao();
+      } catch {
+        window.lioraLoading?.hide();
+        window.lioraError?.show("Erro ao gerar simulado.");
+      }
+
+      return;
+    }
 
     // próxima
     if (e.target.closest("#sim-btn-proxima")) {
