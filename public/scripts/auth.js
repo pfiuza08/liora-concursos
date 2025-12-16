@@ -122,7 +122,7 @@ onAuthStateChanged(auth, (user) => {
     document.body.classList.add("liora-auth-on");
     document.body.classList.remove("liora-auth-off");
 
-    // TODO: no futuro buscar status premium real do backend
+    // TODO: buscar status premium real do backend
     window.lioraAuth.premium = false;
   } else {
     console.log("🔴 Usuário deslogado");
@@ -132,8 +132,9 @@ onAuthStateChanged(auth, (user) => {
   }
 
   window.lioraAuth.error = null;
+
+  // 🔔 EVENTO CANÔNICO
   window.dispatchEvent(new Event("liora:auth-changed"));
-  window.dispatchEvent(new Event("liora:auth-ui-update"));
 });
 
 console.log("🔐 Liora Auth v2.1 carregado.");
