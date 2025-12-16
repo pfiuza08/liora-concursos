@@ -122,20 +122,24 @@ onAuthStateChanged(auth, (user) => {
     document.body.classList.add("liora-auth-on");
     document.body.classList.remove("liora-auth-off");
 
-    // TODO: buscar status premium real do backend
-    window.lioraAuth.premium = false;
+    window.lioraAuth.premium = false; // TODO backend
   } else {
     console.log("🔴 Usuário deslogado");
     document.body.classList.add("liora-auth-off");
     document.body.classList.remove("liora-auth-on");
+
     window.lioraAuth.premium = false;
   }
 
   window.lioraAuth.error = null;
 
-  // 🔔 EVENTO CANÔNICO
-  window.dispatchEvent(new Event("liora:auth-changed"));
+  // 🔥 FORÇA PROPAGAÇÃO REAL
+  setTimeout(() => {
+    console.log("🔔 Disparando liora:auth-changed (forçado)");
+    window.dispatchEvent(new Event("liora:auth-changed"));
+  }, 0);
 });
+
 
 console.log("🔐 Liora Auth v2.1 carregado.");
 
