@@ -108,22 +108,18 @@
   // =============================================================
   // 🔔 EVENTO GLOBAL CANÔNICO — ABERTURA DO SIMULADO
   // =============================================================
-    document.addEventListener("liora:abrir-simulado", () => {
+    window.addEventListener("liora:abrir-simulado", () => {
     console.log("🟢 Evento liora:abrir-simulado recebido");
   
-    const access = getSimuladoAccess();
-  
-    if (!access.ok) {
-      if (access.reason === "login") {
-        window.lioraLogin?.openLoginModal?.();
-      } else {
-        window.dispatchEvent(new Event("liora:premium-bloqueado"));
-      }
+    const user = window.lioraAuth?.user;
+    if (!user) {
+      alert("Faça login para iniciar um simulado.");
       return;
     }
   
-    abrirModal(access);
+    abrirModal({ mode: "free" });
   });
+
 
 
   // -----------------------------
