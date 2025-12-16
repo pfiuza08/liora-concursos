@@ -206,73 +206,31 @@ Retorne APENAS JSON válido no formato:
     els.resultado.classList.remove("hidden");
   }
 
+  function abrirBloqueioLogin() {
+  alert("Faça login para configurar e iniciar um simulado.");
+
+  // botão fake de login (por enquanto)
+  // depois você liga ao login real
+  console.log("➡ Redirecionar para login");
+}
+
  // =============================================================
   // 🔔 EVENTO GLOBAL CANÔNICO — SIMULADOS
   // =============================================================
-  window.addEventListener("liora:abrir-simulado", () => {
-    console.log("🟢 Evento liora:abrir-simulado recebido");
-  
-    const access = getSimuladoAccess();
-  
-    // 🔐 Usuário NÃO logado
-    if (!access.ok && access.reason === "login") {
-      window.lioraError?.show(
-        "Para gerar simulados, você precisa entrar na Liora.",
-        {
-          primary: {
-            label: "Entrar agora",
-            action: () => window.dispatchEvent(new Event("liora:login-required"))
-          },
-          secondary: {
-            label: "Cancelar"
-          }
-        }
-      );
-      return;
-    }
-  
-    // 🔒 Usuário FREE sem crédito
-    if (!access.ok && access.reason === "upgrade") {
-      window.lioraError?.show(
-        "Seu plano gratuito permite apenas 1 simulado básico.\nDesbloqueie simulados ilimitados com o Liora+.",
-        {
-          primary: {
-            label: "Ver planos Premium",
-            action: () => window.lioraPremium?.openUpgradeModal("simulado")
-          },
-          secondary: {
-            label: "Cancelar"
-          }
-        }
-      );
-      return;
-    }
-  
-    // ✅ Usuário logado (free ou premium)
-    abrirModal();
-  });
+ document.addEventListener("liora:abrir-simulado", () => {
+  console.log("🟢 Evento liora:abrir-simulado recebido");
 
-  
-    // -----------------------------------------
-    // 🆓 LOGADO — PLANO FREE
-    // -----------------------------------------
-    if (!access.ok && access.reason === "upgrade") {
-      window.lioraError?.show(
-        "Simulados completos estão disponíveis apenas no plano Liora+."
-      );
-  
-      setTimeout(() => {
-        window.lioraPremium?.openUpgradeModal?.("simulados");
-      }, 400);
-  
-      return;
-    }
-  
-    // -----------------------------------------
-    // ⭐ PREMIUM — ABRE CONFIGURAÇÃO
-    // -----------------------------------------
-    abrirModal(access);
-  });
+  const access = window.lioraAccess || { logged: false };
+
+  // 🚫 NÃO LOGADO
+  if (!access.logged) {
+    abrirBloqueioLogin();
+    return;
+  }
+
+  // ✅ LOGADO (free ou premium)
+  abrirModal(access);
+});
 
 
   // =============================================================
