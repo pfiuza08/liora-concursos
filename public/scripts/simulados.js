@@ -236,33 +236,41 @@ Retorne APENAS JSON válido no formato:
       return;
     }
 
-    // iniciar simulado
-    if (!access.ok) {
-      alert("Faça login para iniciar o simulado.");
-    return;
-    }
-      STATE.config = {
-        banca: els.banca?.value,
-        qtd: access.mode === "free" ? 3 : Number(els.qtd?.value),
-        dificuldade: els.dif?.value,
-        tema: els.tema?.value,
-        tempo: Number(els.tempo?.value)
-      };
-
-      fecharModal();
-      window.lioraLoading?.show("Gerando simulado...");
-
-      try {
-        const raw = await gerarQuestoes(STATE.config);
-        STATE.questoes = limparQuestoes(raw);
-        STATE.atual = 0;
-
-        window.lioraLoading?.hide();
-        renderQuestao();
-      } catch {
-        window.lioraLoading?.hide();
-        window.lioraError?.show("Erro ao gerar simulado.");
+   // iniciar simulado
+      if (e.target.closest("#sim-modal-iniciar")) {
+        const access = getSimuladoAccess();
+      
+        if (!access.ok) {
+          alert("Faça login para iniciar o simulado.");
+          return;
+        }
+      
+        STATE.config = {
+          banca: els.banca?.value,
+          qtd: access.mode === "free" ? 3 : Number(els.qtd?.value),
+          dificuldade: els.dif?.value,
+          tema: els.tema?.value,
+          tempo: Number(els.tempo?.value)
+        };
+      
+        fecharModal();
+        window.lioraLoading?.show("Gerando simulado...");
+      
+        try {
+          const raw = await gerarQuestoes(STATE.config);
+          STATE.questoes = limparQuestoes(raw);
+          STATE.atual = 0;
+      
+          window.lioraLoading?.hide();
+          renderQuestao();
+        } catch {
+          window.lioraLoading?.hide();
+          window.lioraError?.show("Erro ao gerar simulado.");
+        }
+      
+        return; // 🔒 encerra o handler aqui
       }
+
     }
 
     // próxima
