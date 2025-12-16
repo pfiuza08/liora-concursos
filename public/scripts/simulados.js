@@ -1,4 +1,9 @@
 console.log("🧪 SIMULADOS.JS EXECUTOU — timestamp:", Date.now());
+console.log("📦 Simulados path:", document.currentScript?.src);
+document.addEventListener("liora:abrir-simulado", () => {
+  console.log("🟢 [TESTE DIRETO] Listener de simulados ativo");
+});
+
 
 // =============================================================
 // 🧠 LIORA — SIMULADOS v103.3-FINAL-STABLE
