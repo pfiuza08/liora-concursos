@@ -1,78 +1,106 @@
 // ===============================================================
-// 🟠 LIORA PREMIUM — v7 SIMPLES (SEM LOGIN OBRIGATÓRIO)
-// - Controla só o modal #liora-premium-backdrop
-// - Ignora conflitos de CSS usando display inline
-// - Compatível com index atual e nav-home v93
+// 🟠 LIORA PREMIUM — v8 CANONICAL + SAFE
+// - Controla SOMENTE o modal #liora-premium-modal
+// - Abre apenas via eventos explícitos
+// - Não interfere em Simulados, Login ou outros modais
+// - Compatível com nav-home, simulados e core atuais
 // ===============================================================
 
 (function () {
-  console.log("🔵 Liora Premium v7 carregado...");
+  console.log("🔵 Liora Premium v8 carregado...");
 
   document.addEventListener("DOMContentLoaded", () => {
     const backdrop = document.getElementById("liora-premium-modal");
     const closeBtn = document.getElementById("liora-premium-close");
 
     if (!backdrop) {
-      console.error("❌ ERRO: #liora-premium-backdrop NÃO encontrado no DOM!");
+      console.error("❌ Premium v8: #liora-premium-modal NÃO encontrado no DOM");
       return;
     }
 
-    // Estado inicial: totalmente escondido
-    backdrop.classList.remove("visible");
-    backdrop.classList.add("hidden");
-    backdrop.style.display = "none";
-    backdrop.style.opacity = "0";
-    backdrop.style.pointerEvents = "none";
+    // ===========================================================
+    // 🔒 FUNÇÕES INTERNAS
+    // ===========================================================
+    function forceHide(el) {
+      if (!el) return;
+      el.classList.remove("visible");
+      el.classList.add("hidden");
+      el.style.display = "none";
+      el.style.opacity = "0";
+      el.style.pointerEvents = "none";
+    }
 
-    // ---------------------------------------------------------
-    // FUNÇÕES
-    // ---------------------------------------------------------
+    function forceShow(el) {
+      if (!el) return;
+      el.classList.remove("hidden");
+      el.classList.add("visible");
+      el.style.display = "flex";
+      el.style.opacity = "1";
+      el.style.pointerEvents = "auto";
+    }
+
+    // ===========================================================
+    // 🧹 FECHA OUTROS MODAIS (SEGURANÇA TOTAL)
+    // ===========================================================
+    function closeOtherModals() {
+      document
+        .querySelectorAll(".liora-modal-backdrop.visible")
+        .forEach((el) => {
+          if (el !== backdrop) {
+            forceHide(el);
+          }
+        });
+    }
+
+    // ===========================================================
+    // 🚀 API PÚBLICA
+    // ===========================================================
     function openUpgradeModal(origem = "unknown") {
-      console.log("✨ Abrindo modal Premium v7… Origem:", origem);
+      console.log("✨ Abrindo Premium v8 | origem:", origem);
 
-      // Garante que NADA esconda o backdrop
-      backdrop.classList.remove("hidden");
-      backdrop.classList.add("visible");
-
-      // Força exibição mesmo se houver CSS conflitante
-      backdrop.style.display = "flex";
-      backdrop.style.opacity = "1";
-      backdrop.style.pointerEvents = "auto";
+      closeOtherModals();
+      forceShow(backdrop);
     }
 
     function closeUpgradeModal() {
-      console.log("⏹ Fechando modal Premium v7");
-
-      backdrop.classList.remove("visible");
-      backdrop.classList.add("hidden");
-
-      backdrop.style.opacity = "0";
-      backdrop.style.pointerEvents = "none";
-      backdrop.style.display = "none";
+      console.log("⏹ Fechando Premium v8");
+      forceHide(backdrop);
     }
 
-    // ---------------------------------------------------------
-    // EVENTOS LOCAIS
-    // ---------------------------------------------------------
-    if (closeBtn) {
-      closeBtn.addEventListener("click", closeUpgradeModal);
-    }
+    // ===========================================================
+    // 🔔 EVENTOS GLOBAIS (CANÔNICOS)
+    // ===========================================================
+    window.addEventListener("liora:premium-bloqueado", () => {
+      console.log("🔐 Evento premium-bloqueado recebido");
+      openUpgradeModal("bloqueio");
+    });
 
-    // Fechar clicando fora do card
+    window.addEventListener("liora:open-premium", () => {
+      openUpgradeModal("manual");
+    });
+
+    // ===========================================================
+    // 🎯 EVENTOS LOCAIS
+    // ===========================================================
+    closeBtn?.addEventListener("click", closeUpgradeModal);
+
     backdrop.addEventListener("click", (ev) => {
       if (ev.target === backdrop) {
         closeUpgradeModal();
       }
     });
 
-    // ---------------------------------------------------------
-    // EXPOSTO GLOBALMENTE (usado pelo nav-home v93)
-    // ---------------------------------------------------------
+    // ===========================================================
+    // 🌍 EXPOSIÇÃO GLOBAL CONTROLADA
+    // ===========================================================
     window.lioraPremium = {
       openUpgradeModal,
       closeUpgradeModal,
     };
 
-    console.log("🟢 Liora Premium v7 totalmente funcional.");
+    // Estado inicial garantido
+    forceHide(backdrop);
+
+    console.log("🟢 Liora Premium v8 pronto e blindado.");
   });
 })();
