@@ -202,7 +202,7 @@ Retorne APENAS JSON válido no formato:
  // =============================================================
   // 🔔 EVENTO GLOBAL CANÔNICO
   // =============================================================
-  window.addEventListener("liora:abrir-simulado", () => {
+  document.addEventListener("liora:abrir-simulado", () => {
     console.log("🟢 Evento liora:abrir-simulado recebido");
   
     const access = getSimuladoAccess();
