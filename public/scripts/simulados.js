@@ -271,8 +271,6 @@ Retorne APENAS JSON válido no formato:
         return; // 🔒 encerra o handler aqui
       }
 
-    }
-
     // próxima
     if (e.target.closest("#sim-btn-proxima")) {
       STATE.atual < STATE.questoes.length - 1
