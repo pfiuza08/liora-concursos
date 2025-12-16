@@ -207,126 +207,49 @@ Retorne APENAS JSON válido no formato:
   }
 
  // =============================================================
-  // 🔔 EVENTO GLOBAL CANÔNICO
+  // 🔔 EVENTO GLOBAL CANÔNICO — SIMULADOS
   // =============================================================
-  document.addEventListener("liora:abrir-simulado", () => {
+  window.addEventListener("liora:abrir-simulado", () => {
     console.log("🟢 Evento liora:abrir-simulado recebido");
   
     const access = getSimuladoAccess();
-    
-    // Verificando o estado de acesso do usuário
-    if (!access.ok) {
-      if (access.reason === "login") {
-        window.dispatchEvent(new Event("liora:login-required")); // Dispara o evento de login necessário
-        showError("Para configurar e gerar simulados, você precisa estar logado na Liora.", "login");
-      }
-      if (access.reason === "upgrade") {
-        window.dispatchEvent(new Event("liora:premium-bloqueado")); // Dispara o evento de upgrade necessário
-        showError("Simulados completos estão disponíveis apenas no plano Liora+.", "upgrade");
-      }
+  
+    // 🔐 Usuário NÃO logado
+    if (!access.ok && access.reason === "login") {
+      window.lioraError?.show(
+        "Para gerar simulados, você precisa entrar na Liora.",
+        {
+          primary: {
+            label: "Entrar agora",
+            action: () => window.dispatchEvent(new Event("liora:login-required"))
+          },
+          secondary: {
+            label: "Cancelar"
+          }
+        }
+      );
       return;
     }
   
-    // Caso o acesso seja permitido, abrir o modal do simulado
+    // 🔒 Usuário FREE sem crédito
+    if (!access.ok && access.reason === "upgrade") {
+      window.lioraError?.show(
+        "Seu plano gratuito permite apenas 1 simulado básico.\nDesbloqueie simulados ilimitados com o Liora+.",
+        {
+          primary: {
+            label: "Ver planos Premium",
+            action: () => window.lioraPremium?.openUpgradeModal("simulado")
+          },
+          secondary: {
+            label: "Cancelar"
+          }
+        }
+      );
+      return;
+    }
+  
+    // ✅ Usuário logado (free ou premium)
     abrirModal();
-  });
-  
-  // Função para exibir mensagens de erro com botões apropriados
-  function showError(message, type) {
-    const errorElement = document.getElementById("liora-error");
-    const errorMessage = document.getElementById("liora-error-message");
-    const retryButton = document.getElementById("liora-error-retry");
-    const backButton = document.getElementById("liora-error-back");
-  
-    // Definindo a mensagem
-    errorMessage.textContent = message;
-  
-    // Exibindo o modal de erro
-    errorElement.classList.remove("hidden");
-    errorElement.classList.add("visible");
-  
-    // Botões de ação
-    if (type === "login") {
-      retryButton.textContent = "Entrar agora";
-      retryButton.onclick = () => window.location.href = "/login"; // Direciona para login
-    } else if (type === "upgrade") {
-      retryButton.textContent = "Ativar Liora+";
-      retryButton.onclick = () => window.location.href = "/premium"; // Direciona para página premium
-    }
-  
-    backButton.textContent = "Voltar ao início";
-    backButton.onclick = () => window.location.href = "/"; // Volta para a página inicial
-  }
-  
-  // Função para abrir o modal do simulado
-  function abrirModal() {
-    const { modal } = getEls();
-    if (!modal) return;
-  
-    modal.classList.remove("hidden");
-    modal.classList.add("visible");
-  
-    // Garantindo que o modal seja exibido corretamente, mesmo com CSS conflitante
-    modal.style.display = "flex";
-    modal.style.zIndex = "9999"; // Garante que o modal fique acima de outros elementos
-    console.log("🟢 Modal do Simulado FORÇADO a abrir");
-  }
-  
-  // Função para fechar o modal do simulado
-  function fecharModal() {
-    const { modal } = getEls();
-    if (!modal) return;
-    modal.classList.remove("visible");
-    modal.classList.add("hidden");
-  }
-  
-  // Função para obter os elementos necessários do DOM
-  function getEls() {
-    return {
-      modal: document.getElementById("sim-modal-backdrop"),
-      close: document.getElementById("sim-modal-close-btn"),
-      iniciar: document.getElementById("sim-modal-iniciar"),
-  
-      banca: document.getElementById("sim-modal-banca"),
-      qtd: document.getElementById("sim-modal-qtd"),
-      tempo: document.getElementById("sim-modal-tempo"),
-      dif: document.getElementById("sim-modal-dificuldade"),
-      tema: document.getElementById("sim-modal-tema"),
-  
-      container: document.getElementById("sim-questao-container"),
-      nav: document.getElementById("sim-nav"),
-      btnProx: document.getElementById("sim-btn-proxima"),
-      btnVoltar: document.getElementById("sim-btn-voltar"),
-      resultado: document.getElementById("sim-resultado"),
-      timer: document.getElementById("sim-timer"),
-      progress: document.getElementById("sim-progress-bar")
-    };
-  }
-  
-  // Função para exibir o simulado, caso o usuário tenha acesso
-  document.addEventListener("click", (e) => {
-    if (e.target.closest("#sim-modal-close-btn") || e.target.closest("#sim-modal-backdrop")) {
-      fecharModal(); // Fecha o modal ao clicar no botão de fechar ou fora do modal
-    }
-  
-    if (e.target.closest("#sim-modal-iniciar")) {
-      const access = getSimuladoAccess();
-      if (!access.ok) return; // Se o acesso não for permitido, não faz nada
-  
-      // Configura o simulado com base nas opções escolhidas
-      STATE.config = {
-        banca: getEls().banca.value,
-        qtd: access.mode === "free" ? 3 : Number(getEls().qtd.value),
-        dificuldade: getEls().dif.value,
-        tema: getEls().tema.value,
-        tempo: Number(getEls().tempo.value)
-      };
-  
-      fecharModal(); // Fecha o modal
-  
-      // Aqui deve chamar a função para gerar as questões
-      // Por exemplo: gerarQuestoes(STATE.config);
-    }
   });
 
   
