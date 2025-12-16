@@ -7,10 +7,7 @@
 
 (function () {
   console.log("🟢 Liora Simulados v103.4 carregado");
-  console.log("🧪 SIMULADOS.JS EXECUTOU — timestamp:", Date.now());
-  console.log("📦 Simulados path:", document.currentScript?.src);
-
-  // -----------------------------
+   // -----------------------------
   // STATE GLOBAL
   // -----------------------------
   const STATE = {
@@ -111,19 +108,23 @@
   // =============================================================
   // 🔔 EVENTO GLOBAL CANÔNICO — ABERTURA DO SIMULADO
   // =============================================================
-  document.addEventListener("liora:abrir-simulado", () => {
-    const access = getAccess();
-    console.log("🟢 Abrir Simulado → access:", access);
-
-    // 🚫 NÃO LOGADO
-    if (!access.logged) {
-      abrirBloqueioLogin();
+    document.addEventListener("liora:abrir-simulado", () => {
+    console.log("🟢 Evento liora:abrir-simulado recebido");
+  
+    const access = getSimuladoAccess();
+  
+    if (!access.ok) {
+      if (access.reason === "login") {
+        window.lioraLogin?.openLoginModal?.();
+      } else {
+        window.dispatchEvent(new Event("liora:premium-bloqueado"));
+      }
       return;
     }
-
-    // ✅ LOGADO (free ou premium)
+  
     abrirModal(access);
   });
+
 
   // -----------------------------
   // IA (mantido como está)
