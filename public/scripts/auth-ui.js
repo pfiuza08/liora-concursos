@@ -210,11 +210,28 @@
     // -------------------------------------------------------
     // EVENTOS GLOBAIS
     // -------------------------------------------------------
-    window.addEventListener("liora:auth-changed", () => {
-      const user = currentUser();
-      dbg("🌀 auth-changed", user);
-      updateAuthUI(user);
-    });
+    window.addEventListener("liora:state-changed", (e) => {
+    const { logged, plan } = e.detail;
+  
+    els.btnAuthToggles.forEach(
+      (btn) => (btn.textContent = logged ? "Conta" : "Entrar")
+    );
+  
+    if (els.premiumBadge) {
+      els.premiumBadge.textContent =
+        plan === "premium" ? "Liora+ ativo" : "Versão gratuita";
+    }
+  
+    els.userInfo.classList.toggle("hidden", !logged);
+    els.btnLogout?.classList.toggle("hidden", !logged);
+  
+    if (logged && window.lioraAuth?.user) {
+      els.userName.textContent =
+        window.lioraAuth.user.email.split("@")[0];
+      els.userStatus.textContent =
+        plan === "premium" ? "Liora+ ativo" : "Conta gratuita";
+    }
+  });
 
     // -------------------------------------------------------
     // INIT
