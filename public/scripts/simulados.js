@@ -45,25 +45,21 @@
       progress: qs("sim-progress-bar")
     };
   }
-
-  // -----------------------------
-  // ACESSO CANÔNICO (LOGIN + MODO)
-  // Fonte da verdade: window.lioraAccess
-  // Ex.: { logged:true, mode:"free" } | { logged:true, mode:"premium" } | { logged:false }
-  // -----------------------------
-  function getAccess() {
-    const raw = window.lioraAccess;
-
-    if (!raw || raw.logged !== true) {
-      return { logged: false };
+  function getSimuladoAccess() {
+    const user = window.lioraAuth?.user || null;
+  
+    if (!user) {
+      return { ok: false, reason: "login" };
     }
-
+  
+    // por enquanto, free e premium se comportam igual
     return {
-      logged: true,
-      mode: raw.mode === "premium" ? "premium" : "free"
+      ok: true,
+      mode: "free", // ou "premium" no futuro
     };
   }
 
+ 
   // -----------------------------
   // MODAL
   // -----------------------------
@@ -241,16 +237,10 @@ Retorne APENAS JSON válido no formato:
     }
 
     // iniciar simulado
-    if (e.target.closest("#sim-modal-iniciar")) {
-      const access = getAccess();
-
-      // se clicou iniciar sem estar logado, bloqueia
-      if (!access.logged) {
-        fecharModal();
-        abrirBloqueioLogin();
-        return;
-      }
-
+    if (!access.ok) {
+      alert("Faça login para iniciar o simulado.");
+    return;
+    }
       STATE.config = {
         banca: els.banca?.value,
         qtd: access.mode === "free" ? 3 : Number(els.qtd?.value),
