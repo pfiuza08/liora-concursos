@@ -1,22 +1,20 @@
 // =============================================================
-// 🧠 LIORA — SIMULADOS v103.6-FREEMIUM-CANONICAL
-// - Baseado no v103.5-FLOW-CANONICAL
-// - Free = experiência completa com limites
-// - Premium = ilimitado
-// - Limites via limits.js + usage.js
+// 🧠 LIORA — SIMULADOS v103.7-FREEMIUM-STABLE
+// - Free: experiência completa com limites
+// - Premium: ilimitado + histórico
+// - Shuffle real das alternativas
+// - Resultado + explicações no final
 // =============================================================
 
 (function () {
-  console.log("🟢 Liora Simulados v103.6 carregado");
+  console.log("🟢 Liora Simulados v103.7 carregado");
 
   // -------------------------------------------------
-  // STATE LOCAL (isolado)
+  // STATE LOCAL
   // -------------------------------------------------
   const STATE = {
     questoes: [],
     atual: 0,
-    timerID: null,
-    tempoRestante: 0,
     config: null,
     modalOpen: false
   };
@@ -29,7 +27,6 @@
   function getEls() {
     return {
       modal: qs("sim-modal-backdrop"),
-      close: qs("sim-modal-close-btn"),
       iniciar: qs("sim-modal-iniciar"),
 
       banca: qs("sim-modal-banca"),
@@ -42,27 +39,21 @@
       nav: qs("sim-nav"),
       btnProx: qs("sim-btn-proxima"),
       btnVoltar: qs("sim-btn-voltar"),
-      resultado: qs("sim-resultado"),
-      timer: qs("sim-timer"),
-      progress: qs("sim-progress-bar")
+      resultado: qs("sim-resultado")
     };
   }
 
   // -------------------------------------------------
-  // 🔐 ACESSO CANÔNICO (FREE vs PREMIUM)
+  // 🔐 ACESSO CANÔNICO
   // -------------------------------------------------
   function getSimuladoAccess() {
-    const user = window.lioraAuth?.user || null;
-    const plan = window.lioraUserPlan || "free";
+    const user = window.lioraAuth?.user;
+    const plan = window.lioraState?.plan || "free";
 
-    if (!user) {
-      return { ok: false, reason: "login" };
-    }
+    if (!user) return { ok: false, reason: "login" };
 
     const limits = window.lioraLimits?.[plan];
-    if (!limits) {
-      return { ok: false, reason: "config" };
-    }
+    if (!limits) return { ok: false, reason: "config" };
 
     if (!window.lioraUsage?.podeCriarSimulado(plan)) {
       return { ok: false, reason: "limit" };
@@ -79,69 +70,22 @@
   // MODAL
   // -------------------------------------------------
   function abrirModal(access) {
-  const els = getEls();
-  if (!els.modal || STATE.modalOpen) return;
+    const els = getEls();
+    if (!els.modal || STATE.modalOpen) return;
 
-  STATE.modalOpen = true;
+    STATE.modalOpen = true;
+    els.modal.classList.remove("hidden");
+    els.modal.classList.add("visible");
 
-  els.modal.classList.remove("hidden");
-  els.modal.classList.add("visible");
+    const isFree = access.plan === "free";
+    if (els.qtd) {
+      els.qtd.value = access.maxQuestoes;
+      els.qtd.disabled = isFree;
+    }
 
-  if (access.mode === "free" && els.qtd) {
-    els.qtd.value = 5;
-    els.qtd.disabled = true;
-  } else if (els.qtd) {
-    els.qtd.disabled = false;
+    bindIniciarSimulado();
   }
 
-  // 🔥 GARANTE QUE O BOTÃO FUNCIONE
-  bindIniciarSimulado();
-}
-
-//----------------------------------------------------------
-  
-  function bindIniciarSimulado() {
-  const els = getEls();
-  if (!els.iniciar || els.iniciar.dataset.bound) return;
-
-  els.iniciar.dataset.bound = "1";
-
-  els.iniciar.addEventListener("click", async () => {
-    const access = getSimuladoAccess();
-
-    if (!access.ok) {
-      alert("Faça login para iniciar o simulado.");
-      return;
-    }
-
-    STATE.config = {
-      banca: els.banca?.value,
-      qtd: access.mode === "free" ? 5 : Number(els.qtd?.value),
-      dificuldade: els.dif?.value,
-      tema: els.tema?.value,
-      tempo: Number(els.tempo?.value)
-    };
-
-    fecharModal();
-    window.lioraLoading?.show("Gerando simulado...");
-
-    try {
-      const raw = await gerarQuestoes(STATE.config);
-      STATE.questoes = limparQuestoes(raw);
-      STATE.atual = 0;
-
-      window.lioraUsage?.registrarSimulado?.();
-      window.lioraLoading?.hide();
-      renderQuestao();
-    } catch (e) {
-      console.error(e);
-      window.lioraLoading?.hide();
-      window.lioraError?.show("Erro ao gerar simulado.");
-    }
-  });
-}
-
- // -------------------------------------------------
   function fecharModal() {
     const els = getEls();
     if (!els.modal) return;
@@ -152,11 +96,9 @@
   }
 
   // -------------------------------------------------
-  // 🔔 EVENTO CANÔNICO — abrir simulado
+  // EVENTO CANÔNICO
   // -------------------------------------------------
   window.addEventListener("liora:abrir-simulado", () => {
-    console.log("🟢 Evento liora:abrir-simulado recebido");
-
     const access = getSimuladoAccess();
 
     if (!access.ok && access.reason === "login") {
@@ -170,7 +112,7 @@
     }
 
     if (!access.ok) {
-      alert("Erro ao verificar acesso. Recarregue a página.");
+      alert("Erro ao verificar acesso.");
       return;
     }
 
@@ -178,7 +120,47 @@
   });
 
   // -------------------------------------------------
-  // IA — geração das questões
+  // BIND DO BOTÃO INICIAR
+  // -------------------------------------------------
+  function bindIniciarSimulado() {
+    const els = getEls();
+    if (!els.iniciar || els.iniciar.dataset.bound) return;
+
+    els.iniciar.dataset.bound = "1";
+
+    els.iniciar.addEventListener("click", async () => {
+      const access = getSimuladoAccess();
+      if (!access.ok) return;
+
+      STATE.config = {
+        banca: els.banca?.value,
+        qtd: access.maxQuestoes,
+        dificuldade: els.dif?.value,
+        tema: els.tema?.value,
+        tempo: Number(els.tempo?.value)
+      };
+
+      fecharModal();
+      window.lioraLoading?.show("Gerando simulado...");
+
+      try {
+        const raw = await gerarQuestoes(STATE.config);
+        STATE.questoes = prepararQuestoes(raw);
+        STATE.atual = 0;
+
+        window.lioraUsage?.registrarSimulado();
+        window.lioraLoading?.hide();
+        renderQuestao();
+      } catch (e) {
+        console.error(e);
+        window.lioraLoading?.hide();
+        window.lioraError?.show("Erro ao gerar simulado.");
+      }
+    });
+  }
+
+  // -------------------------------------------------
+  // IA
   // -------------------------------------------------
   async function gerarQuestoes(config) {
     const res = await fetch("/api/liora", {
@@ -196,7 +178,9 @@ Retorne APENAS JSON válido no formato:
   {
     "enunciado": "...",
     "alternativas": ["A...", "B...", "C...", "D..."],
-    "corretaIndex": 0
+    "corretaIndex": 0,
+    "explicacaoCorreta": "...",
+    "explicacoesErradas": ["...", "...", "..."]
   }
 ]
 `
@@ -210,15 +194,12 @@ Retorne APENAS JSON válido no formato:
       raw = raw.replace(/```json/gi, "").replace(/```/g, "").trim();
     }
 
-    const start = raw.indexOf("[");
-    const end = raw.lastIndexOf("]");
-    if (start === -1 || end === -1) {
-      throw new Error("Resposta inválida da IA");
-    }
-
-    return JSON.parse(raw.slice(start, end + 1));
+    return JSON.parse(raw);
   }
- // -------------------------------------------------
+
+  // -------------------------------------------------
+  // SHUFFLE + NORMALIZAÇÃO
+  // -------------------------------------------------
   function shuffle(arr) {
     const a = arr.slice();
     for (let i = a.length - 1; i > 0; i--) {
@@ -227,30 +208,27 @@ Retorne APENAS JSON válido no formato:
     }
     return a;
   }
- 
- 
-  
- // -------------------------------------------------
- function limparQuestoes(lista) {
-  return lista.map((q, idx) => ({
-    indice: idx + 1,
-    enunciado: String(q.enunciado),
-    alternativas: q.alternativas.slice(0, 4),
-    corretaIndex: Number.isInteger(q.corretaIndex) ? q.corretaIndex : 0,
 
-    // 🔥 NOVO
-    explicacaoCorreta: q.explicacaoCorreta || q.explicacao || "",
-    explicacoesErradas: Array.isArray(q.explicacoesErradas)
-      ? q.explicacoesErradas
-      : [],
+  function prepararQuestoes(lista) {
+    return lista.map((q, idx) => {
+      const correta = q.alternativas[q.corretaIndex];
+      const alternativas = shuffle(q.alternativas);
+      const novaCorreta = alternativas.indexOf(correta);
 
-    resp: null
-  }));
-}
-
+      return {
+        indice: idx + 1,
+        enunciado: q.enunciado,
+        alternativas,
+        corretaIndex: novaCorreta,
+        explicacaoCorreta: q.explicacaoCorreta || "",
+        explicacoesErradas: q.explicacoesErradas || [],
+        resp: null
+      };
+    });
+  }
 
   // -------------------------------------------------
-  // RENDER
+  // RENDER QUESTÃO
   // -------------------------------------------------
   function renderQuestao() {
     const els = getEls();
@@ -263,7 +241,7 @@ Retorne APENAS JSON válido no formato:
     els.container.innerHTML = `
       <div class="sim-questao-card">
         <div class="sim-status">
-         Questão ${STATE.atual + 1} de ${STATE.questoes.length}
+          Questão ${STATE.atual + 1} de ${STATE.questoes.length}
         </div>
         <p>${q.enunciado}</p>
         ${q.alternativas
@@ -285,298 +263,114 @@ Retorne APENAS JSON válido no formato:
     });
 
     els.btnProx.textContent =
-      STATE.atual === STATE.questoes.length - 1
-        ? "Finalizar ▶"
-        : "Próxima ▶";
-
+      STATE.atual === STATE.questoes.length - 1 ? "Finalizar ▶" : "Próxima ▶";
     els.btnVoltar.disabled = STATE.atual === 0;
   }
- 
-  function calcularResultado() {
-  let acertos = 0;
 
-  STATE.questoes.forEach((q) => {
-    if (q.resp === q.corretaIndex) acertos++;
-  });
+  // -------------------------------------------------
+  // FINALIZAR + RESULTADO
+  // -------------------------------------------------
+  function finalizar() {
+    const els = getEls();
+    const plan = window.lioraState?.plan || "free";
+    const isPremium = plan === "premium";
 
-  return {
-    total: STATE.questoes.length,
-    acertos,
-    erros: STATE.questoes.length - acertos,
-    percentual: Math.round((acertos / STATE.questoes.length) * 100)
-  };
-}
+    let acertos = 0;
+    STATE.questoes.forEach((q) => {
+      if (q.resp === q.corretaIndex) acertos++;
+    });
 
-  // ----------------------------------------------  
-  
-  function renderExplicacaoQuestao(q, index, isPremium) {
-  const correta = q.corretaIndex;
-  const marcada = q.resp;
+    const total = STATE.questoes.length;
+    const erros = total - acertos;
+    const percentual = Math.round((acertos / total) * 100);
 
-  let html = `
-    <div class="sim-explicacao-bloco">
-      <h4>Questão ${index + 1}</h4>
-      <p class="sim-explicacao-status ${
-        marcada === correta ? "correta" : "errada"
-      }">
-        ${marcada === correta ? "✅ Você acertou" : "❌ Você errou"}
-      </p>
+    els.container.innerHTML = "";
+    els.nav.classList.add("hidden");
 
-      <div class="sim-explicacao-correta">
-        <strong>Resposta correta:</strong> ${q.alternativas[correta]}
+    const explicacoesHTML = STATE.questoes
+      .map((q, i) => {
+        const acertou = q.resp === q.corretaIndex;
+        return `
+          <div class="sim-explicacao-bloco">
+            <h4>Questão ${i + 1}</h4>
+            <p class="${acertou ? "correta" : "errada"}">
+              ${acertou ? "✅ Você acertou" : "❌ Você errou"}
+            </p>
+            <p><strong>Resposta correta:</strong> ${q.alternativas[q.corretaIndex]}</p>
+            ${q.explicacaoCorreta ? `<p>${q.explicacaoCorreta}</p>` : ""}
+            ${
+              isPremium && q.explicacoesErradas.length
+                ? `<ul>${q.explicacoesErradas.map((e) => `<li>${e}</li>`).join("")}</ul>`
+                : ""
+            }
+          </div>
+        `;
+      })
+      .join("");
+
+    els.resultado.innerHTML = `
+      <div class="sim-resultado-card">
+        <h3>📊 Resultado do Simulado</h3>
+
+        <div class="sim-resultado-metricas">
+          <div><strong>${acertos}</strong><span>Acertos</span></div>
+          <div><strong>${erros}</strong><span>Erros</span></div>
+          <div><strong>${percentual}%</strong><span>Aproveitamento</span></div>
+        </div>
+
+        <div class="sim-explicacoes-wrapper">${explicacoesHTML}</div>
+
         ${
-          q.explicacaoCorreta
-            ? `<p class="sim-explicacao-texto">${q.explicacaoCorreta}</p>`
-            : ""
+          isPremium
+            ? `<p class="sim-msg-premium">✅ Histórico salvo.</p>`
+            : `<p class="sim-msg-free">
+                No <strong>Liora+</strong> você vê explicações completas.
+              </p>`
         }
-      </div>
-  `;
 
-  // ⭐ PREMIUM: explicar erros
-  if (isPremium && q.explicacoesErradas.length) {
-    html += `<div class="sim-explicacao-erradas">
-      <strong>Por que as outras estão erradas:</strong>
-      <ul>
-        ${q.explicacoesErradas
-          .map((e, i) => `<li>${e}</li>`)
-          .join("")}
-      </ul>
-    </div>`;
+        <div class="sim-resultado-acoes">
+          ${
+            isPremium
+              ? `<button class="btn-secundario" id="sim-refazer">🔁 Novo simulado</button>`
+              : `<button class="btn-primario" id="sim-upgrade">🚀 Conhecer o Liora+</button>`
+          }
+          <button class="btn-secundario" id="sim-voltar-home">⬅ Voltar</button>
+        </div>
+      </div>
+    `;
+
+    els.resultado.classList.remove("hidden");
+
+    qs("sim-voltar-home")?.addEventListener("click", () =>
+      qs("fab-home")?.click()
+    );
+
+    qs("sim-refazer")?.addEventListener("click", () =>
+      window.dispatchEvent(new Event("liora:abrir-simulado"))
+    );
+
+    qs("sim-upgrade")?.addEventListener("click", () =>
+      window.lioraPremium?.openUpgradeModal?.("simulado")
+    );
   }
 
-  html += `</div>`;
-  return html;
-}
-
- // -------------------------------------------------
- // FINALIZAR
- // ------------------------------------------------- 
-  
- function finalizar() {
-  const els = getEls();
-  clearInterval(STATE.timerID);
-
-  const total = STATE.questoes.length;
-  let acertos = 0;
-
-  STATE.questoes.forEach((q) => {
-    if (q.resp === q.corretaIndex) acertos++;
-  });
-
-  const erros = total - acertos;
-  const percentual = Math.round((acertos / total) * 100);
-
-  els.container.innerHTML = "";
-  els.nav.classList.add("hidden");
-
-  const plan = window.lioraState?.plan || "free";
-  const isPremium = plan === "premium";
-
-  // -----------------------------
-  // BLOCO DE EXPLICAÇÕES
-  // -----------------------------
-  const explicacoesHTML = STATE.questoes
-    .map((q, i) => renderExplicacaoQuestao(q, i, isPremium))
-    .join("");
-
-  els.resultado.innerHTML = `
-    <div class="sim-resultado-card">
-      <h3>📊 Resultado do Simulado</h3>
-
-      <div class="sim-resultado-metricas">
-        <div><strong>${acertos}</strong><span>Acertos</span></div>
-        <div><strong>${erros}</strong><span>Erros</span></div>
-        <div><strong>${percentual}%</strong><span>Aproveitamento</span></div>
-      </div>
-
-      <div class="sim-explicacoes-wrapper">
-        ${explicacoesHTML}
-      </div>
-
-      ${
-        isPremium
-          ? `<p class="sim-msg-premium">✅ Seu histórico foi salvo.</p>`
-          : `<p class="sim-msg-free">
-              Quer ver explicações completas?<br>
-              O <strong>Liora+</strong> destrincha todas as alternativas.
-            </p>`
-      }
-
-      <div class="sim-resultado-acoes">
-        ${
-          isPremium
-            ? `<button class="btn-secundario" id="sim-refazer">🔁 Novo simulado</button>`
-            : `<button class="btn-primario" id="sim-upgrade">🚀 Conhecer o Liora+</button>`
-        }
-        <button class="btn-secundario" id="sim-voltar-home">⬅ Voltar</button>
-      </div>
-    </div>
-  `;
-
-  els.resultado.classList.remove("hidden");
-
-  document.getElementById("sim-voltar-home")?.addEventListener("click", () => {
-    document.getElementById("fab-home")?.click();
-  });
-
-  document.getElementById("sim-refazer")?.addEventListener("click", () => {
-    window.dispatchEvent(new Event("liora:abrir-simulado"));
-  });
-
-  document.getElementById("sim-upgrade")?.addEventListener("click", () => {
-    window.lioraPremium?.openUpgradeModal?.("simulado-explicacao");
-  });
-}
-
-  // -----------------------------
-  // CÁLCULO DE RESULTADOS
-  // -----------------------------
-  const total = STATE.questoes.length;
-
-  let acertos = 0;
-  STATE.questoes.forEach((q) => {
-    if (q.resp === q.corretaIndex) acertos++;
-  });
-
-  const erros = total - acertos;
-  const percentual = Math.round((acertos / total) * 100);
-
-  // -----------------------------
-  // LIMPA UI ATUAL
-  // -----------------------------
-  els.container.innerHTML = "";
-  els.nav.classList.add("hidden");
-
-  // -----------------------------
-  // MODO DO USUÁRIO
-  // -----------------------------
-  const plan = window.lioraState?.plan || "free";
-  const isPremium = plan === "premium";
-
-  // -----------------------------
-  // HTML DO RESULTADO
-  // -----------------------------
-  els.resultado.innerHTML = `
-    <div class="sim-resultado-card">
-      <h3>📊 Resultado do Simulado</h3>
-
-      <div class="sim-resultado-metricas">
-        <div class="sim-metrica">
-          <strong>${acertos}</strong>
-          <span>Acertos</span>
-        </div>
-        <div class="sim-metrica">
-          <strong>${erros}</strong>
-          <span>Erros</span>
-        </div>
-        <div class="sim-metrica">
-          <strong>${percentual}%</strong>
-          <span>Aproveitamento</span>
-        </div>
-      </div>
-
-      ${
-        isPremium
-          ? `<p class="sim-msg-premium">✅ Seu desempenho foi salvo no histórico.</p>`
-          : `<p class="sim-msg-free">
-               Você utilizou seu simulado gratuito de hoje.<br>
-               No <strong>Liora+</strong> você pode praticar quantas vezes quiser.
-             </p>`
-      }
-
-      <div class="sim-resultado-acoes">
-        ${
-          isPremium
-            ? `<button class="btn-secundario" id="sim-refazer">
-                 🔁 Novo simulado
-               </button>`
-            : `<button class="btn-primario" id="sim-upgrade">
-                 🚀 Conhecer o Liora Premium
-               </button>`
-        }
-
-        <button class="btn-secundario" id="sim-voltar-home">
-          ⬅ Voltar ao início
-        </button>
-      </div>
-    </div>
-  `;
-
-  els.resultado.classList.remove("hidden");
-
-  // -----------------------------
-  // AÇÕES DOS BOTÕES
-  // -----------------------------
-  document.getElementById("sim-voltar-home")?.addEventListener("click", () => {
-    document.getElementById("fab-home")?.click();
-  });
-
-  document.getElementById("sim-refazer")?.addEventListener("click", () => {
-    window.dispatchEvent(new Event("liora:abrir-simulado"));
-  });
-
-  document.getElementById("sim-upgrade")?.addEventListener("click", () => {
-    window.lioraPremium?.openUpgradeModal?.("simulado-resultado");
-  });
-}
-
-
-
   // -------------------------------------------------
-  // EVENTOS DE UI
+  // NAVEGAÇÃO
   // -------------------------------------------------
-  document.addEventListener("click", async (e) => {
-    const els = getEls();
-
-    // fechar modal
-    if (e.target.closest("#sim-modal-close-btn") || e.target === els.modal) {
-      fecharModal();
-      return;
-    }
-
-       STATE.config = {
-        banca: els.banca?.value,
-        qtd: Math.min(
-          Number(els.qtd?.value || access.maxQuestoes),
-          access.maxQuestoes
-        ),
-        dificuldade: els.dif?.value,
-        tema: els.tema?.value,
-        tempo: Number(els.tempo?.value)
-      };
-
-      fecharModal();
-      window.lioraLoading?.show("Gerando simulado...");
-
-      try {
-        const raw = await gerarQuestoes(STATE.config);
-        STATE.questoes = limparQuestoes(raw);
-        STATE.atual = 0;
-
-        // 🔒 registra uso real
-        window.lioraUsage?.registrarSimulado();
-
-        window.lioraLoading?.hide();
-        renderQuestao();
-      } catch {
-        window.lioraLoading?.hide();
-        window.lioraError?.show("Erro ao gerar simulado.");
-      }
-
-      return;
-    }
-
-    // próxima
+  document.addEventListener("click", (e) => {
     if (e.target.closest("#sim-btn-proxima")) {
       STATE.atual < STATE.questoes.length - 1
         ? (STATE.atual++, renderQuestao())
         : finalizar();
     }
 
-    // voltar
     if (e.target.closest("#sim-btn-voltar") && STATE.atual > 0) {
       STATE.atual--;
       renderQuestao();
+    }
+
+    if (e.target.closest("#sim-modal-close-btn") || e.target === getEls().modal) {
+      fecharModal();
     }
   });
 })();
