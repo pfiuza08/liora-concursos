@@ -219,22 +219,70 @@ Retorne APENAS JSON válido no formato:
 
     els.btnVoltar.disabled = STATE.atual === 0;
   }
+ 
+  function calcularResultado() {
+  let acertos = 0;
 
+  STATE.questoes.forEach((q) => {
+    if (q.resp === q.corretaIndex) acertos++;
+  });
+
+  return {
+    total: STATE.questoes.length,
+    acertos,
+    erros: STATE.questoes.length - acertos,
+    percentual: Math.round((acertos / STATE.questoes.length) * 100)
+  };
+}
+ 
   function finalizar() {
-    const els = getEls();
-    clearInterval(STATE.timerID);
+  const els = getEls();
+  clearInterval(STATE.timerID);
 
-    els.container.innerHTML = "";
-    els.nav.classList.add("hidden");
+  const r = calcularResultado();
 
-    els.resultado.innerHTML = `
-      <div class="sim-resultado-card">
-        <h3>Simulado concluído</h3>
-        <p>${STATE.questoes.length} questões respondidas</p>
+  els.container.innerHTML = "";
+  els.nav.classList.add("hidden");
+
+  els.resultado.innerHTML = `
+    <div class="sim-resultado-card">
+      <h3>Simulado concluído</h3>
+
+      <p><strong>${r.acertos}</strong> acertos · <strong>${r.erros}</strong> erros</p>
+      <p>Aproveitamento: <strong>${r.percentual}%</strong></p>
+
+      <div class="sim-resultado-lista">
+        ${STATE.questoes.map((q) => `
+          <div class="sim-resultado-item ${q.resp === q.corretaIndex ? "ok" : "erro"}">
+            <p>${q.enunciado}</p>
+
+            <p>
+              Sua resposta: 
+              <strong>
+                ${
+                  q.resp !== null
+                    ? q.alternativas[q.resp]
+                    : "Não respondida"
+                }
+              </strong>
+            </p>
+
+            ${
+              q.resp !== q.corretaIndex
+                ? `<p class="sim-correta">
+                     Correta: <strong>${q.alternativas[q.corretaIndex]}</strong>
+                   </p>`
+                : `<p class="sim-ok">✔ Correta</p>`
+            }
+          </div>
+        `).join("")}
       </div>
-    `;
-    els.resultado.classList.remove("hidden");
-  }
+    </div>
+  `;
+
+  els.resultado.classList.remove("hidden");
+}
+
 
   // -------------------------------------------------
   // EVENTOS DE UI
