@@ -122,13 +122,18 @@ onAuthStateChanged(auth, (user) => {
     document.body.classList.add("liora-auth-on");
     document.body.classList.remove("liora-auth-off");
 
-    window.lioraAuth.premium = false; // TODO backend
+    // TODO backend
+    window.lioraAuth.premium = false;
+
+    // 🔑 PLANO CANÔNICO (ESSENCIAL)
+    window.lioraUserPlan = window.lioraAuth.premium ? "premium" : "free";
   } else {
     console.log("🔴 Usuário deslogado");
     document.body.classList.add("liora-auth-off");
     document.body.classList.remove("liora-auth-on");
 
     window.lioraAuth.premium = false;
+    window.lioraUserPlan = "free";
   }
 
   window.lioraAuth.error = null;
