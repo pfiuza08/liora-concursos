@@ -1,27 +1,33 @@
 // ==========================================================
-// 🧠 LIORA — USAGE v1 (CANONICAL)
-// Controla uso diário por usuário
+// 🧠 LIORA — USAGE v1.1 (USER-SCOPED)
+// Controla uso diário POR USUÁRIO
 // ==========================================================
 
 (function () {
-  console.log("📊 Liora Usage v1 carregado");
+  console.log("📊 Liora Usage v1.1 carregado");
 
-  const STORAGE_KEY = "liora-usage-v1";
+  function uid() {
+    return window.lioraAuth?.user?.uid || "anon";
+  }
+
+  function storageKey() {
+    return `liora-usage-v1:${uid()}`;
+  }
 
   function hoje() {
-    return new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+    return new Date().toISOString().slice(0, 10);
   }
 
   function load() {
     try {
-      return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
+      return JSON.parse(localStorage.getItem(storageKey())) || {};
     } catch {
       return {};
     }
   }
 
   function save(data) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    localStorage.setItem(storageKey(), JSON.stringify(data));
   }
 
   function ensureToday(data) {
@@ -74,6 +80,13 @@
 
       data.planosPorTema[key] = (data.planosPorTema[key] || 0) + 1;
       save(data);
+    },
+
+    // -----------------------------
+    // DEBUG
+    // -----------------------------
+    dump() {
+      return load();
     }
   };
 })();
