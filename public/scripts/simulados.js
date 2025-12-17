@@ -183,30 +183,21 @@ Retorne APENAS JSON válido no formato:
  
   
  // -------------------------------------------------
-  function limparQuestoes(lista) {
-  return lista.map((q, idx) => {
-    const alternativasOriginais = q.alternativas.slice(0, 4);
+ function limparQuestoes(lista) {
+  return lista.map((q, idx) => ({
+    indice: idx + 1,
+    enunciado: String(q.enunciado),
+    alternativas: q.alternativas.slice(0, 4),
+    corretaIndex: Number.isInteger(q.corretaIndex) ? q.corretaIndex : 0,
 
-    // cria estrutura com flag de correta
-    let alternativas = alternativasOriginais.map((texto, i) => ({
-      texto: String(texto),
-      correta: i === Number(q.corretaIndex)
-    }));
+    // 🔥 NOVO
+    explicacaoCorreta: q.explicacaoCorreta || q.explicacao || "",
+    explicacoesErradas: Array.isArray(q.explicacoesErradas)
+      ? q.explicacoesErradas
+      : [],
 
-    // embaralha
-    alternativas = shuffle(alternativas);
-
-    // recalcula o índice correto
-    const novaCorretaIndex = alternativas.findIndex(a => a.correta);
-
-    return {
-      indice: idx + 1,
-      enunciado: String(q.enunciado),
-      alternativas: alternativas.map(a => a.texto),
-      corretaIndex: novaCorretaIndex >= 0 ? novaCorretaIndex : 0,
-      resp: null
-    };
-  });
+    resp: null
+  }));
 }
 
 
@@ -267,7 +258,48 @@ Retorne APENAS JSON válido no formato:
     percentual: Math.round((acertos / STATE.questoes.length) * 100)
   };
 }
+
+  // ----------------------------------------------  
   
+  function renderExplicacaoQuestao(q, index, isPremium) {
+  const correta = q.corretaIndex;
+  const marcada = q.resp;
+
+  let html = `
+    <div class="sim-explicacao-bloco">
+      <h4>Questão ${index + 1}</h4>
+      <p class="sim-explicacao-status ${
+        marcada === correta ? "correta" : "errada"
+      }">
+        ${marcada === correta ? "✅ Você acertou" : "❌ Você errou"}
+      </p>
+
+      <div class="sim-explicacao-correta">
+        <strong>Resposta correta:</strong> ${q.alternativas[correta]}
+        ${
+          q.explicacaoCorreta
+            ? `<p class="sim-explicacao-texto">${q.explicacaoCorreta}</p>`
+            : ""
+        }
+      </div>
+  `;
+
+  // ⭐ PREMIUM: explicar erros
+  if (isPremium && q.explicacoesErradas.length) {
+    html += `<div class="sim-explicacao-erradas">
+      <strong>Por que as outras estão erradas:</strong>
+      <ul>
+        ${q.explicacoesErradas
+          .map((e, i) => `<li>${e}</li>`)
+          .join("")}
+      </ul>
+    </div>`;
+  }
+
+  html += `</div>`;
+  return html;
+}
+
  // -------------------------------------------------
  // FINALIZAR
  // ------------------------------------------------- 
@@ -275,6 +307,78 @@ Retorne APENAS JSON válido no formato:
  function finalizar() {
   const els = getEls();
   clearInterval(STATE.timerID);
+
+  const total = STATE.questoes.length;
+  let acertos = 0;
+
+  STATE.questoes.forEach((q) => {
+    if (q.resp === q.corretaIndex) acertos++;
+  });
+
+  const erros = total - acertos;
+  const percentual = Math.round((acertos / total) * 100);
+
+  els.container.innerHTML = "";
+  els.nav.classList.add("hidden");
+
+  const plan = window.lioraState?.plan || "free";
+  const isPremium = plan === "premium";
+
+  // -----------------------------
+  // BLOCO DE EXPLICAÇÕES
+  // -----------------------------
+  const explicacoesHTML = STATE.questoes
+    .map((q, i) => renderExplicacaoQuestao(q, i, isPremium))
+    .join("");
+
+  els.resultado.innerHTML = `
+    <div class="sim-resultado-card">
+      <h3>📊 Resultado do Simulado</h3>
+
+      <div class="sim-resultado-metricas">
+        <div><strong>${acertos}</strong><span>Acertos</span></div>
+        <div><strong>${erros}</strong><span>Erros</span></div>
+        <div><strong>${percentual}%</strong><span>Aproveitamento</span></div>
+      </div>
+
+      <div class="sim-explicacoes-wrapper">
+        ${explicacoesHTML}
+      </div>
+
+      ${
+        isPremium
+          ? `<p class="sim-msg-premium">✅ Seu histórico foi salvo.</p>`
+          : `<p class="sim-msg-free">
+              Quer ver explicações completas?<br>
+              O <strong>Liora+</strong> destrincha todas as alternativas.
+            </p>`
+      }
+
+      <div class="sim-resultado-acoes">
+        ${
+          isPremium
+            ? `<button class="btn-secundario" id="sim-refazer">🔁 Novo simulado</button>`
+            : `<button class="btn-primario" id="sim-upgrade">🚀 Conhecer o Liora+</button>`
+        }
+        <button class="btn-secundario" id="sim-voltar-home">⬅ Voltar</button>
+      </div>
+    </div>
+  `;
+
+  els.resultado.classList.remove("hidden");
+
+  document.getElementById("sim-voltar-home")?.addEventListener("click", () => {
+    document.getElementById("fab-home")?.click();
+  });
+
+  document.getElementById("sim-refazer")?.addEventListener("click", () => {
+    window.dispatchEvent(new Event("liora:abrir-simulado"));
+  });
+
+  document.getElementById("sim-upgrade")?.addEventListener("click", () => {
+    window.lioraPremium?.openUpgradeModal?.("simulado-explicacao");
+  });
+}
 
   // -----------------------------
   // CÁLCULO DE RESULTADOS
