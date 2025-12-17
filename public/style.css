@@ -1871,3 +1871,6 @@ html.light .liora-wizard-title {
   font-size: 1rem;
   opacity: 0.9;
 }
+#liora-seu-estudo {
+  display: none;
+}
