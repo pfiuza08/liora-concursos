@@ -1,5 +1,5 @@
 // ==========================================================
-// 🧠 LIORA — STATE CANÔNICO v1
+// 🧠 LIORA — STATE CANÔNICO v1.1
 // Fonte única de verdade para auth + plano
 // ==========================================================
 
@@ -9,32 +9,54 @@
   const state = {
     logged: false,
     plan: "free", // free | premium
+    user: null,
   };
 
-  function sync() {
+  function sync(origin = "unknown") {
+    // 🔔 Evento canônico
     window.dispatchEvent(
       new CustomEvent("liora:state-changed", {
-        detail: { ...state },
+        detail: { ...state, origin },
       })
     );
+
+    // 🔁 Retrocompatibilidade
+    window.lioraUserPlan = state.plan;
   }
 
   window.lioraState = {
+    // -------------------------
+    // GETTERS
+    // -------------------------
     get logged() {
       return state.logged;
     },
     get plan() {
       return state.plan;
     },
+    get user() {
+      return state.user;
+    },
 
-    setLogged(value) {
+    // -------------------------
+    // SETTERS CANÔNICOS
+    // -------------------------
+    setLogged(value, user = null) {
       state.logged = !!value;
-      sync();
+      state.user = value ? user : null;
+      sync("setLogged");
     },
 
     setPlan(plan) {
       state.plan = plan === "premium" ? "premium" : "free";
-      sync();
+      sync("setPlan");
+    },
+
+    // -------------------------
+    // HELPERS
+    // -------------------------
+    isPremium() {
+      return state.plan === "premium";
     },
 
     snapshot() {
@@ -42,5 +64,5 @@
     },
   };
 
-  console.log("🧠 Liora State v1 inicializado:", state);
+  console.log("🧠 Liora State v1.1 inicializado:", state);
 })();
