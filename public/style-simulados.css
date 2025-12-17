@@ -1883,3 +1883,20 @@ html.light #dash-ultimos .sim-item {
   z-index: 10001;
 }
 
+.sim-resultado-item.ok {
+  border-left: 4px solid #22c55e;
+}
+
+.sim-resultado-item.erro {
+  border-left: 4px solid #ef4444;
+}
+
+.sim-correta {
+  color: #22c55e;
+}
+
+.sim-ok {
+  color: #22c55e;
+  font-weight: 600;
+}
+
