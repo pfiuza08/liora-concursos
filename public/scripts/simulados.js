@@ -268,54 +268,106 @@ Retorne APENAS JSON válido no formato:
   };
 }
   
+ // -------------------------------------------------
+ // FINALIZAR
  // ------------------------------------------------- 
-  function finalizar() {
+  
+ function finalizar() {
   const els = getEls();
   clearInterval(STATE.timerID);
 
-  const r = calcularResultado();
+  // -----------------------------
+  // CÁLCULO DE RESULTADOS
+  // -----------------------------
+  const total = STATE.questoes.length;
 
+  let acertos = 0;
+  STATE.questoes.forEach((q) => {
+    if (q.resp === q.corretaIndex) acertos++;
+  });
+
+  const erros = total - acertos;
+  const percentual = Math.round((acertos / total) * 100);
+
+  // -----------------------------
+  // LIMPA UI ATUAL
+  // -----------------------------
   els.container.innerHTML = "";
   els.nav.classList.add("hidden");
 
+  // -----------------------------
+  // MODO DO USUÁRIO
+  // -----------------------------
+  const plan = window.lioraState?.plan || "free";
+  const isPremium = plan === "premium";
+
+  // -----------------------------
+  // HTML DO RESULTADO
+  // -----------------------------
   els.resultado.innerHTML = `
     <div class="sim-resultado-card">
-      <h3>Simulado concluído</h3>
+      <h3>📊 Resultado do Simulado</h3>
 
-      <p><strong>${r.acertos}</strong> acertos · <strong>${r.erros}</strong> erros</p>
-      <p>Aproveitamento: <strong>${r.percentual}%</strong></p>
+      <div class="sim-resultado-metricas">
+        <div class="sim-metrica">
+          <strong>${acertos}</strong>
+          <span>Acertos</span>
+        </div>
+        <div class="sim-metrica">
+          <strong>${erros}</strong>
+          <span>Erros</span>
+        </div>
+        <div class="sim-metrica">
+          <strong>${percentual}%</strong>
+          <span>Aproveitamento</span>
+        </div>
+      </div>
 
-      <div class="sim-resultado-lista">
-        ${STATE.questoes.map((q) => `
-          <div class="sim-resultado-item ${q.resp === q.corretaIndex ? "ok" : "erro"}">
-            <p>${q.enunciado}</p>
+      ${
+        isPremium
+          ? `<p class="sim-msg-premium">✅ Seu desempenho foi salvo no histórico.</p>`
+          : `<p class="sim-msg-free">
+               Você utilizou seu simulado gratuito de hoje.<br>
+               No <strong>Liora+</strong> você pode praticar quantas vezes quiser.
+             </p>`
+      }
 
-            <p>
-              Sua resposta: 
-              <strong>
-                ${
-                  q.resp !== null
-                    ? q.alternativas[q.resp]
-                    : "Não respondida"
-                }
-              </strong>
-            </p>
+      <div class="sim-resultado-acoes">
+        ${
+          isPremium
+            ? `<button class="btn-secundario" id="sim-refazer">
+                 🔁 Novo simulado
+               </button>`
+            : `<button class="btn-primario" id="sim-upgrade">
+                 🚀 Conhecer o Liora Premium
+               </button>`
+        }
 
-            ${
-              q.resp !== q.corretaIndex
-                ? `<p class="sim-correta">
-                     Correta: <strong>${q.alternativas[q.corretaIndex]}</strong>
-                   </p>`
-                : `<p class="sim-ok">✔ Correta</p>`
-            }
-          </div>
-        `).join("")}
+        <button class="btn-secundario" id="sim-voltar-home">
+          ⬅ Voltar ao início
+        </button>
       </div>
     </div>
   `;
 
   els.resultado.classList.remove("hidden");
+
+  // -----------------------------
+  // AÇÕES DOS BOTÕES
+  // -----------------------------
+  document.getElementById("sim-voltar-home")?.addEventListener("click", () => {
+    document.getElementById("fab-home")?.click();
+  });
+
+  document.getElementById("sim-refazer")?.addEventListener("click", () => {
+    window.dispatchEvent(new Event("liora:abrir-simulado"));
+  });
+
+  document.getElementById("sim-upgrade")?.addEventListener("click", () => {
+    window.lioraPremium?.openUpgradeModal?.("simulado-resultado");
+  });
 }
+
 
 
   // -------------------------------------------------
