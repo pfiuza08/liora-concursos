@@ -1,59 +1,51 @@
 // ==========================================================
-// 🧠 LIORA — LIMITES CANÔNICOS v1
-// Fonte única de verdade do modelo freemium
+// 🧠 LIORA — LIMITS v1 (CANONICAL)
+// Define limites oficiais por plano
 // ==========================================================
 
 (function () {
-  console.log("🧠 Liora Limits v1 carregado");
+  console.log("📏 Liora Limits v1 carregado");
 
-  const FREE_LIMITS = {
-    planos: {
-      porDia: 1,
-      maxSessoes: 6,
-      flashcards: false,
-      mapaMental: false,
-      revisao: false,
-      multiplosAtivos: false,
+  const LIMITS = {
+    free: {
+      simulados: {
+        porDia: 1,
+        questoesPorSimulado: 5,
+        permiteHistorico: false
+      },
+
+      estudo: {
+        planosPorTemaDia: 1,
+        permiteFlashcards: false,
+        permiteMapaMental: false
+      },
+
+      pdf: {
+        permiteUpload: true,
+        maxPaginas: 5
+      }
     },
 
-    pdf: {
-      permitido: true,
-      maxPaginas: 5,          // ou usar blocos
-      maxBlocos: 30,
-      flashcards: false,
-      mapaMental: false,
-      aprofundamento: false,
-    },
+    premium: {
+      simulados: {
+        porDia: Infinity,
+        questoesPorSimulado: Infinity,
+        permiteHistorico: true
+      },
 
-    simulados: {
-      porDia: 1,
-      maxQuestoes: 5,
-      correcaoCompleta: true,
-      historico: false,
-    },
+      estudo: {
+        planosPorTemaDia: Infinity,
+        permiteFlashcards: true,
+        permiteMapaMental: true
+      },
+
+      pdf: {
+        permiteUpload: true,
+        maxPaginas: Infinity
+      }
+    }
   };
 
-  const PREMIUM_LIMITS = {
-    planos: { ilimitado: true },
-    pdf: { ilimitado: true },
-    simulados: { ilimitado: true },
-  };
-
-  // ----------------------------------------------------------
-  // API GLOBAL
-  // ----------------------------------------------------------
-  window.lioraLimits = {
-    FREE: FREE_LIMITS,
-    PREMIUM: PREMIUM_LIMITS,
-
-    getCurrent() {
-      return window.lioraUserPlan === "premium"
-        ? PREMIUM_LIMITS
-        : FREE_LIMITS;
-    },
-
-    isPremium() {
-      return window.lioraUserPlan === "premium";
-    },
-  };
+  // API pública imutável
+  window.lioraLimits = Object.freeze(LIMITS);
 })();
