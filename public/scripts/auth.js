@@ -98,17 +98,32 @@ window.lioraAuth = {
   // - Se não logado → dispara liora:login-required
   // - Se logado mas FREE → dispara liora:premium-bloqueado
   // - Se premium → retorna true
-  exigirPremium: () => {
-    if (!window.lioraAuth.user) {
-      window.dispatchEvent(new Event("liora:login-required"));
-      return false;
-    }
-    if (!window.lioraAuth.premium) {
-      window.dispatchEvent(new Event("liora:premium-bloqueado"));
-      return false;
-    }
-    return true;
-  },
+ exigirPremium: () => {
+  const state = window.lioraState;
+
+  // 🚫 Estado ainda não inicializado (defensivo)
+  if (!state) {
+    console.warn("⚠️ exigirPremium chamado antes do lioraState");
+    return false;
+  }
+
+  // 🚫 Não logado
+  if (!state.logged) {
+    console.log("🔐 Premium bloqueado → login necessário");
+    window.dispatchEvent(new Event("liora:login-required"));
+    return false;
+  }
+
+  // 🚫 Logado, mas não premium
+  if (state.plan !== "premium") {
+    console.log("💎 Premium bloqueado → upgrade necessário");
+    window.dispatchEvent(new Event("liora:premium-bloqueado"));
+    return false;
+  }
+
+  // ✅ Tudo ok
+  return true;
+},
 };
 
 // ------------------------------------------------------
