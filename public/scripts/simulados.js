@@ -193,6 +193,9 @@ Retorne APENAS JSON válido no formato:
 
     els.container.innerHTML = `
       <div class="sim-questao-card">
+        <div class="sim-status">
+         Questão ${STATE.atual + 1} de ${STATE.questoes.length}
+        </div>
         <p>${q.enunciado}</p>
         ${q.alternativas
           .map(
