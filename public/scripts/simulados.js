@@ -92,7 +92,8 @@
       els.qtd.disabled = access.maxQuestoes !== Infinity;
     }
   }
-
+  
+ // -------------------------------------------------
   function fecharModal() {
     const els = getEls();
     if (!els.modal) return;
@@ -169,16 +170,45 @@ Retorne APENAS JSON válido no formato:
 
     return JSON.parse(raw.slice(start, end + 1));
   }
-
+ // -------------------------------------------------
+  function shuffle(arr) {
+    const a = arr.slice();
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+ 
+ 
+  
+ // -------------------------------------------------
   function limparQuestoes(lista) {
-    return lista.map((q, idx) => ({
+  return lista.map((q, idx) => {
+    const alternativasOriginais = q.alternativas.slice(0, 4);
+
+    // cria estrutura com flag de correta
+    let alternativas = alternativasOriginais.map((texto, i) => ({
+      texto: String(texto),
+      correta: i === Number(q.corretaIndex)
+    }));
+
+    // embaralha
+    alternativas = shuffle(alternativas);
+
+    // recalcula o índice correto
+    const novaCorretaIndex = alternativas.findIndex(a => a.correta);
+
+    return {
       indice: idx + 1,
       enunciado: String(q.enunciado),
-      alternativas: q.alternativas.slice(0, 4),
-      corretaIndex: Number.isInteger(q.corretaIndex) ? q.corretaIndex : 0,
+      alternativas: alternativas.map(a => a.texto),
+      corretaIndex: novaCorretaIndex >= 0 ? novaCorretaIndex : 0,
       resp: null
-    }));
-  }
+    };
+  });
+}
+
 
   // -------------------------------------------------
   // RENDER
@@ -237,7 +267,8 @@ Retorne APENAS JSON válido no formato:
     percentual: Math.round((acertos / STATE.questoes.length) * 100)
   };
 }
- 
+  
+ // ------------------------------------------------- 
   function finalizar() {
   const els = getEls();
   clearInterval(STATE.timerID);
