@@ -1,13 +1,13 @@
 // =============================================================
-// 🧠 LIORA — SIMULADOS v103.5-FLOW-CANONICAL
-// - Fluxo limpo e previsível
-// - Login verificado centralmente
-// - Modal controlado por estado interno
-// - Pronto para FREE vs PREMIUM
+// 🧠 LIORA — SIMULADOS v103.6-FREEMIUM-CANONICAL
+// - Baseado no v103.5-FLOW-CANONICAL
+// - Free = experiência completa com limites
+// - Premium = ilimitado
+// - Limites via limits.js + usage.js
 // =============================================================
 
 (function () {
-  console.log("🟢 Liora Simulados v103.5 carregado");
+  console.log("🟢 Liora Simulados v103.6 carregado");
 
   // -------------------------------------------------
   // STATE LOCAL (isolado)
@@ -49,19 +49,29 @@
   }
 
   // -------------------------------------------------
-  // 🔐 ACESSO (login / free / premium)
+  // 🔐 ACESSO CANÔNICO (FREE vs PREMIUM)
   // -------------------------------------------------
   function getSimuladoAccess() {
     const user = window.lioraAuth?.user || null;
+    const plan = window.lioraUserPlan || "free";
 
     if (!user) {
       return { ok: false, reason: "login" };
     }
 
-    // por enquanto: free == premium
+    const limits = window.lioraLimits?.[plan];
+    if (!limits) {
+      return { ok: false, reason: "config" };
+    }
+
+    if (!window.lioraUsage?.podeCriarSimulado(plan)) {
+      return { ok: false, reason: "limit" };
+    }
+
     return {
       ok: true,
-      mode: "free" // futuro: "premium"
+      plan,
+      maxQuestoes: limits.simulados.questoesPorSimulado
     };
   }
 
@@ -77,12 +87,9 @@
     els.modal.classList.remove("hidden");
     els.modal.classList.add("visible");
 
-    // restrições FREE (provisórias)
-    if (access.mode === "free" && els.qtd) {
-      els.qtd.value = 3;
-      els.qtd.disabled = true;
-    } else if (els.qtd) {
-      els.qtd.disabled = false;
+    if (els.qtd) {
+      els.qtd.value = access.maxQuestoes;
+      els.qtd.disabled = access.maxQuestoes !== Infinity;
     }
   }
 
@@ -92,7 +99,6 @@
 
     els.modal.classList.remove("visible");
     els.modal.classList.add("hidden");
-
     STATE.modalOpen = false;
   }
 
@@ -104,8 +110,18 @@
 
     const access = getSimuladoAccess();
 
-    if (!access.ok) {
+    if (!access.ok && access.reason === "login") {
       alert("Faça login para iniciar um simulado.");
+      return;
+    }
+
+    if (!access.ok && access.reason === "limit") {
+      window.dispatchEvent(new Event("liora:premium-bloqueado"));
+      return;
+    }
+
+    if (!access.ok) {
+      alert("Erro ao verificar acesso. Recarregue a página.");
       return;
     }
 
@@ -237,13 +253,20 @@ Retorne APENAS JSON válido no formato:
       const access = getSimuladoAccess();
 
       if (!access.ok) {
-        alert("Faça login para iniciar o simulado.");
+        if (access.reason === "limit") {
+          window.dispatchEvent(new Event("liora:premium-bloqueado"));
+        } else {
+          alert("Faça login para iniciar o simulado.");
+        }
         return;
       }
 
       STATE.config = {
         banca: els.banca?.value,
-        qtd: access.mode === "free" ? 3 : Number(els.qtd?.value),
+        qtd: Math.min(
+          Number(els.qtd?.value || access.maxQuestoes),
+          access.maxQuestoes
+        ),
         dificuldade: els.dif?.value,
         tema: els.tema?.value,
         tempo: Number(els.tempo?.value)
@@ -256,6 +279,9 @@ Retorne APENAS JSON válido no formato:
         const raw = await gerarQuestoes(STATE.config);
         STATE.questoes = limparQuestoes(raw);
         STATE.atual = 0;
+
+        // 🔒 registra uso real
+        window.lioraUsage?.registrarSimulado();
 
         window.lioraLoading?.hide();
         renderQuestao();
