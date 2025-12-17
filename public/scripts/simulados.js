@@ -79,20 +79,68 @@
   // MODAL
   // -------------------------------------------------
   function abrirModal(access) {
-    const els = getEls();
-    if (!els.modal || STATE.modalOpen) return;
+  const els = getEls();
+  if (!els.modal || STATE.modalOpen) return;
 
-    STATE.modalOpen = true;
+  STATE.modalOpen = true;
 
-    els.modal.classList.remove("hidden");
-    els.modal.classList.add("visible");
+  els.modal.classList.remove("hidden");
+  els.modal.classList.add("visible");
 
-    if (els.qtd) {
-      els.qtd.value = access.maxQuestoes;
-      els.qtd.disabled = access.maxQuestoes !== Infinity;
-    }
+  if (access.mode === "free" && els.qtd) {
+    els.qtd.value = 5;
+    els.qtd.disabled = true;
+  } else if (els.qtd) {
+    els.qtd.disabled = false;
   }
+
+  // 🔥 GARANTE QUE O BOTÃO FUNCIONE
+  bindIniciarSimulado();
+}
+
+//----------------------------------------------------------
   
+  function bindIniciarSimulado() {
+  const els = getEls();
+  if (!els.iniciar || els.iniciar.dataset.bound) return;
+
+  els.iniciar.dataset.bound = "1";
+
+  els.iniciar.addEventListener("click", async () => {
+    const access = getSimuladoAccess();
+
+    if (!access.ok) {
+      alert("Faça login para iniciar o simulado.");
+      return;
+    }
+
+    STATE.config = {
+      banca: els.banca?.value,
+      qtd: access.mode === "free" ? 5 : Number(els.qtd?.value),
+      dificuldade: els.dif?.value,
+      tema: els.tema?.value,
+      tempo: Number(els.tempo?.value)
+    };
+
+    fecharModal();
+    window.lioraLoading?.show("Gerando simulado...");
+
+    try {
+      const raw = await gerarQuestoes(STATE.config);
+      STATE.questoes = limparQuestoes(raw);
+      STATE.atual = 0;
+
+      window.lioraUsage?.registrarSimulado?.();
+      window.lioraLoading?.hide();
+      renderQuestao();
+    } catch (e) {
+      console.error(e);
+      window.lioraLoading?.hide();
+      window.lioraError?.show("Erro ao gerar simulado.");
+    }
+  });
+}
+
  // -------------------------------------------------
   function fecharModal() {
     const els = getEls();
@@ -486,20 +534,7 @@ Retorne APENAS JSON válido no formato:
       return;
     }
 
-    // iniciar simulado
-    if (e.target.closest("#sim-modal-iniciar")) {
-      const access = getSimuladoAccess();
-
-      if (!access.ok) {
-        if (access.reason === "limit") {
-          window.dispatchEvent(new Event("liora:premium-bloqueado"));
-        } else {
-          alert("Faça login para iniciar o simulado.");
-        }
-        return;
-      }
-
-      STATE.config = {
+       STATE.config = {
         banca: els.banca?.value,
         qtd: Math.min(
           Number(els.qtd?.value || access.maxQuestoes),
