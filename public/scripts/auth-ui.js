@@ -74,16 +74,14 @@ window.addEventListener("liora:auth-changed", () => {
     // -------------------------------------------------------
     // MODAL
     // -------------------------------------------------------
-    function openModal() {
-      els.modal.classList.remove("hidden");
-      els.modal.classList.add("visible");
+      function openModal() {
+      window.lioraModal?.open("liora-auth-modal");
     }
 
-    function closeModal() {
-      els.modal.classList.remove("visible");
-      els.modal.classList.add("hidden");
-      els.error.textContent = "";
+      function closeModal() {
+      window.lioraModal?.close("liora-auth-modal");
     }
+
 
     // -------------------------------------------------------
     // MODO LOGIN / CADASTRO
@@ -144,8 +142,7 @@ window.addEventListener("liora:auth-changed", () => {
     // -------------------------------------------------------
     els.btnAuthToggles.forEach((btn) => {
       btn.onclick = () => {
-        dbg("🟢 Clique Entrar/Conta");
-        openModal();
+        window.lioraModal?.open("liora-auth-modal");
       };
     });
 
