@@ -1,0 +1,226 @@
+/* ============================================================
+   LIORA — MODAIS CANÔNICOS (DESKTOP + MOBILE SAFE)
+   Extraído do style.css e style-simulados.css
+   ⚠ NÃO altera layout existente
+   ============================================================ */
+
+/* ============================================================
+   BACKDROP BASE (Login, Premium, Meus Planos, Loading, Erro)
+   ============================================================ */
+
+.liora-modal-backdrop,
+.sim-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+
+.liora-modal-backdrop.visible,
+.sim-modal-backdrop.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* hidden SEMPRE vence */
+.liora-modal-backdrop.hidden,
+.sim-modal-backdrop.hidden {
+  display: none !important;
+}
+
+/* ============================================================
+   CARD BASE DO MODAL
+   ============================================================ */
+
+.liora-modal,
+.liora-modal-card,
+.sim-modal {
+  position: relative;
+
+  width: 100%;
+  max-width: 520px;
+  max-height: 92vh;
+  overflow-y: auto;
+
+  background: var(--card, #181818);
+  color: var(--fg, #ffffff);
+
+  border-radius: 16px;
+  padding: 1.25rem;
+
+  box-shadow: 0 10px 40px rgba(0,0,0,0.45);
+}
+
+/* ============================================================
+   HEADER / BODY / FOOTER
+   ============================================================ */
+
+.liora-modal-header,
+.sim-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding-bottom: 0.75rem;
+  margin-bottom: 0.75rem;
+
+  border-bottom: 1px solid var(--border);
+}
+
+.liora-modal-body,
+.sim-modal-body {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.liora-modal-footer,
+.sim-modal-footer {
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+
+  border-top: 1px solid var(--border);
+}
+
+/* ============================================================
+   BOTÃO FECHAR (X)
+   ============================================================ */
+
+.liora-modal-close,
+.sim-modal-close {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+
+  background: transparent;
+  border: none;
+  cursor: pointer;
+
+  font-size: 1.25rem;
+  color: var(--muted);
+
+  border-radius: 999px;
+  padding: 0.25rem;
+
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.liora-modal-close:hover,
+.sim-modal-close:hover {
+  background: rgba(255,255,255,0.08);
+  color: #fff;
+}
+
+/* ============================================================
+   MODAL PREMIUM
+   ============================================================ */
+
+.liora-modal-premium {
+  max-width: 720px;
+}
+
+/* ============================================================
+   MODAL MEUS PLANOS
+   ============================================================ */
+
+.liora-plan-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.liora-plan-item {
+  text-align: left;
+  border-radius: 0.8rem;
+  border: 1px solid var(--border);
+  background: var(--card);
+  padding: 0.75rem 1rem;
+
+  cursor: pointer;
+  color: var(--fg);
+
+  transition: background 0.15s ease, transform 0.1s ease, border-color 0.15s ease;
+}
+
+.liora-plan-item:hover {
+  background: rgba(196,75,4,0.12);
+  border-color: var(--brand);
+  transform: translateY(-1px);
+}
+
+/* ============================================================
+   MODAL DE SIMULADO — FIX DEFINITIVO
+   ============================================================ */
+
+#sim-modal-backdrop {
+  overflow-y: auto; /* evita corte de botão no mobile */
+}
+
+#sim-modal-backdrop .sim-modal {
+  display: flex;
+  flex-direction: column;
+
+  max-height: 90vh;
+  overflow: hidden;
+}
+
+#sim-modal-backdrop .sim-modal-body {
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 6px;
+}
+
+#sim-modal-backdrop .sim-modal-footer {
+  flex-shrink: 0;
+  background: var(--bg2);
+}
+
+/* ============================================================
+   MOBILE SAFE
+   ============================================================ */
+
+@media (max-width: 640px) {
+
+  .liora-modal,
+  .liora-modal-card,
+  .sim-modal {
+    max-width: 100%;
+    max-height: 90vh;
+
+    border-radius: 16px 16px 0 0;
+    margin-top: auto;
+
+    padding: 1rem;
+  }
+
+  .liora-modal-close,
+  .sim-modal-close {
+    font-size: 1.5rem;
+  }
+}
+
+/* ============================================================
+   LIGHT MODE
+   ============================================================ */
+
+html.light .liora-modal,
+html.light .liora-modal-card,
+html.light .sim-modal {
+  background: #ffffff;
+  color: #1a1a1a;
+}
+
+html.light .liora-modal-backdrop,
+html.light .sim-modal-backdrop {
+  background: rgba(0,0,0,0.45);
+}
