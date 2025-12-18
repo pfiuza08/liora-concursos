@@ -1,0 +1,176 @@
+/* ============================================================
+   LIORA — HOME (Seu Estudo + Ações)
+   Estilo canônico isolado
+   ============================================================ */
+
+/* ============================================================
+   BLOCO "SEU ESTUDO"
+   ============================================================ */
+
+.liora-estudo-bloco {
+  width: 100%;
+  max-width: 420px;
+  margin-inline: auto;
+  text-align: center;
+}
+
+/* Header */
+.liora-estudo-header {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.liora-estudo-header h3 {
+  font-size: 0.85rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 600;
+  margin: 0;
+}
+
+/* ============================================================
+   AÇÕES (BOTÕES)
+   ============================================================ */
+
+.liora-estudo-acoes {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Desktop: lado a lado */
+@media (min-width: 720px) {
+  .liora-estudo-acoes {
+    flex-direction: row;
+  }
+}
+
+/* ============================================================
+   BOTÃO — CONTINUAR ESTUDO (PRIMÁRIO)
+   ============================================================ */
+
+.btn-continuar-estudo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+
+  background: var(--brand);
+  color: #fff;
+
+  font-size: 0.88rem;
+  font-weight: 600;
+
+  padding: 0.55rem 1.15rem;
+  border-radius: 12px;
+  border: none;
+
+  cursor: pointer;
+  white-space: nowrap;
+
+  box-shadow: 0 0 12px rgba(196,75,4,0.35);
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.2s ease,
+    filter 0.2s ease;
+}
+
+.btn-continuar-estudo:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.05);
+  box-shadow: 0 0 20px rgba(196,75,4,0.55);
+}
+
+.btn-continuar-estudo:active {
+  transform: translateY(0);
+  box-shadow: 0 0 10px rgba(196,75,4,0.4);
+}
+
+/* ============================================================
+   BOTÃO — MEUS PLANOS (SECUNDÁRIO)
+   ============================================================ */
+
+.btn-meus-planos {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+
+  background: rgba(255,255,255,0.05);
+  color: var(--fg);
+
+  font-size: 0.88rem;
+  font-weight: 600;
+
+  padding: 0.55rem 1.15rem;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.16);
+
+  cursor: pointer;
+  white-space: nowrap;
+
+  transition:
+    background 0.15s ease,
+    border 0.15s ease,
+    transform 0.15s ease;
+}
+
+.btn-meus-planos:hover {
+  background: rgba(255,255,255,0.09);
+  border-color: rgba(255,255,255,0.28);
+  transform: translateY(-1px);
+}
+
+.btn-meus-planos:active {
+  transform: translateY(0);
+}
+
+/* ============================================================
+   ÍCONES DENTRO DOS BOTÕES
+   ============================================================ */
+
+.btn-icone {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.4rem;
+  height: 1.4rem;
+}
+
+.btn-icone svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* ============================================================
+   RESUMO DO ESTUDO
+   ============================================================ */
+
+.liora-estudo-resumo {
+  margin-top: 0.6rem;
+  font-size: 0.75rem;
+  color: var(--muted);
+  padding: 0 0.4rem;
+  text-align: center;
+}
+
+/* ============================================================
+   MOBILE — AJUSTES FINOS
+   ============================================================ */
+
+@media (max-width: 480px) {
+  .btn-continuar-estudo,
+  .btn-meus-planos {
+    min-width: 130px;
+    padding: 0.45rem 0.9rem;
+    font-size: 0.8rem;
+    border-radius: 10px;
+  }
+}
