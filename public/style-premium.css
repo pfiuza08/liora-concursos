@@ -1,0 +1,230 @@
+/* ============================================================
+   LIORA — PREMIUM (Liora+)
+   Estilo isolado e canônico
+   ============================================================ */
+
+/* ============================================================
+   MODAL PREMIUM — BACKDROP
+   ============================================================ */
+
+#liora-premium-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 1.25rem;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(10px);
+
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+
+#liora-premium-modal.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* ============================================================
+   CARD PRINCIPAL
+   ============================================================ */
+
+.liora-modal-premium {
+  width: 100%;
+  max-width: 720px;
+  max-height: 92vh;
+  overflow-y: auto;
+
+  background:
+    radial-gradient(circle at top left, rgba(196,75,4,0.18), transparent 55%),
+    rgba(12,12,12,0.96);
+
+  border-radius: 20px;
+  border: 1px solid rgba(255,255,255,0.08);
+
+  padding: 1.6rem 1.6rem 1.8rem;
+  box-shadow: 0 24px 60px rgba(0,0,0,0.6);
+
+  animation: premiumFadeUp 0.3s ease;
+}
+
+/* ============================================================
+   HEADER
+   ============================================================ */
+
+.liora-modal-premium .liora-modal-header {
+  text-align: center;
+  margin-bottom: 1.2rem;
+}
+
+.liora-modal-premium h2 {
+  font-size: 1.45rem;
+  font-weight: 700;
+  margin: 0.3rem 0 0.2rem;
+  color: var(--fg);
+}
+
+.liora-modal-premium p {
+  font-size: 0.9rem;
+  color: var(--muted);
+  margin: 0;
+}
+
+/* ============================================================
+   PILL LIORA+
+   ============================================================ */
+
+.liora-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0.25rem 0.8rem;
+  border-radius: 999px;
+
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+
+  background: rgba(196,75,4,0.2);
+  color: #ffd6b5;
+}
+
+/* ============================================================
+   GRID DE BENEFÍCIOS
+   ============================================================ */
+
+.liora-premium-grid {
+  margin-top: 1.3rem;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.9rem;
+}
+
+@media (min-width: 640px) {
+  .liora-premium-grid {
+    grid-template-columns: repeat(2, minmax(0,1fr));
+  }
+}
+
+/* ============================================================
+   CARD DE BENEFÍCIO
+   ============================================================ */
+
+.liora-premium-card {
+  background: rgba(8,8,8,0.92);
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,0.06);
+
+  padding: 0.9rem 1rem;
+  font-size: 0.88rem;
+
+  transition: border 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.liora-premium-card h3 {
+  margin: 0 0 0.4rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.liora-premium-card ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.liora-premium-card li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.45rem;
+  margin-bottom: 0.35rem;
+}
+
+.liora-premium-card li::before {
+  content: "•";
+  font-size: 1.1rem;
+  color: var(--brand);
+}
+
+.liora-premium-card-highlight {
+  border-color: rgba(196,75,4,0.7);
+  box-shadow: 0 12px 30px rgba(196,75,4,0.45);
+  transform: translateY(-1px);
+}
+
+/* ============================================================
+   CTA — BOTÃO PREMIUM
+   ============================================================ */
+
+.liora-premium-cta {
+  margin-top: 1.4rem;
+  text-align: center;
+}
+
+.liora-premium-cta .liora-btn-primary {
+  width: 100%;
+  max-width: 360px;
+}
+
+/* ============================================================
+   BOTÃO FECHAR
+   ============================================================ */
+
+#liora-premium-modal .liora-modal-close {
+  position: absolute;
+  top: 0.9rem;
+  right: 0.9rem;
+
+  border: none;
+  background: transparent;
+  color: var(--muted);
+
+  font-size: 1.1rem;
+  cursor: pointer;
+
+  border-radius: 999px;
+  padding: 0.25rem;
+
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+#liora-premium-modal .liora-modal-close:hover {
+  background: rgba(255,255,255,0.08);
+  color: #fff;
+}
+
+/* ============================================================
+   MOBILE
+   ============================================================ */
+
+@media (max-width: 480px) {
+  .liora-modal-premium {
+    padding: 1.3rem 1.1rem 1.4rem;
+    border-radius: 18px;
+  }
+
+  .liora-modal-premium h2 {
+    font-size: 1.3rem;
+  }
+}
+
+/* ============================================================
+   ANIMAÇÃO
+   ============================================================ */
+
+@keyframes premiumFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
