@@ -1,9 +1,13 @@
 /* ============================================================
-   LIORA — SIMULADOS (estilos gerais) v25-IA-HYBRID
+   LIORA — SIMULADOS
+   Consolidado v26 — SAFE + PREMIUM
+   ============================================================ */
+
+/* ============================================================
+   TOKENS LOCAIS (fallback)
    ============================================================ */
 
 :root {
-  /* fallback (tema escuro) */
   --surface: #111318;
   --surface-soft: #181b22;
   --border: #252835;
@@ -12,7 +16,10 @@
   --text: #f5f5f7;
 }
 
-/* Botão primário (reutilizável) */
+/* ============================================================
+   BOTÕES REUTILIZÁVEIS
+   ============================================================ */
+
 .btn-primary {
   display: inline-flex;
   align-items: center;
@@ -25,1845 +32,39 @@
   cursor: pointer;
   background: var(--brand);
   color: #fff;
-  transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
+  transition: transform .12s ease, box-shadow .12s ease, background .12s ease;
 }
 
 .btn-primary:hover {
   background: #e45c05;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.45);
+  box-shadow: 0 10px 25px rgba(0,0,0,.45);
   transform: translateY(-1px);
 }
 
 .btn-primary:disabled {
-  opacity: 0.6;
+  opacity: .6;
   cursor: not-allowed;
-  box-shadow: none;
-  transform: none;
 }
 
 /* ============================================================
-   INPUTS DO MODAL
-   ============================================================ */
-
-.sim-input {
-  width: 100%;
-  background: #000000;
-  border: 1px solid var(--border);
-  border-radius: 0.6rem;
-  padding: 0.5rem 0.7rem;
-  font-size: 0.9rem;
-  color: var(--text);
-}
-
-.sim-input:focus {
-  outline: none;
-  border-color: var(--brand);
-  box-shadow: 0 0 0 1px rgba(196,75,4,0.35);
-}
-
-.sim-label {
-  font-size: 0.8rem;
-  font-weight: 600;
-  margin-bottom: 0.25rem;
-  display: block;
-}
-
-.sim-modal-block {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-/* ============================================================
-   ÁREA DO SIMULADO (CARD DIREITO)
-   ============================================================ */
-
-.sim-timer {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-  font-size: 0.9rem;
-  font-weight: 700;
-  padding: 0.35rem 0.6rem;
-  border-radius: 0.75rem;
-  border: 1px solid var(--border);
-  background: rgba(0,0,0,0.35);
-  color: #f97316;
-}
-
-.sim-progress {
-  height: 6px;
-  border-radius: 999px;
-  background: rgba(255,255,255,0.06);
-  overflow: hidden;
-}
-
-.sim-progress-fill {
-  height: 100%;
-  width: 0%;
-  border-radius: 999px;
-  background: linear-gradient(90deg, #f97316, #facc15);
-  transition: width 0.2s ease-out;
-}
-
-/* Cartão da questão */
-.sim-questao-card {
-  background: rgba(0,0,0,0.45);
-  border-radius: 1rem;
-  padding: 1.25rem 1.4rem;
-  border: 1px solid rgba(255,255,255,0.06);
-  box-shadow: 0 18px 40px rgba(0,0,0,0.45);
-}
-
-.sim-enunciado {
-  font-size: 0.95rem;
-  line-height: 1.6;
-  color: var(--text);
-  margin-top: 0.35rem;
-  white-space: pre-line;
-}
-
-/* Destaques dentro do enunciado (sublinhar / marcar) */
-.sim-enunciado u {
-  text-decoration: underline;
-  text-decoration-thickness: 2px;
-  text-underline-offset: 3px;
-}
-
-.sim-enunciado mark {
-  background: rgba(250,204,21,0.18);
-  padding: 0 2px;
-  border-radius: 3px;
-}
-
-/* Alternativas */
-.sim-alt {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.55rem;
-  padding: 0.55rem 0.65rem;
-  border-radius: 0.7rem;
-  border: 1px solid var(--border);
-  cursor: pointer;
-  transition: background 0.12s ease, border-color 0.12s ease, transform 0.08s ease;
-  margin-top: 0.35rem;
-}
-
-.sim-alt:hover {
-  background: rgba(255,255,255,0.03);
-  border-color: rgba(255,255,255,0.12);
-}
-
-.sim-alt.selected {
-  border-color: var(--brand);
-  background: rgba(196,75,4,0.12);
-  box-shadow: 0 0 0 1px rgba(196,75,4,0.26);
-  transform: translateY(-1px);
-}
-
-.sim-radio {
-  width: 16px;
-  height: 16px;
-  border-radius: 999px;
-  border: 2px solid var(--border);
-  margin-top: 0.15rem;
-  flex-shrink: 0;
-}
-
-.sim-alt.selected .sim-radio {
-  border-color: var(--brand);
-  background: radial-gradient(circle, var(--brand) 0, var(--brand) 45%, transparent 46%);
-}
-
-.sim-alt-text {
-  font-size: 0.9rem;
-  color: var(--text);
-}
-
-/* Navegação */
-.sim-nav {
-  display: flex;
-  justify-content: space-between;
-  gap: 0.75rem;
-  margin-top: 0.5rem;
-}
-
-.sim-btn-nav {
-  flex: 1;
-  padding: 0.55rem 0.85rem;
-  border-radius: 0.75rem;
-  border: 1px solid var(--border);
-  background: rgba(0,0,0,0.35);
-  color: var(--text);
-  font-size: 0.9rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background 0.12s ease, border-color 0.12s ease, transform 0.08s ease;
-}
-
-.sim-btn-nav:hover {
-  background: rgba(255,255,255,0.04);
-  border-color: rgba(255,255,255,0.16);
-  transform: translateY(-0.5px);
-}
-
-.sim-btn-next {
-  background: linear-gradient(135deg, #c44b04, #f97316);
-  border-color: transparent;
-  font-weight: 600;
-}
-
-.sim-btn-next:hover {
-  filter: brightness(1.05);
-}
-
-/* ============================================================
-   RESULTADO / DASHBOARD (BÁSICO)
-   ============================================================ */
-
-.sim-resultado-card {
-  margin-top: 1rem;
-  padding: 1.2rem 1.4rem;
-  border-radius: 1rem;
-  background: rgba(0,0,0,0.45);
-  border: 1px solid rgba(255,255,255,0.06);
-}
-
-.sim-resultado-titulo {
-  font-weight: 700;
-  font-size: 1rem;
-  margin-bottom: 0.35rem;
-}
-
-.sim-score {
-  font-size: 2.1rem;
-  font-weight: 800;
-  margin: 0.1rem 0 0.4rem;
-  color: #f97316;
-}
-
-.sim-feedback {
-  font-size: 0.8rem;
-  color: var(--muted);
-  margin-top: 0.55rem;
-}
-
-.sim-dashboard {
-  margin-top: 1.5rem;
-}
-
-.sim-dashboard h4 {
-  font-size: 0.95rem;
-  font-weight: 700;
-  margin-bottom: 0.35rem;
-}
-
-.sim-dashboard-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.85rem;
-}
-
-.sim-dashboard-table th,
-.sim-dashboard-table td {
-  padding: 0.35rem 0.4rem;
-  border-bottom: 1px solid var(--border);
-}
-
-.sim-dashboard-table th {
-  font-weight: 600;
-  color: var(--muted);
-}
-
-.sim-lista-resultados {
-  margin-top: 1.2rem;
-  list-style: none;
-  padding-left: 0;
-  max-height: 360px;
-  overflow-y: auto;
-  scrollbar-width: thin;
-}
-
-.sim-resultado-item {
-  padding: 0.7rem 0;
-  border-bottom: 1px dashed rgba(255,255,255,0.06);
-}
-
-.sim-resultado-item h4 {
-  font-size: 0.9rem;
-  font-weight: 600;
-  margin-bottom: 0.35rem;
-}
-
-.sim-resultado-item p {
-  font-size: 0.82rem;
-  margin-bottom: 0.15rem;
-}
-
-.sim-resultado-item .correta {
-  color: #22c55e;
-  font-weight: 600;
-}
-
-.sim-resultado-item .errada {
-  color: #f97316;
-  font-weight: 600;
-}
-
-/* ============================================================
-   DASHBOARD PREMIUM — CARDS, LISTAS E GRÁFICOS
-   ============================================================ */
-
-/* Containers principais */
-#dash-resumo,
-#dash-bancas,
-#dash-ultimos {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1.25rem;
-  width: 100%;
-  margin-top: 0.5rem;
-}
-
-/* Estado vazio */
-#dash-empty {
-  margin-top: 2rem;
-  padding: 2rem 1.5rem;
-  border-radius: 1rem;
-  background: rgba(0,0,0,0.25);
-  border: 1px solid rgba(255,255,255,0.04);
-  text-align: center;
-  color: var(--muted);
-}
-
-/* ------------------------------------------------------------
-   Cards do resumo (Simulados / Estudos / Progresso)
-   ------------------------------------------------------------ */
-.sim-resultado-card {
-  flex: 1 1 calc(33% - 1.25rem);
-  min-width: 260px;
-  padding: 1.4rem 1.6rem;
-  border-radius: 1rem;
-  background: rgba(0,0,0,0.45);
-  border: 1px solid rgba(255,255,255,0.06);
-  box-shadow: 0 14px 32px rgba(0,0,0,0.35);
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
-}
-
-.sim-resultado-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 20px 40px rgba(0,0,0,0.45);
-}
-
-.sim-resultado-titulo {
-  font-size: 1rem;
-  font-weight: 700;
-  margin-bottom: 0.35rem;
-  color: var(--text);
-}
-
-.sim-desc {
-  color: var(--muted);
-  font-size: 0.82rem;
-  margin-top: 0.25rem;
-}
-
-.sim-detail {
-  font-size: 0.85rem;
-  color: var(--text);
-}
-
-.sim-score {
-  font-size: 2.2rem;
-  font-weight: 800;
-  color: #f97316;
-  margin: 0.15rem 0 0.4rem;
-}
-
-/* ------------------------------------------------------------
-   Desempenho por banca — tabela premium
-   ------------------------------------------------------------ */
-.sim-dashboard {
-  width: 100%;
-  padding: 1rem 0.2rem;
-}
-
-.sim-subtitulo {
-  font-size: 1rem;
-  font-weight: 700;
-  margin-bottom: 0.65rem;
-}
-
-.sim-dashboard-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.85rem;
-}
-
-.sim-dashboard-table th,
-.sim-dashboard-table td {
-  padding: 0.45rem 0.4rem;
-  border-bottom: 1px solid var(--border);
-}
-
-.sim-dashboard-table th {
-  color: var(--muted);
-  font-weight: 600;
-}
-
-/* Barras de progresso */
-.sim-bar-outer {
-  width: 100%;
-  height: 6px;
-  border-radius: 999px;
-  background: rgba(255,255,255,0.06);
-  overflow: hidden;
-  margin-top: 0.3rem;
-}
-
-.sim-bar-inner {
-  height: 100%;
-  border-radius: 999px;
-  background: linear-gradient(90deg, #f97316, #facc15);
-  transition: width 0.25s ease-out;
-}
-
-/* ------------------------------------------------------------
-   Últimos simulados + estudos recentes
-   ------------------------------------------------------------ */
-.sim-lista-resultados {
-  list-style: none;
-  padding-left: 0;
-  margin-top: 1rem;
-  max-height: 360px;
-  overflow-y: auto;
-  scrollbar-width: thin;
-}
-
-.sim-resultado-item {
-  padding: 0.7rem 0;
-  border-bottom: 1px dashed rgba(255,255,255,0.06);
-  transition: background 0.12s ease;
-}
-
-.sim-resultado-item:hover {
-  background: rgba(255,255,255,0.04);
-}
-
-.sim-resultado-header {
-  display: flex;
-  justify-content: space-between;
-  font-size: 0.8rem;
-  color: var(--muted);
-  margin-bottom: 0.2rem;
-}
-
-.sim-resultado-banca {
-  font-weight: 600;
-  color: #f97316;
-}
-
-.sim-resultado-tema {
-  font-size: 0.82rem;
-  color: var(--muted);
-  line-height: 1.3;
-  margin-bottom: 0.35rem;
-}
-
-.sim-resultado-info {
-  display: flex;
-  justify-content: space-between;
-  font-size: 0.85rem;
-  margin-bottom: 0.35rem;
-}
-
-.sim-badge {
-  padding: 2px 8px;
-  border-radius: 999px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  background: rgba(249,115,22,0.18);
-  border: 1px solid rgba(249,115,22,0.55);
-  color: #fb923c;
-}
-
-/* ------------------------------------------------------------
-   Tema claro — Dashboard Premium
-   ------------------------------------------------------------ */
-html.light #dash-empty {
-  background: #ffffff;
-  border-color: #d4d4d4;
-  color: #6b6b6b;
-}
-
-html.light .sim-resultado-card {
-  background: #ffffff;
-  border-color: #e5e5e5;
-  box-shadow: 0 10px 24px rgba(0,0,0,0.06);
-}
-
-html.light .sim-subtitulo {
-  color: #1a1a1a;
-}
-
-html.light .sim-dashboard-table th {
-  color: #6b6b6b;
-}
-
-html.light .sim-resultado-item:hover {
-  background: #f1f1f1;
-}
-
-html.light .sim-badge {
-  background: #fff3e0;
-  border-color: #fdba74;
-  color: #c2410c;
-}
-
-html.light .sim-bar-outer {
-  background: rgba(0,0,0,0.08);
-}
-
-
-/* ============================================================
-   MODAL — BACKDROP + CONTAINER
+   BACKDROP + MODAL (CANÔNICO)
    ============================================================ */
 
 .sim-modal-backdrop {
   position: fixed;
   inset: 0;
-  display: none;
-  align-items: center;
-  justify-content: center;
-  background: rgba(0,0,0,0.88);
-  backdrop-filter: blur(4px);
   z-index: 9999;
-  pointer-events: none;
-}
-
-.sim-modal-backdrop.visible {
-  display: flex;
-  pointer-events: auto;
-}
-
-.sim-modal {
-  background: var(--surface);
-  border-radius: 1.25rem;
-  padding: 2rem 2.5rem;
-  box-shadow: 0 28px 60px rgba(0,0,0,0.5);
-  max-width: 680px;
-  width: 100%;
-  color: var(--text);
-  animation: modalFadeIn 0.24s ease-out;
-  z-index: 10000;
-}
-
-/* Header do modal */
-.sim-modal-header {
-  margin-bottom: 0.9rem;
-}
-
-.sim-modal-title {
-  font-size: 1.25rem;
-  font-weight: 800;
-}
-
-.sim-modal-close {
-  border: none;
-  background: transparent;
-  font-size: 1.4rem;
-  cursor: pointer;
-  color: var(--muted);
-  padding: 0.25rem;
-  border-radius: 0.5rem;
-}
-
-.sim-modal-close:hover {
-  background: rgba(255,255,255,0.06);
-}
-
-/* Corpo do modal */
-.sim-modal-body {
-  display: flex;
-  flex-direction: column;
-  gap: 0.9rem;
-  font-size: 0.9rem;
-}
-
-/* Rodapé */
-.sim-modal-footer {
-  margin-top: 1.2rem;
-}
-
-/* animação desktop */
-@keyframes modalFadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(8px) scale(0.97);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-/* ============================================================
-   SELETOR DE IA (C) — chips no modal
-   ============================================================ */
-
-.sim-ia-row {
-  margin-top: 0.4rem;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem;
-  align-items: center;
-}
-
-.sim-ia-label {
-  font-size: 0.75rem;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--muted);
-}
-
-.sim-ia-options {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem;
-}
-
-.sim-ia-option {
-  padding: 0.25rem 0.7rem;
-  border-radius: 999px;
-  font-size: 0.78rem;
-  border: 1px solid var(--border);
-  background: rgba(0,0,0,0.4);
-  color: var(--text);
-  cursor: pointer;
-  transition: background 0.12s ease, border-color 0.12s ease, transform 0.08s ease, box-shadow 0.12s ease;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-}
-
-.sim-ia-option span.emoji {
-  font-size: 0.95rem;
-}
-
-.sim-ia-option:hover {
-  background: rgba(255,255,255,0.06);
-  border-color: rgba(255,255,255,0.4);
-  transform: translateY(-0.5px);
-}
-
-.sim-ia-option.active {
-  background: var(--brand);
-  border-color: var(--brand);
-  color: #fff;
-  box-shadow: 0 0 0 1px rgba(196,75,4,0.4);
-  transform: translateY(-1px);
-}
-
-/* ============================================================
-   BADGES DE IA (D) — em questões / resultados
-   ============================================================ */
-
-.sim-ia-badges {
-  display: inline-flex;
-  flex-wrap: wrap;
-  gap: 0.3rem;
-  align-items: center;
-}
-
-.sim-ia-badge {
-  font-size: 0.7rem;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  padding: 2px 8px;
-  border-radius: 999px;
-  border: 1px solid rgba(255,255,255,0.16);
-  background: rgba(255,255,255,0.06);
-  color: var(--muted);
-}
-
-.sim-ia-badge--banca {
-  border-color: rgba(59,130,246,0.45);
-  background: rgba(37,99,235,0.16);
-  color: #bfdbfe;
-}
-
-.sim-ia-badge--explica {
-  border-color: rgba(16,185,129,0.45);
-  background: rgba(5,150,105,0.18);
-  color: #bbf7d0;
-}
-
-.sim-ia-badge--reforco {
-  border-color: rgba(249,115,22,0.5);
-  background: rgba(234,88,12,0.18);
-  color: #fed7aa;
-}
-
-.sim-ia-badge--historico {
-  border-color: rgba(168,85,247,0.5);
-  background: rgba(147,51,234,0.18);
-  color: #e9d5ff;
-}
-
-/* ============================================================
-   FAB DO SIMULADO — botão flutuante ⚙
-   ============================================================ */
-
-.sim-fab {
-  position: fixed;
-  right: 1.5rem;
-  bottom: 1.5rem;
-  width: 54px;
-  height: 54px;
-  border-radius: 999px;
-  font-size: 1.4rem;
-  font-weight: 700;
-  background: var(--brand);
-  color: #fff;
-  border: none;
-  cursor: pointer;
-  z-index: 50;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.35);
-  display: flex; /* controlado via JS/nav-home */
-  align-items: center;
-  justify-content: center;
-  transition: 180ms ease;
-  pointer-events: auto !important;
-}
-
-.sim-fab:hover {
-  transform: translateY(-3px);
-  filter: brightness(1.1);
-}
-
-/* ============================================================
-   RESPONSIVO — TABLET
-   ============================================================ */
-
-@media (min-width: 641px) and (max-width: 1024px) {
-
-  .sim-modal-backdrop {
-    align-items: center !important;
-    justify-content: center !important;
-    padding-top: 0 !important;
-  }
-
-  .sim-modal {
-    max-width: 560px;
-    width: 90%;
-    height: auto;
-    max-height: 85vh;
-    padding: 2rem;
-    border-radius: 1.25rem;
-    overflow-y: auto;
-    animation: modalFadeInTablet 0.28s ease-out;
-  }
-
-  @keyframes modalFadeInTablet {
-    from {
-      opacity: 0;
-      transform: translateY(10px) scale(0.97);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0) scale(1);
-    }
-  }
-}
-
-/* ============================================================
-   RESPONSIVO — MOBILE
-   ============================================================ */
-
-@media (max-width: 640px) {
-
-  .sim-modal-backdrop {
-    align-items: flex-start;
-    padding-top: 12vh !important;
-  }
-
-  .sim-modal {
-    width: 100%;
-    height: calc(100vh - 12vh);
-    max-height: calc(100vh - 12vh);
-    border-radius: 1.25rem 1.25rem 0 0;
-    padding: 1.5rem 1.25rem;
-    overflow-y: auto;
-    animation: modalSlideUp 0.28s ease-out;
-  }
-
-  .sim-modal-header {
-    padding-bottom: 0.75rem;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .sim-modal-title {
-    font-size: 1.2rem;
-  }
-
-  .sim-modal-close {
-    font-size: 1.6rem;
-    padding: 0.5rem 0.7rem;
-  }
-
-  .sim-modal-body {
-    gap: 1.1rem;
-    margin-top: 0.9rem;
-  }
-
-  .sim-modal-body .sim-input {
-    padding: 0.75rem 1rem;
-    font-size: 1rem;
-    border-radius: 0.8rem;
-  }
-
-  .sim-modal-footer {
-    position: sticky;
-    bottom: 0;
-    background: var(--surface);
-    padding-top: 0.9rem;
-    padding-bottom: 0.6rem;
-    border-top: 1px solid var(--border);
-  }
-
-  #sim-modal-iniciar {
-    width: 100%;
-    font-size: 1.05rem;
-    padding: 1rem;
-    border-radius: 0.8rem;
-  }
-
-  @keyframes modalSlideUp {
-    from {
-      opacity: 0;
-      transform: translateY(28px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-}
-
-/* ============================================================
-   TEMA CLARO — overrides
-   ============================================================ */
-
-html.light {
-  --surface: #ffffff;
-  --surface-soft: #f3f3f3;
-  --border: #d4d4d4;
-  --text: #1a1a1a;
-  --muted: #6b6b6b;
-}
-
-/* Timer */
-html.light .sim-timer {
-  background: #ffffffdd;
-  border-color: #d4d4d4;
-  color: #c44b04;
-}
-
-/* Progresso */
-html.light .sim-progress {
-  background: rgba(0,0,0,0.08);
-}
-
-/* Card de questão */
-html.light .sim-questao-card {
-  background: #ffffff;
-  border: 1px solid #e5e5e5;
-  box-shadow: 0 10px 24px rgba(0,0,0,0.08);
-}
-
-html.light .sim-enunciado,
-html.light .sim-alt-text {
-  color: #1a1a1a;
-}
-
-/* Alternativas */
-html.light .sim-alt {
-  background: #fafafa;
-  border-color: #d4d4d4;
-}
-html.light .sim-alt:hover {
-  background: #f0f0f0;
-  border-color: #bdbdbd;
-}
-html.light .sim-alt.selected {
-  background: rgba(196,75,4,0.12);
-  border-color: var(--brand);
-  box-shadow: 0 0 0 1px rgba(196,75,4,0.25);
-}
-html.light .sim-alt .sim-radio {
-  border-color: #3a3a3a;
-}
-
-/* Navegação / botões */
-html.light .sim-btn-nav {
-  background: #ffffff;
-  color: #1a1a1a;
-  border-color: #d4d4d4;
-}
-html.light .sim-btn-nav:hover {
-  background: #f3f3f3;
-}
-
-/* Modal */
-html.light .sim-modal {
-  background: #ffffff;
-  color: #1a1a1a;
-}
-html.light .sim-modal-header {
-  border-color: #d4d4d4;
-}
-html.light .sim-modal-close {
-  color: #6b6b6b;
-}
-html.light .sim-modal-close:hover {
-  background: rgba(0,0,0,0.08);
-}
-html.light .sim-input {
-  background: #ffffff;
-  border-color: #d4d4d4;
-  color: #1a1a1a;
-}
-html.light .sim-input:focus {
-  border-color: #c44b04;
-  box-shadow: 0 0 0 1px rgba(196,75,4,0.4);
-}
-html.light .sim-label {
-  color: #1a1a1a;
-}
-
-/* Resultado / histórico */
-html.light .sim-resultado-card {
-  background: #ffffff;
-  border-color: #e5e5e5;
-}
-
-html.light .sim-dashboard-table th {
-  color: #6b6b6b;
-}
-
-/* FAB Simulado */
-html.light .sim-fab {
-  background: #ffffffdd;
-  border: 1px solid #cfcfcf;
-  color: #1e1e1e;
-}
-html.light .sim-fab:hover {
-  background: #ffffff;
-}
-
-/* Seletor de IA */
-html.light .sim-ia-option {
-  background: #fafafa;
-  border-color: #d4d4d4;
-  color: #1a1a1a;
-}
-html.light .sim-ia-option:hover {
-  background: #f1f1f1;
-}
-html.light .sim-ia-option.active {
-  color: #ffffff;
-}
-
-/* Badges de IA */
-html.light .sim-ia-badge {
-  background: #f5f5f5;
-  border-color: #d4d4d4;
-  color: #6b6b6b;
-}
-html.light .sim-ia-badge--banca {
-  background: #e0edff;
-  border-color: #93c5fd;
-  color: #1d4ed8;
-}
-html.light .sim-ia-badge--explica {
-  background: #dcfce7;
-  border-color: #4ade80;
-  color: #047857;
-}
-html.light .sim-ia-badge--reforco {
-  background: #ffedd5;
-  border-color: #fdba74;
-  color: #9a3412;
-}
-html.light .sim-ia-badge--historico {
-  background: #f3e8ff;
-  border-color: #c4b5fd;
-  color: #6d28d9;
-}
-/* ============================================================
-   BADGES DE IA — Premium v3
-   ============================================================ */
-
-.sim-ia-badges {
-  display: inline-flex;
-  gap: 6px;
-  flex-wrap: wrap;
-}
-
-.sim-ia-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-
-  padding: 3px 8px;
-  font-size: 0.72rem;
-  font-weight: 600;
-
-  border-radius: 8px;
-  background: var(--bg2);
-  border: 1px solid var(--border);
-  color: var(--fg);
-
-  line-height: 1;
-}
-
-/* Estilo por tipo */
-.sim-ia-badge--banca {
-  border-color: #8b82ff;
-  background: rgba(139,130,255,0.15);
-}
-
-.sim-ia-badge--explica {
-  border-color: #ffc94d;
-  background: rgba(255,201,77,0.18);
-}
-
-.sim-ia-badge--reforco {
-  border-color: #7ddf78;
-  background: rgba(125,223,120,0.18);
-}
-
-/* Light Mode */
-html.light .sim-ia-badge {
-  background: #fff;
-  border-color: #d9c6b7;
-  color: #3d3028;
-}
-/* ============================================================
-   CARD DE QUESTÃO — Premium
-   ============================================================ */
-
-.sim-questao-card {
-  background: var(--card);
-  border: 1px solid var(--border);
-  padding: 16px;
-  border-radius: 14px;
-  box-shadow: 0 6px 20px rgba(0,0,0,0.25);
-}
-/* ============================================================
-   ALTERNATIVAS — Premium Touch
-   ============================================================ */
-
-.sim-alt {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-
-  background: var(--bg2);
-  border: 1px solid var(--border);
-  padding: 10px 14px;
-  border-radius: 12px;
-
-  margin-bottom: 10px;
-  cursor: pointer;
-  transition: all .25s ease;
-}
-
-.sim-alt:hover {
-  border-color: var(--brand);
-  background: rgba(196,75,4,0.10);
-}
-
-.sim-alt.selected {
-  background: var(--brand);
-  border-color: var(--brand);
-  color: #fff;
-  font-weight: 600;
-  transform: translateY(-1px);
-}
-
-.sim-radio {
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  border: 2px solid var(--border);
-}
-
-.sim-alt.selected .sim-radio {
-  border-color: #fff;
-  background: #fff;
-}
-.sim-timer {
-  font-weight: 600;
-  letter-spacing: 0.5px;
-  color: var(--fg);
-  background: var(--bg2);
-  padding: 6px 12px;
-  border-radius: 8px;
-  border: 1px solid var(--border);
-}
-.sim-nav .sim-btn-nav {
-  padding: 10px 18px;
-  border-radius: 12px !important;
-  font-size: 0.9rem !important;
-}
-
-.sim-btn-next {
-  background: var(--brand) !important;
-  color: #fff !important;
-  border-color: var(--brand) !important;
-}
-
-.sim-btn-next:hover {
-  filter: brightness(1.05);
-}
-/* ============================================================
-   FAB SIMULADO — Premium
-   ============================================================ */
-
-#sim-fab {
-  position: fixed;
-  bottom: 26px;
-  right: 26px;
-
-  background: var(--brand);
-  color: #fff;
-
-  padding: 14px 18px;
-  border-radius: 14px;
-
-  font-size: 1.1rem;
-  font-weight: 600;
-
-  box-shadow: 0 10px 32px rgba(0,0,0,0.35);
-  transition: all .25s ease;
-  border: none;
-}
-
-#sim-fab:hover {
-  transform: translateY(-3px);
-  filter: brightness(1.08);
-}
-@media (max-width: 480px) {
-  .sim-questao-card {
-    padding: 12px;
-  }
-  .sim-alt {
-    padding: 8px 12px;
-  }
-  .sim-ia-option {
-    padding: 5px 10px;
-    font-size: 0.78rem;
-  }
-  .sim-ia-badge {
-    font-size: 0.68rem;
-    padding: 3px 6px;
-  }
-}
-/* ============================================================
-   RESULTADO DO SIMULADO — Premium v3
-   ============================================================ */
-
-.sim-resultado-card {
-  background: var(--card);
-  border: 1px solid var(--border);
-  padding: 22px;
-  border-radius: 18px;
-  box-shadow: 0 10px 26px rgba(0,0,0,0.28);
-  max-width: 650px;
-}
-
-.sim-resultado-titulo {
-  font-size: 1.25rem;
-  font-weight: 700;
-  margin-bottom: 4px;
-  color: var(--fg);
-}
-
-.sim-score {
-  font-size: 2.8rem;
-  font-weight: 800;
-  color: var(--brand);
-  line-height: 1;
-}
-
-.sim-feedback {
-  font-size: 0.9rem;
-  margin-top: 12px;
-  color: var(--muted);
-}
-/* ============================================================
-   PROGRESSO DO SIMULADO — Premium v2
-   ============================================================ */
-
-.sim-progress {
-  position: relative;
-  height: 6px;
-  background: var(--bg2);
-  border-radius: 6px;
-  overflow: hidden;
-}
-
-.sim-progress-fill {
-  background: var(--brand);
-  height: 100%;
-  transition: width 0.35s ease;
-}
-/* ============================================================
-   DASHBOARD — Cards Premium
-   ============================================================ */
-
-#dash-resumo .dash-card,
-#dash-bancas .dash-card,
-#dash-ultimos .dash-card {
-  background: var(--card);
-  border: 1px solid var(--border);
-  padding: 14px 18px;
-  border-radius: 14px;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.20);
-  transition: transform .25s ease, box-shadow .25s ease;
-}
-
-#dash-resumo .dash-card:hover,
-#dash-bancas .dash-card:hover,
-#dash-ultimos .dash-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 10px 30px rgba(0,0,0,0.30);
-}
-.dash-title {
-  font-size: 1rem;
-  font-weight: 700;
-  margin-bottom: 6px;
-  color: var(--fg);
-}
-
-.dash-sub {
-  font-size: 0.82rem;
-  color: var(--muted);
-}
-.dash-score {
-  font-weight: 700;
-  font-size: 1.4rem;
-  color: var(--brand);
-}
-
-html.light .dash-score {
-  color: #b54404;
-}
-/* ============================================================
-   MODAL DE CONFIGURAÇÃO — Premium Glass
-   ============================================================ */
-
-.sim-modal {
-  background: rgba(0,0,0,0.55);
-  backdrop-filter: blur(14px);
-  border-radius: 18px;
-  border: 1px solid rgba(255,255,255,0.06);
-  box-shadow: 0 10px 48px rgba(0,0,0,0.45);
-
-  padding: 22px;
-  max-width: 420px;
-}
-
-.sim-modal-title {
-  font-size: 1.25rem;
-  font-weight: 700;
-  margin-bottom: 6px;
-  color: #fff;
-}
-
-.sim-label {
-  color: var(--fg);
-  font-size: 0.85rem;
-  font-weight: 600;
-  margin-top: 14px;
-}
-
-.sim-input {
-  background: var(--bg2);
-  border: 1px solid var(--border);
-  padding: 10px 12px;
-  border-radius: 12px;
-  width: 100%;
-  color: var(--fg);
-  margin-top: 4px;
-  font-size: 0.9rem;
-}
-
-.sim-modal-footer .btn-primary {
-  margin-top: 14px;
-}
-html.light .sim-modal {
-  background: rgba(255,255,255,0.8);
-  border: 1px solid #e2d4c6;
-}
-
-html.light .sim-label {
-  color: #3c2b1d;
-}
-
-html.light .sim-input {
-  background: #fff;
-  border-color: #d9c6b7;
-  color: #3a2d22;
-}
-/* ============================================================
-   BADGES GENÉRICAS DO SIMULADO
-   ============================================================ */
-
-.sim-badge {
-  display: inline-flex;
-  padding: 4px 8px;
-  border-radius: 8px;
-  font-size: 0.7rem;
-  font-weight: 600;
-  border: 1px solid var(--border);
-  background: var(--bg2);
-  color: var(--fg);
-}
-
-.sim-badge.banca { border-color:#8b82ff; }
-.sim-badge.dificuldade { border-color:#ffc94d; }
-.sim-badge.tema { border-color:#7ddf78; }
-@media (max-width: 480px) {
-  .sim-modal {
-    padding: 18px;
-    border-radius: 16px;
-  }
-
-  .sim-questao-card {
-    padding: 14px;
-  }
-
-  .sim-score {
-    font-size: 2.3rem;
-  }
-
-  .sim-ia-option {
-    padding: 6px 10px;
-    font-size: 0.78rem;
-  }
-
-  .sim-ia-badge {
-    padding: 2px 6px;
-    font-size: 0.65rem;
-  }
-}
-/* ============================================================
-   IA AUXILIARES (C3) — CHIPS PREMIUM
-   ============================================================ */
-
-.sim-ia-row {
-  margin-top: 1.4rem;
-  padding-top: 0.9rem;
-  border-top: 1px dashed rgba(255,255,255,0.18);
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-}
-
-.sim-ia-label {
-  font-size: 0.8rem;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  color: var(--muted);
-  font-weight: 600;
-}
-
-.sim-ia-options {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.45rem;
-}
-
-/* Chip base (desligado, mas legível) */
-.sim-ia-option {
-  border-radius: 999px;
-  padding: 0.45rem 0.85rem;
-  font-size: 0.78rem;
-  font-weight: 600;
-  border: 1px solid rgba(255,255,255,0.16);
-  background: rgba(255,255,255,0.04);
-  color: var(--muted);
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  cursor: pointer;
-  transition:
-    background 0.18s ease,
-    border-color 0.18s ease,
-    color 0.18s ease,
-    transform 0.12s ease,
-    box-shadow 0.18s ease;
-}
-
-.sim-ia-option .emoji {
-  font-size: 0.95rem;
-}
-
-/* Hover no estado desligado */
-.sim-ia-option:hover {
-  background: rgba(255,255,255,0.08);
-  border-color: rgba(255,255,255,0.26);
-  transform: translateY(-1px);
-}
-
-/* Estado ativo (ligado) */
-.sim-ia-option.active {
-  background: rgba(196,75,4,0.18);
-  border-color: var(--brand);
-  color: #fff;
-  box-shadow: 0 0 14px rgba(196,75,4,0.45);
-}
-
-/* Pequeno "press" */
-.sim-ia-option:active {
-  transform: translateY(0);
-  box-shadow: none;
-}
-
-/* --------- MODO CLARO --------- */
-
-html.light .sim-ia-row {
-  border-top-color: rgba(0,0,0,0.08);
-}
-
-html.light .sim-ia-label {
-  color: #7b6a5d;
-}
-
-html.light .sim-ia-option {
-  background: #ffffff;
-  border-color: #e3d5c6;
-  color: #6a5544;
-}
-
-html.light .sim-ia-option:hover {
-  background: #f5e7d8;
-  border-color: #d4bda7;
-}
-
-html.light .sim-ia-option.active {
-  background: #c44b04;
-  border-color: #c44b04;
-  color: #fff;
-  box-shadow: 0 0 14px rgba(196,75,4,0.45);
-}
-/* ============================================================
-   BADGES DE IA — SOBRE AS QUESTÕES E RESULTADO
-   ============================================================ */
-
-.sim-ia-badges {
-  display: inline-flex;
-  flex-wrap: wrap;
-  gap: 0.3rem;
-}
-
-.sim-ia-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-  padding: 0.2rem 0.55rem;
-  border-radius: 999px;
-  font-size: 0.7rem;
-  font-weight: 600;
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.14);
-  color: var(--muted);
-}
-
-/* Variações por tipo */
-.sim-ia-badge--banca {
-  border-color: #8b82ff;
-  background: rgba(139,130,255,0.14);
-  color: #d4d0ff;
-}
-
-.sim-ia-badge--explica {
-  border-color: #ffc94d;
-  background: rgba(255,201,77,0.16);
-  color: #ffe3a2;
-}
-
-.sim-ia-badge--reforco {
-  border-color: #7ddf78;
-  background: rgba(125,223,120,0.15);
-  color: #c3f7bf;
-}
-
-/* Modo claro: suaviza */
-html.light .sim-ia-badge {
-  background: #fff;
-  border-color: #e0d2c4;
-  color: #6b5645;
-}
-
-html.light .sim-ia-badge--banca {
-  background: #f1efff;
-  color: #5149d8;
-  border-color: #b4aefc;
-}
-
-html.light .sim-ia-badge--explica {
-  background: #fff6dd;
-  color: #9a6a00;
-  border-color: #ffdd92;
-}
-
-html.light .sim-ia-badge--reforco {
-  background: #e6ffec;
-  color: #21763c;
-  border-color: #aee9b6;
-}
-/* ============================================================
-   ALTERNATIVAS DO SIMULADO — Refinamento
-   ============================================================ */
-
-.sim-questao-card {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 16px 18px;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.22);
-}
-
-.sim-enunciado {
-  font-size: 0.96rem;
-  color: var(--fg);
-}
-
-/* alternativa base */
-.sim-alt {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.6rem;
-  margin-top: 0.55rem;
-  padding: 0.55rem 0.65rem;
-  border-radius: 10px;
-  cursor: pointer;
-  transition: background 0.15s ease, transform 0.12s ease;
-}
-
-.sim-alt:hover {
-  background: rgba(255,255,255,0.04);
-  transform: translateY(-1px);
-}
-
-/* bolinha à esquerda */
-.sim-radio {
-  width: 16px;
-  height: 16px;
-  border-radius: 999px;
-  border: 2px solid var(--border);
-  margin-top: 3px;
-  flex-shrink: 0;
-  transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
-}
-
-.sim-alt-text {
-  font-size: 0.92rem;
-  color: var(--fg);
-}
-
-/* selecionada */
-.sim-alt.selected {
-  background: rgba(196,75,4,0.12);
-}
-
-.sim-alt.selected .sim-radio {
-  border-color: var(--brand);
-  background: radial-gradient(circle at 50% 50%, var(--brand) 0, var(--brand) 50%, transparent 51%);
-  box-shadow: 0 0 0 2px rgba(196,75,4,0.45);
-}
-/* ============================================================
-   DASHBOARD PREMIUM — CARDS, TABELAS, MÉTRICAS
-   ============================================================ */
-
-/* Container geral */
-#area-dashboard {
-  animation: dashFade 0.35s ease forwards;
-  opacity: 0;
-}
-
-@keyframes dashFade {
-  to { opacity: 1; }
-}
-
-/* -------------------------------------------
-   CARDS RESUMO (md:grid-cols-3)
--------------------------------------------- */
-
-#dash-resumo .dash-card {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 1rem 1.2rem;
-  box-shadow: 0 6px 14px rgba(0,0,0,0.25);
-  transition: transform .15s ease, box-shadow .2s ease;
-}
-
-#dash-resumo .dash-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 10px 22px rgba(0,0,0,0.32);
-}
-
-.dash-card-title {
-  font-size: 0.78rem;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  color: var(--muted);
-  margin-bottom: 0.45rem;
-  font-weight: 600;
-}
-
-.dash-card-value {
-  font-size: 1.55rem;
-  font-weight: 700;
-  color: var(--fg);
-  margin-bottom: 0.2rem;
-}
-
-.dash-card-sub {
-  font-size: 0.75rem;
-  color: var(--muted);
-}
-
-/* Estado vazio */
-#dash-empty {
-  padding: 1rem;
-  background: rgba(255,255,255,0.05);
-  border-radius: 12px;
-  text-align: center;
-}
-
-/* -------------------------------------------
-   BANCAS — barras horizontais
--------------------------------------------- */
-
-#dash-bancas .banca-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: var(--bg2);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 0.6rem 0.8rem;
-  margin-bottom: 0.5rem;
-  transition: background 0.15s ease, transform .12s ease;
-}
-
-#dash-bancas .banca-row:hover {
-  background: rgba(255,255,255,0.05);
-  transform: translateX(2px);
-}
-
-.banca-label {
-  font-weight: 600;
-  color: var(--fg);
-  font-size: 0.9rem;
-}
-
-.banca-score {
-  font-size: 0.9rem;
-  font-weight: 700;
-  color: var(--brand);
-}
-
-/* -------------------------------------------
-   ÚLTIMOS SIMULADOS — LISTA PREMIUM
--------------------------------------------- */
-
-#dash-ultimos .sim-item {
-  border: 1px solid var(--border);
-  background: var(--card);
-  border-radius: 12px;
-  padding: 0.75rem 1rem;
-  margin-bottom: 0.65rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  transition: background .15s ease, transform .12s ease;
-}
-
-#dash-ultimos .sim-item:hover {
-  background: rgba(255,255,255,0.05);
-  transform: translateY(-2px);
-}
-
-.sim-item-left {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.sim-item-banca {
-  font-size: 0.85rem;
-  color: var(--muted);
-}
-
-.sim-item-linha {
-  font-size: 0.95rem;
-  color: var(--fg);
-  font-weight: 600;
-}
-
-.sim-item-ia {
-  font-size: 0.7rem;
-  opacity: 0.7;
-}
-
-/* Score */
-.sim-item-score {
-  font-size: 1.3rem;
-  font-weight: 700;
-  color: var(--brand);
-  text-align: right;
-}
-
-/* -------------------------------------------
-   MODO CLARO — ajustes suaves
--------------------------------------------- */
-
-html.light #dash-resumo .dash-card {
-  box-shadow: 0 6px 12px rgba(0,0,0,0.08);
-}
-
-html.light #dash-bancas .banca-row {
-  background: #fffaf5;
-}
-
-html.light #dash-ultimos .sim-item {
-  background: #ffffff;
-  border-color: #e1d5c6;
-}
-
-/* -------------------------------------------
-   MICRO-ANIMAÇÕES
--------------------------------------------- */
-
-@keyframes dashPop {
-  0% { transform: scale(0.96); opacity: 0; }
-  100% { transform: scale(1); opacity: 1; }
-}
-
-#dash-resumo .dash-card,
-#dash-bancas .banca-row,
-#dash-ultimos .sim-item {
-  animation: dashPop 0.25s ease forwards;
-}
-
-/* ============================================================
-   FIX DEFINITIVO — Modal Simulado com layout profissional
-   ============================================================ */
-
-#sim-modal-backdrop .sim-modal {
-  display: flex;
-  flex-direction: column;
-  max-height: 90vh !important;
-  overflow: hidden !important; /* não deixa o container rolar */
-  padding: 1.2rem;
-  box-sizing: border-box;
-}
-
-/* Corpo rola, footer sempre visível */
-#sim-modal-backdrop .sim-modal-body {
-  flex: 1;
-  overflow-y: auto !important;
-  margin-bottom: 1rem;
-  padding-right: 6px; /* evita esconder conteúdo atrás da scrollbar */
-}
-
-/* Footer fixo na base do modal */
-#sim-modal-backdrop .sim-modal-footer {
-  flex-shrink: 0;
-  padding-top: 0.8rem;
-  background: var(--bg2);
-  border-top: 1px solid var(--border);
-  padding-bottom: 0.2rem;
-}
-
-/* Mobile refinado */
-@media (max-width: 640px) {
-  #sim-modal-backdrop .sim-modal {
-    max-height: 92vh !important;
-    margin-top: 4vh;
-  }
-
-  #sim-modal-backdrop .sim-modal-body {
-    padding-right: 4px;
-  }
-}
-/* ============================================================
-   FIX MOBILE — Modal de Simulado SEM cortar o botão
-   ============================================================ */
-
-/* O backdrop passa a rolar se o conteúdo for grande */
-#sim-modal-backdrop {
-  position: fixed;
-  inset: 0;
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  padding: 1.5rem 1rem;
-  background: rgba(0,0,0,0.65);
-  z-index: 70;
-  overflow-y: auto;              /* ← aqui é a chave */
-}
-
-/* O cartão do modal ganha margem no topo e largura controlada */
-#sim-modal-backdrop .sim-modal {
-  width: 100%;
-  max-width: 480px;
-  margin-top: 4vh;               /* descola do topo, cabe em mobile */
-  background: var(--card);
-  border-radius: 16px;
-  box-shadow: 0 18px 45px rgba(0,0,0,0.6);
-}
-
-/* Em telas maiores ele continua comportado */
-@media (min-width: 768px) {
-  #sim-modal-backdrop {
-    align-items: center;
-    padding: 2rem;
-  }
-
-  #sim-modal-backdrop .sim-modal {
-    margin-top: 0;
-    max-width: 520px;
-  }
-}
-/* =========================================================
-   FIX DEFINITIVO — MODAL SIMULADOS (z-index + pointer-events)
-========================================================= */
-
-.sim-modal-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.55);
 
   display: flex;
   align-items: center;
   justify-content: center;
 
-  z-index: 9999;
+  background: rgba(0,0,0,.65);
   pointer-events: auto;
 }
 
 .sim-modal-backdrop.hidden {
-  display: none;
-}
-
-.sim-modal-backdrop.visible {
-  display: flex;
+  display: none !important;
 }
 
 .sim-modal {
@@ -1871,86 +72,139 @@ html.light #dash-ultimos .sim-item {
   border-radius: 16px;
   padding: 1.25rem;
   width: 100%;
-  max-width: 420px;
+  max-width: 520px;
 
+  box-shadow: 0 18px 45px rgba(0,0,0,.6);
   position: relative;
-  z-index: 10000;
-  pointer-events: auto;
 }
 
-#sim-modal-iniciar {
-  pointer-events: auto;
-  z-index: 10001;
+/* Header / close */
+.sim-modal-close {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  background: transparent;
+  border: none;
+  font-size: 1.4rem;
+  color: var(--muted);
+  cursor: pointer;
 }
 
-.sim-resultado-item.ok {
-  border-left: 4px solid #22c55e;
+.sim-modal-close:hover {
+  background: rgba(255,255,255,.08);
+  border-radius: 8px;
 }
 
-.sim-resultado-item.erro {
-  border-left: 4px solid #ef4444;
-}
+/* ============================================================
+   INPUTS DO MODAL
+   ============================================================ */
 
-.sim-correta {
-  color: #22c55e;
-}
-
-.sim-ok {
-  color: #22c55e;
+.sim-label {
+  font-size: .85rem;
   font-weight: 600;
+  margin-top: .75rem;
+  color: var(--fg, #fff);
 }
-/* ===============================
-   SIMULADO — UI REFINADA
-================================ */
+
+.sim-input {
+  width: 100%;
+  margin-top: .35rem;
+  padding: .6rem .75rem;
+
+  border-radius: 10px;
+  background: var(--bg2, #141414);
+  border: 1px solid var(--border);
+  color: var(--fg, #fff);
+  font-size: .9rem;
+}
+
+.sim-input:focus {
+  outline: none;
+  border-color: var(--brand);
+  box-shadow: 0 0 0 1px rgba(196,75,4,.4);
+}
+
+/* ============================================================
+   QUESTÃO
+   ============================================================ */
 
 .sim-questao-card {
   background: linear-gradient(180deg, #141414, #101010);
   border-radius: 16px;
   padding: 24px 26px;
-  max-width: 760px;
-  margin: 0 auto 24px auto;
-  box-shadow: 0 12px 32px rgba(0,0,0,0.45);
+  margin-bottom: 24px;
+  box-shadow: 0 12px 32px rgba(0,0,0,.45);
 }
 
-.sim-questao-card p {
-  font-size: 1.15rem;
+.sim-status {
+  font-size: .8rem;
+  color: var(--muted);
+  margin-bottom: 10px;
+}
+
+.sim-enunciado {
+  font-size: .96rem;
   line-height: 1.55;
-  font-weight: 500;
-  color: #ffffff;
-  margin-bottom: 20px;
+  color: var(--fg);
+  white-space: pre-line;
 }
 
-/* Alternativas */
+/* ============================================================
+   ALTERNATIVAS
+   ============================================================ */
+
 .sim-alt {
-  width: 100%;
-  text-align: left;
-  padding: 14px 16px;
-  margin-bottom: 12px;
+  display: flex;
+  align-items: flex-start;
+  gap: .6rem;
+
+  margin-top: .55rem;
+  padding: .65rem .75rem;
+
   border-radius: 12px;
-  background: #1a1a1a;
-  border: 1px solid #2a2a2a;
-  color: #f1f1f1;
-  font-size: 0.95rem;
+  background: var(--bg2, #1a1a1a);
+  border: 1px solid var(--border);
+
   cursor: pointer;
-  transition: all 0.18s ease;
+  transition: all .18s ease;
 }
 
 .sim-alt:hover {
   background: #202020;
-  border-color: #c44b04;
+  border-color: var(--brand);
   transform: translateY(-1px);
 }
 
 .sim-alt.selected {
-  background: rgba(196,75,4,0.15);
-  border-color: #c44b04;
-  box-shadow: inset 0 0 0 1px rgba(196,75,4,0.4);
+  background: rgba(196,75,4,.15);
+  border-color: var(--brand);
+  box-shadow: inset 0 0 0 1px rgba(196,75,4,.4);
 }
 
-/* Navegação */
+.sim-radio {
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  border: 2px solid var(--border);
+  margin-top: 3px;
+  flex-shrink: 0;
+}
+
+.sim-alt.selected .sim-radio {
+  border-color: var(--brand);
+  background: radial-gradient(circle, var(--brand) 0, var(--brand) 50%, transparent 51%);
+}
+
+.sim-alt-text {
+  font-size: .92rem;
+  color: var(--fg);
+}
+
+/* ============================================================
+   NAVEGAÇÃO
+   ============================================================ */
+
 #sim-nav {
-  max-width: 760px;
-  margin: 0 auto;
   display: flex;
   gap: 14px;
 }
@@ -1960,14 +214,14 @@ html.light #dash-ultimos .sim-item {
   flex: 1;
   padding: 14px;
   border-radius: 14px;
-  font-size: 0.95rem;
+  font-size: .95rem;
   font-weight: 600;
   cursor: pointer;
 }
 
 #sim-btn-voltar {
   background: #141414;
-  border: 1px solid #2a2a2a;
+  border: 1px solid var(--border);
   color: #ccc;
 }
 
@@ -1978,14 +232,14 @@ html.light #dash-ultimos .sim-item {
 }
 
 #sim-btn-voltar:disabled {
-  opacity: 0.4;
+  opacity: .4;
   cursor: not-allowed;
 }
-.sim-status {
-  font-size: 0.8rem;
-  color: #aaa;
-  margin-bottom: 10px;
-}
+
+/* ============================================================
+   RESULTADO
+   ============================================================ */
+
 .sim-resultado-card {
   max-width: 640px;
   margin: 0 auto;
@@ -2013,61 +267,109 @@ html.light #dash-ultimos .sim-item {
   color: var(--muted);
 }
 
-.sim-msg-free {
-  margin: 16px 0;
-  color: var(--muted);
+/* ============================================================
+   IA — CHIPS
+   ============================================================ */
+
+.sim-ia-row {
+  margin-top: 1.2rem;
+  padding-top: .9rem;
+  border-top: 1px dashed rgba(255,255,255,.18);
 }
 
-.sim-msg-premium {
-  margin: 16px 0;
-  color: var(--brand);
-  font-weight: 600;
-}
-
-.sim-resultado-acoes {
+.sim-ia-options {
   display: flex;
-  gap: 12px;
-  justify-content: center;
-  margin-top: 24px;
+  flex-wrap: wrap;
+  gap: .45rem;
 }
 
-.btn-primario {
+.sim-ia-option {
+  padding: .45rem .85rem;
+  border-radius: 999px;
+  font-size: .78rem;
+  font-weight: 600;
+
+  border: 1px solid rgba(255,255,255,.16);
+  background: rgba(255,255,255,.04);
+  color: var(--muted);
+
+  cursor: pointer;
+  transition: all .18s ease;
+}
+
+.sim-ia-option:hover {
+  background: rgba(255,255,255,.08);
+  border-color: rgba(255,255,255,.26);
+}
+
+.sim-ia-option.active {
+  background: rgba(196,75,4,.18);
+  border-color: var(--brand);
+  color: #fff;
+  box-shadow: 0 0 14px rgba(196,75,4,.45);
+}
+
+/* ============================================================
+   FAB
+   ============================================================ */
+
+#sim-fab {
+  position: fixed;
+  right: 26px;
+  bottom: 26px;
+
+  padding: 14px 18px;
+  border-radius: 14px;
+
   background: var(--brand);
   color: #fff;
-  padding: 12px 18px;
-  border-radius: 12px;
-  border: none;
+
+  font-size: 1.1rem;
   font-weight: 600;
+  border: none;
   cursor: pointer;
+
+  box-shadow: 0 10px 32px rgba(0,0,0,.35);
+  transition: all .25s ease;
 }
 
-.btn-secundario {
-  background: transparent;
-  color: var(--fg);
-  padding: 12px 18px;
-  border-radius: 12px;
-  border: 1px solid var(--border);
-  cursor: pointer;
-}
-.sim-explicacao-bloco {
-  margin: 20px 0;
-  padding: 16px;
-  border-radius: 12px;
-  background: var(--surface-soft);
-  text-align: left;
+#sim-fab:hover {
+  transform: translateY(-3px);
+  filter: brightness(1.08);
 }
 
-.sim-explicacao-status.correta { color: var(--brand); }
-.sim-explicacao-status.errada { color: #ff6b6b; }
+/* ============================================================
+   MOBILE
+   ============================================================ */
 
-.sim-explicacao-correta p {
-  margin-top: 6px;
-  color: var(--fg);
+@media (max-width: 640px) {
+  .sim-modal {
+    margin-top: 4vh;
+    max-height: 92vh;
+    overflow-y: auto;
+  }
+
+  .sim-questao-card {
+    padding: 18px;
+  }
 }
 
-.sim-explicacao-erradas ul {
-  margin-top: 8px;
-  padding-left: 18px;
-  color: var(--muted);
+/* ============================================================
+   LIGHT MODE
+   ============================================================ */
+
+html.light {
+  --surface: #ffffff;
+  --surface-soft: #f3f3f3;
+  --border: #d4d4d4;
+  --text: #1a1a1a;
+  --muted: #6b6b6b;
 }
 
+html.light .sim-alt {
+  background: #fafafa;
+}
+
+html.light .sim-modal {
+  background: #ffffff;
+}
