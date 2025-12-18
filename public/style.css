@@ -1946,3 +1946,54 @@ html.light .liora-wizard-title {
     margin-top: auto;
   }
 }
+
+
+/* ============================================================
+   AJUSTES MOBILE PARA MODAIS
+============================================================ */
+.liora-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(0,0,0,0.6);
+  z-index: 1000;
+}
+
+.liora-modal-backdrop.hidden {
+  display: none;
+}
+
+.liora-modal,
+.liora-modal-card {
+  width: 100%;
+  max-width: 520px;
+  max-height: 92vh;
+  overflow-y: auto;
+  background: var(--card, #181818);
+  border-radius: 16px;
+  padding: 1.25rem;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+}
+
+@media (max-width: 640px) {
+  .liora-modal,
+  .liora-modal-card {
+    max-width: 100%;
+    max-height: 90vh;
+    border-radius: 14px;
+    padding: 1rem;
+  }
+}
+
+.liora-modal-close {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+}
