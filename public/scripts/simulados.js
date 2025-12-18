@@ -1,13 +1,14 @@
 // =============================================================
-// 🧠 LIORA — SIMULADOS v103.7-FREEMIUM-STABLE
+// 🧠 LIORA — SIMULADOS v103.8-CANONICAL
 // - Free: experiência completa com limites
 // - Premium: ilimitado + histórico
 // - Shuffle real das alternativas
 // - Resultado + explicações no final
+// - Modal controlado 100% via lioraModal
 // =============================================================
 
 (function () {
-  console.log("🟢 Liora Simulados v103.7 carregado");
+  console.log("🟢 Liora Simulados v103.8 carregado");
 
   // -------------------------------------------------
   // STATE LOCAL
@@ -15,8 +16,7 @@
   const STATE = {
     questoes: [],
     atual: 0,
-    config: null,
-    modalOpen: false
+    config: null
   };
 
   // -------------------------------------------------
@@ -67,42 +67,30 @@
   }
 
   // -------------------------------------------------
-  // MODAL
+  // ABRIR MODAL (CANÔNICO)
   // -------------------------------------------------
   function abrirModal(access) {
     const els = getEls();
-    if (!els.modal || STATE.modalOpen) return;
-
-    STATE.modalOpen = true;
-    els.modal.classList.remove("hidden");
-    els.modal.classList.add("visible");
+    if (!els.modal) return;
 
     const isFree = access.plan === "free";
+
     if (els.qtd) {
       els.qtd.value = access.maxQuestoes;
       els.qtd.disabled = isFree;
     }
 
-    bindIniciarSimulado();
-  }
-
-  function fecharModal() {
-    const els = getEls();
-    if (!els.modal) return;
-
-    els.modal.classList.remove("visible");
-    els.modal.classList.add("hidden");
-    STATE.modalOpen = false;
+    lioraModal.open("sim-modal-backdrop");
   }
 
   // -------------------------------------------------
-  // EVENTO CANÔNICO
+  // EVENTO GLOBAL — ABRIR SIMULADO
   // -------------------------------------------------
   window.addEventListener("liora:abrir-simulado", () => {
     const access = getSimuladoAccess();
 
     if (!access.ok && access.reason === "login") {
-      alert("Faça login para iniciar um simulado.");
+      window.dispatchEvent(new Event("liora:login-required"));
       return;
     }
 
@@ -120,44 +108,40 @@
   });
 
   // -------------------------------------------------
-  // BIND DO BOTÃO INICIAR
+  // BIND BOTÃO INICIAR (1x)
   // -------------------------------------------------
-  function bindIniciarSimulado() {
+  document.addEventListener("click", async (e) => {
+    if (!e.target.closest("#sim-modal-iniciar")) return;
+
     const els = getEls();
-    if (!els.iniciar || els.iniciar.dataset.bound) return;
+    const access = getSimuladoAccess();
+    if (!access.ok) return;
 
-    els.iniciar.dataset.bound = "1";
+    STATE.config = {
+      banca: els.banca?.value,
+      qtd: access.maxQuestoes,
+      dificuldade: els.dif?.value,
+      tema: els.tema?.value,
+      tempo: Number(els.tempo?.value)
+    };
 
-    els.iniciar.addEventListener("click", async () => {
-      const access = getSimuladoAccess();
-      if (!access.ok) return;
+    lioraModal.close("sim-modal-backdrop");
+    window.lioraLoading?.show("Gerando simulado...");
 
-      STATE.config = {
-        banca: els.banca?.value,
-        qtd: access.maxQuestoes,
-        dificuldade: els.dif?.value,
-        tema: els.tema?.value,
-        tempo: Number(els.tempo?.value)
-      };
+    try {
+      const raw = await gerarQuestoes(STATE.config);
+      STATE.questoes = prepararQuestoes(raw);
+      STATE.atual = 0;
 
-      fecharModal();
-      window.lioraLoading?.show("Gerando simulado...");
-
-      try {
-        const raw = await gerarQuestoes(STATE.config);
-        STATE.questoes = prepararQuestoes(raw);
-        STATE.atual = 0;
-
-        window.lioraUsage?.registrarSimulado();
-        window.lioraLoading?.hide();
-        renderQuestao();
-      } catch (e) {
-        console.error(e);
-        window.lioraLoading?.hide();
-        window.lioraError?.show("Erro ao gerar simulado.");
-      }
-    });
-  }
+      window.lioraUsage?.registrarSimulado();
+      window.lioraLoading?.hide();
+      renderQuestao();
+    } catch (e) {
+      console.error(e);
+      window.lioraLoading?.hide();
+      window.lioraError?.show("Erro ao gerar simulado.");
+    }
+  });
 
   // -------------------------------------------------
   // IA
@@ -211,9 +195,9 @@ Retorne APENAS JSON válido no formato:
 
   function prepararQuestoes(lista) {
     return lista.map((q, idx) => {
-      const correta = q.alternativas[q.corretaIndex];
+      const corretaTexto = q.alternativas[q.corretaIndex];
       const alternativas = shuffle(q.alternativas);
-      const novaCorreta = alternativas.indexOf(correta);
+      const novaCorreta = alternativas.indexOf(corretaTexto);
 
       return {
         indice: idx + 1,
@@ -263,7 +247,10 @@ Retorne APENAS JSON válido no formato:
     });
 
     els.btnProx.textContent =
-      STATE.atual === STATE.questoes.length - 1 ? "Finalizar ▶" : "Próxima ▶";
+      STATE.atual === STATE.questoes.length - 1
+        ? "Finalizar ▶"
+        : "Próxima ▶";
+
     els.btnVoltar.disabled = STATE.atual === 0;
   }
 
@@ -367,10 +354,6 @@ Retorne APENAS JSON válido no formato:
     if (e.target.closest("#sim-btn-voltar") && STATE.atual > 0) {
       STATE.atual--;
       renderQuestao();
-    }
-
-    if (e.target.closest("#sim-modal-close-btn") || e.target === getEls().modal) {
-      fecharModal();
     }
   });
 })();
