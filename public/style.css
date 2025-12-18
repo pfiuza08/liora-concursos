@@ -2025,4 +2025,32 @@ html.light .liora-wizard-title {
 .liora-modal-premium {
   max-width: 720px;
 }
+/* ======================================================
+   LIORA — MODAIS CANÔNICOS
+====================================================== */
+
+.liora-modal-backdrop,
+.sim-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: rgba(0, 0, 0, 0.6);
+}
+
+.liora-modal,
+.sim-modal,
+.liora-modal-card {
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+/* hidden SEMPRE vence */
+.hidden {
+  display: none !important;
+}
 
