@@ -2053,4 +2053,20 @@ html.light .liora-wizard-title {
 .hidden {
   display: none !important;
 }
+.liora-modal-card {
+  max-height: 90vh;
+  width: 100%;
+  max-width: 520px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 480px) {
+  .liora-modal-card {
+    max-width: 100%;
+    height: auto;
+    border-radius: 14px 14px 0 0;
+    align-self: flex-end;
+  }
+}
 
