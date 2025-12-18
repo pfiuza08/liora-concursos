@@ -1874,3 +1874,75 @@ html.light .liora-wizard-title {
 #liora-seu-estudo {
   display: none;
 }
+/* ======================================
+   LIORA — MODAL CANÔNICO
+====================================== */
+
+.liora-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  z-index: 9999;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.liora-modal {
+  width: 100%;
+  max-width: 520px;
+  background: var(--card);
+  border-radius: 16px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+
+  display: flex;
+  flex-direction: column;
+
+  max-height: 90vh;
+  overflow: hidden;
+}
+
+/* HEADER */
+.liora-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.liora-modal-header h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.liora-modal-close {
+  background: transparent;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+
+/* BODY */
+.liora-modal-body {
+  padding: 1rem 1.25rem;
+  overflow-y: auto;
+  flex: 1;
+}
+
+/* FOOTER */
+.liora-modal-footer {
+  padding: 1rem 1.25rem;
+  border-top: 1px solid var(--border);
+}
+
+/* MOBILE AJUSTES */
+@media (max-width: 768px) {
+  .liora-modal {
+    border-radius: 16px 16px 0 0;
+    max-height: 85vh;
+    margin-top: auto;
+  }
+}
