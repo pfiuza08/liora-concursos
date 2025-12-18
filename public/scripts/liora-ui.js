@@ -4,6 +4,37 @@
 (function () {
   console.log("🔵 Liora UI helpers carregados...");
 
+  // ======================================
+  // LIORA — MODAL CONTROLLER
+  // ======================================
+  window.lioraModal = {
+    open(id) {
+      const modal = document.getElementById(id);
+      if (!modal) return;
+  
+      modal.classList.remove("hidden");
+  
+      // fecha ao clicar fora
+      modal.onclick = (e) => {
+        if (e.target === modal) {
+          lioraModal.close(id);
+        }
+      };
+  
+      modal
+        .querySelector(".liora-modal-close")
+        ?.addEventListener("click", () => {
+          lioraModal.close(id);
+        });
+    },
+  
+    close(id) {
+      const modal = document.getElementById(id);
+      if (!modal) return;
+      modal.classList.add("hidden");
+    }
+  };
+
   document.addEventListener("DOMContentLoaded", () => {
     const loadingEl = document.getElementById("liora-loading");
     const loadingTextEl = document.getElementById("liora-loading-text");
