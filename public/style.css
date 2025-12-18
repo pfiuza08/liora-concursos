@@ -1947,10 +1947,11 @@ html.light .liora-wizard-title {
   }
 }
 
-
 /* ============================================================
-   AJUSTES MOBILE PARA MODAIS
+   LIORA — MODAIS CANÔNICOS (DESKTOP + MOBILE SAFE)
 ============================================================ */
+
+/* BACKDROP PADRÃO */
 .liora-modal-backdrop {
   position: fixed;
   inset: 0;
@@ -1958,7 +1959,7 @@ html.light .liora-wizard-title {
   align-items: center;
   justify-content: center;
   padding: 1rem;
-  background: rgba(0,0,0,0.6);
+  background: rgba(0, 0, 0, 0.6);
   z-index: 1000;
 }
 
@@ -1966,8 +1967,10 @@ html.light .liora-wizard-title {
   display: none;
 }
 
+/* CARD DO MODAL */
 .liora-modal,
 .liora-modal-card {
+  position: relative;
   width: 100%;
   max-width: 520px;
   max-height: 92vh;
@@ -1975,9 +1978,10 @@ html.light .liora-wizard-title {
   background: var(--card, #181818);
   border-radius: 16px;
   padding: 1.25rem;
-  box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
 }
 
+/* MOBILE */
 @media (max-width: 640px) {
   .liora-modal,
   .liora-modal-card {
@@ -1988,6 +1992,7 @@ html.light .liora-wizard-title {
   }
 }
 
+/* BOTÃO FECHAR */
 .liora-modal-close {
   position: absolute;
   top: 0.75rem;
@@ -1996,4 +2001,28 @@ html.light .liora-wizard-title {
   border: none;
   font-size: 1.2rem;
   cursor: pointer;
+  color: var(--fg, #fff);
 }
+
+/* ============================================================
+   MODAIS ESPECÍFICOS
+============================================================ */
+
+/* LOADING */
+.liora-loading-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+/* ERRO */
+.liora-error-card {
+  text-align: center;
+}
+
+/* PREMIUM */
+.liora-modal-premium {
+  max-width: 720px;
+}
+
