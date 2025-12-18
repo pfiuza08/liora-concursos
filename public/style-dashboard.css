@@ -1,0 +1,230 @@
+/* ============================================================
+   LIORA — DASHBOARD
+   Consolidado v1.0 — SAFE + PREMIUM
+   ============================================================ */
+
+/* ============================================================
+   CONTAINER GERAL
+   ============================================================ */
+
+#area-dashboard {
+  animation: dashFade .35s ease forwards;
+  opacity: 0;
+}
+
+@keyframes dashFade {
+  to { opacity: 1; }
+}
+
+/* ============================================================
+   GRID PRINCIPAL
+   ============================================================ */
+
+#dash-resumo,
+#dash-bancas,
+#dash-ultimos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+  width: 100%;
+  margin-top: .5rem;
+}
+
+/* ============================================================
+   ESTADO VAZIO
+   ============================================================ */
+
+#dash-empty {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  border-radius: 14px;
+  background: rgba(255,255,255,.05);
+  border: 1px solid var(--border);
+  text-align: center;
+  color: var(--muted);
+}
+
+/* ============================================================
+   CARDS — RESUMO
+   ============================================================ */
+
+#dash-resumo .dash-card {
+  flex: 1 1 calc(33% - 1.25rem);
+  min-width: 260px;
+
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 1rem 1.2rem;
+
+  box-shadow: 0 6px 18px rgba(0,0,0,.25);
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+
+#dash-resumo .dash-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 30px rgba(0,0,0,.3);
+}
+
+.dash-card-title {
+  font-size: .78rem;
+  text-transform: uppercase;
+  letter-spacing: .12em;
+  color: var(--muted);
+  margin-bottom: .45rem;
+  font-weight: 600;
+}
+
+.dash-card-value {
+  font-size: 1.55rem;
+  font-weight: 700;
+  color: var(--fg);
+  margin-bottom: .2rem;
+}
+
+.dash-card-sub {
+  font-size: .75rem;
+  color: var(--muted);
+}
+
+/* ============================================================
+   BANCAS — PERFORMANCE
+   ============================================================ */
+
+#dash-bancas .banca-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: .6rem .8rem;
+  margin-bottom: .5rem;
+
+  transition: background .15s ease, transform .12s ease;
+}
+
+#dash-bancas .banca-row:hover {
+  background: rgba(255,255,255,.05);
+  transform: translateX(2px);
+}
+
+.banca-label {
+  font-weight: 600;
+  font-size: .9rem;
+  color: var(--fg);
+}
+
+.banca-score {
+  font-size: .9rem;
+  font-weight: 700;
+  color: var(--brand);
+}
+
+/* ============================================================
+   ÚLTIMOS SIMULADOS
+   ============================================================ */
+
+#dash-ultimos .sim-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  border: 1px solid var(--border);
+  background: var(--card);
+  border-radius: 12px;
+  padding: .75rem 1rem;
+  margin-bottom: .65rem;
+
+  transition: background .15s ease, transform .12s ease;
+}
+
+#dash-ultimos .sim-item:hover {
+  background: rgba(255,255,255,.05);
+  transform: translateY(-2px);
+}
+
+.sim-item-left {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sim-item-banca {
+  font-size: .85rem;
+  color: var(--muted);
+}
+
+.sim-item-linha {
+  font-size: .95rem;
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.sim-item-ia {
+  font-size: .7rem;
+  opacity: .7;
+}
+
+.sim-item-score {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--brand);
+  text-align: right;
+}
+
+/* ============================================================
+   MICRO-ANIMAÇÕES
+   ============================================================ */
+
+@keyframes dashPop {
+  0% { transform: scale(.96); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+#dash-resumo .dash-card,
+#dash-bancas .banca-row,
+#dash-ultimos .sim-item {
+  animation: dashPop .25s ease forwards;
+}
+
+/* ============================================================
+   RESPONSIVO
+   ============================================================ */
+
+@media (max-width: 768px) {
+  #dash-resumo .dash-card {
+    flex: 1 1 100%;
+  }
+}
+
+/* ============================================================
+   MODO CLARO
+   ============================================================ */
+
+html.light #dash-empty {
+  background: #ffffff;
+  border-color: #d4d4d4;
+  color: #6b6b6b;
+}
+
+html.light #dash-resumo .dash-card {
+  background: #ffffff;
+  border-color: #e5e5e5;
+  box-shadow: 0 6px 14px rgba(0,0,0,.08);
+}
+
+html.light #dash-bancas .banca-row {
+  background: #fffaf5;
+}
+
+html.light #dash-ultimos .sim-item {
+  background: #ffffff;
+  border-color: #e1d5c6;
+}
+
+html.light .banca-score,
+html.light .sim-item-score {
+  color: #b54404;
+}
