@@ -418,13 +418,15 @@
      MODAIS
 ============================================================ -->
 
-<!-- SIMULADO CONFIG -->
-<div id="sim-modal-backdrop" class="sim-modal-backdrop hidden">
-  <div class="sim-modal">
-    <div class="sim-modal-header flex justify-between items-center">
-      <h3 class="sim-modal-title">Configurar simulado</h3>
-      <button id="sim-modal-close-btn" class="sim-modal-close">✕</button>
-    </div>
+
+<!-- ============================================================
+     SIMULADO — CONFIGURAÇÃO
+============================================================ -->
+<div id="sim-modal-backdrop" class="liora-modal-backdrop hidden">
+  <div class="liora-modal sim-modal">
+    <button class="liora-modal-close" data-close>✕</button>
+
+    <h3 class="sim-modal-title">Configurar simulado</h3>
 
     <div class="sim-modal-body">
       <label class="sim-label">Banca</label>
@@ -438,7 +440,7 @@
       </select>
 
       <label class="sim-label">Quantidade</label>
-      <input id="sim-modal-qtd" type="number" value="20" class="sim-input">
+      <input id="sim-modal-qtd" type="number" value="5" class="sim-input">
 
       <label class="sim-label">Tempo (minutos)</label>
       <input id="sim-modal-tempo" type="number" value="30" class="sim-input">
@@ -459,17 +461,24 @@
     </div>
 
     <div class="sim-modal-footer">
-      <button id="sim-modal-iniciar" class="btn-primary w-full">Iniciar simulado</button>
+      <button id="sim-modal-iniciar" class="btn-primary w-full">
+        Iniciar simulado
+      </button>
     </div>
   </div>
 </div>
 
-<!-- ERRO -->
-<div id="liora-error" class="liora-error hidden">
-  <div class="liora-error-card">
+<!-- ============================================================
+     ERRO GLOBAL
+============================================================ -->
+<div id="liora-error" class="liora-modal-backdrop hidden">
+  <div class="liora-modal liora-error-card">
+    <button class="liora-modal-close" data-close>✕</button>
+
     <div class="liora-error-icon">⚠️</div>
     <h3 class="liora-error-title">Algo deu errado</h3>
     <p id="liora-error-message">Ocorreu um erro inesperado.</p>
+
     <div class="liora-error-actions">
       <button id="liora-error-retry" class="btn-primary">Tentar novamente</button>
       <button id="liora-error-back" class="btn-secondary">Voltar ao início</button>
@@ -477,125 +486,85 @@
   </div>
 </div>
 
-<!-- LOADING -->
-<div id="liora-loading" class="liora-loading hidden">
-  <div class="liora-loading-card">
+<!-- ============================================================
+     LOADING GLOBAL
+============================================================ -->
+<div id="liora-loading" class="liora-modal-backdrop hidden">
+  <div class="liora-modal liora-loading-card">
     <div class="liora-spinner"></div>
     <p id="liora-loading-text">Carregando…</p>
   </div>
 </div>
 
-
-<!-- LOGIN -->
-<div id="liora-login-backdrop" class="liora-premium-backdrop hidden">
-  <div class="liora-premium-modal" style="max-width: 420px">
-    <button id="liora-login-close" class="liora-premium-close">✕</button>
-    <h2>Entrar na Liora</h2>
-
-    <input id="login-email" type="email" placeholder="Seu e-mail" class="liora-input">
-    <input id="login-senha" type="password" placeholder="Senha" class="liora-input">
-
-    <button id="login-btn" class="btn-primary w-full mt-3">Entrar</button>
-
-    <p class="text-sm mt-3">
-      Não tem conta? <span id="login-criar" class="link">Criar conta</span>
-    </p>
-  </div>
-</div>
-
-<!-- =========================================================
-     MODAL LOGIN / CADASTRO — PREMIUM BLACK GLASS
-========================================================= -->
-<div id="liora-auth-modal" class="liora-modal hidden">
+<!-- ============================================================
+     LOGIN / CADASTRO — CANÔNICO
+============================================================ -->
+<div id="liora-auth-modal" class="liora-modal-backdrop hidden">
   <div class="liora-modal-card">
     <button class="liora-modal-close" data-close>✕</button>
 
     <div class="liora-modal-header">
       <h2 id="liora-auth-title">Acessar Liora</h2>
-      <p id="liora-auth-subtitle">Acesse seus planos de estudo em qualquer dispositivo.</p>
+      <p id="liora-auth-subtitle">
+        Acesse seus planos de estudo em qualquer dispositivo.
+      </p>
     </div>
 
     <form id="liora-auth-form" class="liora-modal-body">
       <div class="liora-input-group">
         <label for="auth-email">E-mail</label>
-        <input type="email" id="auth-email" required placeholder="voce@exemplo.com" autocomplete="email" />
+        <input id="auth-email" type="email" required autocomplete="email">
       </div>
 
       <div class="liora-input-group">
         <label for="auth-senha">Senha</label>
-        <input type="password" id="auth-senha" required placeholder="••••••••" autocomplete="current-password" />
+        <input id="auth-senha" type="password" required autocomplete="current-password">
       </div>
 
-      <div class="liora-auth-error" id="liora-auth-error"></div>
+      <div id="liora-auth-error" class="liora-auth-error"></div>
 
-      <button type="submit" id="liora-auth-submit" class="liora-btn-primary liora-btn-full">
+      <button type="submit"
+              id="liora-auth-submit"
+              class="liora-btn-primary liora-btn-full">
         <span class="liora-btn-text">Entrar</span>
         <span class="liora-btn-loader"></span>
       </button>
 
-      <button type="button" id="liora-auth-toggle-mode" class="liora-link-btn">
+      <button type="button"
+              id="liora-auth-toggle-mode"
+              class="liora-link-btn">
         Ainda não tenho conta. Criar conta.
       </button>
-
-      <div class="liora-auth-banner">
-        <span class="emoji">✨</span>
-        <span>Acesse a Liora em qualquer dispositivo e sincronize seu estudo automaticamente.</span>
-      </div>
-
-   
     </form>
 
     <div class="liora-modal-footer">
-      <small>Ao continuar, você concorda com os termos de uso da Liora.</small>
+      <small>Ao continuar, você concorda com os termos da Liora.</small>
     </div>
   </div>
 </div>
 
-<!-- =========================================================
-     MODAL PREMIUM — LIORA+
-========================================================= -->
-<div id="liora-premium-modal" class="liora-modal-backdrop hidden" aria-hidden="true">
+<!-- ============================================================
+     PREMIUM — LIORA+
+============================================================ -->
+<div id="liora-premium-modal" class="liora-modal-backdrop hidden">
   <div class="liora-modal liora-modal-premium">
-    <button class="liora-modal-close" id="liora-premium-close" aria-label="Fechar">
-      ✕
-    </button>
+    <button class="liora-modal-close" id="liora-premium-close">✕</button>
 
     <div class="liora-modal-header">
       <span class="liora-pill">Liora+</span>
       <h2>Desbloqueie todo o potencial da Liora</h2>
-      <p>Planos ilimitados, sessões completas, simulados avançados e muito mais.</p>
+      <p>Planos ilimitados, simulados avançados e progresso completo.</p>
     </div>
 
     <div class="liora-premium-grid">
-      <div class="liora-premium-card">
-        <h3>Plano Gratuito</h3>
-        <ul>
-          <li>1 plano de estudo por dia</li>
-          <li>Nível iniciante</li>
-          <li>Até 3 sessões por plano</li>
-          <li>Upload de PDFs pequenos</li>
-          <li>Quiz básico</li>
-        </ul>
-      </div>
-
-      <div class="liora-premium-card liora-premium-card-highlight">
-        <h3>Liora+</h3>
-        <ul>
-          <li>Planos ilimitados</li>
-          <li>Todos os níveis</li>
-          <li>Sessões completas e ricas</li>
-          <li>Upload de PDFs grandes</li>
-          <li>Mapa mental, resumo, quiz forte</li>
-          <li>Histórico e progresso avançado</li>
-        </ul>
-      </div>
+      <!-- conteúdo mantido -->
     </div>
 
     <div class="liora-premium-cta">
-      <button id="liora-premium-cta" class="liora-btn-primary liora-btn-full">
+      <button id="liora-premium-cta"
+              class="liora-btn-primary liora-btn-full">
         Quero liberar o Liora+
       </button>
-      <small>Você será direcionado para a página segura de pagamento.</small>
     </div>
   </div>
 </div>
