@@ -26,29 +26,44 @@
     }
 
     function open(id) {
-      const modal = getModal(id);
+      const modal = document.getElementById(id);
       if (!modal) {
         console.warn("⚠️ Modal não encontrado:", id);
         return;
       }
-
+    
+      // remove hidden
       modal.classList.remove("hidden");
+    
+      // 🔥 GARANTE VISIBILIDADE
+      modal.style.display = "flex";
+      modal.style.visibility = "visible";
+      modal.style.opacity = "1";
+      modal.style.pointerEvents = "auto";
+    
       modal.setAttribute("aria-hidden", "false");
-
-      lockScroll();
-
+    
+      document.body.style.overflow = "hidden";
+    
       console.log("🟢 Modal aberto:", id);
     }
 
+
     function close(id) {
-      const modal = getModal(id);
+      const modal = document.getElementById(id);
       if (!modal) return;
-
+    
       modal.classList.add("hidden");
+    
+      modal.style.display = "";
+      modal.style.visibility = "";
+      modal.style.opacity = "";
+      modal.style.pointerEvents = "";
+    
       modal.setAttribute("aria-hidden", "true");
-
-      unlockScroll();
-
+    
+      document.body.style.overflow = "";
+    
       console.log("🔒 Modal fechado:", id);
     }
 
