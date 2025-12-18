@@ -1,9 +1,9 @@
 // ==========================================================
 // 🎨 LIORA UI HELPERS — MODAIS + LOADING + ERRO GLOBAL
-// Versão CANÔNICA v2.0
+// Versão CANÔNICA v2.1 (limpa e estável)
 // ==========================================================
 (function () {
-  console.log("🔵 Liora UI helpers v2.0 carregando...");
+  console.log("🔵 Liora UI helpers v2.1 carregando...");
 
   // ======================================================
   // 🧠 MODAL CONTROLLER — FONTE ÚNICA
@@ -26,49 +26,32 @@
     }
 
     function open(id) {
-      const modal = document.getElementById(id);
+      const modal = getModal(id);
       if (!modal) {
         console.warn("⚠️ Modal não encontrado:", id);
         return;
       }
-    
-      // remove hidden
+
       modal.classList.remove("hidden");
-    
-      // 🔥 GARANTE VISIBILIDADE
-      modal.style.display = "flex";
-      modal.style.visibility = "visible";
-      modal.style.opacity = "1";
-      modal.style.pointerEvents = "auto";
-    
       modal.setAttribute("aria-hidden", "false");
-    
-      document.body.style.overflow = "hidden";
-    
+
+      lockScroll();
       console.log("🟢 Modal aberto:", id);
     }
 
-
     function close(id) {
-      const modal = document.getElementById(id);
+      const modal = getModal(id);
       if (!modal) return;
-    
+
       modal.classList.add("hidden");
-    
-      modal.style.display = "";
-      modal.style.visibility = "";
-      modal.style.opacity = "";
-      modal.style.pointerEvents = "";
-    
       modal.setAttribute("aria-hidden", "true");
-    
-      document.body.style.overflow = "";
-    
+
+      unlockScroll();
       console.log("🔒 Modal fechado:", id);
     }
 
     // ------------------------------
-    // FECHAR POR [data-close]
+    // FECHAR POR BOTÃO [data-close]
     // ------------------------------
     document.addEventListener("click", (e) => {
       const btn = e.target.closest("[data-close]");
@@ -77,6 +60,7 @@
       const modal = btn.closest(
         ".liora-modal, .liora-modal-backdrop, .sim-modal-backdrop"
       );
+
       if (modal?.id) close(modal.id);
     });
 
@@ -84,18 +68,16 @@
     // FECHAR CLICANDO NO BACKDROP
     // ------------------------------
     document.addEventListener("click", (e) => {
-      const backdrop =
+      if (
         e.target.classList.contains("liora-modal-backdrop") ||
-        e.target.classList.contains("sim-modal-backdrop");
-
-      if (backdrop && e.target.id) {
-        close(e.target.id);
+        e.target.classList.contains("sim-modal-backdrop")
+      ) {
+        if (e.target.id) close(e.target.id);
       }
     });
 
     window.lioraModal = { open, close };
-
-    console.log("🧠 Liora Modal Controller v2.0 pronto");
+    console.log("🧠 Liora Modal Controller v2.1 pronto");
   }
 
   // ======================================================
@@ -185,6 +167,6 @@
       });
     }
 
-    console.log("🟢 Liora UI helpers v2.0 prontos");
+    console.log("🟢 Liora UI helpers v2.1 prontos");
   });
 })();
