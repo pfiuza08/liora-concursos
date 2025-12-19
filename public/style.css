@@ -145,6 +145,26 @@ a:hover {
 }
 
 /* ------------------------------------------------------------
+   🧩 HELPERS GLOBAIS (USO CONTROLADO)
+------------------------------------------------------------ */
+.hidden {
+  display: none !important;
+}
+
+/* NÃO definir display aqui */
+.visible {
+  opacity: 1;
+}
+
+.text-muted {
+  color: var(--muted);
+}
+
+.text-center {
+  text-align: center;
+}
+
+/* ------------------------------------------------------------
    🧯 SEGURANÇA: NÃO ADICIONAR
 ------------------------------------------------------------
    ❌ .sim-*
