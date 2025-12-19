@@ -238,3 +238,19 @@ a:hover {
    - premium
    - modais específicos
 ------------------------------------------------------------ */
+/* Backdrop padrão */
+.liora-modal-backdrop {
+  pointer-events: none;
+  opacity: 0;
+}
+
+/* Só interage quando visível */
+.liora-modal-backdrop.visible {
+  pointer-events: auto;
+  opacity: 1;
+}
+
+/* hidden SEMPRE remove do fluxo */
+.liora-modal-backdrop.hidden {
+  display: none !important;
+}
