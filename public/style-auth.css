@@ -268,3 +268,30 @@ html.light .liora-auth-btn:hover {
 @keyframes liora-spin {
   to { transform: rotate(360deg); }
 }
+/* ============================================================
+   FIX CANÔNICO — MODAL AUTH (ENTRAR / CADASTRO)
+============================================================ */
+
+.liora-modal-backdrop {
+  display: flex;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.liora-modal-backdrop.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.liora-modal {
+  display: block;
+  transform: translateY(30px);
+  opacity: 0;
+  transition: transform 0.25s ease, opacity 0.25s ease;
+}
+
+.liora-modal-backdrop.visible .liora-modal {
+  transform: translateY(0);
+  opacity: 1;
+}
+
