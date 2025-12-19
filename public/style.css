@@ -254,3 +254,9 @@ a:hover {
 .liora-modal-backdrop.hidden {
   display: none !important;
 }
+
+.liora-auth-btn {
+  pointer-events: auto;
+  z-index: 20;
+  position: relative;
+}
