@@ -343,4 +343,14 @@ a:hover {
   position: relative;
   z-index: 2147483648;
 }
+/* Quando qualquer modal estiver aberto */
+body.liora-modal-open #liora-home,
+body.liora-modal-open #liora-app,
+body.liora-modal-open .liora-home,
+body.liora-modal-open .liora-app {
+  position: relative;
+  z-index: 1;
+  transform: none !important;
+  filter: none !important;
+}
 
