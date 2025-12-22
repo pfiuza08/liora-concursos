@@ -183,3 +183,53 @@ function traduzErroFirebase(err) {
       return "Erro de autenticação. Tente novamente.";
   }
 }
+// ======================================================
+// 🎛️ AUTH UI BINDINGS — BOTÕES ENTRAR / SAIR (CANÔNICO)
+// ======================================================
+document.addEventListener("DOMContentLoaded", () => {
+  const btnEntrar = document.getElementById("btn-auth-toggle");
+  const btnSair = document.getElementById("btn-logout");
+
+  if (btnEntrar) {
+    btnEntrar.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      console.log("🔐 Clique em ENTRAR");
+      window.lioraModal?.open("liora-auth-modal");
+    });
+  }
+
+  if (btnSair) {
+    btnSair.addEventListener("click", async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      console.log("🚪 Clique em SAIR");
+      try {
+        await window.lioraAuth.logout();
+      } catch (err) {
+        console.error("Erro no logout:", err);
+      }
+    });
+  }
+
+  // --------------------------------------------
+  // 🔄 Atualiza UI quando auth muda
+  // --------------------------------------------
+  function atualizarAuthUI() {
+    const user = window.lioraAuth?.user;
+
+    if (user) {
+      btnEntrar?.classList.add("hidden");
+      btnSair?.classList.remove("hidden");
+    } else {
+      btnSair?.classList.add("hidden");
+      btnEntrar?.classList.remove("hidden");
+    }
+  }
+
+  window.addEventListener("liora:auth-changed", atualizarAuthUI);
+  atualizarAuthUI();
+});
+
