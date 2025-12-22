@@ -190,17 +190,27 @@ document.addEventListener("DOMContentLoaded", () => {
   const btnEntrar = document.getElementById("btn-auth-toggle");
   const btnSair = document.getElementById("btn-logout");
 
-  if (btnEntrar) {
+  // -----------------------------------
+  // 🔐 BOTÃO ENTRAR (ABRE MODAL)
+  // -----------------------------------
+  if (btnEntrar && !btnEntrar.dataset.bound) {
+    btnEntrar.dataset.bound = "1"; // 🛡️ blindagem
+
     btnEntrar.addEventListener("click", (e) => {
       e.preventDefault();
       e.stopPropagation();
 
       console.log("🔐 Clique em ENTRAR");
-      window.lioraModal?.open("liora-auth-modal");
+      window.lioraModal.open("liora-auth-modal");
     });
   }
 
-  if (btnSair) {
+  // -----------------------------------
+  // 🚪 BOTÃO SAIR (LOGOUT)
+  // -----------------------------------
+  if (btnSair && !btnSair.dataset.bound) {
+    btnSair.dataset.bound = "1"; // 🛡️ blindagem
+
     btnSair.addEventListener("click", async (e) => {
       e.preventDefault();
       e.stopPropagation();
@@ -213,6 +223,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
   }
+});
 
   // --------------------------------------------
   // 🔄 Atualiza UI quando auth muda
