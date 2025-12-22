@@ -25,30 +25,33 @@
       body.style.touchAction = "";
     }
 
-    function open(id) {
-      const modal = getModal(id);
-      if (!modal) {
-        console.warn("⚠️ Modal não encontrado:", id);
-        return;
-      }
-
-      modal.classList.remove("hidden");
-      modal.setAttribute("aria-hidden", "false");
-
-      lockScroll();
-      console.log("🟢 Modal aberto:", id);
+     function open(id) {
+    const modal = getModal(id);
+    if (!modal) {
+      console.warn("⚠️ Modal não encontrado:", id);
+      return;
     }
+  
+    modal.classList.remove("hidden");
+    modal.classList.add("visible");   // 🔑 ESSENCIAL
+    modal.setAttribute("aria-hidden", "false");
+  
+    lockScroll();
+    console.log("🟢 Modal aberto:", id);
+  }
+  
+  function close(id) {
+    const modal = getModal(id);
+    if (!modal) return;
+  
+    modal.classList.remove("visible"); // 🔑 ESSENCIAL
+    modal.classList.add("hidden");
+    modal.setAttribute("aria-hidden", "true");
+  
+    unlockScroll();
+    console.log("🔒 Modal fechado:", id);
+  }
 
-    function close(id) {
-      const modal = getModal(id);
-      if (!modal) return;
-
-      modal.classList.add("hidden");
-      modal.setAttribute("aria-hidden", "true");
-
-      unlockScroll();
-      console.log("🔒 Modal fechado:", id);
-    }
 
     // ------------------------------
     // FECHAR POR BOTÃO [data-close]
