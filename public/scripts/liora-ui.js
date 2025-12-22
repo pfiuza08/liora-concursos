@@ -5,107 +5,56 @@
 (function () {
   console.log("🔵 Liora UI helpers v2.3 carregando...");
 
-  // ======================================================
-  // 🧠 MODAL CONTROLLER — FONTE ÚNICA DA VERDADE
-  // ======================================================
-  if (!window.lioraModal) {
-    const body = document.body;
-    let activeModal = null;
-    let backdropEl = null;
+ // ======================================================
+// 🧠 MODAL CONTROLLER — COMPATÍVEL COM HTML ESTÁTICO
+// ======================================================
+if (!window.lioraModal) {
+  const body = document.body;
 
-    function getModal(id) {
-      return document.getElementById(id);
-    }
-
-    function createBackdrop(id) {
-      removeBackdrop();
-
-      backdropEl = document.createElement("div");
-      backdropEl.className = "liora-modal-backdrop";
-      backdropEl.dataset.modal = id;
-      backdropEl.style.zIndex = "9998";
-
-      backdropEl.addEventListener("click", () => {
-        close(id);
-      });
-
-      document.body.appendChild(backdropEl);
-    }
-
-    function removeBackdrop() {
-      if (backdropEl) {
-        backdropEl.remove();
-        backdropEl = null;
-      }
-    }
-
-    function lockScroll() {
-      body.style.overflow = "hidden";
-      body.style.touchAction = "none";
-      body.style.pointerEvents = "auto";
-      body.classList.add("liora-modal-open");
-    }
-
-    function unlockScroll() {
-      body.style.overflow = "";
-      body.style.touchAction = "";
-      body.style.pointerEvents = "auto";
-      body.classList.remove("liora-modal-open");
-    }
-
-    function open(id) {
-      const modal = getModal(id);
-      if (!modal) {
-        console.warn("⚠️ Modal não encontrado:", id);
-        return;
-      }
-
-      if (activeModal === id) return;
-
-      activeModal = id;
-
-      modal.classList.remove("hidden");
-      modal.classList.add("visible", "is-open");
-      modal.setAttribute("aria-hidden", "false");
-
-      modal.style.display = "flex";
-      modal.style.opacity = "1";
-      modal.style.pointerEvents = "auto";
-      modal.style.zIndex = "9999";
-
-      createBackdrop(id);
-      lockScroll();
-
-      console.log("🟢 Modal aberto:", id);
-    }
-
-    function close(id) {
-      const modal = getModal(id);
-      if (!modal) return;
-
-      if (activeModal !== id) return;
-
-      modal.classList.add("hidden");
-      modal.classList.remove("visible", "is-open");
-      modal.setAttribute("aria-hidden", "true");
-
-      removeBackdrop();
-      unlockScroll();
-
-      activeModal = null;
-
-      console.log("🔒 Modal fechado:", id);
-    }
-
-    function closeAll() {
-      if (activeModal) {
-        close(activeModal);
-      }
-    }
-
-    window.lioraModal = { open, close, closeAll };
-    console.log("🧠 Liora Modal Controller v2.3 pronto");
+  function getModal(id) {
+    return document.getElementById(id);
   }
+
+  function lockScroll() {
+    body.style.overflow = "hidden";
+    body.classList.add("liora-modal-open");
+  }
+
+  function unlockScroll() {
+    body.style.overflow = "";
+    body.classList.remove("liora-modal-open");
+  }
+
+  function open(id) {
+    const modal = getModal(id);
+    if (!modal) {
+      console.warn("⚠️ Modal não encontrado:", id);
+      return;
+    }
+
+    modal.classList.remove("hidden");
+    modal.classList.add("visible");
+    modal.setAttribute("aria-hidden", "false");
+
+    lockScroll();
+    console.log("🟢 Modal aberto:", id);
+  }
+
+  function close(id) {
+    const modal = getModal(id);
+    if (!modal) return;
+
+    modal.classList.add("hidden");
+    modal.classList.remove("visible");
+    modal.setAttribute("aria-hidden", "true");
+
+    unlockScroll();
+    console.log("🔒 Modal fechado:", id);
+  }
+
+  window.lioraModal = { open, close };
+  console.log("🧠 Liora Modal Controller v2.2 pronto");
+}
 
   // ======================================================
   // ⏳ LOADING + ❌ ERRO GLOBAL
