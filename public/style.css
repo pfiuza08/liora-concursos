@@ -260,3 +260,29 @@ a:hover {
   z-index: 20;
   position: relative;
 }
+/* =========================================================
+   MODAIS — CONTRATO CANÔNICO (OBRIGATÓRIO)
+========================================================= */
+
+/* Backdrop sempre começa morto */
+.liora-modal-backdrop,
+.sim-modal-backdrop {
+  display: flex;
+  opacity: 0;
+  pointer-events: none;
+  z-index: -1;
+  transition: opacity 0.25s ease;
+}
+
+/* Backdrop ativo */
+.liora-modal-backdrop.is-open,
+.sim-modal-backdrop.is-open {
+  opacity: 1;
+  pointer-events: auto;
+  z-index: 10000;
+}
+
+/* Hidden sempre vence */
+.hidden {
+  display: none !important;
+}
