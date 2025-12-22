@@ -6,10 +6,14 @@
   console.log("🔵 Liora UI helpers v2.3 carregando...");
 
  // ======================================================
-// 🧠 MODAL CONTROLLER — COMPATÍVEL COM HTML ESTÁTICO
+// 🧠 MODAL CONTROLLER — v2.4 (PORTAL CONTROLADO)
+// Compatível com HTML estático + stacking context
 // ======================================================
 if (!window.lioraModal) {
   const body = document.body;
+
+  // guarda referência original do modal
+  const modalState = new Map();
 
   function getModal(id) {
     return document.getElementById(id);
@@ -25,12 +29,39 @@ if (!window.lioraModal) {
     body.classList.remove("liora-modal-open");
   }
 
+  function promoteToBody(modal) {
+    if (modalState.has(modal)) return;
+
+    modalState.set(modal, {
+      parent: modal.parentNode,
+      next: modal.nextSibling,
+    });
+
+    body.appendChild(modal);
+  }
+
+  function restoreToOrigin(modal) {
+    const state = modalState.get(modal);
+    if (!state) return;
+
+    if (state.next) {
+      state.parent.insertBefore(modal, state.next);
+    } else {
+      state.parent.appendChild(modal);
+    }
+
+    modalState.delete(modal);
+  }
+
   function open(id) {
     const modal = getModal(id);
     if (!modal) {
       console.warn("⚠️ Modal não encontrado:", id);
       return;
     }
+
+    // 🔝 garante topo visual
+    promoteToBody(modal);
 
     modal.classList.remove("hidden");
     modal.classList.add("visible");
@@ -48,12 +79,14 @@ if (!window.lioraModal) {
     modal.classList.remove("visible");
     modal.setAttribute("aria-hidden", "true");
 
+    restoreToOrigin(modal);
     unlockScroll();
+
     console.log("🔒 Modal fechado:", id);
   }
 
   window.lioraModal = { open, close };
-  console.log("🧠 Liora Modal Controller v2.2 pronto");
+  console.log("🧠 Liora Modal Controller v2.4 pronto");
 }
 
   // ======================================================
