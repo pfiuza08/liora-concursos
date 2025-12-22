@@ -326,3 +326,21 @@ a:hover {
 .hidden {
   display: none !important;
 }
+/* =========================================================
+   🔐 MODAIS — GARANTIA DE TOPO ABSOLUTO
+========================================================= */
+.liora-modal-backdrop {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 2147483647 !important; /* acima de qualquer coisa */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Card do modal */
+.liora-modal-card {
+  position: relative;
+  z-index: 2147483648;
+}
+
