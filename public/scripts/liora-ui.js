@@ -68,19 +68,25 @@
     console.log("🔒 Modal fechado:", id);
   }
 
-    // ------------------------------
-    // FECHAR POR BOTÃO [data-close]
+   
+   // ------------------------------
+    // FECHAR CLICANDO APENAS NO FUNDO (BACKDROP REAL)
     // ------------------------------
     document.addEventListener("click", (e) => {
-      const btn = e.target.closest("[data-close]");
-      if (!btn) return;
-
-      const modal = btn.closest(
-        ".liora-modal, .liora-modal-backdrop, .sim-modal-backdrop"
-      );
-
-      if (modal?.id) close(modal.id);
+      const backdrop = e.target;
+    
+      // ⚠️ só fecha se o clique foi EXATAMENTE no backdrop
+      if (
+        (backdrop.classList.contains("liora-modal-backdrop") ||
+         backdrop.classList.contains("sim-modal-backdrop")) &&
+        backdrop === e.target
+      ) {
+        if (backdrop.id) {
+          close(backdrop.id);
+        }
+      }
     });
+
 
     // ------------------------------
     // FECHAR CLICANDO NO BACKDROP
