@@ -515,60 +515,7 @@
   </div>
 </div>
 
-<!-- ============================================================
-     LOGIN / CADASTRO — CANÔNICO
-============================================================ -->
-<div id="liora-auth-modal" class="liora-modal-backdrop hidden" aria-hidden="true">
-  <div class="liora-modal-card" role="dialog" aria-modal="true">
-    <button class="liora-modal-close" data-close aria-label="Fechar">✕</button>
 
-    <div class="liora-modal-header">
-      <h2 id="liora-auth-title">Acessar Liora</h2>
-      <p id="liora-auth-subtitle">
-        Acesse seus planos de estudo em qualquer dispositivo.
-      </p>
-    </div>
-
-    <form id="liora-auth-form" class="liora-modal-body liora-modal-scroll">
-      <div class="liora-input-group">
-        <label for="auth-email">E-mail</label>
-        <input id="auth-email"
-               type="email"
-               required
-               autocomplete="email"
-               class="liora-input">
-      </div>
-
-      <div class="liora-input-group">
-        <label for="auth-senha">Senha</label>
-        <input id="auth-senha"
-               type="password"
-               required
-               autocomplete="current-password"
-               class="liora-input">
-      </div>
-
-      <div id="liora-auth-error" class="liora-auth-error"></div>
-
-      <button type="submit"
-              id="liora-auth-submit"
-              class="liora-btn-primary liora-btn-full">
-        <span class="liora-btn-text">Entrar</span>
-        <span class="liora-btn-loader"></span>
-      </button>
-
-      <button type="button"
-              id="liora-auth-toggle-mode"
-              class="liora-link-btn">
-        Ainda não tenho conta. Criar conta.
-      </button>
-    </form>
-
-    <div class="liora-modal-footer">
-      <small>Ao continuar, você concorda com os termos da Liora.</small>
-    </div>
-  </div>
-</div>
 
 <!-- ============================================================
      PREMIUM — LIORA+
@@ -633,5 +580,59 @@
 
 <div id="liora-build-info">Liora v74-PREMIUM-C7.2</div>
 
+  <!-- ============================================================
+     LOGIN / CADASTRO — CANÔNICO
+============================================================ -->
+<div id="liora-auth-modal" class="liora-modal-backdrop hidden" aria-hidden="true">
+  <div class="liora-modal-card" role="dialog" aria-modal="true">
+    <button class="liora-modal-close" data-close aria-label="Fechar">✕</button>
+
+    <div class="liora-modal-header">
+      <h2 id="liora-auth-title">Acessar Liora</h2>
+      <p id="liora-auth-subtitle">
+        Acesse seus planos de estudo em qualquer dispositivo.
+      </p>
+    </div>
+
+    <form id="liora-auth-form" class="liora-modal-body liora-modal-scroll">
+      <div class="liora-input-group">
+        <label for="auth-email">E-mail</label>
+        <input id="auth-email"
+               type="email"
+               required
+               autocomplete="email"
+               class="liora-input">
+      </div>
+
+      <div class="liora-input-group">
+        <label for="auth-senha">Senha</label>
+        <input id="auth-senha"
+               type="password"
+               required
+               autocomplete="current-password"
+               class="liora-input">
+      </div>
+
+      <div id="liora-auth-error" class="liora-auth-error"></div>
+
+      <button type="submit"
+              id="liora-auth-submit"
+              class="liora-btn-primary liora-btn-full">
+        <span class="liora-btn-text">Entrar</span>
+        <span class="liora-btn-loader"></span>
+      </button>
+
+      <button type="button"
+              id="liora-auth-toggle-mode"
+              class="liora-link-btn">
+        Ainda não tenho conta. Criar conta.
+      </button>
+    </form>
+
+    <div class="liora-modal-footer">
+      <small>Ao continuar, você concorda com os termos da Liora.</small>
+    </div>
+  </div>
+</div>
 </body>
 </html>
