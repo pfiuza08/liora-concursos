@@ -49,25 +49,18 @@
   }
   
   function close(id) {
-    const modal = getModal(id);
-    if (!modal) return;
-  
-    // ✅ Fecha em qualquer padrão
-    modal.classList.add("hidden");
-    modal.classList.remove("visible");
-    modal.classList.remove("is-open");
-    modal.setAttribute("aria-hidden", "true");
-  
-    // ✅ Limpa overrides
-    modal.style.display = "";
-    modal.style.opacity = "";
-    modal.style.pointerEvents = "";
-    modal.style.zIndex = "";
-  
-    unlockScroll();
-    console.log("🔒 Modal fechado:", id);
-  }
+  const modal = getModal(id);
+  if (!modal) return;
 
+  // 🛑 Já está fechado → não faz nada
+  if (modal.classList.contains("hidden")) return;
+
+  modal.classList.add("hidden");
+  modal.setAttribute("aria-hidden", "true");
+
+  unlockScroll();
+  console.log("🔒 Modal fechado:", id);
+}
    
    // ------------------------------
     // FECHAR CLICANDO APENAS NO FUNDO (BACKDROP REAL)
