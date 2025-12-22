@@ -1,100 +1,110 @@
 // ==========================================================
 // 🎨 LIORA UI HELPERS — MODAIS + LOADING + ERRO GLOBAL
-// Versão CANÔNICA v2.1 (limpa e estável)
+// Versão CANÔNICA v2.3 (BLINDADA)
 // ==========================================================
 (function () {
-  console.log("🔵 Liora UI helpers v2.1 carregando...");
+  console.log("🔵 Liora UI helpers v2.3 carregando...");
 
   // ======================================================
-  // 🧠 MODAL CONTROLLER — FONTE ÚNICA
+  // 🧠 MODAL CONTROLLER — FONTE ÚNICA DA VERDADE
   // ======================================================
   if (!window.lioraModal) {
     const body = document.body;
+    let activeModal = null;
+    let backdropEl = null;
 
     function getModal(id) {
       return document.getElementById(id);
     }
 
+    function createBackdrop(id) {
+      removeBackdrop();
+
+      backdropEl = document.createElement("div");
+      backdropEl.className = "liora-modal-backdrop";
+      backdropEl.dataset.modal = id;
+      backdropEl.style.zIndex = "9998";
+
+      backdropEl.addEventListener("click", () => {
+        close(id);
+      });
+
+      document.body.appendChild(backdropEl);
+    }
+
+    function removeBackdrop() {
+      if (backdropEl) {
+        backdropEl.remove();
+        backdropEl = null;
+      }
+    }
+
     function lockScroll() {
       body.style.overflow = "hidden";
       body.style.touchAction = "none";
+      body.style.pointerEvents = "auto";
+      body.classList.add("liora-modal-open");
     }
 
     function unlockScroll() {
       body.style.overflow = "";
       body.style.touchAction = "";
+      body.style.pointerEvents = "auto";
+      body.classList.remove("liora-modal-open");
     }
 
-   function open(id) {
-    const modal = getModal(id);
-    if (!modal) {
-      console.warn("⚠️ Modal não encontrado:", id);
-      return;
+    function open(id) {
+      const modal = getModal(id);
+      if (!modal) {
+        console.warn("⚠️ Modal não encontrado:", id);
+        return;
+      }
+
+      if (activeModal === id) return;
+
+      activeModal = id;
+
+      modal.classList.remove("hidden");
+      modal.classList.add("visible", "is-open");
+      modal.setAttribute("aria-hidden", "false");
+
+      modal.style.display = "flex";
+      modal.style.opacity = "1";
+      modal.style.pointerEvents = "auto";
+      modal.style.zIndex = "9999";
+
+      createBackdrop(id);
+      lockScroll();
+
+      console.log("🟢 Modal aberto:", id);
     }
-  
-    // ✅ Compatibilidade com seus CSS antigos e novos
-    modal.classList.remove("hidden");
-    modal.classList.add("visible");
-    modal.classList.add("is-open");
-    modal.setAttribute("aria-hidden", "false");
-  
-    // ✅ Força visual (resolve casos em que CSS deixa opacity 0 / pointer-events none)
-    modal.style.display = "flex";
-    modal.style.opacity = "1";
-    modal.style.pointerEvents = "auto";
-    modal.style.zIndex = "9999";
-  
-    lockScroll();
-    console.log("🟢 Modal aberto:", id);
-  }
-  
-  function close(id) {
-  const modal = getModal(id);
-  if (!modal) return;
 
-  // 🛑 Já está fechado → não faz nada
-  if (modal.classList.contains("hidden")) return;
+    function close(id) {
+      const modal = getModal(id);
+      if (!modal) return;
 
-  modal.classList.add("hidden");
-  modal.setAttribute("aria-hidden", "true");
+      if (activeModal !== id) return;
 
-  unlockScroll();
-  console.log("🔒 Modal fechado:", id);
-}
-   
-   // ------------------------------
-    // FECHAR CLICANDO APENAS NO FUNDO (BACKDROP REAL)
-    // ------------------------------
-    document.addEventListener("click", (e) => {
-      const backdrop = e.target;
-    
-      // ⚠️ só fecha se o clique foi EXATAMENTE no backdrop
-      if (
-        (backdrop.classList.contains("liora-modal-backdrop") ||
-         backdrop.classList.contains("sim-modal-backdrop")) &&
-        backdrop === e.target
-      ) {
-        if (backdrop.id) {
-          close(backdrop.id);
-        }
+      modal.classList.add("hidden");
+      modal.classList.remove("visible", "is-open");
+      modal.setAttribute("aria-hidden", "true");
+
+      removeBackdrop();
+      unlockScroll();
+
+      activeModal = null;
+
+      console.log("🔒 Modal fechado:", id);
+    }
+
+    function closeAll() {
+      if (activeModal) {
+        close(activeModal);
       }
-    });
+    }
 
-
-    // ------------------------------
-    // FECHAR CLICANDO NO BACKDROP
-    // ------------------------------
-    document.addEventListener("click", (e) => {
-      if (
-        e.target.classList.contains("liora-modal-backdrop") ||
-        e.target.classList.contains("sim-modal-backdrop")
-      ) {
-        if (e.target.id) close(e.target.id);
-      }
-    });
-
-    window.lioraModal = { open, close };
-    console.log("🧠 Liora Modal Controller v2.1 pronto");
+    window.lioraModal = { open, close, closeAll };
+    console.log("🧠 Liora Modal Controller v2.3 pronto");
   }
 
   // ======================================================
@@ -168,22 +178,18 @@
       },
     };
 
-    if (errorRetryBtn) {
-      errorRetryBtn.addEventListener("click", () => {
-        const fn = errorState.retryFn;
-        window.lioraError.hide();
-        if (fn) fn();
-      });
-    }
+    errorRetryBtn?.addEventListener("click", () => {
+      const fn = errorState.retryFn;
+      window.lioraError.hide();
+      if (fn) fn();
+    });
 
-    if (errorBackBtn) {
-      errorBackBtn.addEventListener("click", () => {
-        const fn = errorState.backFn;
-        window.lioraError.hide();
-        if (fn) fn();
-      });
-    }
+    errorBackBtn?.addEventListener("click", () => {
+      const fn = errorState.backFn;
+      window.lioraError.hide();
+      if (fn) fn();
+    });
 
-    console.log("🟢 Liora UI helpers v2.1 prontos");
+    console.log("🟢 Liora UI helpers v2.3 prontos");
   });
 })();
