@@ -294,4 +294,35 @@ html.light .liora-auth-btn:hover {
   transform: translateY(0);
   opacity: 1;
 }
+/* ============================================================
+   FIX FINAL — MODAL AUTH (ENTRAR / LOGIN)
+   Força visibilidade independente do CSS legado
+============================================================ */
+
+#liora-auth-modal {
+  display: flex !important;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* quando o JS abrir */
+#liora-auth-modal.visible {
+  opacity: 1 !important;
+  pointer-events: auto;
+}
+
+/* card interno */
+#liora-auth-modal .liora-modal,
+#liora-auth-modal .liora-modal-card {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+/* card visível */
+#liora-auth-modal.visible .liora-modal,
+#liora-auth-modal.visible .liora-modal-card {
+  opacity: 1;
+  transform: translateY(0);
+}
 
