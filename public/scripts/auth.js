@@ -1,14 +1,5 @@
 // ======================================================
-// LIORA — AUTENTICAÇÃO v2.1 (Firebase Auth + Premium Hooks)
-// ------------------------------------------------------
-// - Login, cadastro, logout
-// - Sessão persistente
-// - Estados: user, premium, loading, error
-// - Eventos globais:
-//    - liora:auth-changed
-//    - liora:login-required
-//    - liora:premium-bloqueado
-// - API global: window.lioraAuth
+// 🔐 LIORA — AUTH CORE v3 (FIREBASE | CANÔNICO)
 // ======================================================
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
@@ -23,7 +14,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 // ------------------------------------------------------
-// 🔧 CONFIGURAÇÃO FIREBASE
+// 🔧 FIREBASE CONFIG
 // ------------------------------------------------------
 const firebaseConfig = {
   apiKey: "AIzaSyBG2SFwUH-oebuOieWS5WbUtidbuSYgDLY",
@@ -36,138 +27,92 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
-
-// Mantém usuário entre sessões
 setPersistence(auth, browserLocalPersistence);
 
 // ------------------------------------------------------
-// 🌍 API Global da Liora
+// 🌍 API GLOBAL
 // ------------------------------------------------------
 window.lioraAuth = {
   user: null,
-  premium: false, // por enquanto sempre false (freemium)
+  premium: false,
   loading: false,
   error: null,
 
+  // -------------------------------
   // LOGIN
-  login: async (email, senha) => {
-    try {
-      window.lioraAuth.loading = true;
-      window.lioraAuth.error = null;
+  // -------------------------------
+  async login({ email, password }) {
+    if (!email || !password) {
+      throw new Error("E-mail e senha são obrigatórios.");
+    }
 
-      const cred = await signInWithEmailAndPassword(auth, email, senha);
+    try {
+      this.loading = true;
+      this.error = null;
+
+      const cred = await signInWithEmailAndPassword(auth, email, password);
       return cred.user;
     } catch (err) {
-      console.error("Erro login:", err);
-      window.lioraAuth.error = traduzErroFirebase(err);
+      this.error = traduzErroFirebase(err);
       throw err;
     } finally {
-      window.lioraAuth.loading = false;
-      window.dispatchEvent(new Event("liora:auth-ui-update"));
+      this.loading = false;
     }
   },
 
+  // -------------------------------
   // CADASTRO
-  cadastro: async (email, senha) => {
+  // -------------------------------
+  async cadastro({ email, password }) {
+    if (!email || !password) {
+      throw new Error("E-mail e senha são obrigatórios.");
+    }
+
     try {
-      window.lioraAuth.loading = true;
-      window.lioraAuth.error = null;
+      this.loading = true;
+      this.error = null;
 
-      const cred = await createUserWithEmailAndPassword(auth, email, senha);
-
-      // Novo usuário começa no plano FREE
-      window.lioraAuth.premium = false;
-
+      const cred = await createUserWithEmailAndPassword(auth, email, password);
+      this.premium = false;
       return cred.user;
     } catch (err) {
-      console.error("Erro cadastro:", err);
-      window.lioraAuth.error = traduzErroFirebase(err);
+      this.error = traduzErroFirebase(err);
       throw err;
     } finally {
-      window.lioraAuth.loading = false;
-      window.dispatchEvent(new Event("liora:auth-ui-update"));
+      this.loading = false;
     }
   },
 
+  // -------------------------------
   // LOGOUT
-  logout: async () => {
+  // -------------------------------
+  async logout() {
     await signOut(auth);
-  },
-
-  // 🔒 Proteção de recurso premium
-  // - Se não logado → dispara liora:login-required
-  // - Se logado mas FREE → dispara liora:premium-bloqueado
-  // - Se premium → retorna true
- exigirPremium: () => {
-  const state = window.lioraState;
-
-  // 🚫 Estado ainda não inicializado (defensivo)
-  if (!state) {
-    console.warn("⚠️ exigirPremium chamado antes do lioraState");
-    return false;
   }
-
-  // 🚫 Não logado
-  if (!state.logged) {
-    console.log("🔐 Premium bloqueado → login necessário");
-    window.dispatchEvent(new Event("liora:login-required"));
-    return false;
-  }
-
-  // 🚫 Logado, mas não premium
-  if (state.plan !== "premium") {
-    console.log("💎 Premium bloqueado → upgrade necessário");
-    window.dispatchEvent(new Event("liora:premium-bloqueado"));
-    return false;
-  }
-
-  // ✅ Tudo ok
-  return true;
-},
 };
 
 // ------------------------------------------------------
-// 👤 Listener de Autenticação
+// 👤 AUTH STATE LISTENER
 // ------------------------------------------------------
 onAuthStateChanged(auth, (user) => {
-  window.lioraAuth.user = user;
+  window.lioraAuth.user = user || null;
+  window.lioraAuth.premium = false;
 
-  if (user) {
-    console.log("🟢 Usuário logado:", user.email);
-    document.body.classList.add("liora-auth-on");
-    document.body.classList.remove("liora-auth-off");
+  window.lioraUserPlan = user ? "free" : "free";
 
-    // TODO backend
-    window.lioraAuth.premium = false;
+  document.body.classList.toggle("liora-auth-on", !!user);
+  document.body.classList.toggle("liora-auth-off", !user);
 
-    // 🔑 PLANO CANÔNICO (ESSENCIAL)
-    window.lioraUserPlan = window.lioraAuth.premium ? "premium" : "free";
-  } else {
-    console.log("🔴 Usuário deslogado");
-    document.body.classList.add("liora-auth-off");
-    document.body.classList.remove("liora-auth-on");
-
-    window.lioraAuth.premium = false;
-    window.lioraUserPlan = "free";
-  }
-
-  window.lioraAuth.error = null;
-
-  // 🔥 FORÇA PROPAGAÇÃO REAL
-  setTimeout(() => {
-    console.log("🔔 Disparando liora:auth-changed (forçado)");
-    window.dispatchEvent(new Event("liora:auth-changed"));
-  }, 0);
+  window.dispatchEvent(new Event("liora:auth-changed"));
 });
 
-
-console.log("🔐 Liora Auth v2.1 carregado.");
+console.log("🔐 auth.js v3 carregado");
 
 // ------------------------------------------------------
-// 🔤 Tradução simples de erros Firebase
+// 🔤 ERROS FIREBASE
 // ------------------------------------------------------
 function traduzErroFirebase(err) {
-  if (!err || !err.code) return "Ocorreu um erro. Tente novamente.";
+  if (!err?.code) return "Erro inesperado. Tente novamente.";
 
   switch (err.code) {
     case "auth/invalid-email":
@@ -180,67 +125,6 @@ function traduzErroFirebase(err) {
     case "auth/weak-password":
       return "A senha deve ter pelo menos 6 caracteres.";
     default:
-      return "Erro de autenticação. Tente novamente.";
+      return "Erro de autenticação.";
   }
 }
-// ======================================================
-// 🎛️ AUTH UI BINDINGS — BOTÕES ENTRAR / SAIR (CANÔNICO)
-// ======================================================
-document.addEventListener("DOMContentLoaded", () => {
-  const btnEntrar = document.getElementById("btn-auth-toggle");
-  const btnSair = document.getElementById("btn-logout");
-
-  // -----------------------------------
-  // 🔐 BOTÃO ENTRAR (ABRE MODAL)
-  // -----------------------------------
-  if (btnEntrar && !btnEntrar.dataset.bound) {
-    btnEntrar.dataset.bound = "1"; // 🛡️ blindagem
-
-    btnEntrar.addEventListener("click", (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-
-      console.log("🔐 Clique em ENTRAR");
-      window.lioraModal.open("liora-auth-modal");
-    });
-  }
-
-  // -----------------------------------
-  // 🚪 BOTÃO SAIR (LOGOUT)
-  // -----------------------------------
-  if (btnSair && !btnSair.dataset.bound) {
-    btnSair.dataset.bound = "1"; // 🛡️ blindagem
-
-    btnSair.addEventListener("click", async (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-
-      console.log("🚪 Clique em SAIR");
-      try {
-        await window.lioraAuth.logout();
-      } catch (err) {
-        console.error("Erro no logout:", err);
-      }
-    });
-  }
-});
-
-  // --------------------------------------------
-  // 🔄 Atualiza UI quando auth muda
-  // --------------------------------------------
-  function atualizarAuthUI() {
-    const user = window.lioraAuth?.user;
-
-    if (user) {
-      btnEntrar?.classList.add("hidden");
-      btnSair?.classList.remove("hidden");
-    } else {
-      btnSair?.classList.add("hidden");
-      btnEntrar?.classList.remove("hidden");
-    }
-  }
-
-  window.addEventListener("liora:auth-changed", atualizarAuthUI);
-  atualizarAuthUI();
-});
-
