@@ -25,15 +25,35 @@
       body.style.touchAction = "";
     }
 
-     function open(id) {
+  function open(id) {
     const modal = getModal(id);
     if (!modal) {
       console.warn("⚠️ Modal não encontrado:", id);
       return;
     }
   
+    // 🔴 fecha TODOS os backdrops primeiro
+    document
+      .querySelectorAll(".liora-modal-backdrop, .sim-modal-backdrop")
+      .forEach((bd) => {
+        bd.classList.remove("is-open");
+        bd.classList.add("hidden");
+      });
+  
+    // 🔵 identifica o backdrop correto
+    const backdrop = modal.closest(
+      ".liora-modal-backdrop, .sim-modal-backdrop"
+    );
+  
+    if (!backdrop) {
+      console.warn("⚠️ Backdrop não encontrado para modal:", id);
+      return;
+    }
+  
+    backdrop.classList.remove("hidden");
+    backdrop.classList.add("is-open");
+  
     modal.classList.remove("hidden");
-    modal.classList.add("visible");   // 🔑 ESSENCIAL
     modal.setAttribute("aria-hidden", "false");
   
     lockScroll();
@@ -44,14 +64,21 @@
     const modal = getModal(id);
     if (!modal) return;
   
-    modal.classList.remove("visible"); // 🔑 ESSENCIAL
+    const backdrop = modal.closest(
+      ".liora-modal-backdrop, .sim-modal-backdrop"
+    );
+  
     modal.classList.add("hidden");
     modal.setAttribute("aria-hidden", "true");
+  
+    if (backdrop) {
+      backdrop.classList.remove("is-open");
+      backdrop.classList.add("hidden");
+    }
   
     unlockScroll();
     console.log("🔒 Modal fechado:", id);
   }
-
 
     // ------------------------------
     // FECHAR POR BOTÃO [data-close]
