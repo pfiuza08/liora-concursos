@@ -1,9 +1,9 @@
 // ==========================================================
-// 🔐 LIORA — AUTH UI v11 (FINAL)
+// 🔐 LIORA — AUTH UI v11.1 (BLINDADO)
 // ==========================================================
 
 (function () {
-  console.log("🔐 Auth UI v11 iniciado");
+  console.log("🔐 Auth UI v11.1 iniciado");
 
   if (!window.lioraAuth) {
     console.error("❌ lioraAuth não disponível");
@@ -33,14 +33,29 @@
 
     let mode = "login";
 
+    // -------------------------------------------------------
+    // MODAL (OPEN / CLOSE)
+    // -------------------------------------------------------
     function openModal() {
       window.lioraModal?.open("liora-auth-modal");
     }
 
-    function closeModal() {
+    function closeModalHard() {
       window.lioraModal?.close("liora-auth-modal");
+
+      // 🧹 LIMPEZA TOTAL (anti-overlay fantasma)
+      document.body.classList.remove("modal-open", "liora-modal-open");
+      document.body.style.overflow = "";
+      document.body.style.pointerEvents = "auto";
+
+      document
+        .querySelectorAll(".liora-modal-backdrop, .modal-backdrop")
+        .forEach((el) => el.remove());
     }
 
+    // -------------------------------------------------------
+    // MODO LOGIN / CADASTRO
+    // -------------------------------------------------------
     function applyMode() {
       if (mode === "login") {
         els.title.textContent = "Acesse sua conta";
@@ -58,6 +73,9 @@
       applyMode();
     };
 
+    // -------------------------------------------------------
+    // SUBMIT (NÃO FECHA MODAL AQUI)
+    // -------------------------------------------------------
     els.form.onsubmit = async (e) => {
       e.preventDefault();
       els.error.textContent = "";
@@ -79,26 +97,40 @@
           await window.lioraAuth.cadastro(payload);
         }
 
-        closeModal();
+        // ⛔ NÃO FECHA MODAL AQUI
+        // fechamento acontece via auth-changed
       } catch (err) {
         els.error.textContent =
           window.lioraAuth.error || "Erro ao autenticar.";
       }
     };
 
+    // -------------------------------------------------------
+    // BOTÕES "ENTRAR"
+    // -------------------------------------------------------
     els.btnAuth.forEach((btn) => {
       btn.onclick = openModal;
     });
 
+    // -------------------------------------------------------
+    // LOGOUT
+    // -------------------------------------------------------
     els.btnLogout?.addEventListener("click", async () => {
       await window.lioraAuth.logout();
     });
 
-    els.close?.addEventListener("click", closeModal);
+    // -------------------------------------------------------
+    // FECHAMENTO MANUAL (X / BACKDROP)
+    // -------------------------------------------------------
+    els.close?.addEventListener("click", closeModalHard);
+
     els.modal.addEventListener("click", (e) => {
-      if (e.target === els.modal) closeModal();
+      if (e.target === els.modal) closeModalHard();
     });
 
+    // -------------------------------------------------------
+    // ATUALIZA UI
+    // -------------------------------------------------------
     function updateAuthUI() {
       const user = window.lioraAuth.user;
       const logged = !!user;
@@ -123,11 +155,23 @@
       }
     }
 
-    window.addEventListener("liora:auth-changed", updateAuthUI);
+    // -------------------------------------------------------
+    // FECHAMENTO CANÔNICO APÓS LOGIN REAL
+    // -------------------------------------------------------
+    window.addEventListener("liora:auth-changed", () => {
+      updateAuthUI();
 
+      if (window.lioraAuth.user) {
+        closeModalHard();
+      }
+    });
+
+    // -------------------------------------------------------
+    // INIT
+    // -------------------------------------------------------
     applyMode();
     updateAuthUI();
 
-    console.log("✅ Auth UI pronto");
+    console.log("✅ Auth UI v11.1 pronto");
   });
 })();
