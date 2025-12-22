@@ -353,4 +353,18 @@ body.liora-modal-open .liora-app {
   transform: none !important;
   filter: none !important;
 }
+/* =========================================================
+   🔐 PASSO 2 — Neutraliza stacking context da Home
+   Ativo SOMENTE quando modal está aberto
+========================================================= */
+body.liora-modal-open #liora-home,
+body.liora-modal-open #liora-app,
+body.liora-modal-open .liora-home,
+body.liora-modal-open .liora-app {
+  transform: none !important;
+  filter: none !important;
+  will-change: auto !important;
+  opacity: 1 !important;
+  z-index: 1;
+}
 
