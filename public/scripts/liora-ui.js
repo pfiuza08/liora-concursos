@@ -25,36 +25,24 @@
       body.style.touchAction = "";
     }
 
-  function open(id) {
+   function open(id) {
     const modal = getModal(id);
     if (!modal) {
       console.warn("⚠️ Modal não encontrado:", id);
       return;
     }
   
-    // 🔴 fecha TODOS os backdrops primeiro
-    document
-      .querySelectorAll(".liora-modal-backdrop, .sim-modal-backdrop")
-      .forEach((bd) => {
-        bd.classList.remove("is-open");
-        bd.classList.add("hidden");
-      });
-  
-    // 🔵 identifica o backdrop correto
-    const backdrop = modal.closest(
-      ".liora-modal-backdrop, .sim-modal-backdrop"
-    );
-  
-    if (!backdrop) {
-      console.warn("⚠️ Backdrop não encontrado para modal:", id);
-      return;
-    }
-  
-    backdrop.classList.remove("hidden");
-    backdrop.classList.add("is-open");
-  
+    // ✅ Compatibilidade com seus CSS antigos e novos
     modal.classList.remove("hidden");
+    modal.classList.add("visible");
+    modal.classList.add("is-open");
     modal.setAttribute("aria-hidden", "false");
+  
+    // ✅ Força visual (resolve casos em que CSS deixa opacity 0 / pointer-events none)
+    modal.style.display = "flex";
+    modal.style.opacity = "1";
+    modal.style.pointerEvents = "auto";
+    modal.style.zIndex = "9999";
   
     lockScroll();
     console.log("🟢 Modal aberto:", id);
@@ -64,17 +52,17 @@
     const modal = getModal(id);
     if (!modal) return;
   
-    const backdrop = modal.closest(
-      ".liora-modal-backdrop, .sim-modal-backdrop"
-    );
-  
+    // ✅ Fecha em qualquer padrão
     modal.classList.add("hidden");
+    modal.classList.remove("visible");
+    modal.classList.remove("is-open");
     modal.setAttribute("aria-hidden", "true");
   
-    if (backdrop) {
-      backdrop.classList.remove("is-open");
-      backdrop.classList.add("hidden");
-    }
+    // ✅ Limpa overrides
+    modal.style.display = "";
+    modal.style.opacity = "";
+    modal.style.pointerEvents = "";
+    modal.style.zIndex = "";
   
     unlockScroll();
     console.log("🔒 Modal fechado:", id);
