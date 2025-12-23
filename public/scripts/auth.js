@@ -42,6 +42,9 @@ window.lioraAuth = {
   // LOGIN
   // -------------------------------
   async login({ email, password }) {
+
+    console.log("🧪 LOGIN PARAMS:", arguments);
+
     if (!email || !password) {
       throw new Error("E-mail e senha são obrigatórios.");
     }
