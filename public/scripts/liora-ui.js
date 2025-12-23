@@ -53,37 +53,44 @@ if (!window.lioraModal) {
     modalState.delete(modal);
   }
 
-  function open(id) {
-    const modal = getModal(id);
-    if (!modal) {
-      console.warn("⚠️ Modal não encontrado:", id);
-      return;
-    }
-
-    // 🔝 garante topo visual
-    promoteToBody(modal);
-
-    modal.classList.remove("hidden");
-    modal.classList.add("visible");
-    modal.setAttribute("aria-hidden", "false");
-
-    lockScroll();
-    console.log("🟢 Modal aberto:", id);
+ function open(id) {
+  const modal = getModal(id);
+  if (!modal) {
+    console.warn("⚠️ Modal não encontrado:", id);
+    return;
   }
+
+  modal.classList.remove("hidden");
+  modal.classList.add("visible");
+  modal.setAttribute("aria-hidden", "false");
+
+  // 🔥 CORREÇÃO CRÍTICA
+  modal.style.pointerEvents = "auto";
+  const card = modal.querySelector(".liora-modal-card");
+  if (card) card.style.pointerEvents = "auto";
+
+  lockScroll();
+  console.log("🟢 Modal aberto:", id);
+}
+
 
   function close(id) {
-    const modal = getModal(id);
-    if (!modal) return;
+  const modal = getModal(id);
+  if (!modal) return;
 
-    modal.classList.add("hidden");
-    modal.classList.remove("visible");
-    modal.setAttribute("aria-hidden", "true");
+  modal.classList.add("hidden");
+  modal.classList.remove("visible");
+  modal.setAttribute("aria-hidden", "true");
 
-    restoreToOrigin(modal);
-    unlockScroll();
+  // limpa override
+  modal.style.pointerEvents = "";
+  const card = modal.querySelector(".liora-modal-card");
+  if (card) card.style.pointerEvents = "";
 
-    console.log("🔒 Modal fechado:", id);
-  }
+  unlockScroll();
+  console.log("🔒 Modal fechado:", id);
+}
+
 
   window.lioraModal = { open, close };
   console.log("🧠 Liora Modal Controller v2.4 pronto");
