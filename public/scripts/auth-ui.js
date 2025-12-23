@@ -1,28 +1,28 @@
 // ==========================================================
-// 🔐 LIORA — AUTH UI (CANÔNICO · LIMPO)
-// - Login / Cadastro
-// - Um único botão de login
-// - Um único modal
-// - Sem duplicação de listeners
+// 🔐 LIORA — AUTH UI (CANÔNICO · ROBUSTO)
 // ==========================================================
 (function () {
-  console.log("🔐 Auth UI (canônico) carregando...");
+  console.log("🔐 Auth UI aguardando dependências...");
 
-  // -------------------------------------------------------
-  // 🔒 Dependências obrigatórias
-  // -------------------------------------------------------
-  if (!window.lioraAuth) {
-    console.error("❌ lioraAuth não disponível");
-    return;
+  function whenReady(fn) {
+    if (window.lioraAuth && window.lioraModal) {
+      fn();
+      return;
+    }
+
+    const iv = setInterval(() => {
+      if (window.lioraAuth && window.lioraModal) {
+        clearInterval(iv);
+        fn();
+      }
+    }, 20);
   }
 
-  if (!window.lioraModal) {
-    console.error("❌ lioraModal não disponível");
-    return;
-  }
+  whenReady(() => {
+    console.log("✅ Auth UI dependências OK");
 
-  document.addEventListener("DOMContentLoaded", () => {
-
+    document.addEventListener("DOMContentLoaded", () => {
+    
     // -------------------------------------------------------
     // 🎯 ELEMENTOS (IDs ÚNICOS)
     // -------------------------------------------------------
@@ -169,5 +169,7 @@
     // -------------------------------------------------------
     setMode("login");
     console.log("✅ Auth UI canônico pronto");
+      });
   });
 })();
+
