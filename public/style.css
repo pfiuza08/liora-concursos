@@ -393,3 +393,41 @@ body.liora-modal-open #liora-home {
   visibility: hidden;
 }
 
+/* ============================================================
+   LIORA — MODAL SYSTEM (FASE 1A · ESTÁVEL)
+============================================================ */
+
+.liora-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  display: none;              /* 🔑 contrato único */
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.72);
+  z-index: 9999;
+}
+
+.liora-modal-backdrop.is-open {
+  display: flex;
+}
+
+.liora-modal-card {
+  background: var(--card, #181818);
+  color: var(--fg, #fff);
+  width: 100%;
+  max-width: 420px;
+  max-height: 90vh;
+  border-radius: 14px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  overflow: hidden;
+  pointer-events: auto;
+}
+
+/* botão fechar */
+.liora-modal-close {
+  background: none;
+  border: none;
+  color: inherit;
+  font-size: 1.2rem;
+  cursor: pointer;
+}
