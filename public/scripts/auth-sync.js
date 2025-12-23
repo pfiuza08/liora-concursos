@@ -72,10 +72,17 @@
   }
 
   // 🔔 Evento principal
-  window.addEventListener("liora:auth-changed", () => {
-    updateUI();
-    bindLogout();
-  });
+ window.addEventListener("liora:auth-changed", () => {
+  const user = window.lioraAuth?.user;
+
+  if (user) {
+    // logado → home
+    window.lioraUI.show("liora-home");
+  } else {
+    // deslogado → home (não força login automático)
+    window.lioraUI.show("liora-home");
+  }
+});
 
   // 🧠 Bootstrap seguro: espera o auth existir
   document.addEventListener("DOMContentLoaded", () => {
