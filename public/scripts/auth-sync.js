@@ -4,6 +4,17 @@
 (function () {
 
   function updateUI() {
+   
+    console.log("🧪 AUTH-SYNC DOM CHECK:", {
+  btnEntrar: document.getElementById("btn-auth-toggle"),
+  btnSair: document.getElementById("btn-logout"),
+  userInfo: document.getElementById("liora-user-info"),
+  visibleScreen: document.querySelector("section:not(.hidden)")?.id
+});
+    
+    
+    
+    
     const auth = window.lioraAuth;
     if (!auth) {
       console.warn("⚠️ Auth Sync: lioraAuth indisponível");
