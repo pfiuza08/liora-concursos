@@ -367,4 +367,23 @@ body.liora-modal-open .liora-app {
   opacity: 1 !important;
   z-index: 1;
 }
+/* =========================================================
+   🔐 MODAL — INTERAÇÃO GARANTIDA
+========================================================= */
+
+/* Modal visível precisa aceitar clique */
+#liora-auth-modal {
+  pointer-events: auto;
+}
+
+/* Backdrop + card sempre clicáveis */
+.liora-modal-backdrop,
+.liora-modal-card {
+  pointer-events: auto;
+}
+
+/* Quando escondido, aí sim bloqueia clique */
+#liora-auth-modal.hidden {
+  pointer-events: none;
+}
 
