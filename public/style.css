@@ -386,4 +386,10 @@ body.liora-modal-open .liora-app {
 #liora-auth-modal.hidden {
   pointer-events: none;
 }
+/* =========================================================
+   🔕 DESATIVA HOME QUANDO MODAL ESTÁ ABERTO
+========================================================= */
+body.liora-modal-open #liora-home {
+  visibility: hidden;
+}
 
