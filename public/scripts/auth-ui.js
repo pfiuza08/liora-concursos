@@ -59,10 +59,14 @@
         }
 
         window.lioraUI.show("liora-home");
-      } catch (err) {
-        error.textContent =
-          window.lioraAuth.error || "Erro ao autenticar.";
-      }
+    } catch (err) {
+  console.error("❌ ERRO AUTH COMPLETO:", err);
+  error.textContent =
+    err?.message ||
+    window.lioraAuth?.error ||
+    "Erro ao autenticar.";
+}
+
     });
 
   });
