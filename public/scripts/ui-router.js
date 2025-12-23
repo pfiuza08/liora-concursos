@@ -1,6 +1,5 @@
 // ==========================================================
-// 🧭 LIORA UI ROUTER — CANÔNICO (SCREENS)
-// Compatível com .liora-screen + .is-active
+// 🧭 LIORA UI ROUTER — FULLSCREEN (CANÔNICO)
 // ==========================================================
 (function () {
 
@@ -10,29 +9,27 @@
     "liora-app"
   ];
 
-  function hideAll() {
-    screens.forEach(id => {
-      const el = document.getElementById(id);
-      if (!el) return;
-      el.classList.remove("is-active");
+  function show(id) {
+    screens.forEach(s => {
+      const el = document.getElementById(s);
+      if (el) el.classList.toggle("hidden", s !== id);
     });
+
+    window.scrollTo(0, 0);
+    console.log("🧭 UI →", id);
   }
 
-  window.lioraUI = {
-    show(id) {
-      hideAll();
+  window.lioraUI = { show };
 
-      const target = document.getElementById(id);
-      if (target) {
-        target.classList.add("is-active");
-      } else {
-        console.warn("⚠️ Tela não encontrada:", id);
-      }
+  // 🔐 REAÇÃO AO LOGIN / LOGOUT
+  window.addEventListener("liora:auth-changed", () => {
+    const user = window.lioraAuth?.user;
 
-      window.scrollTo({ top: 0, behavior: "instant" });
-      console.log("🧭 UI →", id);
+    if (user) {
+      show("liora-home");
+    } else {
+      show("liora-auth");
     }
-  };
+  });
 
 })();
-
