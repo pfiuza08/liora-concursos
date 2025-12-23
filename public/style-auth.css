@@ -326,3 +326,22 @@ html.light .liora-auth-btn:hover {
   transform: translateY(0);
 }
 
+/* =========================================================
+   LOGIN FULLSCREEN — CAMADA CORRETA
+========================================================= */
+
+#liora-auth {
+  position: relative;
+  z-index: 20; /* acima do home */
+  background: var(--bg);
+}
+
+/* quando o login está visível */
+#liora-auth:not(.hidden) {
+  display: flex;
+}
+
+/* GARANTE que nenhum modal/backdrop interfira */
+body:not(.liora-modal-open) #liora-auth {
+  pointer-events: auto;
+}
