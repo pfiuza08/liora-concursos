@@ -139,3 +139,11 @@ function traduzErroFirebase(err) {
       return "Erro de autenticação.";
   }
 }
+// 🧪 TESTE A — LOG DE ESTADO REAL
+window.addEventListener("liora:auth-changed", () => {
+  console.log("🧪 AUTH STATE CHANGED:", {
+    user: window.lioraAuth?.user,
+    plan: window.lioraUserPlan,
+    time: new Date().toISOString()
+  });
+});
