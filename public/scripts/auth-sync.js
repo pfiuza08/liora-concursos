@@ -1,10 +1,16 @@
 // ==========================================================
-// 🔁 LIORA — AUTH STATE SYNC (FINAL)
+// 🔁 LIORA — AUTH STATE SYNC (FINAL · ESTÁVEL)
 // ==========================================================
 (function () {
 
   function updateUI() {
-    const user = window.lioraAuth?.user;
+    const auth = window.lioraAuth;
+    if (!auth) {
+      console.warn("⚠️ Auth Sync: lioraAuth indisponível");
+      return;
+    }
+
+    const user = auth.user;
 
     const btnEntrar = document.getElementById("btn-auth-toggle");
     const btnSair = document.getElementById("btn-logout");
@@ -12,33 +18,30 @@
     const userName = document.getElementById("liora-user-name");
     const userStatus = document.getElementById("liora-user-status");
 
-    if (!btnEntrar || !btnSair) return;
+    if (!btnEntrar || !btnSair) {
+      console.warn("⚠️ Auth Sync: botões não encontrados");
+      return;
+    }
 
     if (user) {
-      // 🔐 LOGADO
       btnEntrar.classList.add("hidden");
       btnSair.classList.remove("hidden");
 
       if (userInfo) userInfo.classList.remove("hidden");
-      if (userName) userName.textContent = user.email.split("@")[0];
+      if (userName) userName.textContent = user.email?.split("@")[0] || "Usuário";
       if (userStatus) userStatus.textContent = "Conta gratuita";
 
-      console.log("👤 UI → logado:", user.email);
-
+      console.log("👤 UI sincronizada → LOGADO:", user.email);
     } else {
-      // 🔓 DESLOGADO
       btnEntrar.classList.remove("hidden");
       btnSair.classList.add("hidden");
 
       if (userInfo) userInfo.classList.add("hidden");
 
-      console.log("👤 UI → deslogado");
+      console.log("👤 UI sincronizada → DESLOGADO");
     }
   }
 
-  // -------------------------------
-  // LOGOUT (CANÔNICO)
-  // -------------------------------
   function bindLogout() {
     const btnSair = document.getElementById("btn-logout");
     if (!btnSair || btnSair.dataset.bound === "1") return;
@@ -47,32 +50,31 @@
 
     btnSair.addEventListener("click", async (e) => {
       e.preventDefault();
-
       console.log("🚪 Logout solicitado");
 
       try {
         await window.lioraAuth.logout();
-        // o onAuthStateChanged cuidará do resto
       } catch (err) {
         console.error("❌ Erro no logout:", err);
       }
     });
   }
 
-  // -------------------------------
-  // EVENTOS
-  // -------------------------------
+  // 🔔 Evento principal
   window.addEventListener("liora:auth-changed", () => {
     updateUI();
     bindLogout();
   });
 
-  // fallback inicial
+  // 🧠 Bootstrap seguro: espera o auth existir
   document.addEventListener("DOMContentLoaded", () => {
-    setTimeout(() => {
-      updateUI();
-      bindLogout();
-    }, 0);
+    const iv = setInterval(() => {
+      if (window.lioraAuth) {
+        clearInterval(iv);
+        updateUI();
+        bindLogout();
+      }
+    }, 30);
   });
 
 })();
