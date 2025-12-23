@@ -1,5 +1,5 @@
 // ======================================================
-// 🔐 LIORA — AUTH CORE v3 (FIREBASE | CANÔNICO)
+// 🔐 LIORA — AUTH CORE v3.1 (FIREBASE | CANÔNICO)
 // ======================================================
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
@@ -30,7 +30,7 @@ const auth = getAuth(app);
 setPersistence(auth, browserLocalPersistence);
 
 // ------------------------------------------------------
-// 🌍 API GLOBAL
+// 🌍 API GLOBAL DA LIORA
 // ------------------------------------------------------
 window.lioraAuth = {
   user: null,
@@ -41,11 +41,10 @@ window.lioraAuth = {
   // -------------------------------
   // LOGIN
   // -------------------------------
-  async login({ email, password }) {
+  async login(email, senha) {
+    console.log("🧪 LOGIN RECEBIDO:", { email, senha });
 
-    console.log("🧪 LOGIN PARAMS:", arguments);
-
-    if (!email || !password) {
+    if (!email || !senha) {
       throw new Error("E-mail e senha são obrigatórios.");
     }
 
@@ -53,11 +52,14 @@ window.lioraAuth = {
       this.loading = true;
       this.error = null;
 
-      const cred = await signInWithEmailAndPassword(auth, email, password);
+      const cred = await signInWithEmailAndPassword(auth, email, senha);
       return cred.user;
+
     } catch (err) {
+      console.error("Erro login:", err);
       this.error = traduzErroFirebase(err);
       throw err;
+
     } finally {
       this.loading = false;
     }
@@ -66,8 +68,10 @@ window.lioraAuth = {
   // -------------------------------
   // CADASTRO
   // -------------------------------
-  async cadastro({ email, password }) {
-    if (!email || !password) {
+  async cadastro(email, senha) {
+    console.log("🧪 CADASTRO RECEBIDO:", { email, senha });
+
+    if (!email || !senha) {
       throw new Error("E-mail e senha são obrigatórios.");
     }
 
@@ -75,12 +79,15 @@ window.lioraAuth = {
       this.loading = true;
       this.error = null;
 
-      const cred = await createUserWithEmailAndPassword(auth, email, password);
+      const cred = await createUserWithEmailAndPassword(auth, email, senha);
       this.premium = false;
       return cred.user;
+
     } catch (err) {
+      console.error("Erro cadastro:", err);
       this.error = traduzErroFirebase(err);
       throw err;
+
     } finally {
       this.loading = false;
     }
@@ -101,6 +108,7 @@ onAuthStateChanged(auth, (user) => {
   window.lioraAuth.user = user || null;
   window.lioraAuth.premium = false;
 
+  // plano canônico (por enquanto)
   window.lioraUserPlan = user ? "free" : "free";
 
   document.body.classList.toggle("liora-auth-on", !!user);
@@ -109,10 +117,10 @@ onAuthStateChanged(auth, (user) => {
   window.dispatchEvent(new Event("liora:auth-changed"));
 });
 
-console.log("🔐 auth.js v3 carregado");
+console.log("🔐 auth.js v3.1 carregado");
 
 // ------------------------------------------------------
-// 🔤 ERROS FIREBASE
+// 🔤 TRADUÇÃO DE ERROS FIREBASE
 // ------------------------------------------------------
 function traduzErroFirebase(err) {
   if (!err?.code) return "Erro inesperado. Tente novamente.";
