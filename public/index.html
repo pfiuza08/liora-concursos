@@ -146,13 +146,56 @@
 
 </div>
 
-<!-- ======================================================
-     SCRIPTS (inalterados)
-====================================================== -->
+<!-- ============================================================
+     SCRIPTS — ORDEM CANÔNICA (LIORA)
+============================================================ -->
+
+<!-- ESTADO CANÔNICO -->
+<script src="/scripts/state.js?v=1"></script>
+<script src="/scripts/limits.js?v=1"></script>
+<script src="/scripts/usage.js?v=1"></script>
+
+<!-- LIMPEZA DE ESTADO LEGADO (FASE A) -->
+<script src="/scripts/state-reset.js?v=1"></script>
+
+<!-- Testes / flags premium -->
+<script src="/scripts/premium-test.js"></script>
+
+<!-- Firebase Auth + API global da Liora -->
 <script type="module" src="/scripts/auth.js?v=1"></script>
+
+<!-- UI de autenticação + modais -->
 <script src="/scripts/auth-ui.js?v=1" defer></script>
 <script src="/scripts/liora-ui.js?v=1" defer></script>
+
+<!-- PDF + IA -->
+<script src="/scripts/pdf-extractor.js?v=1" defer></script>
+<script src="/scripts/pdf-structure.js?v=1" defer></script>
+<script src="/scripts/outline-generator.js?v=1" defer></script>
+<script src="/scripts/semantic.js?v=1" defer></script>
+
+<!-- Simulados + Dashboard -->
+<script src="/scripts/simulados.js?v=103" defer></script>
+<script src="/scripts/dashboard.js?v=2" defer></script>
+
+<!-- Premium -->
+<script src="/scripts/premium.js?v=7" defer></script>
+
+<!-- CORE DA LIORA (sempre antes do estudo) -->
 <script src="/scripts/core.js?v=75" defer></script>
+
+<!-- Estudo / Wizard -->
+<script src="/scripts/estudos.js?v=2" defer></script>
+
+<!-- UI específica -->
+<script src="/scripts/ui-seu-estudo.js"></script>
+<script src="/scripts/nav-home.js?v=80" defer></script>
+
+<!-- Reset de segurança -->
+<script src="/scripts/reset-secret.js" defer></script>
+
+<!-- Build info -->
+<div id="liora-build-info">Liora v74-PREMIUM-C7.2</div>
 
 </body>
 </html>
