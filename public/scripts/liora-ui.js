@@ -5,18 +5,27 @@
 (function () {
   console.log("🔵 Liora UI helpers v2.3 carregando...");
 
- // ======================================================
-// 🧠 MODAL CONTROLLER — v2.4 (PORTAL CONTROLADO)
-// Compatível com HTML estático + stacking context
+// ======================================================
+// 🧠 MODAL CONTROLLER — v2.5 (HTML ESTÁTICO, CACHEADO)
 // ======================================================
 if (!window.lioraModal) {
   const body = document.body;
 
-  // guarda referência original do modal
-  const modalState = new Map();
+  // cache único de modais
+  const modalCache = new Map();
 
-  function getModal(id) {
-    return document.getElementById(id);
+  function resolveModal(id) {
+    if (modalCache.has(id)) {
+      return modalCache.get(id);
+    }
+
+    const el = document.getElementById(id);
+    if (el) {
+      modalCache.set(id, el);
+      return el;
+    }
+
+    return null;
   }
 
   function lockScroll() {
@@ -29,71 +38,40 @@ if (!window.lioraModal) {
     body.classList.remove("liora-modal-open");
   }
 
-  function promoteToBody(modal) {
-    if (modalState.has(modal)) return;
-
-    modalState.set(modal, {
-      parent: modal.parentNode,
-      next: modal.nextSibling,
-    });
-
-    body.appendChild(modal);
-  }
-
-  function restoreToOrigin(modal) {
-    const state = modalState.get(modal);
-    if (!state) return;
-
-    if (state.next) {
-      state.parent.insertBefore(modal, state.next);
-    } else {
-      state.parent.appendChild(modal);
+  function open(id) {
+    const modal = resolveModal(id);
+    if (!modal) {
+      console.warn("⚠️ Modal não encontrado:", id);
+      return;
     }
 
-    modalState.delete(modal);
+    modal.classList.remove("hidden");
+    modal.classList.add("visible");
+    modal.setAttribute("aria-hidden", "false");
+
+    // garante interação
+    modal.style.pointerEvents = "auto";
+    const card = modal.querySelector(".liora-modal-card");
+    if (card) card.style.pointerEvents = "auto";
+
+    lockScroll();
+    console.log("🟢 Modal aberto:", id);
   }
-
- function open(id) {
-  const modal = getModal(id);
-  if (!modal) {
-    console.warn("⚠️ Modal não encontrado:", id);
-    return;
-  }
-
-  modal.classList.remove("hidden");
-  modal.classList.add("visible");
-  modal.setAttribute("aria-hidden", "false");
-
-  // 🔥 CORREÇÃO CRÍTICA
-  modal.style.pointerEvents = "auto";
-  const card = modal.querySelector(".liora-modal-card");
-  if (card) card.style.pointerEvents = "auto";
-
-  lockScroll();
-  console.log("🟢 Modal aberto:", id);
-}
-
 
   function close(id) {
-  const modal = getModal(id);
-  if (!modal) return;
+    const modal = resolveModal(id);
+    if (!modal) return;
 
-  modal.classList.add("hidden");
-  modal.classList.remove("visible");
-  modal.setAttribute("aria-hidden", "true");
+    modal.classList.add("hidden");
+    modal.classList.remove("visible");
+    modal.setAttribute("aria-hidden", "true");
 
-  // limpa override
-  modal.style.pointerEvents = "";
-  const card = modal.querySelector(".liora-modal-card");
-  if (card) card.style.pointerEvents = "";
-
-  unlockScroll();
-  console.log("🔒 Modal fechado:", id);
-}
-
+    unlockScroll();
+    console.log("🔒 Modal fechado:", id);
+  }
 
   window.lioraModal = { open, close };
-  console.log("🧠 Liora Modal Controller v2.4 pronto");
+  console.log("🧠 Liora Modal Controller v2.5 pronto");
 }
 
   // ======================================================
