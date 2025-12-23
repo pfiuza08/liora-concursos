@@ -1,12 +1,22 @@
 // ==========================================================
-// 🎨 LIORA — MODAL CONTROLLER (FASE 1A · ESTÁVEL)
+// 🎨 LIORA — MODAL CONTROLLER (CANÔNICO · ESTÁVEL)
+// Compatível com UI Router + Fullscreen Screens
 // ==========================================================
 (function () {
-  console.log("🔵 Liora Modal Controller — Fase 1A");
-
   if (window.lioraModal) return;
 
+  console.log("🔵 Liora Modal Controller — CANÔNICO");
+
   const body = document.body;
+  let openCount = 0;
+
+  function lockScroll() {
+    body.style.overflow = "hidden";
+  }
+
+  function unlockScroll() {
+    body.style.overflow = "";
+  }
 
   function open(id) {
     const modal = document.getElementById(id);
@@ -18,7 +28,9 @@
     modal.classList.add("is-open");
     modal.setAttribute("aria-hidden", "false");
 
-    body.style.overflow = "hidden";
+    openCount++;
+    lockScroll();
+
     console.log("🟢 Modal aberto:", id);
   }
 
@@ -29,11 +41,17 @@
     modal.classList.remove("is-open");
     modal.setAttribute("aria-hidden", "true");
 
-    body.style.overflow = "";
+    openCount = Math.max(0, openCount - 1);
+    if (openCount === 0) {
+      unlockScroll();
+    }
+
     console.log("🔒 Modal fechado:", id);
   }
 
-  // Fecha por botão [data-close]
+  // --------------------------------------------------
+  // FECHAR POR BOTÃO [data-close]
+  // --------------------------------------------------
   document.addEventListener("click", (e) => {
     const btn = e.target.closest("[data-close]");
     if (!btn) return;
@@ -42,15 +60,20 @@
     if (modal?.id) close(modal.id);
   });
 
-  // Fecha clicando no backdrop
+  // --------------------------------------------------
+  // FECHAR CLICANDO NO BACKDROP
+  // --------------------------------------------------
   document.addEventListener("click", (e) => {
     if (
-      e.target.classList.contains("liora-modal-backdrop") &&
-      e.target === e.target
+      e.target.classList.contains("liora-modal-backdrop")
     ) {
-      if (e.target.id) close(e.target.id);
+      close(e.target.id);
     }
   });
 
+  // --------------------------------------------------
+  // API GLOBAL
+  // --------------------------------------------------
   window.lioraModal = { open, close };
+
 })();
