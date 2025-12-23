@@ -2,29 +2,84 @@
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8" />
-
-  <!-- SEO -->
-  <meta name="description" content="Liora — Estudo Inteligente com IA">
-  <meta name="keywords" content="Liora, estudo inteligente, IA, simulados, planos de estudo">
+  <!-- ============================================================
+       META TAGS — SEO + Indexação Google
+  ============================================================ -->
+  <meta name="description" content="Liora — Estudo Inteligente. Crie planos de estudo, sessões completas e simulados avançados com IA. Tudo organizado, adaptativo e feito para acelerar sua aprovação.">
+  <meta name="keywords" content="Liora, estudo inteligente, IA, planos de estudo, simulados, concurseiros, ENEM, OAB, certificações, PDF IA, microlearning">
   <meta name="author" content="Intellih Tecnologia">
   <meta name="robots" content="index, follow">
+  <meta name="googlebot" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
+
   <link rel="canonical" href="https://getliora.ia.br/">
 
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="/favicon.ico">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="manifest" href="/site.webmanifest">
+
   <meta name="theme-color" content="#c44b04">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <!-- Pré-conexão + fontes -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+
+  <!-- ============================================================
+       OPEN GRAPH — Compartilhamento
+  ============================================================ -->
+  <meta property="og:title" content="Liora — Estudo Inteligente com IA">
+  <meta property="og:description" content="Crie planos de estudo e simulados inteligentes com IA. Organize, aprenda e avance em qualquer área.">
+  <meta property="og:image" content="https://getliora.ia.br/og-liora.png">
+  <meta property="og:url" content="https://getliora.ia.br/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Liora">
+
+  <!-- ============================================================
+       TWITTER CARD
+  ============================================================ -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Liora — Estudo Inteligente">
+  <meta name="twitter:description" content="Planos de estudo completos e simulados com IA. Simples, rápido e eficiente.">
+  <meta name="twitter:image" content="https://getliora.ia.br/og-liora.png">
+
+  <!-- ============================================================
+       JSON-LD — WebApp + SoftwareApplication
+  ============================================================ -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "Liora — Estudo Inteligente",
+    "url": "https://getliora.ia.br/",
+    "description": "Plataforma de estudo com IA: planos completos, simulados, dashboard e microlearning.",
+    "applicationCategory": "EducationalApplication",
+    "operatingSystem": "Web",
+    "creator": {
+      "@type": "Organization",
+      "name": "Intellih Tecnologia",
+      "url": "https://www.intellih.com.br"
+    },
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "BRL"
+    },
+    "featureList": [
+      "Planos de estudo com IA",
+      "Sessões completas e adaptativas",
+      "Simulados inteligentes",
+      "Flashcards automáticos",
+      "Mapa mental gerado por IA",
+      "Dashboard de desempenho"
+    ]
+  }
+  </script>
 
   <title>Liora — Estudo Inteligente</title>
 
-  <!-- Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
-
-  <!-- CSS base -->
-  <link rel="stylesheet" href="/style.css?v=81">
-  <link rel="stylesheet" href="/style-auth.css?v=1">
-  <link rel="stylesheet" href="/style-simulados.css?v=6">
-  <link rel="stylesheet" href="/style-dashboard.css?v=1">
-  <link rel="stylesheet" href="/style-wizard.css?v=1">
+  <!-- Tailwind (temporário) -->
+  <script src="https://cdn.tailwindcss.com"></script>
 
   <!-- PDF.js -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.14.305/pdf.min.js"></script>
@@ -32,161 +87,504 @@
     pdfjsLib.GlobalWorkerOptions.workerSrc =
       "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.14.305/pdf.worker.min.js";
   </script>
+
+  <!-- =========================================================
+       CSS — BASE + FEATURES (ordem canônica)
+  ========================================================= -->
+  <link rel="stylesheet" href="/style.css?v=81">
+  <link rel="stylesheet" href="/style-auth.css?v=1">
+  <link rel="stylesheet" href="/style-simulados.css?v=6">
+  <link rel="stylesheet" href="/style-dashboard.css?v=1">
+  <link rel="stylesheet" href="/style-wizard.css?v=1">
+
+  <!-- =========================================================
+       BOOTSTRAP DE CAMADAS (sem quebrar layout)
+  ========================================================= -->
+  <style>
+    #liora-shell { min-height: 100vh; }
+    #layer-modal { position: fixed; inset: 0; z-index: 1000; pointer-events: none; }
+    /* os próprios modais controlam pointer-events */
+    #layer-modal .liora-modal-backdrop { pointer-events: none; }
+    #layer-modal .liora-modal-backdrop.is-open { pointer-events: auto; }
+
+    /* telas (home/app/auth) */
+    .liora-screen { display: none; }
+    .liora-screen.is-active { display: block; }
+
+    /* auth fullscreen */
+    #liora-auth { min-height: calc(100vh - 88px); }
+  </style>
 </head>
 
 <body>
+  <div id="liora-shell">
 
-<div id="liora-shell">
-
-  <!-- ================= HEADER ================= -->
-  <header class="max-w-6xl mx-auto px-6 pt-8 flex justify-between items-center">
-    <div class="flex items-center gap-3">
-      <div class="w-10 h-10 rounded-2xl bg-[var(--brand)] text-white font-black flex items-center justify-center">Li</div>
-      <div>
-        <h1 class="text-xl font-bold">Liora</h1>
-        <p class="text-sm text-[var(--muted)]">Estudo inteligente com IA</p>
-      </div>
-    </div>
-
-    <div class="flex items-center gap-3">
-      <div id="liora-user-info" class="hidden text-right">
-        <div id="liora-user-name" class="text-sm font-medium"></div>
-        <div id="liora-user-status" class="text-xs text-[var(--muted)]"></div>
-      </div>
-
-      <button id="btn-auth-toggle" class="btn-secondary">Entrar</button>
-      <button id="btn-logout" class="btn-secondary hidden">Sair</button>
-      <button id="btn-theme" class="btn-secondary">🌙</button>
-    </div>
-  </header>
-
-  <!-- ================= MAIN ================= -->
-  <main id="liora-layout" class="max-w-6xl mx-auto px-6 pt-10 pb-16">
-
-    <!-- HOME -->
-    <section id="liora-home" class="space-y-12 text-center">
-      <h2 class="text-2xl font-semibold">Como deseja estudar hoje?</h2>
-
-      <div>
-        <h3 class="text-sm text-[var(--muted)] mb-2">PLANO DE ESTUDO</h3>
-        <div class="flex justify-center gap-4">
-          <button id="home-tema" class="btn-secondary">Tema</button>
-          <button id="home-upload" class="btn-secondary">PDF</button>
+    <!-- ============================================================
+         HEADER (sempre visível)
+    ============================================================ -->
+    <header class="max-w-6xl mx-auto px-6 pt-8 flex justify-between items-center">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-2xl bg-[var(--brand)] text-white font-black flex items-center justify-center">
+          Li
+        </div>
+        <div>
+          <h1 class="text-xl font-bold">Liora — Estudo Inteligente</h1>
+          <p class="text-sm text-[var(--muted)] leading-tight">
+            Planos de estudo, sessões completas e simulados com IA.
+          </p>
         </div>
       </div>
 
-      <div>
-        <h3 class="text-sm text-[var(--muted)] mb-2">AVALIAÇÃO</h3>
-        <div class="flex justify-center gap-4">
-          <button id="home-simulados" class="btn-secondary">Simulados</button>
-          <button id="home-dashboard" class="btn-secondary">Meu Desempenho</button>
+      <div class="flex items-center gap-4">
+        <!-- Info do usuário -->
+        <div id="liora-user-info" class="hidden flex-col text-right leading-tight">
+          <span id="liora-user-name" class="text-sm font-medium"></span>
+          <span id="liora-user-status" class="text-[0.7rem] text-[var(--muted)]"></span>
+        </div>
+
+        <!-- Login/Logout -->
+        <button id="btn-auth-toggle" class="btn-secondary text-sm px-3 py-1.5">
+          Entrar
+        </button>
+
+        <button id="btn-logout" class="btn-secondary text-sm px-3 py-1.5 hidden">
+          Sair
+        </button>
+
+        <button id="btn-theme" class="btn-secondary py-1 px-2 text-base">🌙</button>
+      </div>
+    </header>
+
+    <!-- ============================================================
+         MAIN
+    ============================================================ -->
+    <main id="liora-layout" class="max-w-6xl mx-auto px-6 pt-8 pb-16">
+
+      <!-- =========================
+           HOME (screen)
+      ========================== -->
+      <section id="liora-home" class="liora-screen is-active">
+        <div class="w-full min-h-[70vh] flex flex-col items-center justify-start text-center px-4 gap-12 pt-10 pb-24">
+          <div class="w-full max-w-xl flex flex-col items-center gap-10">
+
+            <div class="space-y-3">
+              <h2 class="text-2xl font-semibold text-[var(--fg)]">Como deseja estudar hoje?</h2>
+              <p class="text-sm text-[var(--muted)]">Crie planos de estudo ou simulados guiados pela IA.</p>
+            </div>
+
+            <!-- PLANO DE ESTUDO -->
+            <div class="space-y-3">
+              <h3 class="text-base font-medium text-[var(--muted)]">PLANO DE ESTUDO</h3>
+              <div class="flex gap-4 justify-center">
+                <button id="home-tema" class="btn-secondary px-6 py-2 text-sm">Tema</button>
+                <button id="home-upload" class="btn-secondary px-6 py-2 text-sm">PDF</button>
+              </div>
+            </div>
+
+            <!-- AVALIAÇÃO -->
+            <div class="space-y-3">
+              <h3 class="text-base font-medium text-[var(--muted)]">AVALIAÇÃO COM IA</h3>
+              <div class="flex gap-4 justify-center">
+                <button id="home-simulados" class="btn-secondary px-6 py-2 text-sm">Simulados</button>
+                <button id="home-dashboard" class="btn-secondary px-6 py-2 text-sm">Meu Desempenho</button>
+              </div>
+            </div>
+
+            <!-- BADGE -->
+            <p id="liora-premium-badge"
+               class="inline-flex items-center gap-2 text-[0.7rem] px-3 py-1 rounded-full bg-slate-800/80 text-slate-200">
+              Versão gratuita — recursos limitados
+            </p>
+
+            <button id="liora-upgrade-open" class="btn-secondary px-4 py-2 text-xs">
+              Conhecer o Liora Premium
+            </button>
+
+            <!-- SEU ESTUDO -->
+            <div id="liora-seu-estudo" class="liora-estudo-bloco w-full">
+              <div class="liora-estudo-header">
+                <h3>Seu Estudo</h3>
+              </div>
+
+              <div class="liora-estudo-acoes">
+                <button id="home-continuar-estudo" class="btn-continuar-estudo">
+                  <span class="btn-icone" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" focusable="false">
+                      <circle cx="12" cy="12" r="10" fill="rgba(0,0,0,0.28)"></circle>
+                      <path d="M10 8l6 4-6 4V8z" fill="currentColor"></path>
+                    </svg>
+                  </span>
+                  <span>Continuar estudo</span>
+                </button>
+
+                <button id="home-meus-planos" class="btn-meus-planos">
+                  <span class="btn-icone" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" focusable="false">
+                      <rect x="5" y="6" width="10" height="12" rx="2"
+                            fill="none" stroke="currentColor" stroke-width="1.6"></rect>
+                      <path d="M15 8h2.2c0.99 0 1.8 0.81 1.8 1.8v7.4"
+                            fill="none" stroke="currentColor" stroke-width="1.6"
+                            stroke-linecap="round"></path>
+                      <path d="M8 10h6" fill="none" stroke="currentColor" stroke-width="1.4"
+                            stroke-linecap="round"></path>
+                      <path d="M8 13h4" fill="none" stroke="currentColor" stroke-width="1.4"
+                            stroke-linecap="round"></path>
+                    </svg>
+                  </span>
+                  <span>Meus planos</span>
+                </button>
+              </div>
+
+              <p id="home-resumo-estudo" class="liora-estudo-resumo">
+                Gere um plano por Tema ou PDF para começar.
+              </p>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      <!-- =========================
+           AUTH FULLSCREEN (screen)
+      ========================== -->
+      <section id="liora-auth" class="liora-screen">
+        <div class="min-h-[70vh] flex items-center justify-center px-4 py-10">
+          <div class="w-full max-w-md liora-card">
+            <h2 id="liora-auth-title" class="text-xl font-semibold mb-2">Acessar Liora</h2>
+            <p class="text-sm text-[var(--muted)] mb-6">
+              Entre para acessar seus estudos em qualquer dispositivo.
+            </p>
+
+            <form id="liora-auth-form" class="space-y-4">
+              <div class="liora-input-group">
+                <label for="auth-email">E-mail</label>
+                <input id="auth-email" type="email" required autocomplete="email" class="liora-input">
+              </div>
+
+              <div class="liora-input-group">
+                <label for="auth-senha">Senha</label>
+                <input id="auth-senha" type="password" required autocomplete="current-password" class="liora-input">
+              </div>
+
+              <div id="liora-auth-error" class="text-sm text-red-400"></div>
+
+              <button type="submit" class="btn-primary w-full">
+                <span id="liora-auth-submit-text">Entrar</span>
+              </button>
+            </form>
+
+            <button id="liora-auth-toggle-mode" class="mt-4 text-sm text-[var(--brand)]">
+              Criar conta
+            </button>
+
+            <button id="liora-auth-back" class="mt-6 text-xs text-[var(--muted)]">
+              ← Voltar para início
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- =========================
+           WORKSPACE (mantido)
+      ========================== -->
+      <section id="liora-app" class="liora-screen">
+        <!-- HEADER DO WORKSPACE -->
+        <div class="space-y-1">
+          <h2 id="liora-view-title" class="section-title"></h2>
+          <p id="liora-view-subtitle" class="text-sm text-[var(--muted)]"></p>
+        </div>
+
+        <!-- PAINEL DE ESTUDO -->
+        <div id="painel-estudo" class="space-y-8 hidden">
+
+          <!-- POR TEMA -->
+          <div id="painel-tema" class="space-y-3 hidden">
+            <label class="text-sm font-medium">Tema de estudo</label>
+            <input id="inp-tema" type="text" placeholder="Ex.: Direito Constitucional — Controle de Constitucionalidade">
+
+            <label class="text-sm font-medium">Nível</label>
+            <select id="sel-nivel">
+              <option value="iniciante">Iniciante</option>
+              <option value="intermediario">Intermediário</option>
+              <option value="avancado">Avançado</option>
+            </select>
+
+            <button id="btn-gerar" class="btn w-full mt-2">Gerar plano</button>
+            <p id="status" class="text-xs text-[var(--muted)] mt-1"></p>
+
+            <div id="barra-tema" class="liora-progress mt-1">
+              <div id="barra-tema-fill" class="liora-progress__bar"></div>
+            </div>
+          </div>
+
+          <!-- POR PDF -->
+          <div id="painel-upload" class="space-y-3 hidden">
+            <label class="text-sm font-medium">Envie seu PDF</label>
+
+            <label id="upload-zone" class="upload-zone">
+              <p id="upload-text">Clique ou arraste um PDF</p>
+              <div id="upload-spinner"></div>
+              <input id="inp-file" type="file" accept="application/pdf" />
+            </label>
+
+            <p class="text-xs text-[var(--muted)]">
+              PDFs com até 80 páginas funcionam melhor nesta versão.
+            </p>
+
+            <button id="btn-gerar-upload" class="btn w-full mt-1">Gerar plano</button>
+
+            <p id="status-upload" class="text-xs text-[var(--muted)] mt-1"></p>
+            <div id="barra-upload" class="liora-progress mt-1">
+              <div id="barra-upload-fill" class="liora-progress__bar"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- LISTA DE TÓPICOS DO PLANO -->
+        <div id="area-plano" class="space-y-6 hidden">
+          <div class="flex justify-between items-baseline">
+            <h3 class="section-title">Seu Plano de Estudo</h3>
+            <p id="ctx" class="text-sm text-[var(--muted)]"></p>
+          </div>
+          <div id="plano" class="space-y-4"></div>
+        </div>
+
+        <!-- WIZARD -->
+        <div id="liora-sessoes" class="hidden space-y-6">
+          <h3 id="liora-tema-ativo" class="text-lg font-semibold"></h3>
+
+          <div class="liora-wizard-card">
+            <div id="liora-sessao-progress" class="text-sm text-[var(--muted)] mb-2"></div>
+            <h4 id="liora-sessao-titulo" class="liora-wizard-title"></h4>
+
+            <div class="liora-wizard-section">
+              <h5>OBJETIVO</h5>
+              <p id="liora-sessao-objetivo"></p>
+            </div>
+
+            <div class="liora-wizard-section">
+              <h5>CONTEÚDO</h5>
+              <div id="liora-sessao-conteudo"></div>
+            </div>
+
+            <div class="liora-wizard-section">
+              <h5>ANALOGIAS</h5>
+              <div id="liora-sessao-analogias"></div>
+            </div>
+
+            <div class="liora-wizard-section">
+              <h5>ATIVAÇÃO</h5>
+              <ul id="liora-sessao-ativacao"></ul>
+            </div>
+
+            <div class="liora-wizard-section">
+              <h5>TESTE RÁPIDO</h5>
+              <div id="liora-sessao-quiz"></div>
+              <p id="liora-sessao-quiz-feedback" class="liora-quiz-feedback"></p>
+            </div>
+
+            <div class="liora-wizard-section">
+              <h5>FLASHCARDS</h5>
+              <div id="liora-sessao-flashcards" class="liora-flashcards-box"></div>
+            </div>
+
+            <div class="liora-wizard-section">
+              <h5>MAPA MENTAL</h5>
+              <pre id="liora-sessao-mapa" class="liora-mapa-mental"></pre>
+            </div>
+          </div>
+
+          <div class="flex justify-between gap-3">
+            <button id="liora-btn-voltar" class="btn-secondary">◀ Voltar</button>
+            <button id="liora-btn-revisar" class="btn-secondary">✓ Revisar</button>
+            <button id="liora-btn-proxima" class="btn-primary">Próxima ▶</button>
+          </div>
+        </div>
+
+        <!-- SIMULADOS -->
+        <div id="area-simulado" class="hidden space-y-8">
+          <p class="text-sm text-[var(--muted)] max-w-xl">
+            Use o botão no canto inferior direito para configurar seu simulado.
+          </p>
+
+          <div class="flex justify-between items-center">
+            <div id="sim-timer" class="sim-timer hidden">00:00</div>
+            <div class="sim-progress w-48">
+              <div id="sim-progress-bar" class="sim-progress-fill"></div>
+            </div>
+          </div>
+
+          <div id="sim-questao-container" class="space-y-4"></div>
+
+          <div id="sim-nav" class="sim-nav hidden">
+            <button id="sim-btn-voltar" class="sim-btn-nav">◀ Voltar</button>
+            <button id="sim-btn-proxima" class="sim-btn-nav sim-btn-next">Próxima ▶</button>
+          </div>
+
+          <div id="sim-resultado" class="hidden"></div>
+        </div>
+
+        <!-- DASHBOARD -->
+        <div id="area-dashboard" class="hidden space-y-8">
+          <div class="flex justify-between items-center">
+            <h3 class="section-title">Minha evolução</h3>
+            <p class="text-sm text-[var(--muted)]">Resumo dos seus simulados</p>
+          </div>
+
+          <p id="dash-empty" class="text-sm text-[var(--muted)]">
+            Você ainda não fez simulados.
+          </p>
+
+          <div id="dash-resumo" class="grid gap-3 md:grid-cols-3 text-sm"></div>
+          <div id="dash-bancas" class="mt-4"></div>
+          <div id="dash-ultimos" class="mt-4"></div>
+        </div>
+      </section>
+
+      <!-- FAB HOME -->
+      <button id="fab-home" class="liora-fab-home hidden">⬅ Início</button>
+
+      <!-- FAB SIMULADO -->
+      <button id="sim-fab" class="sim-fab hidden">⚙</button>
+
+      <div id="liora-build-info">Liora v78-FREEMIUM-A4</div>
+    </main>
+
+    <!-- ============================================================
+         LAYER MODAL (todos os modais aqui)
+    ============================================================ -->
+    <section id="layer-modal">
+      <!-- SIMULADO — CONFIGURAÇÃO -->
+      <div id="sim-modal-backdrop" class="liora-modal-backdrop hidden" aria-hidden="true">
+        <div class="liora-modal-card sim-modal" role="dialog" aria-modal="true">
+          <button class="liora-modal-close" data-close aria-label="Fechar">✕</button>
+
+          <h3 class="sim-modal-title">Configurar simulado</h3>
+
+          <div class="sim-modal-body liora-modal-scroll">
+            <label class="sim-label">Banca</label>
+            <select id="sim-modal-banca" class="sim-input">
+              <option value="FGV">FGV</option>
+              <option value="CESPE">Cebraspe (CESPE)</option>
+              <option value="VUNESP">VUNESP</option>
+              <option value="FCC">FCC</option>
+              <option value="QUADRIX">Quadrix</option>
+              <option value="IBFC">IBFC</option>
+            </select>
+
+            <label class="sim-label">Quantidade</label>
+            <input id="sim-modal-qtd" type="number" value="5" min="1" class="sim-input">
+
+            <label class="sim-label">Tempo (minutos)</label>
+            <input id="sim-modal-tempo" type="number" value="30" min="5" class="sim-input">
+
+            <label class="sim-label">Dificuldade</label>
+            <select id="sim-modal-dificuldade" class="sim-input">
+              <option value="misturado">Misturado</option>
+              <option value="facil">Fácil</option>
+              <option value="medio">Médio</option>
+              <option value="dificil">Difícil</option>
+            </select>
+
+            <label class="sim-label">Tema (opcional)</label>
+            <input id="sim-modal-tema" type="text" class="sim-input">
+
+            <p id="sim-modal-aviso-estudos" class="text-xs text-[var(--muted)] mt-3 hidden"></p>
+          </div>
+
+          <div class="sim-modal-footer">
+            <button id="sim-modal-iniciar" class="btn-primary w-full">
+              Iniciar simulado
+            </button>
+          </div>
         </div>
       </div>
 
-      <p id="liora-premium-badge" class="text-xs text-[var(--muted)]">
-        Versão gratuita — recursos limitados
-      </p>
+      <!-- ERRO GLOBAL -->
+      <div id="liora-error" class="liora-modal-backdrop hidden" aria-hidden="true">
+        <div class="liora-modal-card liora-error-card" role="alertdialog">
+          <button class="liora-modal-close" data-close aria-label="Fechar">✕</button>
 
-      <button id="liora-upgrade-open" class="btn-secondary text-xs">
-        Conhecer Liora Premium
-      </button>
-    </section>
+          <div class="liora-error-icon">⚠️</div>
+          <h3 class="liora-error-title">Algo deu errado</h3>
+          <p id="liora-error-message">Ocorreu um erro inesperado.</p>
 
-    <!-- LOGIN FULLSCREEN -->
-    <section id="liora-auth" class="hidden min-h-screen flex items-center justify-center">
-      <div class="liora-card w-full max-w-md">
-        <h2 class="text-xl font-semibold mb-4">Acessar Liora</h2>
+          <div class="liora-error-actions">
+            <button id="liora-error-retry" class="btn-primary">Tentar novamente</button>
+            <button id="liora-error-back" class="btn-secondary">Voltar ao início</button>
+          </div>
+        </div>
+      </div>
 
-        <form id="liora-auth-form" class="space-y-4">
-          <div>
-            <label>E-mail</label>
-            <input id="auth-email" type="email" class="liora-input" required>
+      <!-- LOADING GLOBAL -->
+      <div id="liora-loading" class="liora-modal-backdrop hidden" aria-hidden="true">
+        <div class="liora-modal-card liora-loading-card" role="status">
+          <div class="liora-spinner"></div>
+          <p id="liora-loading-text">Carregando…</p>
+        </div>
+      </div>
+
+      <!-- PREMIUM — LIORA+ -->
+      <div id="liora-premium-modal" class="liora-modal-backdrop hidden" aria-hidden="true">
+        <div class="liora-modal-card liora-modal-premium" role="dialog" aria-modal="true">
+          <button class="liora-modal-close" data-close aria-label="Fechar">✕</button>
+
+          <div class="liora-modal-header">
+            <span class="liora-pill">Liora+</span>
+            <h2>Desbloqueie todo o potencial da Liora</h2>
+            <p>Planos ilimitados, simulados avançados e progresso completo.</p>
           </div>
 
-          <div>
-            <label>Senha</label>
-            <input id="auth-senha" type="password" class="liora-input" required>
+          <div class="liora-premium-grid liora-modal-scroll">
+            <!-- conteúdo mantido -->
           </div>
 
-          <div id="liora-auth-error" class="text-sm text-red-400"></div>
-
-          <button type="submit" class="btn-primary w-full">
-            <span id="liora-auth-submit-text">Entrar</span>
-          </button>
-        </form>
-
-        <button id="liora-auth-toggle-mode" class="mt-4 text-sm text-[var(--brand)]">
-          Criar conta
-        </button>
-
-        <button id="liora-auth-back" class="mt-6 text-xs text-[var(--muted)]">
-          ← Voltar
-        </button>
+          <div class="liora-premium-cta">
+            <button id="liora-premium-cta" class="liora-btn-primary liora-btn-full">
+              Quero liberar o Liora+
+            </button>
+          </div>
+        </div>
       </div>
     </section>
 
-    <!-- APP (workspace completo permanece controlado pelos scripts) -->
-    <section id="liora-app" class="hidden">
-      <!-- conteúdo já controlado por core.js / nav-home.js -->
-    </section>
+  </div>
 
-  </main>
+  <!-- ============================================================
+       SCRIPTS (ordem canônica e segura)
+  ============================================================ -->
+  <script src="/scripts/state.js?v=1"></script>
+  <script src="/scripts/limits.js?v=1"></script>
+  <script src="/scripts/usage.js?v=1.1"></script>
 
-  <!-- ================= MODAIS ================= -->
-  <section id="layer-modal">
+  <script src="/scripts/state-reset.js?v=1"></script>
+  <script src="/scripts/premium-test.js"></script>
 
-    <!-- SIMULADO -->
-    <div id="sim-modal-backdrop" class="liora-modal-backdrop hidden">
-      <div class="liora-modal-card sim-modal">
-        <button class="liora-modal-close" data-close>✕</button>
-        <h3>Configurar simulado</h3>
-        <button id="sim-modal-iniciar" class="btn-primary w-full">Iniciar</button>
-      </div>
-    </div>
+  <!-- Firebase Auth -->
+  <script type="module" src="/scripts/auth.js?v=1"></script>
 
-    <!-- ERRO -->
-    <div id="liora-error" class="liora-modal-backdrop hidden">
-      <div class="liora-modal-card">
-        <h3>Algo deu errado</h3>
-        <p id="liora-error-message"></p>
-        <button id="liora-error-back" class="btn-secondary">Voltar</button>
-      </div>
-    </div>
+  <!-- Router de telas + Modal Controller (precisam vir cedo) -->
+  <script src="/scripts/ui-router.js?v=1" defer></script>
+  <script src="/scripts/liora-ui.js?v=1" defer></script>
 
-    <!-- LOADING -->
-    <div id="liora-loading" class="liora-modal-backdrop hidden">
-      <div class="liora-modal-card">
-        <div class="liora-spinner"></div>
-        <p id="liora-loading-text">Carregando…</p>
-      </div>
-    </div>
+  <!-- UIs que dependem do router/modal/auth -->
+  <script src="/scripts/auth-ui.js?v=1" defer></script>
 
-  </section>
+  <!-- Features -->
+  <script src="/scripts/pdf-extractor.js?v=1" defer></script>
+  <script src="/scripts/pdf-structure.js?v=1" defer></script>
+  <script src="/scripts/outline-generator.js?v=1" defer></script>
+  <script src="/scripts/semantic.js?v=41" defer></script>
+  <script src="/scripts/simulados.js?v=103" defer></script>
+  <script src="/scripts/dashboard.js?v=2" defer></script>
+  <script src="/scripts/premium.js?v=9" defer></script>
 
-</div>
+  <!-- Core -->
+  <script src="/scripts/core.js?v=75" defer></script>
+  <script src="/scripts/estudos.js?v=2" defer></script>
+  <script src="/scripts/ui-seu-estudo.js?v=1" defer></script>
+  <script src="/scripts/nav-home.js?v=95" defer></script>
 
-<!-- ================= SCRIPTS ================= -->
-<script src="/scripts/state.js?v=1"></script>
-<script src="/scripts/limits.js?v=1"></script>
-<script src="/scripts/usage.js?v=1"></script>
-<script src="/scripts/state-reset.js?v=1"></script>
-
-<script type="module" src="/scripts/auth.js?v=1"></script>
-
-<script src="/scripts/liora-ui.js?v=1"></script>
-<script src="/scripts/ui-router.js"></script>
-<script src="/scripts/auth-ui.js?v=1"></script>
-
-<script src="/scripts/pdf-extractor.js?v=1"></script>
-<script src="/scripts/pdf-structure.js?v=1"></script>
-<script src="/scripts/outline-generator.js?v=1"></script>
-<script src="/scripts/semantic.js?v=1"></script>
-<script src="/scripts/simulados.js?v=103"></script>
-<script src="/scripts/dashboard.js?v=2"></script>
-<script src="/scripts/premium.js?v=7"></script>
-<script src="/scripts/core.js?v=75"></script>
-<script src="/scripts/estudos.js?v=2"></script>
-<script src="/scripts/nav-home.js?v=80"></script>
-
+  <script src="/scripts/reset-secret.js?v=1" defer></script>
 </body>
 </html>
