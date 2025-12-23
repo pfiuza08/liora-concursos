@@ -1,57 +1,69 @@
 // ==========================================================
-// 🎨 LIORA — MODAL CONTROLLER (FINAL E SIMPLES)
+// 🔐 LIORA — AUTH UI (FULLSCREEN)
 // ==========================================================
 (function () {
-  console.log("🔵 Liora Modal Controller FINAL carregado");
 
-  const body = document.body;
-
-  function open(id) {
-    const modal = document.getElementById(id);
-    if (!modal) {
-      console.warn("⚠️ Modal não encontrado:", id);
-      return;
-    }
-
-    // 🔑 ISSO É O QUE FALTAVA
-    modal.classList.remove("hidden");
-    modal.classList.add("is-open");
-    modal.setAttribute("aria-hidden", "false");
-
-    body.style.overflow = "hidden";
-    console.log("🟢 Modal aberto:", id);
+  function ready(fn) {
+    const iv = setInterval(() => {
+      if (window.lioraAuth && window.lioraUI) {
+        clearInterval(iv);
+        fn();
+      }
+    }, 20);
   }
 
-  function close(id) {
-    const modal = document.getElementById(id);
-    if (!modal) return;
+  ready(() => {
 
-    modal.classList.add("hidden");
-    modal.classList.remove("is-open");
-    modal.setAttribute("aria-hidden", "true");
+    const form = document.getElementById("liora-auth-form");
+    const email = document.getElementById("auth-email");
+    const senha = document.getElementById("auth-senha");
+    const error = document.getElementById("liora-auth-error");
 
-    body.style.overflow = "";
-    console.log("🔒 Modal fechado:", id);
-  }
+    const toggle = document.getElementById("liora-auth-toggle-mode");
+    const submitText = document.getElementById("liora-auth-submit-text");
+    const back = document.getElementById("liora-auth-back");
 
-  // Botão fechar
-  document.addEventListener("click", (e) => {
-    const btn = e.target.closest("[data-close]");
-    if (!btn) return;
+    let mode = "login";
 
-    const modal = btn.closest(".liora-modal-backdrop");
-    if (modal?.id) close(modal.id);
-  });
-
-  // Clique no backdrop
-  document.addEventListener("click", (e) => {
-    if (
-      e.target.classList.contains("liora-modal-backdrop") &&
-      e.target === e.target
-    ) {
-      if (e.target.id) close(e.target.id);
+    function setMode(m) {
+      mode = m;
+      submitText.textContent = m === "login" ? "Entrar" : "Criar conta";
+      toggle.textContent =
+        m === "login" ? "Criar conta" : "Já tenho conta";
+      error.textContent = "";
     }
-  });
 
-  window.lioraModal = { open, close };
+    document.getElementById("btn-auth-toggle")
+      ?.addEventListener("click", () => {
+        setMode("login");
+        window.lioraUI.show("liora-auth");
+      });
+
+    toggle.addEventListener("click", () => {
+      setMode(mode === "login" ? "signup" : "login");
+    });
+
+    back.addEventListener("click", () => {
+      window.lioraUI.show("liora-home");
+    });
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      error.textContent = "";
+
+      try {
+        if (mode === "login") {
+          await window.lioraAuth.login(email.value, senha.value);
+        } else {
+          await window.lioraAuth.cadastro(email.value, senha.value);
+        }
+
+        window.lioraUI.show("liora-home");
+      } catch (err) {
+        error.textContent =
+          window.lioraAuth.error || "Erro ao autenticar.";
+      }
+    });
+
+  });
 })();
