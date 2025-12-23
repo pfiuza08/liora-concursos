@@ -1,31 +1,24 @@
 // ==========================================================
-// 🎨 LIORA UI HELPERS — MODAIS + LOADING + ERRO GLOBAL
-// Versão CANÔNICA v2.3 (BLINDADA)
+// 🎨 LIORA UI — MODAL CONTROLLER CANÔNICO v3.0
+// - Autossuficiente
+// - Sem dependência de CSS implícito
+// - Seguro para App Shell
 // ==========================================================
 (function () {
-  console.log("🔵 Liora UI helpers v2.3 carregando...");
+  console.log("🔵 Liora UI v3.0 inicializando...");
 
-// ======================================================
-// 🧠 MODAL CONTROLLER — v2.5 (HTML ESTÁTICO, CACHEADO)
-// ======================================================
-if (!window.lioraModal) {
+  if (window.lioraModal) {
+    console.warn("⚠️ lioraModal já existe. Abortando redefinição.");
+    return;
+  }
+
   const body = document.body;
 
-  // cache único de modais
-  const modalCache = new Map();
-
-  function resolveModal(id) {
-    if (modalCache.has(id)) {
-      return modalCache.get(id);
-    }
-
-    const el = document.getElementById(id);
-    if (el) {
-      modalCache.set(id, el);
-      return el;
-    }
-
-    return null;
+  // ------------------------------------------------------
+  // 🔧 HELPERS INTERNOS (ESCOPO LOCAL)
+  // ------------------------------------------------------
+  function getModal(id) {
+    return document.getElementById(id);
   }
 
   function lockScroll() {
@@ -38,135 +31,77 @@ if (!window.lioraModal) {
     body.classList.remove("liora-modal-open");
   }
 
-   function open(id) {
+  // ------------------------------------------------------
+  // 🧠 OPEN / CLOSE — CANÔNICOS
+  // ------------------------------------------------------
+  function open(id) {
     const modal = getModal(id);
     if (!modal) {
       console.warn("⚠️ Modal não encontrado:", id);
       return;
     }
-  
+
+    // BACKDROP
     modal.classList.remove("hidden");
     modal.classList.add("is-open");
     modal.setAttribute("aria-hidden", "false");
-  
-    // 🔑 GARANTE VISIBILIDADE DO CARD
+
+    // CARD
     const card = modal.querySelector(".liora-modal-card");
     if (card) {
       card.style.opacity = "1";
       card.style.transform = "none";
       card.style.pointerEvents = "auto";
     }
-  
+
     lockScroll();
     console.log("🟢 Modal aberto:", id);
   }
-  
+
   function close(id) {
     const modal = getModal(id);
     if (!modal) return;
-  
+
     modal.classList.remove("is-open");
     modal.classList.add("hidden");
     modal.setAttribute("aria-hidden", "true");
-  
+
     const card = modal.querySelector(".liora-modal-card");
     if (card) {
       card.style.opacity = "";
       card.style.transform = "";
       card.style.pointerEvents = "";
     }
-  
+
     unlockScroll();
     console.log("🔒 Modal fechado:", id);
   }
 
-  window.lioraModal = { open, close };
-  console.log("🧠 Liora Modal Controller v2.5 pronto");
-}
+  // ------------------------------------------------------
+  // 🖱️ FECHAR AO CLICAR NO BACKDROP OU [data-close]
+  // ------------------------------------------------------
+  document.addEventListener("click", (e) => {
+    const closeBtn = e.target.closest("[data-close]");
+    if (closeBtn) {
+      const modal = closeBtn.closest(".liora-modal-backdrop");
+      if (modal?.id) close(modal.id);
+      return;
+    }
 
-  // ======================================================
-  // ⏳ LOADING + ❌ ERRO GLOBAL
-  // ======================================================
-  document.addEventListener("DOMContentLoaded", () => {
-    const loadingEl = document.getElementById("liora-loading");
-    const loadingTextEl = document.getElementById("liora-loading-text");
-
-    const errorEl = document.getElementById("liora-error");
-    const errorMsgEl = document.getElementById("liora-error-message");
-    const errorRetryBtn = document.getElementById("liora-error-retry");
-    const errorBackBtn = document.getElementById("liora-error-back");
-
-    // ------------------------
-    // LOADING GLOBAL
-    // ------------------------
-    window.lioraLoading = {
-      show(texto) {
-        if (!loadingEl) return;
-        if (loadingTextEl && texto) {
-          loadingTextEl.textContent = texto;
-        }
-        loadingEl.classList.remove("hidden");
-        document.body.style.overflow = "hidden";
-      },
-      hide() {
-        if (!loadingEl) return;
-        loadingEl.classList.add("hidden");
-        document.body.style.overflow = "";
-      },
-    };
-
-    // ------------------------
-    // ERRO GLOBAL
-    // ------------------------
-    const errorState = {
-      retryFn: null,
-      backFn: null,
-    };
-
-    window.lioraError = {
-      show(msg, opts = {}) {
-        if (!errorEl) {
-          alert(msg || "Ocorreu um erro inesperado.");
-          return;
-        }
-
-        if (errorMsgEl && msg) {
-          errorMsgEl.textContent = msg;
-        }
-
-        errorState.retryFn =
-          typeof opts.retryFn === "function" ? opts.retryFn : null;
-
-        errorState.backFn =
-          typeof opts.backFn === "function"
-            ? opts.backFn
-            : () => window.location.reload();
-
-        errorEl.classList.remove("hidden");
-        document.body.style.overflow = "hidden";
-      },
-
-      hide() {
-        if (!errorEl) return;
-        errorEl.classList.add("hidden");
-        errorState.retryFn = null;
-        errorState.backFn = null;
-        document.body.style.overflow = "";
-      },
-    };
-
-    errorRetryBtn?.addEventListener("click", () => {
-      const fn = errorState.retryFn;
-      window.lioraError.hide();
-      if (fn) fn();
-    });
-
-    errorBackBtn?.addEventListener("click", () => {
-      const fn = errorState.backFn;
-      window.lioraError.hide();
-      if (fn) fn();
-    });
-
-    console.log("🟢 Liora UI helpers v2.3 prontos");
+    const backdrop = e.target;
+    if (
+      backdrop.classList.contains("liora-modal-backdrop") &&
+      backdrop === e.target &&
+      backdrop.id
+    ) {
+      close(backdrop.id);
+    }
   });
+
+  // ------------------------------------------------------
+  // 🌍 API GLOBAL
+  // ------------------------------------------------------
+  window.lioraModal = { open, close };
+
+  console.log("🧠 Liora Modal Controller v3.0 pronto");
 })();
