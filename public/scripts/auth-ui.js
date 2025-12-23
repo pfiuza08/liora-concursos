@@ -1,5 +1,5 @@
 // ==========================================================
-// 🔐 LIORA — AUTH UI (FULLSCREEN | CANÔNICO)
+// 🔐 LIORA — AUTH UI (FULLSCREEN | CANÔNICO FINAL)
 // ==========================================================
 (function () {
 
@@ -49,9 +49,26 @@
     }
 
     // ------------------------------------------------------
+    // 🔥 LIMPEZA TOTAL DE MODAIS / BACKDROPS
+    // ------------------------------------------------------
+    function clearAnyModalState() {
+      document
+        .querySelectorAll(".liora-modal-backdrop.is-open")
+        .forEach(el => el.classList.remove("is-open"));
+
+      document
+        .querySelectorAll(".liora-modal-backdrop")
+        .forEach(el => el.setAttribute("aria-hidden", "true"));
+
+      document.body.style.overflow = "";
+      document.body.classList.remove("liora-modal-open");
+    }
+
+    // ------------------------------------------------------
     // ABRIR LOGIN (HEADER)
     // ------------------------------------------------------
     btnTop?.addEventListener("click", () => {
+      clearAnyModalState();
       setMode("login");
       window.lioraUI.show("liora-auth");
     });
@@ -67,6 +84,7 @@
     // VOLTAR PARA HOME
     // ------------------------------------------------------
     back.addEventListener("click", () => {
+      clearAnyModalState();
       window.lioraUI.show("liora-home");
     });
 
@@ -95,6 +113,7 @@
         }
 
         // sucesso → volta para home
+        clearAnyModalState();
         window.lioraUI.show("liora-home");
 
       } catch (err) {
@@ -110,7 +129,7 @@
     // INIT
     // ------------------------------------------------------
     setMode("login");
-    console.log("🔐 Auth UI (fullscreen) pronto");
+    console.log("🔐 Auth UI (fullscreen | canônico) pronto");
 
   });
 })();
