@@ -1,31 +1,60 @@
 /* ============================================================
-   LIORA — AUTH (LOGIN / REGISTER / BANNER)
-   Estilo canônico isolado
-   ============================================================ */
+   LIORA — AUTH (LOGIN / CADASTRO · FULLSCREEN)
+   Estilo canônico · SEM MODAL · SEM BACKDROP
+============================================================ */
 
 /* ============================================================
-   AUTH MODAL (CARD)
-   ============================================================ */
+   LOGIN FULLSCREEN — CONTAINER
+============================================================ */
 
-.liora-modal-auth {
+#liora-auth {
+  min-height: 100vh;
+  width: 100%;
+  display: none;
+
+  align-items: center;
+  justify-content: center;
+
+  background: var(--bg);
+  position: relative;
+  z-index: 10;
+}
+
+/* visível quando ativo */
+#liora-auth:not(.hidden) {
+  display: flex;
+}
+
+/* ============================================================
+   CARD DE LOGIN
+============================================================ */
+
+#liora-auth .liora-card {
+  width: 100%;
   max-width: 420px;
+
+  background: var(--card);
+  border-radius: 18px;
+
+  padding: 1.8rem;
+  box-shadow: 0 30px 80px rgba(0,0,0,0.45);
 }
 
 /* Header */
-.liora-modal-header h2 {
+#liora-auth h2 {
   font-size: 1.4rem;
   margin: 0 0 0.25rem;
 }
 
-.liora-modal-header p {
-  margin: 0;
+#liora-auth p {
+  margin: 0 0 1.2rem;
   font-size: 0.9rem;
   color: var(--muted);
 }
 
 /* ============================================================
    FORMULÁRIOS
-   ============================================================ */
+============================================================ */
 
 .liora-input-group {
   display: flex;
@@ -66,8 +95,8 @@
 }
 
 /* ============================================================
-   BOTÕES AUTH
-   ============================================================ */
+   BOTÃO PRINCIPAL
+============================================================ */
 
 .liora-btn-primary {
   display: inline-flex;
@@ -75,6 +104,7 @@
   justify-content: center;
   gap: 0.5rem;
 
+  width: 100%;
   border-radius: 999px;
   padding: 0.7rem 1.1rem;
 
@@ -105,46 +135,19 @@
   box-shadow: 0 8px 22px rgba(196,75,4,0.4);
 }
 
-.liora-btn-full {
-  width: 100%;
-}
-
-/* Loader dentro do botão */
-.liora-btn-loader {
-  display: inline-block;
-  width: 0;
-  height: 0;
-}
-
-#liora-auth-submit.is-loading .liora-btn-text {
-  opacity: 0;
-  pointer-events: none;
-}
-
-#liora-auth-submit.is-loading .liora-btn-loader {
-  width: 16px;
-  height: 16px;
-
-  border-radius: 999px;
-  border: 2px solid rgba(255,255,255,0.4);
-  border-top-color: #fff;
-
-  animation: liora-spin 0.7s linear infinite;
-}
-
 /* ============================================================
-   LINKS / AÇÕES SECUNDÁRIAS
-   ============================================================ */
+   AÇÕES SECUNDÁRIAS
+============================================================ */
 
-.liora-link-btn {
-  margin-top: 0.3rem;
+#liora-auth-toggle-mode {
+  margin-top: 0.8rem;
   width: 100%;
 
   text-align: center;
   border: none;
   background: none;
 
-  color: var(--muted);
+  color: var(--brand);
   font-size: 0.85rem;
 
   cursor: pointer;
@@ -154,90 +157,47 @@
   transition: background 0.2s ease, color 0.2s ease;
 }
 
-.liora-link-btn:hover {
+#liora-auth-toggle-mode:hover {
   background: rgba(255,255,255,0.06);
   color: #fff;
 }
 
-/* ============================================================
-   ERROS DE AUTH
-   ============================================================ */
+#liora-auth-back {
+  margin-top: 1.2rem;
+  width: 100%;
 
-.liora-auth-error {
+  border: none;
+  background: none;
+
+  color: var(--muted);
+  font-size: 0.75rem;
+  cursor: pointer;
+
+  text-align: center;
+}
+
+/* ============================================================
+   ERROS
+============================================================ */
+
+#liora-auth-error {
   min-height: 1.1rem;
   font-size: 0.8rem;
   color: #ff7b7b;
-}
-
-/* ============================================================
-   BANNER AUTH (Topo / Home)
-   ============================================================ */
-
-.liora-auth-banner {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-
-  background: rgba(255,255,255,0.06);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-
-  border: 1px solid rgba(255,255,255,0.08);
-  padding: 0.7rem 1rem;
-  border-radius: 12px;
-
-  font-size: 0.78rem;
-  color: var(--muted);
-}
-
-.liora-auth-banner .emoji {
-  font-size: 1rem;
-  opacity: 0.9;
-}
-
-/* ============================================================
-   BOTÃO AUTH (Topo)
-   ============================================================ */
-
-.liora-auth-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.35rem;
-
-  padding: 0.45rem 0.9rem;
-  border-radius: 999px;
-
-  border: 1px solid rgba(255,255,255,0.16);
-  background: rgba(10,10,10,0.85);
-
-  color: var(--fg);
-  font-size: 0.85rem;
-
-  cursor: pointer;
-  transition:
-    background 0.2s ease,
-    border 0.2s ease,
-    transform 0.1s ease;
-}
-
-.liora-auth-btn:hover {
-  background: rgba(20,20,20,0.95);
-  border-color: rgba(255,255,255,0.22);
-  transform: translateY(-1px);
-}
-
-/* Avatar mini */
-.liora-auth-btn-avatar {
-  width: 18px;
-  height: 18px;
-  border-radius: 999px;
-  background: linear-gradient(135deg, #c44b04, #ffb263);
+  margin-bottom: 0.4rem;
 }
 
 /* ============================================================
    LIGHT MODE
-   ============================================================ */
+============================================================ */
+
+html.light #liora-auth {
+  background: #f6f3ef;
+}
+
+html.light #liora-auth .liora-card {
+  background: #ffffff;
+}
 
 html.light .liora-input-group input {
   background: #ffffff;
@@ -248,100 +208,4 @@ html.light .liora-input-group input {
 html.light .liora-input-group input:focus {
   border-color: #c44b04;
   box-shadow: 0 0 0 1px rgba(196,75,4,0.45);
-}
-
-html.light .liora-auth-btn {
-  background: rgba(255,255,255,0.85);
-  color: #55321c;
-  border-color: rgba(0,0,0,0.12);
-}
-
-html.light .liora-auth-btn:hover {
-  background: rgba(255,255,255,1);
-  border-color: rgba(0,0,0,0.22);
-}
-
-/* ============================================================
-   ANIMAÇÕES
-   ============================================================ */
-
-@keyframes liora-spin {
-  to { transform: rotate(360deg); }
-}
-/* ============================================================
-   FIX CANÔNICO — MODAL AUTH (ENTRAR / CADASTRO)
-============================================================ */
-
-.liora-modal-backdrop {
-  display: flex;
-  opacity: 0;
-  pointer-events: none;
-}
-
-.liora-modal-backdrop.visible {
-  opacity: 1;
-  pointer-events: auto;
-}
-
-.liora-modal {
-  display: block;
-  transform: translateY(30px);
-  opacity: 0;
-  transition: transform 0.25s ease, opacity 0.25s ease;
-}
-
-.liora-modal-backdrop.visible .liora-modal {
-  transform: translateY(0);
-  opacity: 1;
-}
-/* ============================================================
-   FIX FINAL — MODAL AUTH (ENTRAR / LOGIN)
-   Força visibilidade independente do CSS legado
-============================================================ */
-
-#liora-auth-modal {
-  display: flex !important;
-  opacity: 0;
-  pointer-events: none;
-}
-
-/* quando o JS abrir */
-#liora-auth-modal.visible {
-  opacity: 1 !important;
-  pointer-events: auto;
-}
-
-/* card interno */
-#liora-auth-modal .liora-modal,
-#liora-auth-modal .liora-modal-card {
-  opacity: 0;
-  transform: translateY(24px);
-  transition: opacity 0.25s ease, transform 0.25s ease;
-}
-
-/* card visível */
-#liora-auth-modal.visible .liora-modal,
-#liora-auth-modal.visible .liora-modal-card {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-/* =========================================================
-   LOGIN FULLSCREEN — CAMADA CORRETA
-========================================================= */
-
-#liora-auth {
-  position: relative;
-  z-index: 20; /* acima do home */
-  background: var(--bg);
-}
-
-/* quando o login está visível */
-#liora-auth:not(.hidden) {
-  display: flex;
-}
-
-/* GARANTE que nenhum modal/backdrop interfira */
-body:not(.liora-modal-open) #liora-auth {
-  pointer-events: auto;
 }
