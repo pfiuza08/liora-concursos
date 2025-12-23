@@ -38,34 +38,44 @@ if (!window.lioraModal) {
     body.classList.remove("liora-modal-open");
   }
 
-  function open(id) {
-    const modal = resolveModal(id);
+   function open(id) {
+    const modal = getModal(id);
     if (!modal) {
       console.warn("⚠️ Modal não encontrado:", id);
       return;
     }
-
+  
     modal.classList.remove("hidden");
-    modal.classList.add("visible");
+    modal.classList.add("is-open");
     modal.setAttribute("aria-hidden", "false");
-
-    // garante interação
-    modal.style.pointerEvents = "auto";
+  
+    // 🔑 GARANTE VISIBILIDADE DO CARD
     const card = modal.querySelector(".liora-modal-card");
-    if (card) card.style.pointerEvents = "auto";
-
+    if (card) {
+      card.style.opacity = "1";
+      card.style.transform = "none";
+      card.style.pointerEvents = "auto";
+    }
+  
     lockScroll();
     console.log("🟢 Modal aberto:", id);
   }
-
+  
   function close(id) {
-    const modal = resolveModal(id);
+    const modal = getModal(id);
     if (!modal) return;
-
+  
+    modal.classList.remove("is-open");
     modal.classList.add("hidden");
-    modal.classList.remove("visible");
     modal.setAttribute("aria-hidden", "true");
-
+  
+    const card = modal.querySelector(".liora-modal-card");
+    if (card) {
+      card.style.opacity = "";
+      card.style.transform = "";
+      card.style.pointerEvents = "";
+    }
+  
     unlockScroll();
     console.log("🔒 Modal fechado:", id);
   }
