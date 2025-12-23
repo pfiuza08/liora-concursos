@@ -246,6 +246,56 @@
 
         </section>
 
+   <!-- ============================================================
+    LOGIN / CADASTRO — FULLSCREEN (CANÔNICO)
+   ============================================================ -->
+  <section id="liora-auth" class="hidden min-h-screen flex items-center justify-center px-4">
+
+  <div class="w-full max-w-md liora-card">
+
+    <h2 id="liora-auth-title" class="text-xl font-semibold mb-2">
+            Acessar Liora
+          </h2>
+      
+          <p class="text-sm text-[var(--muted)] mb-6">
+            Entre para acessar seus estudos em qualquer dispositivo.
+          </p>
+      
+          <form id="liora-auth-form" class="space-y-4">
+      
+            <div class="liora-input-group">
+              <label for="auth-email">E-mail</label>
+              <input id="auth-email" type="email" required class="liora-input">
+            </div>
+      
+            <div class="liora-input-group">
+              <label for="auth-senha">Senha</label>
+              <input id="auth-senha" type="password" required class="liora-input">
+            </div>
+      
+            <div id="liora-auth-error" class="text-sm text-red-400"></div>
+      
+            <button type="submit" class="btn-primary w-full">
+              <span id="liora-auth-submit-text">Entrar</span>
+            </button>
+          </form>
+      
+          <button id="liora-auth-toggle-mode"
+                  class="mt-4 text-sm text-[var(--brand)]">
+            Criar conta
+          </button>
+      
+          <button id="liora-auth-back"
+                  class="mt-6 text-xs text-[var(--muted)]">
+            ← Voltar para início
+          </button>
+      
+        </div>
+      </section>
+
+
+
+        
         <!-- ============================================================
              WORKSPACE (mantido)
         ============================================================ -->
