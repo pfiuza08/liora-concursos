@@ -41,6 +41,9 @@
       return;
     }
 
+     // 🔒 DESATIVA VALIDAÇÃO NATIVA DO BROWSER (AQUI 👇)
+        form.setAttribute("novalidate", "true");
+    
     // ------------------------------------------------------
     // ESTADO
     // ------------------------------------------------------
