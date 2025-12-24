@@ -68,6 +68,27 @@ window.lioraAuth = {
     } finally {
       this.loading = false;
     }
+    // -------------------------------
+    // 🔁 RESET DE SENHA
+    // -------------------------------
+    async resetPassword(email) {
+      if (!email) {
+        throw new Error("Informe o e-mail para redefinir a senha.");
+      }
+    
+      try {
+        this.loading = true;
+        this.error = null;
+    
+        await sendPasswordResetEmail(auth, email);
+        console.log("📧 E-mail de redefinição enviado para:", email);
+      } catch (err) {
+        this.error = traduzErroFirebase(err);
+        throw err;
+      } finally {
+        this.loading = false;
+      }
+    }
   },
 
   // -------------------------------
