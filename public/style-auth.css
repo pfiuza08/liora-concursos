@@ -209,3 +209,39 @@ html.light .liora-input-group input:focus {
   border-color: #c44b04;
   box-shadow: 0 0 0 1px rgba(196,75,4,0.45);
 }
+/* ===============================
+   CAMPO DE SENHA COM TOGGLE
+=============================== */
+
+.liora-password-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.liora-password-wrapper input {
+  width: 100%;
+  padding-right: 3rem; /* espaço para o botão */
+}
+
+.liora-password-toggle {
+  position: absolute;
+  right: 0.75rem;
+
+  background: none;
+  border: none;
+  cursor: pointer;
+
+  font-size: 1.1rem; /* 🔥 aqui está o ganho */
+  line-height: 1;
+
+  color: var(--muted);
+  opacity: 0.85;
+
+  padding: 0.25rem;
+}
+
+.liora-password-toggle:hover {
+  opacity: 1;
+  color: var(--fg);
+}
