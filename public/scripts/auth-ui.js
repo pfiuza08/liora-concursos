@@ -30,6 +30,11 @@
     const back = document.getElementById("liora-auth-back");
     const btnTop = document.getElementById("btn-auth-toggle");
     const forgotBtn = document.getElementById("liora-auth-forgot");
+    const togglePwd = document.getElementById("toggle-password");
+
+    togglePwd?.addEventListener("click", () => {
+       senha.type = senha.type === "password" ? "text" : "password";
+     });
 
     if (!form || !email || !senha) {
       console.error("❌ Auth UI: elementos não encontrados");
