@@ -1,5 +1,5 @@
 // ======================================================
-// 🔐 LIORA — AUTH CORE v3.1 (FIREBASE | CANÔNICO)
+// 🔐 LIORA — AUTH CORE v3.2 (FIREBASE | CANÔNICO)
 // ======================================================
 
 import { initializeApp } from
@@ -17,7 +17,6 @@ import {
 } from
   "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-
 // ------------------------------------------------------
 // 🔧 FIREBASE CONFIG
 // ------------------------------------------------------
@@ -30,84 +29,51 @@ const firebaseConfig = {
   appId: "1:545087329216:web:7955f259a753f6e2692e25",
 };
 
+// ------------------------------------------------------
+// 🔥 FIREBASE INIT
+// ------------------------------------------------------
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 setPersistence(auth, browserLocalPersistence);
 
 // ------------------------------------------------------
-// 🌍 API GLOBAL DA LIORA
+// 🌍 API GLOBAL DA LIORA (ÚNICA FONTE DE VERDADE)
 // ------------------------------------------------------
-  window.lioraAuth = {
-    user: null,
-    premium: false,
-    loading: false,
-    error: null,
-  
-    // -------------------------------
-    // LOGIN
-    // -------------------------------
-    async login(email, senha) {
-      console.log("🧪 LOGIN RECEBIDO:", { email, senha });
-  
-      if (!email || !senha) {
-        throw new Error("E-mail e senha são obrigatórios.");
-      }
-  
-      try {
-        this.loading = true;
-        this.error = null;
-  
-        const cred = await signInWithEmailAndPassword(auth, email, senha);
-        return cred.user;
-  
-      } catch (err) {
-        console.error("❌ Erro login:", err);
-        this.error = traduzErroFirebase(err);
-        throw err;
-  
-      } finally {
-        this.loading = false;
-      }
-    },
-  
-    // -------------------------------
-    // 🔁 RESET DE SENHA
-    // -------------------------------
-    async resetPassword(email) {
-      if (!email) {
-        throw new Error("Informe o e-mail para redefinir a senha.");
-      }
-  
-      try {
-        this.loading = true;
-        this.error = null;
-  
-        await sendPasswordResetEmail(auth, email);
-        console.log("📧 E-mail de redefinição enviado para:", email);
-  
-        return true;
-  
-      } catch (err) {
-        console.error("❌ Erro reset senha:", err);
-        this.error = traduzErroFirebase(err);
-        throw err;
-  
-      } finally {
-        this.loading = false;
-      }
-    },
-  
-    // -------------------------------
-    // LOGOUT
-    // -------------------------------
-    async logout() {
-      await signOut(auth);
-    }
-  };
-
+window.lioraAuth = {
+  user: null,
+  premium: false,
+  loading: false,
+  error: null,
 
   // -------------------------------
-  // CADASTRO
+  // LOGIN
+  // -------------------------------
+  async login(email, senha) {
+    console.log("🧪 LOGIN RECEBIDO:", { email, senha });
+
+    if (!email || !senha) {
+      throw new Error("E-mail e senha são obrigatórios.");
+    }
+
+    try {
+      this.loading = true;
+      this.error = null;
+
+      const cred = await signInWithEmailAndPassword(auth, email, senha);
+      return cred.user;
+
+    } catch (err) {
+      this.error = traduzErroFirebase(err);
+      console.error("❌ Erro login:", err);
+      throw err;
+
+    } finally {
+      this.loading = false;
+    }
+  },
+
+  // -------------------------------
+  // 🆕 CADASTRO
   // -------------------------------
   async cadastro(email, senha) {
     console.log("🧪 CADASTRO RECEBIDO:", { email, senha });
@@ -125,8 +91,34 @@ setPersistence(auth, browserLocalPersistence);
       return cred.user;
 
     } catch (err) {
-      console.error("Erro cadastro:", err);
       this.error = traduzErroFirebase(err);
+      console.error("❌ Erro cadastro:", err);
+      throw err;
+
+    } finally {
+      this.loading = false;
+    }
+  },
+
+  // -------------------------------
+  // 🔁 RESET DE SENHA
+  // -------------------------------
+  async resetPassword(email) {
+    if (!email) {
+      throw new Error("Informe o e-mail para redefinir a senha.");
+    }
+
+    try {
+      this.loading = true;
+      this.error = null;
+
+      await sendPasswordResetEmail(auth, email);
+      console.log("📧 E-mail de redefinição enviado:", email);
+      return true;
+
+    } catch (err) {
+      this.error = traduzErroFirebase(err);
+      console.error("❌ Erro reset senha:", err);
       throw err;
 
     } finally {
@@ -143,65 +135,21 @@ setPersistence(auth, browserLocalPersistence);
 };
 
 // ------------------------------------------------------
-// 👤 AUTH STATE LISTENER
+// 👤 AUTH STATE LISTENER (ÚNICO)
 // ------------------------------------------------------
 onAuthStateChanged(auth, (user) => {
   window.lioraAuth.user = user || null;
   window.lioraAuth.premium = false;
 
-  const btnEntrar = document.getElementById("btn-auth-toggle");
-  const btnSair = document.getElementById("btn-logout");
-  const userInfo = document.getElementById("liora-user-info");
-  const userName = document.getElementById("liora-user-name");
-  const userStatus = document.getElementById("liora-user-status");
-
-  if (user) {
-    btnEntrar?.classList.add("hidden");
-    btnSair?.classList.remove("hidden");
-
-    userInfo?.classList.remove("hidden");
-    if (userName) userName.textContent = user.email.split("@")[0];
-    if (userStatus) userStatus.textContent = "Conta gratuita";
-
-    console.log("👤 HEADER → logado:", user.email);
-  } else {
-    btnEntrar?.classList.remove("hidden");
-    btnSair?.classList.add("hidden");
-    userInfo?.classList.add("hidden");
-
-    console.log("👤 HEADER → deslogado");
-  }
-
-  // 🔥 garante que o botão SAIR funcione
-  bindLogoutButton();
-
   window.dispatchEvent(new Event("liora:auth-changed"));
+
+  console.log("🧪 AUTH STATE CHANGED:", {
+    user: user?.email || null,
+    time: new Date().toISOString()
+  });
 });
 
-
-console.log("🔐 auth.js v3.1 carregado");
-
-// ------------------------------------------------------
-// 🚪 LOGOUT — BIND CANÔNICO
-// ------------------------------------------------------
-function bindLogoutButton() {
-  const btnSair = document.getElementById("btn-logout");
-  if (!btnSair || btnSair.dataset.bound === "1") return;
-
-  btnSair.dataset.bound = "1";
-
-  btnSair.addEventListener("click", async (e) => {
-    e.preventDefault();
-    console.log("🚪 Logout solicitado");
-
-    try {
-      await window.lioraAuth.logout();
-      // o onAuthStateChanged cuidará da UI
-    } catch (err) {
-      console.error("❌ Erro no logout:", err);
-    }
-  });
-}
+console.log("🔐 auth.js v3.2 carregado");
 
 // ------------------------------------------------------
 // 🔤 TRADUÇÃO DE ERROS FIREBASE
@@ -223,11 +171,3 @@ function traduzErroFirebase(err) {
       return "Erro de autenticação.";
   }
 }
-// 🧪 TESTE A — LOG DE ESTADO REAL
-window.addEventListener("liora:auth-changed", () => {
-  console.log("🧪 AUTH STATE CHANGED:", {
-    user: window.lioraAuth?.user,
-    plan: window.lioraUserPlan,
-    time: new Date().toISOString()
-  });
-});
