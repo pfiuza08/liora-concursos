@@ -37,60 +37,74 @@ setPersistence(auth, browserLocalPersistence);
 // ------------------------------------------------------
 // 🌍 API GLOBAL DA LIORA
 // ------------------------------------------------------
-window.lioraAuth = {
-  user: null,
-  premium: false,
-  loading: false,
-  error: null,
-
-  // -------------------------------
-  // LOGIN
-  // -------------------------------
-  async login(email, senha) {
-    console.log("🧪 LOGIN RECEBIDO:", { email, senha });
-
-    if (!email || !senha) {
-      throw new Error("E-mail e senha são obrigatórios.");
-    }
-
-    try {
-      this.loading = true;
-      this.error = null;
-
-      const cred = await signInWithEmailAndPassword(auth, email, senha);
-      return cred.user;
-
-    } catch (err) {
-      console.error("Erro login:", err);
-      this.error = traduzErroFirebase(err);
-      throw err;
-
-    } finally {
-      this.loading = false;
-    }
-  },
-    // -------------------------------
-    // 🔁 RESET DE SENHA
-    // -------------------------------
-    async resetPassword(email) {
-      if (!email) {
-        throw new Error("Informe o e-mail para redefinir a senha.");
-      }
+    window.lioraAuth = {
+      user: null,
+      premium: false,
+      loading: false,
+      error: null,
     
-      try {
-        this.loading = true;
-        this.error = null;
+      // -------------------------------
+      // LOGIN
+      // -------------------------------
+      async login(email, senha) {
+        console.log("🧪 LOGIN RECEBIDO:", { email, senha });
     
-        await sendPasswordResetEmail(auth, email);
-        console.log("📧 E-mail de redefinição enviado para:", email);
-      } catch (err) {
-        this.error = traduzErroFirebase(err);
-        throw err;
-      } finally {
-        this.loading = false;
+        if (!email || !senha) {
+          throw new Error("E-mail e senha são obrigatórios.");
+        }
+    
+        try {
+          this.loading = true;
+          this.error = null;
+    
+          const cred = await signInWithEmailAndPassword(auth, email, senha);
+          return cred.user;
+    
+        } catch (err) {
+          console.error("❌ Erro login:", err);
+          this.error = traduzErroFirebase(err);
+          throw err;
+    
+        } finally {
+          this.loading = false;
+        }
+      },
+    
+      // -------------------------------
+      // 🔁 RESET DE SENHA
+      // -------------------------------
+      async resetPassword(email) {
+        if (!email) {
+          throw new Error("Informe o e-mail para redefinir a senha.");
+        }
+    
+        try {
+          this.loading = true;
+          this.error = null;
+    
+          await sendPasswordResetEmail(auth, email);
+          console.log("📧 E-mail de redefinição enviado para:", email);
+    
+          return true;
+    
+        } catch (err) {
+          console.error("❌ Erro reset senha:", err);
+          this.error = traduzErroFirebase(err);
+          throw err;
+    
+        } finally {
+          this.loading = false;
+        }
+      },
+    
+      // -------------------------------
+      // LOGOUT
+      // -------------------------------
+      async logout() {
+        await signOut(auth);
       }
-    }
-  },
+    };
+
 
   // -------------------------------
   // CADASTRO
