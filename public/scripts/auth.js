@@ -108,14 +108,34 @@ onAuthStateChanged(auth, (user) => {
   window.lioraAuth.user = user || null;
   window.lioraAuth.premium = false;
 
-  // plano canônico (por enquanto)
-  window.lioraUserPlan = user ? "free" : "free";
+  // 🔥 ATUALIZA HEADER AQUI (CANÔNICO)
+  const btnEntrar = document.getElementById("btn-auth-toggle");
+  const btnSair = document.getElementById("btn-logout");
+  const userInfo = document.getElementById("liora-user-info");
+  const userName = document.getElementById("liora-user-name");
+  const userStatus = document.getElementById("liora-user-status");
 
-  document.body.classList.toggle("liora-auth-on", !!user);
-  document.body.classList.toggle("liora-auth-off", !user);
+  if (user) {
+    btnEntrar?.classList.add("hidden");
+    btnSair?.classList.remove("hidden");
 
+    userInfo?.classList.remove("hidden");
+    if (userName) userName.textContent = user.email.split("@")[0];
+    if (userStatus) userStatus.textContent = "Conta gratuita";
+
+    console.log("👤 HEADER → logado:", user.email);
+  } else {
+    btnEntrar?.classList.remove("hidden");
+    btnSair?.classList.add("hidden");
+    userInfo?.classList.add("hidden");
+
+    console.log("👤 HEADER → deslogado");
+  }
+
+  // mantém o evento para o resto do sistema
   window.dispatchEvent(new Event("liora:auth-changed"));
 });
+
 
 console.log("🔐 auth.js v3.1 carregado");
 
