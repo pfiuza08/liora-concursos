@@ -29,6 +29,7 @@
     const submitText = document.getElementById("liora-auth-submit-text");
     const back = document.getElementById("liora-auth-back");
     const btnTop = document.getElementById("btn-auth-toggle");
+    const forgotBtn = document.getElementById("liora-auth-forgot");
 
     if (!form || !email || !senha) {
       console.error("❌ Auth UI: elementos não encontrados");
@@ -86,6 +87,29 @@
     back.addEventListener("click", () => {
       clearAnyModalState();
       window.lioraUI.show("liora-home");
+    });
+    
+    // ------------------------------------------------------
+    // ESQUECI A SENHA
+    // ------------------------------------------------------
+        forgotBtn?.addEventListener("click", async () => {
+      const emailValue = email.value.trim();
+    
+      if (!emailValue) {
+        error.textContent = "Digite seu e-mail para redefinir a senha.";
+        return;
+      }
+    
+      try {
+        await window.lioraAuth.resetPassword(emailValue);
+        error.textContent =
+          "Enviamos um e-mail para redefinir sua senha. Verifique sua caixa de entrada.";
+      } catch (err) {
+        error.textContent =
+          window.lioraAuth?.error ||
+          err?.message ||
+          "Erro ao enviar e-mail de redefinição.";
+      }
     });
 
     // ------------------------------------------------------
