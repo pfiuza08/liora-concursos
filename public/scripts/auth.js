@@ -108,7 +108,6 @@ onAuthStateChanged(auth, (user) => {
   window.lioraAuth.user = user || null;
   window.lioraAuth.premium = false;
 
-  // 🔥 ATUALIZA HEADER AQUI (CANÔNICO)
   const btnEntrar = document.getElementById("btn-auth-toggle");
   const btnSair = document.getElementById("btn-logout");
   const userInfo = document.getElementById("liora-user-info");
@@ -132,7 +131,9 @@ onAuthStateChanged(auth, (user) => {
     console.log("👤 HEADER → deslogado");
   }
 
-  // mantém o evento para o resto do sistema
+  // 🔥 garante que o botão SAIR funcione
+  bindLogoutButton();
+
   window.dispatchEvent(new Event("liora:auth-changed"));
 });
 
