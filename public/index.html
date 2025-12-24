@@ -256,22 +256,27 @@
             </p>
 
             <form id="liora-auth-form" class="space-y-4">
-              <div class="liora-input-group">
-                <label for="auth-email">E-mail</label>
-                <input id="auth-email" type="email" required autocomplete="email" class="liora-input">
+             <div class="liora-input-group liora-password-field">
+                <label for="auth-senha">Senha</label>
+              
+                <div class="liora-password-wrapper">
+                  <input
+                    id="auth-senha"
+                    type="password"
+                    required
+                    class="liora-input"
+                  >
+              
+                  <button
+                    type="button"
+                    id="toggle-password"
+                    class="liora-password-toggle"
+                    aria-label="Mostrar senha"
+                  >
+                    👁️
+                  </button>
+                </div>
               </div>
-
-              <div class="liora-input-group relative">
-              <label for="auth-senha">Senha</label>
-              <input id="auth-senha" type="password" class="liora-input pr-10">
-            
-              <button type="button"
-                      id="toggle-password"
-                      class="absolute right-3 top-8 text-xs text-[var(--muted)]">
-                👁
-              </button>
-            </div>
-
               <div id="liora-auth-error" class="text-sm text-red-400"></div>
 
               <button type="submit" class="btn-primary w-full">
