@@ -1,46 +1,36 @@
-// ==========================================================
-// 🧭 LIORA UI ROUTER — CANÔNICO (SEM AUTH LOGIC)
-// ==========================================================
+// =======================================================
+// 🧭 LIORA UI ROUTER — vRESTORED-OK
+// - Navegação segura
+// - Só ativa UIs registradas
+// =======================================================
+
 (function () {
+  const registry = {};
+  let current = null;
 
-  const screens = ["liora-home", "liora-auth", "liora-app"];
+  function register(id, el) {
+    registry[id] = el;
+    console.log("🧩 UI registrada:", id);
+  }
+
+  function show(id) {
+    if (!registry[id]) {
+      console.warn("🚫 Navegação bloqueada (UI não registrada):", id);
+      return;
+    }
+
+    Object.values(registry).forEach(el => el.style.display = "none");
+    registry[id].style.display = "block";
+    current = id;
+
+    console.log("🧭 UI →", id);
+  }
 
   window.lioraUI = {
-    show(id) {
-      screens.forEach(s => {
-        const el = document.getElementById(s);
-        if (el) el.classList.toggle("hidden", s !== id);
-      });
-
-      window.scrollTo(0, 0);
-      console.log("🧭 UI →", id);
-
-      // 🔔 EVENTO DE CICLO DE VIDA (SEM LÓGICA DE AUTH)
-      if (id === "liora-auth") {
-        window.dispatchEvent(new Event("liora:show-auth"));
-      }
+    register,
+    show,
+    get current() {
+      return current;
     }
   };
-  window.lioraUI = {
-    show(id) {
-  
-      // 🚫 BLOQUEIA ABERTURA ACIDENTAL DO LOGIN
-      if (
-        id === "liora-auth" &&
-        !window.__allowAuthNavigation
-      ) {
-        console.warn("🚫 Navegação para auth bloqueada");
-        return;
-      }
-  
-      ["liora-home", "liora-auth", "liora-app"].forEach(s => {
-        const el = document.getElementById(s);
-        if (el) el.classList.toggle("hidden", s !== id);
-      });
-  
-      window.scrollTo(0, 0);
-      console.log("🧭 UI →", id);
-    }
-  };
-
 })();
