@@ -168,6 +168,8 @@ function traduzErroFirebase(err) {
       return "Este e-mail já está em uso.";
     case "auth/weak-password":
       return "A senha deve ter pelo menos 6 caracteres.";
+    case "auth/invalid-credential":
+      return "E-mail ou senha incorretos. Se esqueceu a senha, use a opção de redefinição.";
     default:
       return "Erro de autenticação.";
   }
