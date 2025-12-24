@@ -21,5 +21,26 @@
       }
     }
   };
+  window.lioraUI = {
+    show(id) {
+  
+      // 🚫 BLOQUEIA ABERTURA ACIDENTAL DO LOGIN
+      if (
+        id === "liora-auth" &&
+        !window.__allowAuthNavigation
+      ) {
+        console.warn("🚫 Navegação para auth bloqueada");
+        return;
+      }
+  
+      ["liora-home", "liora-auth", "liora-app"].forEach(s => {
+        const el = document.getElementById(s);
+        if (el) el.classList.toggle("hidden", s !== id);
+      });
+  
+      window.scrollTo(0, 0);
+      console.log("🧭 UI →", id);
+    }
+  };
 
 })();
