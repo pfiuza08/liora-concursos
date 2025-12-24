@@ -68,6 +68,7 @@ window.lioraAuth = {
     } finally {
       this.loading = false;
     }
+  },
     // -------------------------------
     // 🔁 RESET DE SENHA
     // -------------------------------
