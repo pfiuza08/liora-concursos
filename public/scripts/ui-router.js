@@ -14,6 +14,11 @@
 
       window.scrollTo(0, 0);
       console.log("🧭 UI →", id);
+
+      // 🔔 EVENTO DE CICLO DE VIDA (SEM LÓGICA DE AUTH)
+      if (id === "liora-auth") {
+        window.dispatchEvent(new Event("liora:show-auth"));
+      }
     }
   };
 
