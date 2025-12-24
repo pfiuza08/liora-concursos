@@ -245,3 +245,21 @@ html.light .liora-input-group input:focus {
   opacity: 1;
   color: var(--fg);
 }
+/* =========================
+   AUTH SCREEN — FIX DEFINITIVO
+========================= */
+#liora-auth {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: radial-gradient(
+    circle at top,
+    #111 0%,
+    #000 70%
+  );
+}
