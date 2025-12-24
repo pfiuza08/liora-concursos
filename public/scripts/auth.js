@@ -140,6 +140,28 @@ onAuthStateChanged(auth, (user) => {
 console.log("🔐 auth.js v3.1 carregado");
 
 // ------------------------------------------------------
+// 🚪 LOGOUT — BIND CANÔNICO
+// ------------------------------------------------------
+function bindLogoutButton() {
+  const btnSair = document.getElementById("btn-logout");
+  if (!btnSair || btnSair.dataset.bound === "1") return;
+
+  btnSair.dataset.bound = "1";
+
+  btnSair.addEventListener("click", async (e) => {
+    e.preventDefault();
+    console.log("🚪 Logout solicitado");
+
+    try {
+      await window.lioraAuth.logout();
+      // o onAuthStateChanged cuidará da UI
+    } catch (err) {
+      console.error("❌ Erro no logout:", err);
+    }
+  });
+}
+
+// ------------------------------------------------------
 // 🔤 TRADUÇÃO DE ERROS FIREBASE
 // ------------------------------------------------------
 function traduzErroFirebase(err) {
