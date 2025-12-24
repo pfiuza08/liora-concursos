@@ -1,5 +1,5 @@
 // ==========================================================
-// 🔐 LIORA — AUTH UI (FULLSCREEN | CANÔNICO FINAL v2)
+// 🔐 LIORA — AUTH UI (FULLSCREEN | CANÔNICO FINAL v3)
 // ==========================================================
 (function () {
 
@@ -17,8 +17,11 @@
 
   ready(() => {
 
-    let bound = false; // evita múltiplos binds
+    let bound = false;
 
+    // ------------------------------------------------------
+    // 🔗 BIND PRINCIPAL
+    // ------------------------------------------------------
     function bindAuthUI() {
       if (bound) return;
 
@@ -41,12 +44,17 @@
       console.log("🔐 Auth UI conectado ao DOM");
       bound = true;
 
+      // 🔒 desativa validação nativa
       form.setAttribute("novalidate", "true");
 
+      // 👁 mostrar / esconder senha
       togglePwd?.addEventListener("click", () => {
         senha.type = senha.type === "password" ? "text" : "password";
       });
 
+      // --------------------------------------------------
+      // ESTADO
+      // --------------------------------------------------
       let mode = "login";
 
       function setMode(m) {
@@ -56,16 +64,20 @@
         error.textContent = "";
       }
 
-      toggle.addEventListener("click", () => {
+      toggle?.addEventListener("click", () => {
         setMode(mode === "login" ? "signup" : "login");
       });
 
-      back.addEventListener("click", () => {
+      back?.addEventListener("click", () => {
         window.lioraUI.show("liora-home");
       });
 
+      // --------------------------------------------------
+      // 🔁 ESQUECI A SENHA
+      // --------------------------------------------------
       forgotBtn?.addEventListener("click", async () => {
         const emailValue = email.value.trim();
+
         if (!emailValue) {
           error.textContent = "Digite seu e-mail para redefinir a senha.";
           return;
@@ -83,6 +95,9 @@
         }
       });
 
+      // --------------------------------------------------
+      // 🚀 SUBMIT
+      // --------------------------------------------------
       form.addEventListener("submit", async (e) => {
         e.preventDefault();
         error.textContent = "";
@@ -119,11 +134,22 @@
     }
 
     // ------------------------------------------------------
-    // QUANDO A TELA AUTH FOR EXIBIDA
+    // 🔘 BOTÃO "ENTRAR" DO HEADER (ÚNICO GATILHO)
     // ------------------------------------------------------
-    window.addEventListener("liora:show-auth", () => {
-      bindAuthUI();
+    const btnTop = document.getElementById("btn-auth-toggle");
+
+    btnTop?.addEventListener("click", () => {
+      window.__allowAuthNavigation = true;
+      window.lioraUI.show("liora-auth");
+      window.__allowAuthNavigation = false;
+
+      // garante bind mesmo se HTML veio depois
+      setTimeout(bindAuthUI, 0);
     });
 
+    // fallback seguro
+    setTimeout(bindAuthUI, 0);
+
+    console.log("🔐 Auth UI (canônico final v3) pronto");
   });
 })();
