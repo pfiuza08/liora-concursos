@@ -17,6 +17,8 @@
     const home = document.getElementById("liora-home");
     const app  = document.getElementById("liora-app");
     const fabHome = document.getElementById("fab-home");
+    const fabSim = document.getElementById("sim-fab");
+
 
     // HEADER
     const userInfo  = document.getElementById("liora-user-info");
