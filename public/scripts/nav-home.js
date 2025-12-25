@@ -16,6 +16,13 @@
     const home = document.getElementById("liora-home");
     const app = document.getElementById("liora-app");
 
+    // ------------------------------------------------------
+    // REGISTRO DA HOME NO UI ROUTER (OBRIGATÓRIO)
+    // ------------------------------------------------------
+    if (home && window.lioraUI) {
+      window.lioraUI.register("liora-home", home);
+    }
+
     const btnTema = document.getElementById("home-tema");
     const btnUpload = document.getElementById("home-upload");
     const btnSimulados = document.getElementById("home-simulados");
