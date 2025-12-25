@@ -143,9 +143,12 @@
         </div>
 
         <!-- Login/Logout -->
-        <button id="btn-auth-toggle" class="btn-secondary text-sm px-3 py-1.5">
-          Entrar
-        </button>
+         <button
+            class="btn-secondary text-sm px-3 py-1.5"
+            data-action="openAuth"
+          >
+            Entrar
+          </button>
 
         <button id="btn-logout" class="btn-secondary text-sm px-3 py-1.5 hidden">
           Sair
@@ -294,12 +297,11 @@
             
               <div id="liora-auth-error" class="text-sm text-red-400"></div>
             
-              <!-- ENTRAR -->
-               <button
-                class="btn-secondary text-sm px-3 py-1.5"
-                data-action="openAuth"
+             <button
+                type="submit"
+                class="btn-primary w-full"
               >
-                Entrar
+                OK
               </button>
             
               <!-- ESQUECI -->
