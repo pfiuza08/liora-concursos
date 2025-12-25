@@ -1,6 +1,7 @@
-/// =======================================================
-// 🔐 LIORA AUTH UI — vRESTORED-FINAL
-// - Login funcional (submit interceptado)
+// =======================================================
+// 🔐 LIORA AUTH UI — vRESTORED-FINAL-BUTTON
+// - Login funcional por CLICK (SPA-safe)
+// - Campo de e-mail + senha
 // - Recuperação de senha isolada
 // - Compatível com UI Router
 // =======================================================
@@ -30,7 +31,7 @@
   }
 
   // -----------------------------
-  // Abertura do login
+  // Abrir login
   // -----------------------------
   function open() {
     if (!ready) {
@@ -41,34 +42,49 @@
   }
 
   // -----------------------------
-  // Submit do formulário (ENTRAR)
+  // Login por CLICK (ENTRAR)
   // -----------------------------
-  function bindLoginForm() {
-    const form = document.getElementById("liora-auth-form");
-    if (!form) {
-      console.warn("⚠️ Formulário de login não encontrado");
+  function bindLoginButton() {
+    const btn = document.getElementById("liora-auth-submit");
+    if (!btn) {
+      console.warn("⚠️ Botão ENTRAR não encontrado");
       return;
     }
 
-    form.addEventListener("submit", (e) => {
-      e.preventDefault(); // ⛔ impede reload
-
+    btn.addEventListener("click", () => {
+      const emailInput = document.getElementById("auth-email");
       const senhaInput = document.getElementById("auth-senha");
+
+      const email = emailInput?.value?.trim();
       const senha = senhaInput?.value?.trim();
 
-      if (!senha) {
-        alert("Digite sua senha");
-        senhaInput?.focus();
+      if (!email || !senha) {
+        alert("Informe e-mail e senha");
         return;
       }
 
-      console.log("🔐 Login acionado");
+      console.log("🔐 Login acionado:", email);
 
-      // 🔹 LOGIN TEMPORÁRIO (para teste)
+      // 🔹 LOGIN TEMPORÁRIO (mock)
       localStorage.setItem("liora:auth", "ok");
 
-      // Fecha auth e volta para home
+      // Volta para Home
       window.lioraUI.show("liora-home");
+    });
+  }
+
+  // -----------------------------
+  // Mostrar / ocultar senha
+  // -----------------------------
+  function bindTogglePassword() {
+    const btn = document.getElementById("toggle-password");
+    const input = document.getElementById("auth-senha");
+    if (!btn || !input) return;
+
+    btn.addEventListener("click", () => {
+      const isPassword = input.type === "password";
+      input.type = isPassword ? "text" : "password";
+      btn.textContent = isPassword ? "🙈" : "👁️";
     });
   }
 
@@ -93,12 +109,14 @@
   // -----------------------------
   document.addEventListener("DOMContentLoaded", () => {
     if (bindAuthUI()) {
-      bindLoginForm();
+      bindLoginButton();
+      bindTogglePassword();
       bindRecoverPassword();
     } else {
       setTimeout(() => {
         if (bindAuthUI()) {
-          bindLoginForm();
+          bindLoginButton();
+          bindTogglePassword();
           bindRecoverPassword();
         }
       }, 300);
