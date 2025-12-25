@@ -1,49 +1,67 @@
 // =======================================================
-// 🎯 LIORA — UI ACTIONS (FONTE ÚNICA)
+// 🎯 LIORA — UI ACTIONS (ORQUESTRADOR ÚNICO)
 // =======================================================
 
 (function () {
-  console.log("🎯 UI Actions ativo");
+  console.log("🎯 UI Actions inicializado");
+
+  // garante estado global
+  window.lioraAuth = window.lioraAuth || { user: null };
 
   window.lioraActions = {
 
-    // ---------- AUTH ----------
+    // -------------------------
+    // AUTH
+    // -------------------------
     openAuth() {
-      console.log("🎯 Ação: abrir login");
+      console.log("🎯 openAuth");
       window.lioraUI.show("liora-auth");
     },
 
-    loginSuccess() {
-      console.log("🎯 Ação: login efetuado");
-      window.lioraUI.show("liora-home");
+    loginSuccess(user) {
+      console.log("🎯 loginSuccess", user);
+      window.lioraAuth.user = user;
+      localStorage.setItem("liora:user", JSON.stringify(user));
+
       window.dispatchEvent(new Event("liora:render-auth-ui"));
+      window.lioraUI.show("liora-home");
     },
 
     logout() {
-      console.log("🎯 Ação: logout");
+      console.log("🎯 logout");
       window.lioraAuth.user = null;
       localStorage.removeItem("liora:user");
+
       window.dispatchEvent(new Event("liora:render-auth-ui"));
       window.lioraUI.show("liora-home");
     },
 
-    // ---------- SIMULADOS ----------
+    // -------------------------
+    // SIMULADOS
+    // -------------------------
     openSimulados() {
-      if (!window.lioraAuth?.user) {
-        console.log("🔐 Bloqueado → login necessário");
+      console.log("🎯 openSimulados");
+
+      if (!window.lioraAuth.user) {
+        console.log("🔐 bloqueado → login");
         return window.lioraActions.openAuth();
       }
+
       window.lioraUI.show("liora-app");
       window.dispatchEvent(new Event("liora:enter-simulado"));
     },
 
-    // ---------- UPGRADE ----------
+    // -------------------------
+    // UPGRADE
+    // -------------------------
     openUpgrade() {
-      if (!window.lioraAuth?.user) {
+      console.log("🎯 openUpgrade");
+
+      if (!window.lioraAuth.user) {
         return window.lioraActions.openAuth();
       }
-      console.log("💎 Abrir Liora+ (screen futura)");
-      // window.lioraUI.show("liora-upgrade");
+
+      alert("Tela Liora+ (em breve)");
     }
   };
 })();
