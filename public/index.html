@@ -256,17 +256,31 @@
             </p>
 
             <form id="liora-auth-form" class="space-y-4">
-             <div class="liora-input-group liora-password-field">
+
+              <!-- EMAIL -->
+              <div class="liora-input-group">
+                <label for="auth-email">E-mail</label>
+                <input
+                  id="auth-email"
+                  type="email"
+                  required
+                  class="liora-input"
+                  placeholder="seu@email.com"
+                />
+              </div>
+            
+              <!-- SENHA -->
+              <div class="liora-input-group liora-password-field">
                 <label for="auth-senha">Senha</label>
-              
+            
                 <div class="liora-password-wrapper">
                   <input
                     id="auth-senha"
                     type="password"
                     required
                     class="liora-input"
-                  >
-              
+                  />
+            
                   <button
                     type="button"
                     id="toggle-password"
@@ -277,8 +291,10 @@
                   </button>
                 </div>
               </div>
+            
               <div id="liora-auth-error" class="text-sm text-red-400"></div>
-
+            
+              <!-- ENTRAR -->
               <button
                 type="button"
                 id="liora-auth-submit"
@@ -286,14 +302,16 @@
               >
                 Entrar
               </button>
-              
+            
+              <!-- ESQUECI -->
               <button
                 type="button"
                 id="liora-auth-forgot"
-                class="mt-2 text-xs text-[var(--muted)] hover:text-[var(--fg)]">
+                class="mt-2 text-xs text-[var(--muted)] hover:text-[var(--fg)]"
+              >
                 Esqueci minha senha
               </button>
-           
+            
             </form>
 
             <button id="liora-auth-toggle-mode" class="mt-4 text-sm text-[var(--brand)]">
