@@ -5,14 +5,10 @@
 (function () {
   console.log("🎯 UI Actions inicializado");
 
-  // garante estado global
   window.lioraAuth = window.lioraAuth || { user: null };
 
   window.lioraActions = {
 
-    // -------------------------
-    // AUTH
-    // -------------------------
     openAuth() {
       console.log("🎯 openAuth");
       window.lioraUI.show("liora-auth");
@@ -22,7 +18,6 @@
       console.log("🎯 loginSuccess", user);
       window.lioraAuth.user = user;
       localStorage.setItem("liora:user", JSON.stringify(user));
-
       window.dispatchEvent(new Event("liora:render-auth-ui"));
       window.lioraUI.show("liora-home");
     },
@@ -31,37 +26,48 @@
       console.log("🎯 logout");
       window.lioraAuth.user = null;
       localStorage.removeItem("liora:user");
-
       window.dispatchEvent(new Event("liora:render-auth-ui"));
       window.lioraUI.show("liora-home");
     },
 
-    // -------------------------
-    // SIMULADOS
-    // -------------------------
     openSimulados() {
       console.log("🎯 openSimulados");
-
       if (!window.lioraAuth.user) {
-        console.log("🔐 bloqueado → login");
         return window.lioraActions.openAuth();
       }
-
       window.lioraUI.show("liora-app");
       window.dispatchEvent(new Event("liora:enter-simulado"));
     },
 
-    // -------------------------
-    // UPGRADE
-    // -------------------------
     openUpgrade() {
       console.log("🎯 openUpgrade");
-
       if (!window.lioraAuth.user) {
         return window.lioraActions.openAuth();
       }
-
-      alert("Tela Liora+ (em breve)");
+      alert("Liora+ em breve");
     }
   };
-})();
+
+})(); // ⬅️ FECHA O IIFE
+
+
+// =======================================================
+// 🧭 PASSO 2 — BINDER GLOBAL (COLE AQUI)
+// =======================================================
+
+document.addEventListener("click", (e) => {
+  const el = e.target.closest("[data-action]");
+  if (!el) return;
+
+  const action = el.dataset.action;
+  const fn = window.lioraActions?.[action];
+
+  console.log("🧭 intenção:", action);
+
+  if (!fn) {
+    console.warn("⚠️ ação não registrada:", action);
+    return;
+  }
+
+  fn();
+});
