@@ -55,14 +55,20 @@
     // ------------------------------------------------------
     function renderAuthUI() {
       const user = window.lioraAuth.user;
-
+    
+      const btnLogin = document.getElementById("btn-login");
+    
       if (user) {
         userInfo?.classList.remove("hidden");
         userName.textContent = user.email;
+    
         btnLogout?.classList.remove("hidden");
+        btnLogin?.classList.add("hidden");
       } else {
         userInfo?.classList.add("hidden");
+    
         btnLogout?.classList.add("hidden");
+        btnLogin?.classList.remove("hidden");
       }
     }
 
