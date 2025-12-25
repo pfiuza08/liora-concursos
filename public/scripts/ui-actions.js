@@ -11,6 +11,12 @@
 
     openAuth() {
       console.log("🎯 openAuth");
+
+      if (!window.lioraAuthUI?.ready?.()) {
+        console.warn("⏳ Auth UI ainda não pronta");
+        return;
+      }
+
       window.lioraUI.show("liora-auth");
     },
 
@@ -32,29 +38,30 @@
 
     openSimulados() {
       console.log("🎯 openSimulados");
+
       if (!window.lioraAuth.user) {
         return window.lioraActions.openAuth();
       }
-      window.lioraUI.show("liora-app");
+
       window.dispatchEvent(new Event("liora:enter-simulado"));
     },
 
     openUpgrade() {
       console.log("🎯 openUpgrade");
+
       if (!window.lioraAuth.user) {
         return window.lioraActions.openAuth();
       }
+
       alert("Liora+ em breve");
     }
   };
 
-})(); // ⬅️ FECHA O IIFE
+})();
 
-
-// =======================================================
-// 🧭 PASSO 2 — BINDER GLOBAL (COLE AQUI)
-// =======================================================
-
+// -------------------------------------------------------
+// BINDER GLOBAL
+// -------------------------------------------------------
 document.addEventListener("click", (e) => {
   const el = e.target.closest("[data-action]");
   if (!el) return;
