@@ -1,29 +1,29 @@
 // =======================================================
 // 🧪 LIORA — INTERACTION AUDIT
-// - Loga TODOS os cliques
-// - Detecta bloqueios de auth
-// - Detecta botões mortos
 // =======================================================
 
 (function () {
   console.log("🧪 Interaction Audit ativo");
 
-  document.addEventListener("click", (e) => {
-    const target = e.target.closest("button, a, [role='button']");
-    if (!target) return;
+  document.addEventListener(
+    "click",
+    (e) => {
+      const target = e.target.closest("button, a, [role='button']");
+      if (!target) return;
 
-    const info = {
-      text: target.innerText?.trim(),
-      id: target.id,
-      class: target.className,
-      disabled: target.disabled,
-      pointerEvents: getComputedStyle(target).pointerEvents,
-      opacity: getComputedStyle(target).opacity,
-    };
-
-    console.group("🖱️ CLICK DETECTADO");
-    console.table(info);
-    console.log("Elemento:", target);
-    console.groupEnd();
-  }, true);
+      console.group("🖱️ CLICK DETECTADO");
+      console.log("Texto:", target.innerText?.trim());
+      console.log("ID:", target.id);
+      console.log("Classes:", target.className);
+      console.log("Disabled:", target.disabled);
+      console.log(
+        "pointer-events:",
+        getComputedStyle(target).pointerEvents
+      );
+      console.log("opacity:", getComputedStyle(target).opacity);
+      console.log("Elemento:", target);
+      console.groupEnd();
+    },
+    true // captura antes de qualquer outro handler
+  );
 })();
