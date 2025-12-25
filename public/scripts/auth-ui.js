@@ -1,14 +1,16 @@
 // =======================================================
-// 🔐 LIORA AUTH UI — vRESTORED-FINAL-BUTTON
-// - Login funcional por CLICK (SPA-safe)
-// - Campo de e-mail + senha
-// - Recuperação de senha isolada
-// - Compatível com UI Router
+// 🔐 LIORA AUTH UI — vSTATEFUL
+// - Login funcional por CLICK
+// - Estado global de usuário
+// - Compatível com nav-home gating
 // =======================================================
 
 (function () {
   let authEl = null;
   let ready = false;
+
+  // estado global
+  window.lioraAuth = window.lioraAuth || { user: null };
 
   // -----------------------------
   // Bind da tela de auth
@@ -24,9 +26,7 @@
     window.lioraUI.register("liora-auth", authEl);
     ready = true;
 
-    document.dispatchEvent(new Event("liora:auth-ready"));
     console.log("🔐 Auth UI pronta");
-
     return true;
   }
 
@@ -34,57 +34,41 @@
   // Abrir login
   // -----------------------------
   function open() {
-    if (!ready) {
-      console.warn("🚫 Auth UI não pronta");
-      return;
-    }
+    if (!ready) return;
     window.lioraUI.show("liora-auth");
   }
 
   // -----------------------------
-  // Login por CLICK (ENTRAR)
+  // Login (ENTRAR)
   // -----------------------------
   function bindLoginButton() {
     const btn = document.getElementById("liora-auth-submit");
-    if (!btn) {
-      console.warn("⚠️ Botão ENTRAR não encontrado");
-      return;
-    }
+    if (!btn) return;
 
     btn.addEventListener("click", () => {
-      const emailInput = document.getElementById("auth-email");
-      const senhaInput = document.getElementById("auth-senha");
-
-      const email = emailInput?.value?.trim();
-      const senha = senhaInput?.value?.trim();
+      const email = document.getElementById("auth-email")?.value?.trim();
+      const senha = document.getElementById("auth-senha")?.value?.trim();
 
       if (!email || !senha) {
         alert("Informe e-mail e senha");
         return;
       }
 
-      console.log("🔐 Login acionado:", email);
+      console.log("🔐 Login efetuado:", email);
 
-      // 🔹 LOGIN TEMPORÁRIO (mock)
-      localStorage.setItem("liora:auth", "ok");
+      // 🔹 DEFINE ESTADO GLOBAL
+      window.lioraAuth.user = {
+        email,
+        loginAt: Date.now()
+      };
 
-      // Volta para Home
+      localStorage.setItem("liora:user", JSON.stringify(window.lioraAuth.user));
+
+      // dispara evento de sucesso
+      window.dispatchEvent(new Event("liora:auth-success"));
+
+      // volta para home
       window.lioraUI.show("liora-home");
-    });
-  }
-
-  // -----------------------------
-  // Mostrar / ocultar senha
-  // -----------------------------
-  function bindTogglePassword() {
-    const btn = document.getElementById("toggle-password");
-    const input = document.getElementById("auth-senha");
-    if (!btn || !input) return;
-
-    btn.addEventListener("click", () => {
-      const isPassword = input.type === "password";
-      input.type = isPassword ? "text" : "password";
-      btn.textContent = isPassword ? "🙈" : "👁️";
     });
   }
 
@@ -98,8 +82,6 @@
     btn.addEventListener("click", () => {
       const email = prompt("Digite seu e-mail para recuperação:");
       if (!email) return;
-
-      console.log("📩 Recuperação de senha solicitada:", email);
       alert("Se o e-mail existir, você receberá instruções.");
     });
   }
@@ -110,22 +92,17 @@
   document.addEventListener("DOMContentLoaded", () => {
     if (bindAuthUI()) {
       bindLoginButton();
-      bindTogglePassword();
       bindRecoverPassword();
     } else {
       setTimeout(() => {
         if (bindAuthUI()) {
           bindLoginButton();
-          bindTogglePassword();
           bindRecoverPassword();
         }
       }, 300);
     }
   });
 
-  // -----------------------------
-  // API pública
-  // -----------------------------
   window.lioraAuthUI = {
     open,
     ready: () => ready
