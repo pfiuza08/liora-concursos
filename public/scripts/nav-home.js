@@ -1,12 +1,13 @@
 // ==========================================================
-// 🧭 LIORA — NAV-HOME v99-CANONICAL-APP-ROUTER
+// 🧭 LIORA — NAV-HOME v99.1-CANONICAL-APP-ROUTER
 // - UI reativa ao estado de auth
 // - NÃO decide ações (isso é do ui-actions)
 // - APENAS reage a eventos e mostra telas
+// - Controla corretamente o FAB ⬅ Início
 // ==========================================================
 
 (function () {
-  console.log("🔵 nav-home.js v99 carregado…");
+  console.log("🔵 nav-home.js v99.1 carregado…");
 
   document.addEventListener("DOMContentLoaded", () => {
 
@@ -15,10 +16,11 @@
     // ------------------------------------------------------
     const home = document.getElementById("liora-home");
     const app  = document.getElementById("liora-app");
+    const fabHome = document.getElementById("fab-home");
 
     // HEADER
-    const userInfo = document.getElementById("liora-user-info");
-    const userName = document.getElementById("liora-user-name");
+    const userInfo  = document.getElementById("liora-user-info");
+    const userName  = document.getElementById("liora-user-name");
     const btnLogout = document.getElementById("btn-logout");
     const btnLogin  = document.getElementById("btn-login");
 
@@ -44,17 +46,18 @@
     } catch {}
 
     // ------------------------------------------------------
-    // HELPERS DE TELA
+    // HELPERS DE TELA (ÚNICA FONTE DE CONTROLE VISUAL)
     // ------------------------------------------------------
     function showHome() {
       app?.classList.add("hidden");
       home?.classList.remove("hidden");
+      fabHome?.classList.add("hidden");
     }
 
     function showApp() {
-      home?.classList.remove("is-active");
       home?.classList.add("hidden");
       app?.classList.remove("hidden");
+      fabHome?.classList.remove("hidden");
     }
 
     function hideAllPanels() {
@@ -99,6 +102,14 @@
     // ------------------------------------------------------
     btnLogout?.addEventListener("click", () => {
       window.lioraActions?.logout?.();
+    });
+
+    // ------------------------------------------------------
+    // FAB ⬅ INÍCIO
+    // ------------------------------------------------------
+    fabHome?.addEventListener("click", () => {
+      console.log("⬅️ Voltar para Home");
+      showHome();
     });
 
     // ======================================================
@@ -162,6 +173,6 @@
       }
     });
 
-    console.log("🟢 NAV-HOME v99 pronto!");
+    console.log("🟢 NAV-HOME v99.1 pronto!");
   });
 })();
