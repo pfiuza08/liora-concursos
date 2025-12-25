@@ -56,58 +56,53 @@
     // -----------------------------
     openTema() {
       console.log("🎯 openTema");
-      window.dispatchEvent(new Event("liora:enter-estudo-tema"));
+      window.dispatchEvent(new Event("liora:open-estudo-tema"));
     },
-
+    
     openUpload() {
       console.log("🎯 openUpload");
-      window.dispatchEvent(new Event("liora:enter-estudo-upload"));
+      window.dispatchEvent(new Event("liora:open-estudo-upload"));
     },
-
+    
     // -----------------------------
     // SIMULADOS
     // -----------------------------
     openSimulados() {
       console.log("🎯 openSimulados");
-
+    
       if (!window.lioraAuth.user) {
         return window.lioraActions.openAuth();
       }
-
-      window.dispatchEvent(new Event("liora:enter-simulado"));
+    
+      window.dispatchEvent(new Event("liora:open-simulados"));
     },
-
+    
     // -----------------------------
     // DASHBOARD
     // -----------------------------
     openDashboard() {
       console.log("🎯 openDashboard");
-
+    
       if (!window.lioraAuth.user) {
         return window.lioraActions.openAuth();
       }
-
-      window.dispatchEvent(new Event("liora:enter-dashboard"));
+    
+      window.dispatchEvent(new Event("liora:open-dashboard"));
     },
-
+    
     // -----------------------------
     // PREMIUM
     // -----------------------------
     openUpgrade() {
       console.log("🎯 openUpgrade");
-
+    
       if (!window.lioraAuth.user) {
         return window.lioraActions.openAuth();
       }
-
-      // modal premium (se existir)
-      if (window.lioraModal?.open) {
-        window.lioraModal.open("liora-premium-modal");
-        return;
-      }
-
-      alert("Liora+ em breve");
+    
+      window.dispatchEvent(new Event("liora:open-premium"));
     }
+
   };
 
 })();
