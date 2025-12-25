@@ -1,28 +1,51 @@
 // ==========================================================
-// 🧭 LIORA — NAV-HOME v96-FULLSCREEN-CANONICAL
-// - Simulados com gating de login
-// - Compatível com UI fullscreen
-// - Sem dependência de modal para login/premium
+// 🧭 LIORA — NAV-HOME v97-AUTH-STATEFUL
+// - Gating por auth real (window.lioraAuth.user)
+// - Reage a login/logout
+// - Exibe usuário e botão SAIR
 // ==========================================================
 
 (function () {
-  console.log("🔵 nav-home.js v96 carregado…");
+  console.log("🔵 nav-home.js v97 carregado…");
 
   document.addEventListener("DOMContentLoaded", () => {
 
     // ------------------------------------------------------
-    // ELEMENTOS DA INTERFACE
+    // ELEMENTOS PRINCIPAIS
     // ------------------------------------------------------
     const home = document.getElementById("liora-home");
     const app = document.getElementById("liora-app");
 
+    // header / área de usuário (ajuste IDs se necessário)
+    const userLabel = document.getElementById("liora-user-label");
+    const btnLogout = document.getElementById("liora-logout");
+
     // ------------------------------------------------------
-    // REGISTRO DA HOME NO UI ROUTER (OBRIGATÓRIO)
+    // REGISTRO DA HOME NO UI ROUTER
     // ------------------------------------------------------
     if (home && window.lioraUI) {
       window.lioraUI.register("liora-home", home);
     }
 
+    // ------------------------------------------------------
+    // GARANTE ESTADO GLOBAL DE AUTH
+    // ------------------------------------------------------
+    window.lioraAuth = window.lioraAuth || { user: null };
+
+    // restaura sessão (se existir)
+    try {
+      const saved = localStorage.getItem("liora:user");
+      if (saved && !window.lioraAuth.user) {
+        window.lioraAuth.user = JSON.parse(saved);
+        console.log("🔁 Sessão restaurada:", window.lioraAuth.user.email);
+      }
+    } catch (e) {
+      console.warn("Falha ao restaurar sessão:", e);
+    }
+
+    // ------------------------------------------------------
+    // ELEMENTOS DA HOME
+    // ------------------------------------------------------
     const btnTema = document.getElementById("home-tema");
     const btnUpload = document.getElementById("home-upload");
     const btnSimulados = document.getElementById("home-simulados");
@@ -35,12 +58,12 @@
     const fabHome = document.getElementById("fab-home");
     const simFab = document.getElementById("sim-fab");
 
-    // MODAL — MEUS PLANOS (permanece modal)
+    // MODAL — MEUS PLANOS
     const meusPlanosModalId = "meus-planos-modal";
     const meusPlanosList = document.getElementById("meus-planos-list");
 
     // ------------------------------------------------------
-    // FUNÇÕES DE UI BÁSICAS
+    // UI BÁSICA
     // ------------------------------------------------------
     function showApp() {
       home?.classList.add("hidden");
@@ -70,6 +93,43 @@
     }
 
     // ------------------------------------------------------
+    // AUTH UI STATE
+    // ------------------------------------------------------
+    function refreshAuthUI() {
+      const user = window.lioraAuth.user;
+
+      if (user) {
+        if (userLabel) {
+          userLabel.textContent = user.email;
+          userLabel.classList.remove("hidden");
+        }
+        btnLogout?.classList.remove("hidden");
+      } else {
+        userLabel?.classList.add("hidden");
+        btnLogout?.classList.add("hidden");
+      }
+    }
+
+    // logout global
+    window.lioraLogout = function () {
+      console.log("🚪 Logout efetuado");
+      window.lioraAuth.user = null;
+      localStorage.removeItem("liora:user");
+      refreshAuthUI();
+      showHome();
+    };
+
+    // reage ao login
+    window.addEventListener("liora:auth-success", () => {
+      console.log("🟢 Auth success recebido no nav");
+      refreshAuthUI();
+      showHome();
+    });
+
+    // inicial
+    refreshAuthUI();
+
+    // ------------------------------------------------------
     // NAVEGAÇÃO PRINCIPAL
     // ------------------------------------------------------
     function goToEstudoTema() {
@@ -91,8 +151,7 @@
     }
 
     function goToSimulados() {
-      // 🔐 GATING DE LOGIN
-      if (!window.lioraAuth?.user) {
+      if (!window.lioraAuth.user) {
         console.log("🔐 Simulados → login necessário");
         window.lioraUI?.show("liora-auth");
         return;
@@ -101,15 +160,13 @@
       showApp();
       hideAllAppSections();
       qs("area-simulado")?.classList.remove("hidden");
-
       simFab?.classList.remove("hidden");
       window.dispatchEvent(new Event("liora:enter-simulado"));
       window.lioraPreFillSimulado?.();
     }
 
     function goToDashboard() {
-      // 🔐 GATING DE LOGIN
-      if (!window.lioraAuth?.user) {
+      if (!window.lioraAuth.user) {
         console.log("🔐 Dashboard → login necessário");
         window.lioraUI?.show("liora-auth");
         return;
@@ -157,111 +214,6 @@
     window.addEventListener("liora:plan-updated", atualizarHome);
 
     // ------------------------------------------------------
-    // CONTINUAR ESTUDO
-    // ------------------------------------------------------
-    window.lioraContinueStudy = function () {
-      try {
-        const sm = window.lioraEstudos;
-        if (!sm) return;
-
-        const plano = sm.getPlanoAtivo?.();
-        if (!plano) return;
-
-        let idx =
-          plano.sessoes.findIndex((s) => (s.progresso || 0) < 100);
-        if (idx < 0) idx = plano.sessoes.length - 1;
-
-        window.lioraSetWizardFromPlano?.(plano, idx);
-
-        showApp();
-        hideAllAppSections();
-        qs("liora-sessoes")?.classList.remove("hidden");
-        qs("area-plano")?.classList.remove("hidden");
-
-        simFab?.classList.add("hidden");
-        window.lioraIrParaSessao?.(idx, false);
-      } catch (e) {
-        console.error("❌ Erro no ContinueStudy:", e);
-      }
-    };
-
-    // ------------------------------------------------------
-    // MODAL "MEUS PLANOS" (mantido)
-    // ------------------------------------------------------
-    function abrirMeusPlanosModal() {
-      const sm = window.lioraEstudos;
-      if (!sm || !meusPlanosList) return;
-
-      const planos = sm.listarRecentes?.(20) || [];
-      meusPlanosList.innerHTML = "";
-
-      if (!planos.length) {
-        meusPlanosList.innerHTML =
-          "<p class='liora-modal-empty'>Você ainda não tem planos salvos.</p>";
-      } else {
-        planos.forEach((plano) => {
-          const total = plano.sessoes?.length || 0;
-          const concluidas = plano.sessoes.filter(
-            (s) => (s.progresso || 0) >= 100
-          ).length;
-
-          const item = document.createElement("button");
-          item.className = "liora-plan-item";
-
-          item.innerHTML = `
-            <div class="liora-plan-item-top">
-              <h3 class="liora-plan-title">${plano.tema}</h3>
-              <span class="liora-plan-badge">${total} sessão(ões)</span>
-            </div>
-            <div class="liora-plan-item-middle">
-              <span>Progresso médio: ${
-                total
-                  ? Math.round(
-                      plano.sessoes.reduce(
-                        (a, s) => a + (s.progresso || 0),
-                        0
-                      ) / total
-                    )
-                  : 0
-              }%</span>
-              <span>Concluídas: ${concluidas}/${total}</span>
-            </div>
-            <div class="liora-plan-item-footer">
-              <span class="liora-plan-cta">Ativar plano</span>
-            </div>
-          `;
-
-          item.addEventListener("click", () => {
-            ativarPlanoEIr(plano.id);
-            window.lioraModal?.close(meusPlanosModalId);
-          });
-
-          meusPlanosList.appendChild(item);
-        });
-      }
-
-      window.lioraModal?.open(meusPlanosModalId);
-    }
-
-    function ativarPlanoEIr(id) {
-      const sm = window.lioraEstudos;
-      if (!sm) return;
-
-      sm.ativarPlano?.(id);
-      const plano = sm.listarRecentes?.().find((p) => p.id === id);
-      if (!plano) return;
-
-      window.lioraSetWizardFromPlano?.(plano, 0);
-
-      showApp();
-      hideAllAppSections();
-      qs("liora-sessoes")?.classList.remove("hidden");
-      qs("area-plano")?.classList.remove("hidden");
-
-      window.lioraIrParaSessao?.(0, false);
-    }
-
-    // ------------------------------------------------------
     // BIND DE BOTÕES
     // ------------------------------------------------------
     btnTema?.addEventListener("click", goToEstudoTema);
@@ -284,10 +236,12 @@
       window.dispatchEvent(new Event("liora:abrir-simulado"));
     });
 
-    console.log("🟢 NAV-HOME v96 pronto!");
+    btnLogout?.addEventListener("click", window.lioraLogout);
+
+    console.log("🟢 NAV-HOME v97 pronto!");
   });
 
-  // helper local
+  // helper
   function qs(id) {
     return document.getElementById(id);
   }
