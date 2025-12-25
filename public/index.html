@@ -179,19 +179,46 @@
             <div class="space-y-3">
               <h3 class="text-base font-medium text-[var(--muted)]">PLANO DE ESTUDO</h3>
               <div class="flex gap-4 justify-center">
-                <button id="home-tema" class="btn-secondary px-6 py-2 text-sm">Tema</button>
-                <button id="home-upload" class="btn-secondary px-6 py-2 text-sm">PDF</button>
+                <button
+                  id="home-tema"
+                  class="btn-secondary px-6 py-2 text-sm"
+                  data-action="openTema"
+                >
+                  Tema
+                </button>
+            
+                <button
+                  id="home-upload"
+                  class="btn-secondary px-6 py-2 text-sm"
+                  data-action="openUpload"
+                >
+                  PDF
+                </button>
               </div>
             </div>
-
+            
             <!-- AVALIAÇÃO -->
             <div class="space-y-3">
               <h3 class="text-base font-medium text-[var(--muted)]">AVALIAÇÃO COM IA</h3>
               <div class="flex gap-4 justify-center">
-                <button id="home-simulados" class="btn-secondary px-6 py-2 text-sm">Simulados</button>
-                <button id="home-dashboard" class="btn-secondary px-6 py-2 text-sm">Meu Desempenho</button>
+                <button
+                  id="home-simulados"
+                  class="btn-secondary px-6 py-2 text-sm"
+                  data-action="openSimulados"
+                >
+                  Simulados
+                </button>
+            
+                <button
+                  id="home-dashboard"
+                  class="btn-secondary px-6 py-2 text-sm"
+                  data-action="openDashboard"
+                >
+                  Meu Desempenho
+                </button>
               </div>
             </div>
+
 
             <!-- BADGE -->
             <p id="liora-premium-badge"
@@ -199,9 +226,14 @@
               Versão gratuita — recursos limitados
             </p>
 
-            <button id="liora-upgrade-open" class="btn-secondary px-4 py-2 text-xs">
+            <button
+              id="liora-upgrade-open"
+              class="btn-secondary px-4 py-2 text-xs"
+              data-action="openUpgrade"
+            >
               Conhecer o Liora Premium
             </button>
+
 
             <!-- SEU ESTUDO -->
             <div id="liora-seu-estudo" class="liora-estudo-bloco w-full">
