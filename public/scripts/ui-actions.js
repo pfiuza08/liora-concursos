@@ -1,14 +1,25 @@
 // =======================================================
 // 🎯 LIORA — UI ACTIONS (ORQUESTRADOR ÚNICO)
+// - Fonte única de decisão de navegação
+// - Usado por TODOS os botões via data-action
 // =======================================================
 
 (function () {
   console.log("🎯 UI Actions inicializado");
 
+  // ------------------------------------------------------
+  // ESTADO GLOBAL DE AUTH
+  // ------------------------------------------------------
   window.lioraAuth = window.lioraAuth || { user: null };
 
+  // ------------------------------------------------------
+  // AÇÕES CANÔNICAS
+  // ------------------------------------------------------
   window.lioraActions = {
 
+    // -----------------------------
+    // AUTH
+    // -----------------------------
     openAuth() {
       console.log("🎯 openAuth");
 
@@ -22,20 +33,40 @@
 
     loginSuccess(user) {
       console.log("🎯 loginSuccess", user);
+
       window.lioraAuth.user = user;
       localStorage.setItem("liora:user", JSON.stringify(user));
+
       window.dispatchEvent(new Event("liora:render-auth-ui"));
       window.lioraUI.show("liora-home");
     },
 
     logout() {
       console.log("🎯 logout");
+
       window.lioraAuth.user = null;
       localStorage.removeItem("liora:user");
+
       window.dispatchEvent(new Event("liora:render-auth-ui"));
       window.lioraUI.show("liora-home");
     },
 
+    // -----------------------------
+    // ESTUDO
+    // -----------------------------
+    openTema() {
+      console.log("🎯 openTema");
+      window.dispatchEvent(new Event("liora:enter-estudo-tema"));
+    },
+
+    openUpload() {
+      console.log("🎯 openUpload");
+      window.dispatchEvent(new Event("liora:enter-estudo-upload"));
+    },
+
+    // -----------------------------
+    // SIMULADOS
+    // -----------------------------
     openSimulados() {
       console.log("🎯 openSimulados");
 
@@ -46,11 +77,33 @@
       window.dispatchEvent(new Event("liora:enter-simulado"));
     },
 
+    // -----------------------------
+    // DASHBOARD
+    // -----------------------------
+    openDashboard() {
+      console.log("🎯 openDashboard");
+
+      if (!window.lioraAuth.user) {
+        return window.lioraActions.openAuth();
+      }
+
+      window.dispatchEvent(new Event("liora:enter-dashboard"));
+    },
+
+    // -----------------------------
+    // PREMIUM
+    // -----------------------------
     openUpgrade() {
       console.log("🎯 openUpgrade");
 
       if (!window.lioraAuth.user) {
         return window.lioraActions.openAuth();
+      }
+
+      // modal premium (se existir)
+      if (window.lioraModal?.open) {
+        window.lioraModal.open("liora-premium-modal");
+        return;
       }
 
       alert("Liora+ em breve");
@@ -59,9 +112,9 @@
 
 })();
 
-// -------------------------------------------------------
-// BINDER GLOBAL
-// -------------------------------------------------------
+// =======================================================
+// 🧭 BINDER GLOBAL — DATA-ACTION
+// =======================================================
 document.addEventListener("click", (e) => {
   const el = e.target.closest("[data-action]");
   if (!el) return;
