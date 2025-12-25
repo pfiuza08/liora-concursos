@@ -48,20 +48,25 @@
     } catch {}
 
     // ------------------------------------------------------
-    // HELPERS DE TELA (ÚNICA FONTE DE CONTROLE VISUAL)
+    // HELPERS DE TELA (CANÔNICOS)
     // ------------------------------------------------------
+    function hideAllFABs() {
+      fabHome?.classList.add("hidden");
+      fabSim?.classList.add("hidden");
+    }
+    
     function showHome() {
       app?.classList.add("hidden");
       home?.classList.remove("hidden");
-      fabHome?.classList.add("hidden");
+      hideAllFABs();
     }
-
+    
     function showApp() {
       home?.classList.add("hidden");
       app?.classList.remove("hidden");
-      fabHome?.classList.remove("hidden");
+      hideAllFABs();
     }
-
+    
     function hideAllPanels() {
       [
         "painel-estudo",
@@ -75,6 +80,7 @@
         document.getElementById(id)?.classList.add("hidden")
       );
     }
+
 
     // ------------------------------------------------------
     // RENDERIZAÇÃO REATIVA DO HEADER (AUTH)
