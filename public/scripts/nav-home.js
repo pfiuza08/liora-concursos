@@ -225,7 +225,10 @@
       window.lioraContinueStudy?.()
     );
 
-    btnMeusPlanos?.addEventListener("click", abrirMeusPlanosModal);
+    btnMeusPlanos?.addEventListener("click", () => {
+      console.log("📦 Meus Planos → tela dedicada (em breve)");
+      // futura navegação para screen/painel
+    });
 
     fabHome?.addEventListener("click", () => {
       showHome();
