@@ -94,14 +94,15 @@
     // PREMIUM
     // -----------------------------
     openUpgrade() {
-      console.log("🎯 openUpgrade");
-    
-      if (!window.lioraAuth.user) {
-        return window.lioraActions.openAuth();
-      }
-    
-      window.dispatchEvent(new Event("liora:open-premium"));
+    console.log("🎯 openUpgrade");
+  
+    // abre modal premium direto
+    if (window.lioraModal?.open) {
+      window.lioraModal.open("liora-premium-modal");
+    } else {
+      console.warn("Modal premium não disponível");
     }
+  }
 
   };
 
