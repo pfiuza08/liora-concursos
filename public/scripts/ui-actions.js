@@ -54,17 +54,22 @@
     // -----------------------------
     // SIMULADO — CONFIG
     // -----------------------------
-    openSimConfig() {
-      console.log("🎯 openSimConfig");
-
-      if (!window.lioraAuth.user) {
-        return window.lioraActions.openAuth();
-      }
-
-      // 🔒 MODAL NÃO MUDA TELA
-      if (window.lioraModal?.open) {
-        window.lioraModal.open("sim-modal-backdrop");
-      }
+    startSimulado() {
+      console.log("🎯 startSimulado");
+    
+      const config = {
+        banca: document.getElementById("sim-banca")?.value,
+        qtd: Number(document.getElementById("sim-qtd")?.value),
+        tempo: Number(document.getElementById("sim-tempo")?.value),
+        dificuldade: document.getElementById("sim-dificuldade")?.value,
+        tema: document.getElementById("sim-tema")?.value
+      };
+    
+      window.lioraSimuladoConfig = config;
+    
+      console.log("🧪 Configuração salva:", config);
+    
+      window.dispatchEvent(new Event("liora:start-simulado"));
     },
 
     // -----------------------------
