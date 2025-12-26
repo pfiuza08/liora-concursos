@@ -431,3 +431,25 @@ body.liora-modal-open #liora-home {
   font-size: 1.2rem;
   cursor: pointer;
 }
+
+/* ================================
+   CANONICAL APP SCREEN
+================================ */
+
+#liora-app {
+  min-height: calc(100vh - 120px); /* header */
+  display: block;
+  position: relative;
+}
+
+/* todas as telas internas */
+#liora-app > section,
+#liora-app > div {
+  width: 100%;
+}
+
+/* garante topo visível */
+#liora-app,
+#liora-layout {
+  scroll-behavior: auto;
+}
