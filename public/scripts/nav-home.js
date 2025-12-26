@@ -1,14 +1,15 @@
 // ==========================================================
-// 🧭 LIORA — NAV-HOME v99.3-CANONICAL-APP-ROUTER
+// 🧭 LIORA — NAV-HOME v99.4-CANONICAL-APP-ROUTER
 // - UI reativa ao estado de auth
 // - NÃO decide ações (isso é do ui-actions)
 // - APENAS reage a eventos e mostra telas
-// - Controla corretamente FAB ⬅ Início e FAB ⚙ Simulado
-// - Configurar Simulado como SCREEN (sem modal)
+// - Controla FAB ⬅ Início e FAB ⚙ Simulado
+// - Premium como SCREEN
+// - Reset de scroll global (desktop + mobile)
 // ==========================================================
 
 (function () {
-  console.log("🔵 nav-home.js v99.3 carregado…");
+  console.log("🔵 nav-home.js v99.4 carregado…");
 
   document.addEventListener("DOMContentLoaded", () => {
 
@@ -28,13 +29,6 @@
     const btnLogin  = document.getElementById("btn-login");
 
     // ------------------------------------------------------
-    // REGISTRO DA HOME NO UI ROUTER
-    // ------------------------------------------------------
-    if (home && window.lioraUI) {
-      window.lioraUI.register("liora-home", home);
-    }
-
-    // ------------------------------------------------------
     // ESTADO GLOBAL DE AUTH
     // ------------------------------------------------------
     window.lioraAuth = window.lioraAuth || { user: null };
@@ -48,8 +42,12 @@
     } catch {}
 
     // ------------------------------------------------------
-    // HELPERS DE TELA (CANÔNICOS)
+    // HELPERS CANÔNICOS
     // ------------------------------------------------------
+    function resetScroll() {
+      window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    }
+
     function hideAllFABs() {
       fabHome?.classList.add("hidden");
       fabSim?.classList.add("hidden");
@@ -59,15 +57,17 @@
       app?.classList.add("hidden");
       home?.classList.remove("hidden");
       hideAllFABs();
+      resetScroll();
     }
 
     function showApp() {
       home?.classList.add("hidden");
       app?.classList.remove("hidden");
 
-      // ⬅ Sempre visível no APP
       fabHome?.classList.remove("hidden");
       fabSim?.classList.add("hidden");
+
+      resetScroll();
     }
 
     function hideAllPanels() {
@@ -79,14 +79,15 @@
         "liora-sessoes",
         "area-simulado",
         "liora-sim-config",
-        "area-dashboard"
+        "area-dashboard",
+        "liora-premium"
       ].forEach(id =>
         document.getElementById(id)?.classList.add("hidden")
       );
     }
 
     // ------------------------------------------------------
-    // RENDERIZAÇÃO REATIVA DO HEADER (AUTH)
+    // HEADER — AUTH REATIVO
     // ------------------------------------------------------
     function renderAuthUI() {
       const user = window.lioraAuth.user;
@@ -113,6 +114,7 @@
     // ------------------------------------------------------
     btnLogout?.addEventListener("click", () => {
       window.lioraActions?.logout?.();
+      showHome();
     });
 
     // ------------------------------------------------------
@@ -127,99 +129,66 @@
     // 🎯 EVENTOS DO UI-ACTIONS
     // ======================================================
 
-    // -----------------------------
     // ESTUDO — TEMA
-    // -----------------------------
     window.addEventListener("liora:open-estudo-tema", () => {
       console.log("🧭 Tela: Estudo por Tema");
       showApp();
       hideAllPanels();
-
       document.getElementById("painel-estudo")?.classList.remove("hidden");
       document.getElementById("painel-tema")?.classList.remove("hidden");
     });
 
-    // -----------------------------
     // ESTUDO — PDF
-    // -----------------------------
     window.addEventListener("liora:open-estudo-upload", () => {
       console.log("🧭 Tela: Estudo por PDF");
       showApp();
       hideAllPanels();
-
       document.getElementById("painel-estudo")?.classList.remove("hidden");
       document.getElementById("painel-upload")?.classList.remove("hidden");
     });
 
-    // -----------------------------
-    // SIMULADOS (ÁREA)
-    // -----------------------------
+    // SIMULADOS — LISTA
     window.addEventListener("liora:open-simulados", () => {
       console.log("🧭 Tela: Simulados");
       showApp();
       hideAllPanels();
-
       document.getElementById("area-simulado")?.classList.remove("hidden");
       fabSim?.classList.remove("hidden");
     });
 
-    // -----------------------------
-    // CONFIGURAR SIMULADO (SCREEN)
-    // -----------------------------
+    // CONFIGURAR SIMULADO
     window.addEventListener("liora:open-sim-config", () => {
       console.log("🧭 Tela: Configurar Simulado");
       showApp();
       hideAllPanels();
-
       document.getElementById("liora-sim-config")?.classList.remove("hidden");
     });
 
-    // -----------------------------
     // SIMULADO EM ANDAMENTO
-    // -----------------------------
     window.addEventListener("liora:start-simulado", () => {
       console.log("🧭 Tela: Simulado em andamento");
       showApp();
       hideAllPanels();
-
       document.getElementById("area-simulado")?.classList.remove("hidden");
       fabSim?.classList.remove("hidden");
     });
 
-    // -----------------------------
     // DASHBOARD
-    // -----------------------------
     window.addEventListener("liora:open-dashboard", () => {
       console.log("🧭 Tela: Dashboard");
       showApp();
       hideAllPanels();
-
       document.getElementById("area-dashboard")?.classList.remove("hidden");
     });
 
-    // -----------------------------
-    // LIORA PREMIUM (SCREEN)
-    // -----------------------------
+    // ⭐ LIORA PREMIUM (SCREEN)
     window.addEventListener("liora:open-premium", () => {
       console.log("🧭 Tela: Liora Premium");
-    
       showApp();
       hideAllPanels();
-    
       document.getElementById("liora-premium")?.classList.remove("hidden");
-    
-      // FABs: só voltar
-      fabHome?.classList.remove("hidden");
-      fabSim?.classList.add("hidden");
     });
 
-
-
-
-
-
-    
-
-    console.log("🟢 NAV-HOME v99.3 pronto!");
+    console.log("🟢 NAV-HOME v99.4 pronto!");
   });
 })();
