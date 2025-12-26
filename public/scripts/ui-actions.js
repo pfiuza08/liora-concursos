@@ -2,6 +2,7 @@
 // 🎯 LIORA — UI ACTIONS (ORQUESTRADOR ÚNICO)
 // - Fonte única de decisão de navegação
 // - Usado por TODOS os botões via data-action
+// - SEM MODAIS (tudo é SCREEN)
 // =======================================================
 
 (function () {
@@ -52,27 +53,6 @@
     },
 
     // -----------------------------
-    // SIMULADO — CONFIG
-    // -----------------------------
-    startSimulado() {
-      console.log("🎯 startSimulado");
-    
-      const config = {
-        banca: document.getElementById("sim-banca")?.value,
-        qtd: Number(document.getElementById("sim-qtd")?.value),
-        tempo: Number(document.getElementById("sim-tempo")?.value),
-        dificuldade: document.getElementById("sim-dificuldade")?.value,
-        tema: document.getElementById("sim-tema")?.value
-      };
-    
-      window.lioraSimuladoConfig = config;
-    
-      console.log("🧪 Configuração salva:", config);
-    
-      window.dispatchEvent(new Event("liora:start-simulado"));
-    },
-
-    // -----------------------------
     // ESTUDO
     // -----------------------------
     openTema() {
@@ -98,6 +78,35 @@
       window.dispatchEvent(new Event("liora:open-simulados"));
     },
 
+    openSimConfig() {
+      console.log("🎯 openSimConfig");
+
+      if (!window.lioraAuth.user) {
+        return window.lioraActions.openAuth();
+      }
+
+      // 👉 SCREEN (não modal)
+      window.dispatchEvent(new Event("liora:open-sim-config"));
+    },
+
+    startSimulado() {
+      console.log("🎯 startSimulado");
+
+      const config = {
+        banca: document.getElementById("sim-banca")?.value || null,
+        qtd: Number(document.getElementById("sim-qtd")?.value || 0),
+        tempo: Number(document.getElementById("sim-tempo")?.value || 0),
+        dificuldade: document.getElementById("sim-dificuldade")?.value || null,
+        tema: document.getElementById("sim-tema")?.value || null
+      };
+
+      window.lioraSimuladoConfig = config;
+
+      console.log("🧪 Configuração do simulado salva:", config);
+
+      window.dispatchEvent(new Event("liora:start-simulado"));
+    },
+
     // -----------------------------
     // DASHBOARD
     // -----------------------------
@@ -112,7 +121,7 @@
     },
 
     // -----------------------------
-    // PREMIUM
+    // PREMIUM (SCREEN)
     // -----------------------------
     openUpgrade() {
       console.log("🎯 openUpgrade");
@@ -121,13 +130,11 @@
         return window.lioraActions.openAuth();
       }
 
-      // 🔒 MODAL NÃO MUDA TELA
-      if (window.lioraModal?.open) {
-        window.lioraModal.open("liora-premium-modal");
-      }
+      // 👉 SCREEN (não modal)
+      window.dispatchEvent(new Event("liora:open-premium"));
     }
 
-  }; // ✅ FECHAMENTO CORRETO DO OBJETO
+  }; // ✅ FECHAMENTO DO OBJETO
 
 })(); // ✅ FECHAMENTO DO IIFE
 
