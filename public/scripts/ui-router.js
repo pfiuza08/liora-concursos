@@ -1,52 +1,31 @@
 // =======================================================
-// 🧭 LIORA UI ROUTER — vCANONICAL-SCREENS
-// - Navegação segura entre telas (screens)
-// - NÃO interfere em modais nem FABs
-// - Usa .is-active (CSS-driven)
+// 🧭 LIORA UI ROUTER — vRESTORED-OK
+// - Navegação segura
+// - Só ativa UIs registradas
 // =======================================================
 
 (function () {
   const registry = {};
   let current = null;
 
-  // -----------------------------
-  // Registrar uma tela
-  // -----------------------------
   function register(id, el) {
-    if (!id || !el) return;
-
     registry[id] = el;
-    el.classList.add("liora-screen");
-
     console.log("🧩 UI registrada:", id);
   }
 
-  // -----------------------------
-  // Mostrar uma tela
-  // -----------------------------
   function show(id) {
-    const target = registry[id];
-
-    if (!target) {
+    if (!registry[id]) {
       console.warn("🚫 Navegação bloqueada (UI não registrada):", id);
       return;
     }
 
-    Object.entries(registry).forEach(([key, el]) => {
-      if (key === id) {
-        el.classList.add("is-active");
-      } else {
-        el.classList.remove("is-active");
-      }
-    });
-
+    Object.values(registry).forEach(el => el.style.display = "none");
+    registry[id].style.display = "block";
     current = id;
+
     console.log("🧭 UI →", id);
   }
 
-  // -----------------------------
-  // API pública
-  // -----------------------------
   window.lioraUI = {
     register,
     show,
