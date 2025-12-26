@@ -1,13 +1,14 @@
 // ==========================================================
-// 🧭 LIORA — NAV-HOME v99.2-CANONICAL-APP-ROUTER
+// 🧭 LIORA — NAV-HOME v99.3-CANONICAL-APP-ROUTER
 // - UI reativa ao estado de auth
 // - NÃO decide ações (isso é do ui-actions)
 // - APENAS reage a eventos e mostra telas
 // - Controla corretamente FAB ⬅ Início e FAB ⚙ Simulado
+// - Configurar Simulado como SCREEN (sem modal)
 // ==========================================================
 
 (function () {
-  console.log("🔵 nav-home.js v99.2 carregado…");
+  console.log("🔵 nav-home.js v99.3 carregado…");
 
   document.addEventListener("DOMContentLoaded", () => {
 
@@ -77,6 +78,7 @@
         "area-plano",
         "liora-sessoes",
         "area-simulado",
+        "liora-sim-config",
         "area-dashboard"
       ].forEach(id =>
         document.getElementById(id)?.classList.add("hidden")
@@ -150,7 +152,7 @@
     });
 
     // -----------------------------
-    // SIMULADOS
+    // SIMULADOS (LISTA / ÁREA)
     // -----------------------------
     window.addEventListener("liora:open-simulados", () => {
       console.log("🧭 Tela: Simulados");
@@ -160,6 +162,29 @@
       document.getElementById("area-simulado")?.classList.remove("hidden");
 
       // ⚙ só aqui
+      fabSim?.classList.remove("hidden");
+    });
+
+    // -----------------------------
+    // CONFIGURAR SIMULADO (SCREEN)
+    // -----------------------------
+    window.addEventListener("liora:open-sim-config", () => {
+      console.log("🧭 Tela: Configurar Simulado");
+      showApp();
+      hideAllPanels();
+
+      document.getElementById("liora-sim-config")?.classList.remove("hidden");
+    });
+
+    // -----------------------------
+    // INICIAR SIMULADO
+    // -----------------------------
+    window.addEventListener("liora:start-simulado", () => {
+      console.log("🧭 Tela: Simulado em andamento");
+      showApp();
+      hideAllPanels();
+
+      document.getElementById("area-simulado")?.classList.remove("hidden");
       fabSim?.classList.remove("hidden");
     });
 
@@ -174,14 +199,6 @@
       document.getElementById("area-dashboard")?.classList.remove("hidden");
     });
 
-    // -----------------------------
-    // PREMIUM
-    // -----------------------------
-    window.addEventListener("liora:open-premium", () => {
-      console.log("🧭 Modal: Liora Premium");
-      window.lioraModal?.open?.("liora-premium-modal");
-    });
-
-    console.log("🟢 NAV-HOME v99.2 pronto!");
+    console.log("🟢 NAV-HOME v99.3 pronto!");
   });
 })();
