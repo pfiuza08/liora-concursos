@@ -50,78 +50,81 @@
       window.dispatchEvent(new Event("liora:render-auth-ui"));
       window.lioraUI.show("liora-home");
     },
-    
-   openSimConfig() {
+
+    // -----------------------------
+    // SIMULADO — CONFIG
+    // -----------------------------
+    openSimConfig() {
       console.log("🎯 openSimConfig");
-    
+
       if (!window.lioraAuth.user) {
         return window.lioraActions.openAuth();
       }
-    
+
       // 🔒 MODAL NÃO MUDA TELA
       if (window.lioraModal?.open) {
         window.lioraModal.open("sim-modal-backdrop");
       }
     },
 
-
-        // -----------------------------
+    // -----------------------------
     // ESTUDO
     // -----------------------------
     openTema() {
       console.log("🎯 openTema");
       window.dispatchEvent(new Event("liora:open-estudo-tema"));
     },
-    
+
     openUpload() {
       console.log("🎯 openUpload");
       window.dispatchEvent(new Event("liora:open-estudo-upload"));
     },
-    
+
     // -----------------------------
     // SIMULADOS
     // -----------------------------
     openSimulados() {
       console.log("🎯 openSimulados");
-    
+
       if (!window.lioraAuth.user) {
         return window.lioraActions.openAuth();
       }
-    
+
       window.dispatchEvent(new Event("liora:open-simulados"));
     },
-    
+
     // -----------------------------
     // DASHBOARD
     // -----------------------------
     openDashboard() {
       console.log("🎯 openDashboard");
-    
+
       if (!window.lioraAuth.user) {
         return window.lioraActions.openAuth();
       }
-    
+
       window.dispatchEvent(new Event("liora:open-dashboard"));
     },
-    
+
     // -----------------------------
     // PREMIUM
     // -----------------------------
     openUpgrade() {
       console.log("🎯 openUpgrade");
-    
+
       if (!window.lioraAuth.user) {
         return window.lioraActions.openAuth();
       }
-    
+
       // 🔒 MODAL NÃO MUDA TELA
       if (window.lioraModal?.open) {
         window.lioraModal.open("liora-premium-modal");
       }
-    },
+    }
 
+  }; // ✅ FECHAMENTO CORRETO DO OBJETO
 
-})();
+})(); // ✅ FECHAMENTO DO IIFE
 
 // =======================================================
 // 🧭 BINDER GLOBAL — DATA-ACTION
