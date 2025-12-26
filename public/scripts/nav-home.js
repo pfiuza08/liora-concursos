@@ -152,7 +152,7 @@
     });
 
     // -----------------------------
-    // SIMULADOS (LISTA / ÁREA)
+    // SIMULADOS (ÁREA)
     // -----------------------------
     window.addEventListener("liora:open-simulados", () => {
       console.log("🧭 Tela: Simulados");
@@ -160,8 +160,6 @@
       hideAllPanels();
 
       document.getElementById("area-simulado")?.classList.remove("hidden");
-
-      // ⚙ só aqui
       fabSim?.classList.remove("hidden");
     });
 
@@ -177,7 +175,7 @@
     });
 
     // -----------------------------
-    // INICIAR SIMULADO
+    // SIMULADO EM ANDAMENTO
     // -----------------------------
     window.addEventListener("liora:start-simulado", () => {
       console.log("🧭 Tela: Simulado em andamento");
