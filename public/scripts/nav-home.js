@@ -197,6 +197,29 @@
       document.getElementById("area-dashboard")?.classList.remove("hidden");
     });
 
+    // -----------------------------
+    // LIORA PREMIUM (SCREEN)
+    // -----------------------------
+    window.addEventListener("liora:open-premium", () => {
+      console.log("🧭 Tela: Liora Premium");
+    
+      showApp();
+      hideAllPanels();
+    
+      document.getElementById("liora-premium")?.classList.remove("hidden");
+    
+      // FABs: só voltar
+      fabHome?.classList.remove("hidden");
+      fabSim?.classList.add("hidden");
+    });
+
+
+
+
+
+
+    
+
     console.log("🟢 NAV-HOME v99.3 pronto!");
   });
 })();
