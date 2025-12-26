@@ -50,8 +50,23 @@
       window.dispatchEvent(new Event("liora:render-auth-ui"));
       window.lioraUI.show("liora-home");
     },
+    
+    openSimConfig() {
+      console.log("🎯 openSimConfig");
+    
+      if (!window.lioraAuth.user) {
+        return window.lioraActions.openAuth();
+      }
+    
+      if (window.lioraModal?.open) {
+        window.lioraModal.open("sim-modal-backdrop");
+      } else {
+        console.warn("❌ lioraModal não disponível");
+      }
+    },
 
-    // -----------------------------
+
+        // -----------------------------
     // ESTUDO
     // -----------------------------
     openTema() {
