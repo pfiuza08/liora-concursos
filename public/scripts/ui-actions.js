@@ -51,17 +51,16 @@
       window.lioraUI.show("liora-home");
     },
     
-    openSimConfig() {
+   openSimConfig() {
       console.log("🎯 openSimConfig");
     
       if (!window.lioraAuth.user) {
         return window.lioraActions.openAuth();
       }
     
+      // 🔒 MODAL NÃO MUDA TELA
       if (window.lioraModal?.open) {
         window.lioraModal.open("sim-modal-backdrop");
-      } else {
-        console.warn("❌ lioraModal não disponível");
       }
     },
 
@@ -109,17 +108,18 @@
     // PREMIUM
     // -----------------------------
     openUpgrade() {
-    console.log("🎯 openUpgrade");
-  
-    // abre modal premium direto
-    if (window.lioraModal?.open) {
-      window.lioraModal.open("liora-premium-modal");
-    } else {
-      console.warn("Modal premium não disponível");
-    }
-  }
+      console.log("🎯 openUpgrade");
+    
+      if (!window.lioraAuth.user) {
+        return window.lioraActions.openAuth();
+      }
+    
+      // 🔒 MODAL NÃO MUDA TELA
+      if (window.lioraModal?.open) {
+        window.lioraModal.open("liora-premium-modal");
+      }
+    },
 
-  };
 
 })();
 
