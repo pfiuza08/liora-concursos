@@ -498,7 +498,68 @@
 
           <div id="sim-resultado" class="hidden"></div>
         </div>
+        <!-- =========================
+             CONFIGURAR SIMULADO (screen)
+        ========================== -->
+        <section id="liora-sim-config" class="hidden space-y-6">
+        
+          <div class="space-y-1">
+            <h3 class="section-title">Configurar simulado</h3>
+            <p class="text-sm text-[var(--muted)]">
+              Defina os parâmetros do seu simulado antes de iniciar.
+            </p>
+          </div>
+        
+          <div class="liora-card space-y-4 max-w-md">
+        
+            <div>
+              <label class="sim-label">Banca</label>
+              <select id="sim-banca" class="sim-input">
+                <option value="FGV">FGV</option>
+                <option value="CESPE">Cebraspe (CESPE)</option>
+                <option value="VUNESP">VUNESP</option>
+                <option value="FCC">FCC</option>
+                <option value="QUADRIX">Quadrix</option>
+                <option value="IBFC">IBFC</option>
+              </select>
+            </div>
+        
+            <div>
+              <label class="sim-label">Quantidade de questões</label>
+              <input id="sim-qtd" type="number" min="1" value="5" class="sim-input">
+            </div>
+        
+            <div>
+              <label class="sim-label">Tempo (minutos)</label>
+              <input id="sim-tempo" type="number" min="5" value="30" class="sim-input">
+            </div>
+        
+            <div>
+              <label class="sim-label">Dificuldade</label>
+              <select id="sim-dificuldade" class="sim-input">
+                <option value="misturado">Misturado</option>
+                <option value="facil">Fácil</option>
+                <option value="medio">Médio</option>
+                <option value="dificil">Difícil</option>
+              </select>
+            </div>
+        
+            <div>
+              <label class="sim-label">Tema (opcional)</label>
+              <input id="sim-tema" type="text" class="sim-input">
+            </div>
+        
+            <button
+              class="btn-primary w-full"
+              data-action="startSimulado"
+            >
+              Iniciar simulado
+            </button>
+        
+          </div>
+        </section>
 
+        
         <!-- DASHBOARD -->
         <div id="area-dashboard" class="hidden space-y-8">
           <div class="flex justify-between items-center">
