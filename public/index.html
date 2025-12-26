@@ -575,95 +575,6 @@
         </div>
       </section>
 
-      <!-- FAB HOME -->
-      <button id="fab-home" class="liora-fab-home hidden">⬅ Início</button>
-
-      <!-- FAB SIMULADO -->
-      <button id="sim-fab"
-        class="sim-fab hidden"
-        data-action="openSimConfig">
-        ⚙
-      </button>
-
-
-      <div id="liora-build-info">Liora v78-FREEMIUM-A4</div>
-    </main>
-
-    <!-- ============================================================
-         LAYER MODAL (todos os modais aqui)
-    ============================================================ -->
-    <section id="layer-modal">
-      <!-- SIMULADO — CONFIGURAÇÃO -->
-      <div id="sim-modal-backdrop" class="liora-modal-backdrop hidden" aria-hidden="true">
-        <div class="liora-modal-card sim-modal" role="dialog" aria-modal="true">
-          <button class="liora-modal-close" data-close aria-label="Fechar">✕</button>
-
-          <h3 class="sim-modal-title">Configurar simulado</h3>
-
-          <div class="sim-modal-body liora-modal-scroll">
-            <label class="sim-label">Banca</label>
-            <select id="sim-modal-banca" class="sim-input">
-              <option value="FGV">FGV</option>
-              <option value="CESPE">Cebraspe (CESPE)</option>
-              <option value="VUNESP">VUNESP</option>
-              <option value="FCC">FCC</option>
-              <option value="QUADRIX">Quadrix</option>
-              <option value="IBFC">IBFC</option>
-            </select>
-
-            <label class="sim-label">Quantidade</label>
-            <input id="sim-modal-qtd" type="number" value="5" min="1" class="sim-input">
-
-            <label class="sim-label">Tempo (minutos)</label>
-            <input id="sim-modal-tempo" type="number" value="30" min="5" class="sim-input">
-
-            <label class="sim-label">Dificuldade</label>
-            <select id="sim-modal-dificuldade" class="sim-input">
-              <option value="misturado">Misturado</option>
-              <option value="facil">Fácil</option>
-              <option value="medio">Médio</option>
-              <option value="dificil">Difícil</option>
-            </select>
-
-            <label class="sim-label">Tema (opcional)</label>
-            <input id="sim-modal-tema" type="text" class="sim-input">
-
-            <p id="sim-modal-aviso-estudos" class="text-xs text-[var(--muted)] mt-3 hidden"></p>
-          </div>
-
-          <div class="sim-modal-footer">
-            <button id="sim-modal-iniciar" class="btn-primary w-full">
-              Iniciar simulado
-            </button>
-          </div>
-        </div>
-      </div>
-
- 
-      <!-- ERRO GLOBAL -->
-      <div id="liora-error" class="liora-modal-backdrop hidden" aria-hidden="true">
-        <div class="liora-modal-card liora-error-card" role="alertdialog">
-          <button class="liora-modal-close" data-close aria-label="Fechar">✕</button>
-
-          <div class="liora-error-icon">⚠️</div>
-          <h3 class="liora-error-title">Algo deu errado</h3>
-          <p id="liora-error-message">Ocorreu um erro inesperado.</p>
-
-          <div class="liora-error-actions">
-            <button id="liora-error-retry" class="btn-primary">Tentar novamente</button>
-            <button id="liora-error-back" class="btn-secondary">Voltar ao início</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- LOADING GLOBAL -->
-      <div id="liora-loading" class="liora-modal-backdrop hidden" aria-hidden="true">
-        <div class="liora-modal-card liora-loading-card" role="status">
-          <div class="liora-spinner"></div>
-          <p id="liora-loading-text">Carregando…</p>
-        </div>
-      </div>
-
      <!-- =========================
            LIORA PREMIUM (screen)
       ========================== -->
@@ -761,7 +672,97 @@
         </div>
       
       </section>
+    
+      <!-- FAB HOME -->
+      <button id="fab-home" class="liora-fab-home hidden">⬅ Início</button>
 
+      <!-- FAB SIMULADO -->
+      <button id="sim-fab"
+        class="sim-fab hidden"
+        data-action="openSimConfig">
+        ⚙
+      </button>
+
+
+      <div id="liora-build-info">Liora v78-FREEMIUM-A4</div>
+    </main>
+
+    <!-- ============================================================
+         LAYER MODAL (todos os modais aqui)
+    ============================================================ -->
+    <section id="layer-modal">
+      <!-- SIMULADO — CONFIGURAÇÃO -->
+      <div id="sim-modal-backdrop" class="liora-modal-backdrop hidden" aria-hidden="true">
+        <div class="liora-modal-card sim-modal" role="dialog" aria-modal="true">
+          <button class="liora-modal-close" data-close aria-label="Fechar">✕</button>
+
+          <h3 class="sim-modal-title">Configurar simulado</h3>
+
+          <div class="sim-modal-body liora-modal-scroll">
+            <label class="sim-label">Banca</label>
+            <select id="sim-modal-banca" class="sim-input">
+              <option value="FGV">FGV</option>
+              <option value="CESPE">Cebraspe (CESPE)</option>
+              <option value="VUNESP">VUNESP</option>
+              <option value="FCC">FCC</option>
+              <option value="QUADRIX">Quadrix</option>
+              <option value="IBFC">IBFC</option>
+            </select>
+
+            <label class="sim-label">Quantidade</label>
+            <input id="sim-modal-qtd" type="number" value="5" min="1" class="sim-input">
+
+            <label class="sim-label">Tempo (minutos)</label>
+            <input id="sim-modal-tempo" type="number" value="30" min="5" class="sim-input">
+
+            <label class="sim-label">Dificuldade</label>
+            <select id="sim-modal-dificuldade" class="sim-input">
+              <option value="misturado">Misturado</option>
+              <option value="facil">Fácil</option>
+              <option value="medio">Médio</option>
+              <option value="dificil">Difícil</option>
+            </select>
+
+            <label class="sim-label">Tema (opcional)</label>
+            <input id="sim-modal-tema" type="text" class="sim-input">
+
+            <p id="sim-modal-aviso-estudos" class="text-xs text-[var(--muted)] mt-3 hidden"></p>
+          </div>
+
+          <div class="sim-modal-footer">
+            <button id="sim-modal-iniciar" class="btn-primary w-full">
+              Iniciar simulado
+            </button>
+          </div>
+        </div>
+      </div>
+
+ 
+      <!-- ERRO GLOBAL -->
+      <div id="liora-error" class="liora-modal-backdrop hidden" aria-hidden="true">
+        <div class="liora-modal-card liora-error-card" role="alertdialog">
+          <button class="liora-modal-close" data-close aria-label="Fechar">✕</button>
+
+          <div class="liora-error-icon">⚠️</div>
+          <h3 class="liora-error-title">Algo deu errado</h3>
+          <p id="liora-error-message">Ocorreu um erro inesperado.</p>
+
+          <div class="liora-error-actions">
+            <button id="liora-error-retry" class="btn-primary">Tentar novamente</button>
+            <button id="liora-error-back" class="btn-secondary">Voltar ao início</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- LOADING GLOBAL -->
+      <div id="liora-loading" class="liora-modal-backdrop hidden" aria-hidden="true">
+        <div class="liora-modal-card liora-loading-card" role="status">
+          <div class="liora-spinner"></div>
+          <p id="liora-loading-text">Carregando…</p>
+        </div>
+      </div>
+
+    
   <!-- ============================================================
        SCRIPTS (ordem canônica e segura)
   ============================================================ -->
