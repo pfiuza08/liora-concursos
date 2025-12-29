@@ -123,16 +123,13 @@
     // -----------------------------
     // PREMIUM (SCREEN)
     // -----------------------------
-    openUpgrade() {
+       openUpgrade() {
       console.log("🎯 openUpgrade");
-
-      if (!window.lioraAuth.user) {
-        return window.lioraActions.openAuth();
-      }
-
-      // 👉 SCREEN (não modal)
+    
+      // ❌ REMOVE o gate de auth aqui
       window.dispatchEvent(new Event("liora:open-premium"));
     }
+
 
   }; // ✅ FECHAMENTO DO OBJETO
 
