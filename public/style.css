@@ -456,3 +456,129 @@ body.liora-modal-open #liora-home {
 #liora-premium {
   min-height: calc(100vh - 120px);
 }
+/* =========================================================
+   LIORA PREMIUM — SCREEN CANÔNICA
+========================================================= */
+
+.liora-premium-screen {
+  min-height: 100vh;
+  width: 100%;
+  display: block;
+  background: var(--bg);
+}
+
+.liora-premium-container {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 64px 20px 96px;
+  display: flex;
+  flex-direction: column;
+  gap: 56px;
+}
+
+/* HEADER */
+.liora-premium-header {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.liora-premium-badge {
+  align-self: center;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: rgba(196, 75, 4, 0.15);
+  color: var(--brand);
+}
+
+.liora-premium-title {
+  font-size: clamp(1.8rem, 4vw, 2.6rem);
+  font-weight: 700;
+}
+
+.liora-premium-subtitle {
+  font-size: 0.95rem;
+  color: var(--muted);
+  max-width: 620px;
+  margin: 0 auto;
+}
+
+/* GRID */
+.liora-premium-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 20px;
+}
+
+.liora-premium-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+}
+
+.liora-premium-card h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.liora-premium-card p {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+/* COMPARAÇÃO */
+.liora-premium-compare {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+}
+
+.liora-premium-compare h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.liora-premium-compare ul {
+  font-size: 0.85rem;
+  color: var(--muted);
+  list-style: none;
+  padding: 0;
+}
+
+.liora-premium-compare li {
+  margin-bottom: 6px;
+}
+
+/* CTA */
+.liora-premium-cta {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.liora-premium-btn {
+  font-size: 1rem;
+  padding: 14px;
+}
+
+.liora-premium-footnote {
+  font-size: 0.7rem;
+  color: var(--muted);
+}
+
+/* MOBILE AJUSTE */
+@media (max-width: 480px) {
+  .liora-premium-container {
+    padding-top: 48px;
+    gap: 40px;
+  }
+}
+
