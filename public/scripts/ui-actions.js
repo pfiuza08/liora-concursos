@@ -23,14 +23,15 @@
     // -----------------------------
     openAuth() {
       console.log("🎯 openAuth");
-
-      if (!window.lioraAuthUI?.ready?.()) {
-        console.warn("⏳ Auth UI ainda não pronta");
-        return;
-      }
-
+    
+      // 🔒 força fechamento de tudo
+      document
+        .querySelectorAll(".screen, main, section")
+        .forEach(el => el.classList.add("hidden"));
+    
       window.lioraUI.show("liora-auth");
-    },
+    }
+
 
     loginSuccess(user) {
       console.log("🎯 loginSuccess", user);
