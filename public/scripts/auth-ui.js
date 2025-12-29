@@ -24,14 +24,14 @@
   // Mostrar / esconder senha
   // ------------------------------------------------------
   function bindTogglePassword() {
-    const btn = document.getElementById("toggle-password");
-    const input = document.getElementById("auth-senha");
-    if (!btn || !input) return;
-
-    btn.addEventListener("click", () => {
-      const show = input.type === "password";
-      input.type = show ? "text" : "password";
-      btn.textContent = show ? "🙈" : "👁️";
+   const toggle = document.getElementById("toggle-password");
+    const input  = document.getElementById("password");
+    
+    toggle.addEventListener("click", () => {
+      const isHidden = input.type === "password";
+    
+      input.type = isHidden ? "text" : "password";
+      toggle.textContent = isHidden ? "👁️" : "👁️‍🗨️";
     });
   }
 
