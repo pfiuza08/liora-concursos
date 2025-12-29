@@ -56,22 +56,29 @@
       fabSim?.classList.add("hidden");
     }
 
-    function showHome() {
-      app?.classList.add("hidden");
-      home?.classList.remove("hidden");
+   function showHome() {
+      document.querySelectorAll(".liora-screen").forEach(el =>
+        el.classList.remove("is-active")
+      );
+    
+      home?.classList.add("is-active");
       hideAllFABs();
       resetScroll();
     }
 
-    function showApp() {
-      home?.classList.add("hidden");
-      app?.classList.remove("hidden");
-
+   function showApp() {
+      document.querySelectorAll(".liora-screen").forEach(el =>
+        el.classList.remove("is-active")
+      );
+    
+      app?.classList.add("is-active");
+    
       fabHome?.classList.remove("hidden");
       fabSim?.classList.add("hidden");
-
+    
       resetScroll();
     }
+
 
     function hideAllPanels() {
       [
