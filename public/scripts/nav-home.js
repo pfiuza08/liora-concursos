@@ -181,14 +181,16 @@
     window.addEventListener("liora:open-premium", () => {
       showApp();
       hideAllPanels();
-
+    
       const premium = document.getElementById("liora-premium");
-      if (premium) {
-        premium.classList.remove("hidden");
-
-        // Garantia absoluta de topo (mobile-safe)
-        requestAnimationFrame(() => resetScroll());
-      }
+      if (!premium) return;
+    
+      premium.classList.remove("hidden");
+    
+      // 🔒 força layout antes do scroll
+      premium.getBoundingClientRect();
+    
+      window.scrollTo({ top: 0, behavior: "auto" });
     });
 
     console.log("🟢 NAV-HOME v99.4 pronto!");
