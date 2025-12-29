@@ -1,14 +1,14 @@
 // =============================================================
-// 🧠 LIORA — SIMULADOS v103.8-CANONICAL
+// 🧠 LIORA — SIMULADOS v103.9-CANONICAL
 // - Free: experiência completa com limites
 // - Premium: ilimitado + histórico
 // - Shuffle real das alternativas
 // - Resultado + explicações no final
-// - Modal controlado 100% via lioraModal
+// - Premium tratado como SCREEN (não modal)
 // =============================================================
 
 (function () {
-  console.log("🟢 Liora Simulados v103.8 carregado");
+  console.log("🟢 Liora Simulados v103.9 carregado");
 
   // -------------------------------------------------
   // STATE LOCAL
@@ -44,7 +44,7 @@
   }
 
   // -------------------------------------------------
-  // 🔐 ACESSO CANÔNICO
+  // ACESSO CANÔNICO
   // -------------------------------------------------
   function getSimuladoAccess() {
     const user = window.lioraAuth?.user;
@@ -67,7 +67,8 @@
   }
 
   // -------------------------------------------------
-  // ABRIR MODAL (CANÔNICO)
+  // ABRIR MODAL DE CONFIGURAÇÃO
+  // (mantido como está no projeto atual)
   // -------------------------------------------------
   function abrirModal(access) {
     const els = getEls();
@@ -80,7 +81,7 @@
       els.qtd.disabled = isFree;
     }
 
-    lioraModal.open("sim-modal-backdrop");
+    window.lioraModal?.open("sim-modal-backdrop");
   }
 
   // -------------------------------------------------
@@ -108,7 +109,7 @@
   });
 
   // -------------------------------------------------
-  // BIND BOTÃO INICIAR (1x)
+  // INICIAR SIMULADO
   // -------------------------------------------------
   document.addEventListener("click", async (e) => {
     if (!e.target.closest("#sim-modal-iniciar")) return;
@@ -125,7 +126,7 @@
       tempo: Number(els.tempo?.value)
     };
 
-    lioraModal.close("sim-modal-backdrop");
+    window.lioraModal?.close("sim-modal-backdrop");
     window.lioraLoading?.show("Gerando simulado...");
 
     try {
@@ -248,8 +249,8 @@ Retorne APENAS JSON válido no formato:
 
     els.btnProx.textContent =
       STATE.atual === STATE.questoes.length - 1
-        ? "Finalizar ▶"
-        : "Próxima ▶";
+        ? "Finalizar"
+        : "Próxima";
 
     els.btnVoltar.disabled = STATE.atual === 0;
   }
@@ -274,30 +275,9 @@ Retorne APENAS JSON válido no formato:
     els.container.innerHTML = "";
     els.nav.classList.add("hidden");
 
-    const explicacoesHTML = STATE.questoes
-      .map((q, i) => {
-        const acertou = q.resp === q.corretaIndex;
-        return `
-          <div class="sim-explicacao-bloco">
-            <h4>Questão ${i + 1}</h4>
-            <p class="${acertou ? "correta" : "errada"}">
-              ${acertou ? "✅ Você acertou" : "❌ Você errou"}
-            </p>
-            <p><strong>Resposta correta:</strong> ${q.alternativas[q.corretaIndex]}</p>
-            ${q.explicacaoCorreta ? `<p>${q.explicacaoCorreta}</p>` : ""}
-            ${
-              isPremium && q.explicacoesErradas.length
-                ? `<ul>${q.explicacoesErradas.map((e) => `<li>${e}</li>`).join("")}</ul>`
-                : ""
-            }
-          </div>
-        `;
-      })
-      .join("");
-
     els.resultado.innerHTML = `
       <div class="sim-resultado-card">
-        <h3>📊 Resultado do Simulado</h3>
+        <h3>Resultado do Simulado</h3>
 
         <div class="sim-resultado-metricas">
           <div><strong>${acertos}</strong><span>Acertos</span></div>
@@ -305,23 +285,23 @@ Retorne APENAS JSON válido no formato:
           <div><strong>${percentual}%</strong><span>Aproveitamento</span></div>
         </div>
 
-        <div class="sim-explicacoes-wrapper">${explicacoesHTML}</div>
-
         ${
-          isPremium
-            ? `<p class="sim-msg-premium">✅ Histórico salvo.</p>`
-            : `<p class="sim-msg-free">
-                No <strong>Liora+</strong> você vê explicações completas.
+          !isPremium
+            ? `<p class="sim-msg-free">
+                No Liora+ você vê explicações completas e histórico.
+              </p>`
+            : `<p class="sim-msg-premium">
+                Histórico salvo com sucesso.
               </p>`
         }
 
         <div class="sim-resultado-acoes">
           ${
             isPremium
-              ? `<button class="btn-secundario" id="sim-refazer">🔁 Novo simulado</button>`
-              : `<button class="btn-primario" id="sim-upgrade">🚀 Conhecer o Liora+</button>`
+              ? `<button class="btn-secundario" id="sim-refazer">Novo simulado</button>`
+              : `<button class="btn-primario" id="sim-upgrade">Conhecer o Liora+</button>`
           }
-          <button class="btn-secundario" id="sim-voltar-home">⬅ Voltar</button>
+          <button class="btn-secundario" id="sim-voltar-home">Voltar</button>
         </div>
       </div>
     `;
@@ -337,7 +317,7 @@ Retorne APENAS JSON válido no formato:
     );
 
     qs("sim-upgrade")?.addEventListener("click", () =>
-      window.lioraPremium?.openUpgradeModal?.("simulado")
+      window.dispatchEvent(new Event("liora:open-premium"))
     );
   }
 
