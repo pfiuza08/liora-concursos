@@ -177,21 +177,23 @@
       document.getElementById("area-dashboard")?.classList.remove("hidden");
     });
 
-    // ⭐ LIORA PREMIUM (SCREEN)
-    window.addEventListener("liora:open-premium", () => {
-      showApp();
-      hideAllPanels();
+      // ⭐ LIORA PREMIUM (SCREEN)
+       window.addEventListener("liora:open-premium", () => {
+      // Fecha TODAS as telas
+      document
+        .querySelectorAll("main, section")
+        .forEach(el => el.classList.add("hidden"));
     
       const premium = document.getElementById("liora-premium");
       if (!premium) return;
     
       premium.classList.remove("hidden");
     
-      // 🔒 força layout antes do scroll
-      premium.getBoundingClientRect();
-    
-      window.scrollTo({ top: 0, behavior: "auto" });
+      // 🔒 reset físico do viewport (desktop + mobile)
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
     });
+
 
     console.log("🟢 NAV-HOME v99.4 pronto!");
   });
