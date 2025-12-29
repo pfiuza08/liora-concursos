@@ -182,12 +182,21 @@
     });
 
     // ⭐ LIORA PREMIUM (SCREEN)
-    window.addEventListener("liora:open-premium", () => {
-      console.log("🧭 Tela: Liora Premium");
+     window.addEventListener("liora:open-premium", () => {
       showApp();
       hideAllPanels();
-      document.getElementById("liora-premium")?.classList.remove("hidden");
+    
+      const premium = document.getElementById("liora-premium");
+      if (premium) {
+        premium.classList.remove("hidden");
+    
+        // 🔴 ISSO É O QUE FALTAVA
+        requestAnimationFrame(() => {
+          window.scrollTo({ top: 0, behavior: "instant" });
+        });
+      }
     });
+
 
     console.log("🟢 NAV-HOME v99.4 pronto!");
   });
