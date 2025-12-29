@@ -6,6 +6,7 @@
 // - Controla FAB ⬅ Início e FAB ⚙ Simulado
 // - Premium como SCREEN
 // - Reset de scroll global (desktop + mobile)
+// - Blindagem contra interferência da HOME
 // ==========================================================
 
 (function () {
@@ -45,6 +46,8 @@
     // HELPERS CANÔNICOS
     // ------------------------------------------------------
     function resetScroll() {
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
       window.scrollTo({ top: 0, left: 0, behavior: "auto" });
     }
 
@@ -81,9 +84,10 @@
         "liora-sim-config",
         "area-dashboard",
         "liora-premium"
-      ].forEach(id =>
-        document.getElementById(id)?.classList.add("hidden")
-      );
+      ].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.add("hidden");
+      });
     }
 
     // ------------------------------------------------------
@@ -95,12 +99,10 @@
       if (user) {
         userInfo?.classList.remove("hidden");
         userName.textContent = user.email;
-
         btnLogout?.classList.remove("hidden");
         btnLogin?.classList.add("hidden");
       } else {
         userInfo?.classList.add("hidden");
-
         btnLogout?.classList.add("hidden");
         btnLogin?.classList.remove("hidden");
       }
@@ -131,7 +133,6 @@
 
     // ESTUDO — TEMA
     window.addEventListener("liora:open-estudo-tema", () => {
-      console.log("🧭 Tela: Estudo por Tema");
       showApp();
       hideAllPanels();
       document.getElementById("painel-estudo")?.classList.remove("hidden");
@@ -140,7 +141,6 @@
 
     // ESTUDO — PDF
     window.addEventListener("liora:open-estudo-upload", () => {
-      console.log("🧭 Tela: Estudo por PDF");
       showApp();
       hideAllPanels();
       document.getElementById("painel-estudo")?.classList.remove("hidden");
@@ -149,7 +149,6 @@
 
     // SIMULADOS — LISTA
     window.addEventListener("liora:open-simulados", () => {
-      console.log("🧭 Tela: Simulados");
       showApp();
       hideAllPanels();
       document.getElementById("area-simulado")?.classList.remove("hidden");
@@ -158,7 +157,6 @@
 
     // CONFIGURAR SIMULADO
     window.addEventListener("liora:open-sim-config", () => {
-      console.log("🧭 Tela: Configurar Simulado");
       showApp();
       hideAllPanels();
       document.getElementById("liora-sim-config")?.classList.remove("hidden");
@@ -166,7 +164,6 @@
 
     // SIMULADO EM ANDAMENTO
     window.addEventListener("liora:start-simulado", () => {
-      console.log("🧭 Tela: Simulado em andamento");
       showApp();
       hideAllPanels();
       document.getElementById("area-simulado")?.classList.remove("hidden");
@@ -175,28 +172,24 @@
 
     // DASHBOARD
     window.addEventListener("liora:open-dashboard", () => {
-      console.log("🧭 Tela: Dashboard");
       showApp();
       hideAllPanels();
       document.getElementById("area-dashboard")?.classList.remove("hidden");
     });
 
     // ⭐ LIORA PREMIUM (SCREEN)
-     window.addEventListener("liora:open-premium", () => {
+    window.addEventListener("liora:open-premium", () => {
       showApp();
       hideAllPanels();
-    
+
       const premium = document.getElementById("liora-premium");
       if (premium) {
         premium.classList.remove("hidden");
-    
-        // 🔴 ISSO É O QUE FALTAVA
-        requestAnimationFrame(() => {
-          window.scrollTo({ top: 0, behavior: "instant" });
-        });
+
+        // Garantia absoluta de topo (mobile-safe)
+        requestAnimationFrame(() => resetScroll());
       }
     });
-
 
     console.log("🟢 NAV-HOME v99.4 pronto!");
   });
