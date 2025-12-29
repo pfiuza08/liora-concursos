@@ -1,57 +1,44 @@
 // ===============================================================
-// 🟠 LIORA PREMIUM — v9 CANONICAL
-// - Controla APENAS quando abrir / fechar o modal premium
-// - Toda a UI é responsabilidade do lioraModal
-// - Nenhum CSS inline
-// - Nenhum controle manual de outros modais
+// 🟠 LIORA PREMIUM — v10 CANONICAL (SCREEN MODE)
+// - NÃO usa modal
+// - NÃO controla layout
+// - APENAS dispara evento de navegação
+// - A renderização é 100% responsabilidade do nav-home
 // ===============================================================
 
 (function () {
-  console.log("🟠 Liora Premium v9 carregado");
+  console.log("🟠 Liora Premium v10 carregado (screen mode)");
 
   document.addEventListener("DOMContentLoaded", () => {
-    const MODAL_ID = "liora-premium-modal";
 
     // -----------------------------------------------------------
-    // GUARDA DE SEGURANÇA
+    // API CANÔNICA
     // -----------------------------------------------------------
-    if (!document.getElementById(MODAL_ID)) {
-      console.warn("⚠️ Premium v9: modal não encontrado:", MODAL_ID);
-      return;
-    }
+    function openUpgrade(origem = "unknown") {
+      console.log("✨ Abrindo Liora Premium | origem:", origem);
 
-    // -----------------------------------------------------------
-    // API PÚBLICA CANÔNICA
-    // -----------------------------------------------------------
-    function openUpgradeModal(origem = "unknown") {
-      console.log("✨ Abrindo Premium | origem:", origem);
-      window.lioraModal?.open(MODAL_ID);
-    }
-
-    function closeUpgradeModal() {
-      console.log("⏹ Fechando Premium");
-      window.lioraModal?.close(MODAL_ID);
+      // 🔑 Evento único e canônico
+      window.dispatchEvent(new Event("liora:open-premium"));
     }
 
     // -----------------------------------------------------------
     // EVENTOS GLOBAIS
     // -----------------------------------------------------------
     window.addEventListener("liora:premium-bloqueado", () => {
-      openUpgradeModal("bloqueio");
+      openUpgrade("bloqueio");
     });
 
-    window.addEventListener("liora:open-premium", () => {
-      openUpgradeModal("manual");
+    window.addEventListener("liora:open-upgrade", () => {
+      openUpgrade("manual");
     });
 
     // -----------------------------------------------------------
-    // EXPOSIÇÃO GLOBAL
+    // EXPOSIÇÃO GLOBAL (opcional / debug)
     // -----------------------------------------------------------
     window.lioraPremium = {
-      openUpgradeModal,
-      closeUpgradeModal,
+      openUpgrade,
     };
 
-    console.log("🟢 Liora Premium v9 pronto");
+    console.log("🟢 Liora Premium v10 pronto");
   });
 })();
