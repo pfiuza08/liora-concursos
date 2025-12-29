@@ -1,8 +1,5 @@
 // =======================================================
 // 🎯 LIORA — UI ACTIONS (ORQUESTRADOR ÚNICO)
-// - Fonte única de decisão de navegação
-// - Usado por TODOS os botões via data-action
-// - SEM MODAIS (tudo é SCREEN)
 // =======================================================
 
 (function () {
@@ -23,15 +20,14 @@
     // -----------------------------
     openAuth() {
       console.log("🎯 openAuth");
-    
-      // 🔒 força fechamento de tudo
-      document
-        .querySelectorAll(".screen, main, section")
-        .forEach(el => el.classList.add("hidden"));
-    
-      window.lioraUI.show("liora-auth");
-    }
 
+      if (!window.lioraUI) {
+        console.warn("🚫 UI Router não disponível");
+        return;
+      }
+
+      window.lioraUI.show("liora-auth");
+    },
 
     loginSuccess(user) {
       console.log("🎯 loginSuccess", user);
@@ -57,12 +53,10 @@
     // ESTUDO
     // -----------------------------
     openTema() {
-      console.log("🎯 openTema");
       window.dispatchEvent(new Event("liora:open-estudo-tema"));
     },
 
     openUpload() {
-      console.log("🎯 openUpload");
       window.dispatchEvent(new Event("liora:open-estudo-upload"));
     },
 
@@ -70,88 +64,35 @@
     // SIMULADOS
     // -----------------------------
     openSimulados() {
-      console.log("🎯 openSimulados");
-
       if (!window.lioraAuth.user) {
-        return window.lioraActions.openAuth();
+        this.openAuth();
+        return;
       }
-
       window.dispatchEvent(new Event("liora:open-simulados"));
     },
 
     openSimConfig() {
-      console.log("🎯 openSimConfig");
-
-      if (!window.lioraAuth.user) {
-        return window.lioraActions.openAuth();
-      }
-
-      // 👉 SCREEN (não modal)
       window.dispatchEvent(new Event("liora:open-sim-config"));
-    },
-
-    startSimulado() {
-      console.log("🎯 startSimulado");
-
-      const config = {
-        banca: document.getElementById("sim-banca")?.value || null,
-        qtd: Number(document.getElementById("sim-qtd")?.value || 0),
-        tempo: Number(document.getElementById("sim-tempo")?.value || 0),
-        dificuldade: document.getElementById("sim-dificuldade")?.value || null,
-        tema: document.getElementById("sim-tema")?.value || null
-      };
-
-      window.lioraSimuladoConfig = config;
-
-      console.log("🧪 Configuração do simulado salva:", config);
-
-      window.dispatchEvent(new Event("liora:start-simulado"));
     },
 
     // -----------------------------
     // DASHBOARD
     // -----------------------------
     openDashboard() {
-      console.log("🎯 openDashboard");
-
       if (!window.lioraAuth.user) {
-        return window.lioraActions.openAuth();
+        this.openAuth();
+        return;
       }
-
       window.dispatchEvent(new Event("liora:open-dashboard"));
     },
 
     // -----------------------------
-    // PREMIUM (SCREEN)
+    // PREMIUM
     // -----------------------------
-       openUpgrade() {
-      console.log("🎯 openUpgrade");
-    
-      // ❌ REMOVE o gate de auth aqui
+    openUpgrade() {
       window.dispatchEvent(new Event("liora:open-premium"));
     }
 
+  };
 
-  }; // ✅ FECHAMENTO DO OBJETO
-
-})(); // ✅ FECHAMENTO DO IIFE
-
-// =======================================================
-// 🧭 BINDER GLOBAL — DATA-ACTION
-// =======================================================
-document.addEventListener("click", (e) => {
-  const el = e.target.closest("[data-action]");
-  if (!el) return;
-
-  const action = el.dataset.action;
-  const fn = window.lioraActions?.[action];
-
-  console.log("🧭 intenção:", action);
-
-  if (!fn) {
-    console.warn("⚠️ ação não registrada:", action);
-    return;
-  }
-
-  fn();
-});
+})();
