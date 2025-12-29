@@ -1,6 +1,10 @@
 // ==========================================================
 // 🧠 LIORA — UI | SEU ESTUDO (controle canônico)
 // ==========================================================
+function isHomeActive() {
+  const home = document.getElementById("liora-home");
+  return home && home.classList.contains("is-active");
+}
 
 (function () {
   const bloco = document.getElementById("liora-seu-estudo");
