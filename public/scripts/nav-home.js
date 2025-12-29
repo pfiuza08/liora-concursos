@@ -184,22 +184,45 @@
       document.getElementById("area-dashboard")?.classList.remove("hidden");
     });
 
-      // ⭐ LIORA PREMIUM (SCREEN)
-       window.addEventListener("liora:open-premium", () => {
-      // Fecha TODAS as telas
-      document
-        .querySelectorAll("main, section")
-        .forEach(el => el.classList.add("hidden"));
+     // ⭐ LIORA PREMIUM (SCREEN)
+    window.addEventListener("liora:open-premium", () => {
+      console.log("🧭 Tela: Liora Premium");
     
+      // 1️⃣ Desativa todas as telas canônicas
+      document
+        .querySelectorAll(".liora-screen")
+        .forEach(el => el.classList.remove("is-active"));
+    
+      // 2️⃣ Ativa o APP
+      const app = document.getElementById("liora-app");
+      if (!app) return;
+      app.classList.add("is-active");
+    
+      // 3️⃣ Esconde todos os painéis internos do app
+      [
+        "painel-estudo",
+        "painel-tema",
+        "painel-upload",
+        "area-plano",
+        "liora-sessoes",
+        "area-simulado",
+        "liora-sim-config",
+        "area-dashboard"
+      ].forEach(id =>
+        document.getElementById(id)?.classList.add("hidden")
+      );
+    
+      // 4️⃣ Mostra o Premium
       const premium = document.getElementById("liora-premium");
       if (!premium) return;
-    
       premium.classList.remove("hidden");
     
-      // 🔒 reset físico do viewport (desktop + mobile)
+      // 5️⃣ Reset de scroll real (desktop + mobile)
       document.documentElement.scrollTop = 0;
       document.body.scrollTop = 0;
+      window.scrollTo({ top: 0, left: 0, behavior: "auto" });
     });
+
 
 
     console.log("🟢 NAV-HOME v99.4 pronto!");
