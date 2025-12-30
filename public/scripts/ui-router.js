@@ -1,42 +1,58 @@
 // =======================================================
-// 🧭 LIORA UI ROUTER — vCANONICAL-SAFE
+// 🧭 LIORA UI ROUTER — vCANONICAL-SAFE-FIXED
 // - Registra telas automaticamente
-// - Nunca bloqueia login por erro de timing
+// - NÃO interfere no layout estrutural
+// - NÃO quebra scroll do app
+// - Login nunca bloqueia
 // =======================================================
 
 (function () {
   const registry = {};
   let current = null;
 
+  // --------------------------------------------------
+  // REGISTRO SEGURO
+  // --------------------------------------------------
   function autoRegister(id) {
     const el = document.getElementById(id);
     if (!el) {
       console.warn("⚠️ UI não encontrada para registro:", id);
       return;
     }
+
     registry[id] = el;
     console.log("🧩 UI registrada:", id);
   }
 
+  // --------------------------------------------------
+  // SHOW CANÔNICO
+  // --------------------------------------------------
   function show(id) {
-    if (!registry[id]) {
+    const target = registry[id];
+    if (!target) {
       console.warn("🚫 Navegação bloqueada (UI não registrada):", id);
       return;
     }
 
+    // 🔒 Esconde apenas telas registradas
     Object.values(registry).forEach(el => {
       el.classList.add("hidden");
     });
 
-    registry[id].classList.remove("hidden");
+    target.classList.remove("hidden");
     current = id;
 
-    // 🔒 reset de scroll sempre
-    window.scrollTo({ top: 0, behavior: "auto" });
+    // 🔒 reset físico absoluto (desktop + mobile)
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+    window.scrollTo(0, 0);
 
     console.log("🧭 UI →", id);
   }
 
+  // --------------------------------------------------
+  // API GLOBAL
+  // --------------------------------------------------
   window.lioraUI = {
     register: autoRegister,
     show,
@@ -46,17 +62,14 @@
   };
 
   // --------------------------------------------------
-  // REGISTRO AUTOMÁTICO CANÔNICO
+  // REGISTRO AUTOMÁTICO (APENAS TELAS)
   // --------------------------------------------------
   document.addEventListener("DOMContentLoaded", () => {
     [
       "liora-home",
-      "liora-app",
       "liora-auth",
-      "liora-premium",
-      "area-simulado",
-      "area-dashboard",
-      "liora-sim-config"
+      "liora-app",
+      "liora-premium"
     ].forEach(autoRegister);
   });
 })();
