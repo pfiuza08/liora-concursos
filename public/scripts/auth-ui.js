@@ -1,6 +1,7 @@
 // =======================================================
-// 🔐 LIORA AUTH UI — vFINAL-STABLE-LAZY
+// 🔐 LIORA AUTH UI — vFINAL-STABLE-LAZY-FLOW
 // - Inicializa SOMENTE quando a UI liora-auth está ativa
+// - NÃO força navegação (router decide)
 // - Totalmente defensivo (zero null.addEventListener)
 // - Compatível com UI Router + Auth Core
 // =======================================================
@@ -27,9 +28,8 @@
       return false;
     }
 
-    if (window.lioraUI?.register) {
-      window.lioraUI.register("liora-auth", authEl);
-    }
+    // registro é idempotente
+    window.lioraUI?.register?.("liora-auth", authEl);
 
     ready = true;
     console.log("🔐 Auth UI pronta");
@@ -43,10 +43,7 @@
     const toggle = $("toggle-password");
     const input = $("auth-senha");
 
-    if (!toggle || !input) {
-      console.warn("🔐 Auth UI: toggle-password indisponível");
-      return;
-    }
+    if (!toggle || !input) return;
 
     toggle.addEventListener("click", () => {
       const hidden = input.type === "password";
@@ -56,14 +53,11 @@
   }
 
   // ------------------------------------------------------
-  // Login (mock / integração com auth.js)
+  // Login (integração com auth.js / lioraActions)
   // ------------------------------------------------------
   function bindLoginForm() {
     const form = $("liora-auth-form");
-    if (!form) {
-      console.warn("🔐 Auth UI: formulário não encontrado");
-      return;
-    }
+    if (!form) return;
 
     form.addEventListener("submit", (e) => {
       e.preventDefault();
@@ -78,17 +72,11 @@
 
       console.log("🔐 Login solicitado:", email);
 
-      // 🔁 Integração com auth.js / state
-      if (window.lioraActions?.loginSuccess) {
-        window.lioraActions.loginSuccess({
-          email,
-          loginAt: Date.now()
-        });
-      }
-
-      if (window.lioraUI?.show) {
-        window.lioraUI.show("liora-home");
-      }
+      // 🔁 Delegação TOTAL para auth.js / state
+      window.lioraActions?.loginRequest?.({
+        email,
+        senha
+      });
     });
   }
 
@@ -105,14 +93,14 @@
   }
 
   // ------------------------------------------------------
-  // Voltar para início
+  // Voltar para início (ação explícita do usuário)
   // ------------------------------------------------------
   function bindBackHome() {
     const btn = $("liora-auth-back");
     if (!btn) return;
 
     btn.addEventListener("click", () => {
-      window.lioraUI?.show("liora-home");
+      window.lioraUI?.show?.("liora-home");
     });
   }
 
