@@ -209,42 +209,20 @@
 
      // ⭐ LIORA PREMIUM (SCREEN)
     window.addEventListener("liora:open-premium", () => {
-      console.log("🧭 Tela: Liora Premium");
+      showApp();
+      hideAllPanels();
     
-      // 1️⃣ Desativa todas as telas canônicas
-      document
-        .querySelectorAll(".liora-screen")
-        .forEach(el => el.classList.remove("is-active"));
-    
-      // 2️⃣ Ativa o APP
-      const app = document.getElementById("liora-app");
-      if (!app) return;
-      app.classList.add("is-active");
-    
-      // 3️⃣ Esconde todos os painéis internos do app
-      [
-        "painel-estudo",
-        "painel-tema",
-        "painel-upload",
-        "area-plano",
-        "liora-sessoes",
-        "area-simulado",
-        "liora-sim-config",
-        "area-dashboard"
-      ].forEach(id =>
-        document.getElementById(id)?.classList.add("hidden")
-      );
-    
-      // 4️⃣ Mostra o Premium
       const premium = document.getElementById("liora-premium");
       if (!premium) return;
+    
       premium.classList.remove("hidden");
     
-      // 5️⃣ Reset de scroll real (desktop + mobile)
+      // reset absoluto do viewport
       document.documentElement.scrollTop = 0;
       document.body.scrollTop = 0;
-      window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+      window.scrollTo(0, 0);
     });
+
 
 
 
