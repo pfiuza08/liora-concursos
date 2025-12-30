@@ -97,23 +97,51 @@
   <link rel="stylesheet" href="/style-dashboard.css?v=1">
   <link rel="stylesheet" href="/style-wizard.css?v=1">
 
-  <!-- =========================================================
-       BOOTSTRAP DE CAMADAS (sem quebrar layout)
-  ========================================================= -->
-  <style>
-    #liora-shell { min-height: 100vh; }
-    #layer-modal { position: fixed; inset: 0; z-index: 1000; pointer-events: none; }
-    /* os próprios modais controlam pointer-events */
-    #layer-modal .liora-modal-backdrop { pointer-events: none; }
-    #layer-modal .liora-modal-backdrop.is-open { pointer-events: auto; }
+ <style>
+  /* Shell base */
+  #liora-shell {
+    min-height: 100vh;
+  }
 
-    /* telas (home/app/auth) */
-    .liora-screen { display: none; }
-    .liora-screen.is-active { display: block; }
+  /* Layer de modais (mantido) */
+  #layer-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    pointer-events: none;
+  }
 
-    /* auth fullscreen */
-    #liora-auth { min-height: calc(100vh - 88px); }
-  </style>
+  #layer-modal .liora-modal-backdrop {
+    pointer-events: none;
+  }
+
+  #layer-modal .liora-modal-backdrop.is-open {
+    pointer-events: auto;
+  }
+
+  /* ===============================
+     CONTROLE CANÔNICO DE TELAS
+     =============================== */
+
+  /* Todas as telas existem no fluxo */
+  .liora-screen {
+    display: block;
+  }
+
+  /* Somente o router pode esconder */
+  .hidden {
+    display: none !important;
+  }
+
+  /* Telas fullscreen */
+  #liora-auth,
+  #liora-premium {
+    min-height: calc(100vh - 88px);
+    margin-top: 0;
+    padding-top: 2rem;
+  }
+</style>
+
 </head>
 
 <body>
