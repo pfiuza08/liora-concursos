@@ -110,15 +110,13 @@
   #layer-modal .liora-modal-backdrop { pointer-events: none; }
   #layer-modal .liora-modal-backdrop.is-open { pointer-events: auto; }
 
-  /* 🔴 TELAS CANÔNICAS */
-  .liora-screen {
-    display: none;
-    min-height: calc(100vh - 88px);
-  }
-
-  .liora-screen.is-active {
+    .liora-screen {
     display: block;
   }
+  .liora-screen.hidden {
+    display: none !important;
+  }
+
 </style>
 
 
