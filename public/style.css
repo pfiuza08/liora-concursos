@@ -581,4 +581,15 @@ body.liora-modal-open #liora-home {
     gap: 40px;
   }
 }
+/* =====================================================
+   LIORA — UI SCREENS (CANONICAL)
+   ===================================================== */
+
+.liora-screen {
+  display: none;
+}
+
+.liora-screen.is-active {
+  display: block;
+}
 
