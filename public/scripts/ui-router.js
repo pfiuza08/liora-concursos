@@ -1,75 +1,61 @@
 // =======================================================
-// 🧭 LIORA UI ROUTER — vCANONICAL-SAFE-FIXED
-// - Registra telas automaticamente
-// - NÃO interfere no layout estrutural
-// - NÃO quebra scroll do app
-// - Login nunca bloqueia
+// 🧭 LIORA UI ROUTER — vCANONICAL-ACTIVE
+// - Controle exclusivo via is-active
+// - Scroll reset garantido
 // =======================================================
 
 (function () {
   const registry = {};
   let current = null;
 
-  // --------------------------------------------------
-  // REGISTRO SEGURO
-  // --------------------------------------------------
-  function autoRegister(id) {
+  function register(id) {
     const el = document.getElementById(id);
     if (!el) {
-      console.warn("⚠️ UI não encontrada para registro:", id);
+      console.warn("⚠️ UI não encontrada:", id);
       return;
     }
-
     registry[id] = el;
     console.log("🧩 UI registrada:", id);
   }
 
-  // --------------------------------------------------
-  // SHOW CANÔNICO
-  // --------------------------------------------------
   function show(id) {
-    const target = registry[id];
-    if (!target) {
-      console.warn("🚫 Navegação bloqueada (UI não registrada):", id);
+    if (!registry[id]) {
+      console.warn("🚫 UI não registrada:", id);
       return;
     }
 
-    // 🔒 Esconde apenas telas registradas
-    Object.values(registry).forEach(el => {
-      el.classList.add("hidden");
-    });
+    Object.values(registry).forEach(el =>
+      el.classList.remove("is-active")
+    );
 
-    target.classList.remove("hidden");
+    registry[id].classList.add("is-active");
     current = id;
 
-    // 🔒 reset físico absoluto (desktop + mobile)
+    // reset físico de scroll (desktop + mobile)
     document.documentElement.scrollTop = 0;
     document.body.scrollTop = 0;
-    window.scrollTo(0, 0);
+    window.scrollTo({ top: 0, behavior: "auto" });
 
     console.log("🧭 UI →", id);
   }
 
-  // --------------------------------------------------
-  // API GLOBAL
-  // --------------------------------------------------
   window.lioraUI = {
-    register: autoRegister,
+    register,
     show,
     get current() {
       return current;
     }
   };
 
-  // --------------------------------------------------
-  // REGISTRO AUTOMÁTICO (APENAS TELAS)
-  // --------------------------------------------------
   document.addEventListener("DOMContentLoaded", () => {
     [
       "liora-home",
       "liora-auth",
       "liora-app",
       "liora-premium"
-    ].forEach(autoRegister);
+    ].forEach(register);
+
+    // tela inicial
+    show("liora-home");
   });
 })();
