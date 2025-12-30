@@ -1,21 +1,37 @@
 // =======================================================
-// 🔐 LIORA AUTH UI — vFINAL-STABLE
+// 🔐 LIORA AUTH UI — vFINAL-STABLE-LAZY
+// - Inicializa SOMENTE quando a UI liora-auth está ativa
+// - Totalmente defensivo (zero null.addEventListener)
+// - Compatível com UI Router + Auth Core
 // =======================================================
 
 (function () {
   let authEl = null;
   let ready = false;
+  let bound = false;
+
+  // ------------------------------------------------------
+  // Utilitário seguro
+  // ------------------------------------------------------
+  function $(id) {
+    return document.getElementById(id);
+  }
 
   // ------------------------------------------------------
   // Bind da tela de auth
   // ------------------------------------------------------
   function bindAuthUI() {
-    authEl = document.getElementById("liora-auth");
-    if (!authEl) return false;
+    authEl = $("liora-auth");
+    if (!authEl) {
+      console.warn("🔐 Auth UI: container não encontrado");
+      return false;
+    }
 
-    window.lioraUI.register("liora-auth", authEl);
+    if (window.lioraUI?.register) {
+      window.lioraUI.register("liora-auth", authEl);
+    }
+
     ready = true;
-
     console.log("🔐 Auth UI pronta");
     return true;
   }
@@ -24,41 +40,55 @@
   // Mostrar / esconder senha
   // ------------------------------------------------------
   function bindTogglePassword() {
-   const toggle = document.getElementById("toggle-password");
-    const input  = document.getElementById("password");
-    
+    const toggle = $("toggle-password");
+    const input = $("auth-senha");
+
+    if (!toggle || !input) {
+      console.warn("🔐 Auth UI: toggle-password indisponível");
+      return;
+    }
+
     toggle.addEventListener("click", () => {
-      const isHidden = input.type === "password";
-    
-      input.type = isHidden ? "text" : "password";
-      toggle.textContent = isHidden ? "👁️" : "👁️‍🗨️";
+      const hidden = input.type === "password";
+      input.type = hidden ? "text" : "password";
+      toggle.textContent = hidden ? "🙈" : "👁️";
     });
   }
 
   // ------------------------------------------------------
-  // Login
+  // Login (mock / integração com auth.js)
   // ------------------------------------------------------
   function bindLoginForm() {
-    const form = document.getElementById("liora-auth-form");
-    if (!form) return;
+    const form = $("liora-auth-form");
+    if (!form) {
+      console.warn("🔐 Auth UI: formulário não encontrado");
+      return;
+    }
 
     form.addEventListener("submit", (e) => {
       e.preventDefault();
 
-      const email = document.getElementById("auth-email")?.value?.trim();
-      const senha = document.getElementById("auth-senha")?.value?.trim();
+      const email = $("auth-email")?.value?.trim();
+      const senha = $("auth-senha")?.value?.trim();
 
       if (!email || !senha) {
         alert("Informe e-mail e senha");
         return;
       }
 
-      console.log("🔐 Login efetuado:", email);
+      console.log("🔐 Login solicitado:", email);
 
-      window.lioraActions.loginSuccess({
-        email,
-        loginAt: Date.now()
-      });
+      // 🔁 Integração com auth.js / state
+      if (window.lioraActions?.loginSuccess) {
+        window.lioraActions.loginSuccess({
+          email,
+          loginAt: Date.now()
+        });
+      }
+
+      if (window.lioraUI?.show) {
+        window.lioraUI.show("liora-home");
+      }
     });
   }
 
@@ -66,7 +96,7 @@
   // Criar conta (placeholder)
   // ------------------------------------------------------
   function bindCreateAccount() {
-    const btn = document.getElementById("liora-auth-toggle-mode");
+    const btn = $("liora-auth-toggle-mode");
     if (!btn) return;
 
     btn.addEventListener("click", () => {
@@ -78,11 +108,11 @@
   // Voltar para início
   // ------------------------------------------------------
   function bindBackHome() {
-    const btn = document.getElementById("liora-auth-back");
+    const btn = $("liora-auth-back");
     if (!btn) return;
 
     btn.addEventListener("click", () => {
-      window.lioraUI.show("liora-home");
+      window.lioraUI?.show("liora-home");
     });
   }
 
@@ -90,31 +120,41 @@
   // Recuperação de senha
   // ------------------------------------------------------
   function bindRecoverPassword() {
-    const btn = document.getElementById("liora-auth-forgot");
+    const btn = $("liora-auth-forgot");
     if (!btn) return;
 
     btn.addEventListener("click", () => {
       const email = prompt("Digite seu e-mail para recuperação:");
       if (!email) return;
+
       alert("Se o e-mail existir, você receberá instruções.");
     });
   }
 
   // ------------------------------------------------------
-  // Bootstrap
+  // Inicialização segura (executa UMA vez)
   // ------------------------------------------------------
-  document.addEventListener("DOMContentLoaded", () => {
-    if (!bindAuthUI()) {
-      return setTimeout(() => document.dispatchEvent(new Event("DOMContentLoaded")), 200);
-    }
+  function init() {
+    if (bound) return;
+    bound = true;
+
+    if (!bindAuthUI()) return;
 
     bindTogglePassword();
     bindLoginForm();
     bindCreateAccount();
     bindBackHome();
     bindRecoverPassword();
-  });
+  }
 
+  // ------------------------------------------------------
+  // Lazy init via UI Router
+  // ------------------------------------------------------
+  document.addEventListener("ui:liora-auth", init);
+
+  // ------------------------------------------------------
+  // API pública mínima
+  // ------------------------------------------------------
   window.lioraAuthUI = {
     ready: () => ready
   };
