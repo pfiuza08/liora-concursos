@@ -56,15 +56,38 @@
       fabSim?.classList.add("hidden");
     }
 
-   function showHome() {
-      document.querySelectorAll(".liora-screen").forEach(el =>
-        el.classList.remove("is-active")
-      );
-    
-      home?.classList.add("is-active");
-      hideAllFABs();
-      resetScroll();
-    }
+     function showHome() {
+        // esconde tudo do app
+        app?.classList.add("hidden");
+      
+        // garante que todos os painéis estão fechados
+        [
+          "painel-estudo",
+          "painel-tema",
+          "painel-upload",
+          "area-plano",
+          "liora-sessoes",
+          "area-simulado",
+          "liora-sim-config",
+          "area-dashboard",
+          "liora-premium"
+        ].forEach(id =>
+          document.getElementById(id)?.classList.add("hidden")
+        );
+      
+        // mostra home
+        home?.classList.remove("hidden");
+      
+        // FABs
+        fabHome?.classList.add("hidden");
+        fabSim?.classList.add("hidden");
+      
+        // reset físico do scroll
+        document.documentElement.scrollTop = 0;
+        document.body.scrollTop = 0;
+        window.scrollTo(0, 0);
+      }
+  
 
    function showApp() {
       document.querySelectorAll(".liora-screen").forEach(el =>
