@@ -98,12 +98,8 @@
   <link rel="stylesheet" href="/style-wizard.css?v=1">
 
  <style>
-  /* Shell base */
-  #liora-shell {
-    min-height: 100vh;
-  }
+  #liora-shell { min-height: 100vh; }
 
-  /* Layer de modais (mantido) */
   #layer-modal {
     position: fixed;
     inset: 0;
@@ -111,36 +107,20 @@
     pointer-events: none;
   }
 
-  #layer-modal .liora-modal-backdrop {
-    pointer-events: none;
-  }
+  #layer-modal .liora-modal-backdrop { pointer-events: none; }
+  #layer-modal .liora-modal-backdrop.is-open { pointer-events: auto; }
 
-  #layer-modal .liora-modal-backdrop.is-open {
-    pointer-events: auto;
-  }
-
-  /* ===============================
-     CONTROLE CANÔNICO DE TELAS
-     =============================== */
-
-  /* Todas as telas existem no fluxo */
+  /* 🔴 TELAS CANÔNICAS */
   .liora-screen {
+    display: none;
+    min-height: calc(100vh - 88px);
+  }
+
+  .liora-screen.is-active {
     display: block;
   }
-
-  /* Somente o router pode esconder */
-  .hidden {
-    display: none !important;
-  }
-
-  /* Telas fullscreen */
-  #liora-auth,
-  #liora-premium {
-    min-height: calc(100vh - 88px);
-    margin-top: 0;
-    padding-top: 2rem;
-  }
 </style>
+
 
 </head>
 
