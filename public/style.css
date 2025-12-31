@@ -248,3 +248,35 @@ body.liora-modal-open #liora-auth {
   width: 100%;
   max-width: 420px;
 }
+/* =========================================================
+   🔁 PATCH FINAL — SCREEN SYSTEM REAL (ANTI-EMPILHAMENTO)
+   ========================================================= */
+
+/* Todas as telas são camadas independentes */
+.liora-screen {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  min-height: 100vh;
+  display: none;
+}
+
+/* Apenas a tela ativa aparece */
+.liora-screen.is-active {
+  display: block;
+}
+
+/* Garante que nenhuma tela empilhe no fluxo */
+#liora-home,
+#liora-auth,
+#liora-app,
+#liora-premium {
+  position: absolute;
+  inset: 0;
+}
+
+/* Ordem visual explícita (opcional, mas seguro) */
+#liora-home    { z-index: 1; }
+#liora-auth    { z-index: 2; }
+#liora-app     { z-index: 1; }
+#liora-premium { z-index: 1; }
