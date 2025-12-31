@@ -219,6 +219,15 @@ a:hover { text-decoration: underline; }
   box-shadow: 0 20px 60px rgba(0,0,0,0.5);
   overflow: hidden;
 }
+/* =========================================================
+   🔘 BOTÕES — AJUSTE VISUAL (PILL)
+========================================================= */
+
+.btn,
+.btn-primary,
+.btn-secondary {
+  border-radius: 999px;
+}
 
 /* ------------------------------------------------------------
    🔐 HEADER — ESCONDE DURANTE LOGIN
