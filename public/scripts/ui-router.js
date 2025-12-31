@@ -50,12 +50,12 @@
   };
 
   document.addEventListener("DOMContentLoaded", () => {
-    [
-      "liora-home",
-      "liora-auth",
-      "liora-app",
-      "liora-premium"
+     [
+    "liora-home",
+    "liora-app",
+    "liora-premium"
     ].forEach(register);
+
 
     // 🔒 TELA INICIAL IMUTÁVEL
     show("liora-home");
