@@ -280,3 +280,36 @@ body.liora-modal-open #liora-auth {
 #liora-auth    { z-index: 2; }
 #liora-app     { z-index: 1; }
 #liora-premium { z-index: 1; }
+
+/* =========================================================
+   🧼 PATCH FINAL — ISOLAMENTO TOTAL DE SCREENS
+========================================================= */
+
+/* Container raiz das telas */
+#liora-home,
+#liora-auth,
+#liora-app,
+#liora-premium {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  min-height: 100vh;
+  overflow-y: auto;
+}
+
+/* Apenas a tela ativa existe visualmente */
+.liora-screen {
+  display: none;
+}
+
+.liora-screen.is-active {
+  display: block;
+}
+
+/* Qualquer card de login FORA da screen auth é ocultado */
+#liora-home .liora-auth-card,
+#liora-home .liora-auth-wrapper,
+#liora-home [data-auth],
+#liora-home #liora-auth-card {
+  display: none !important;
+}
