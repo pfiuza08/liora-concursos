@@ -1,8 +1,8 @@
 // =======================================================
 // 🔐 LIORA AUTH UI — vFINAL-CANONICAL-MODAL
 // - Compatível com auth.js v3.2 (Firebase)
-// - LOGIN É MODAL (não é tela do router)
-// - HOME é sempre a tela base
+// - LOGIN É MODAL (fora do router)
+// - HOME é sempre a base
 // - Auth apenas abre / fecha camada
 // =======================================================
 
@@ -23,11 +23,19 @@
     const auth = $("liora-auth");
     if (!auth) return;
 
+    auth.classList.remove("hidden");
     auth.classList.add("is-open");
-    document.body.classList.add("liora-modal-open");
 
-    $("liora-auth-error") && ($("liora-auth-error").textContent = "");
-    $("auth-email")?.focus();
+    document.body.classList.add("liora-modal-open");
+    document.body.style.overflow = "hidden";
+
+    const err = $("liora-auth-error");
+    if (err) err.textContent = "";
+
+    const senha = $("auth-senha");
+    if (senha) senha.value = "";
+
+    setTimeout(() => $("auth-email")?.focus(), 50);
 
     console.log("🔐 Auth aberto (modal)");
   }
@@ -37,7 +45,10 @@
     if (!auth) return;
 
     auth.classList.remove("is-open");
+    auth.classList.add("hidden");
+
     document.body.classList.remove("liora-modal-open");
+    document.body.style.overflow = "";
 
     console.log("🔐 Auth fechado (modal)");
   }
@@ -82,10 +93,10 @@
         console.log("🔐 Login solicitado:", email);
         await window.lioraAuth.login(email, senha);
 
-        // ✅ sucesso → apenas fecha o modal
+        // sucesso → fecha modal
         closeAuth();
 
-      } catch (err) {
+      } catch {
         const msg =
           window.lioraAuth?.error ||
           "Não foi possível entrar. Verifique seus dados.";
@@ -154,17 +165,6 @@
   }
 
   // ------------------------------------------------------
-  // Fecha auth ao autenticar
-  // ------------------------------------------------------
-  function bindAuthChanged() {
-    window.addEventListener("liora:auth-changed", () => {
-      if (window.lioraAuth?.user) {
-        closeAuth();
-      }
-    });
-  }
-
-  // ------------------------------------------------------
   // Init (uma vez)
   // ------------------------------------------------------
   function init() {
@@ -177,9 +177,8 @@
     bindBackHome();
     bindRecoverPassword();
     bindHeaderLogin();
-    bindAuthChanged();
 
-    // garante estado inicial
+    // estado inicial garantido
     closeAuth();
 
     console.log("🔐 Auth UI inicializado (modal canônico)");
