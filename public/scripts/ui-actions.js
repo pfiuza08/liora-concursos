@@ -1,17 +1,13 @@
 // =======================================================
 // 🎯 LIORA — UI ACTIONS (ORQUESTRADOR ÚNICO)
-// - Fonte única de decisões de navegação
-// - NÃO renderiza telas (isso é do nav-home / ui-router)
-// - Binder canônico via data-action
+// - NÃO navega auth
+// - NÃO fecha auth
+// - Router só para telas reais
+// - Auth é modal independente
 // =======================================================
 
 (function () {
-  console.log("🎯 UI Actions inicializado");
-
-  // ------------------------------------------------------
-  // ESTADO GLOBAL DE AUTH
-  // ------------------------------------------------------
-  window.lioraAuth = window.lioraAuth || { user: null };
+  console.log("🎯 UI Actions inicializado (canônico)");
 
   // ------------------------------------------------------
   // AÇÕES CANÔNICAS
@@ -19,42 +15,24 @@
   window.lioraActions = {
 
     // =============================
-    // AUTH
+    // AUTH (MODAL)
     // =============================
     openAuth() {
-      console.log("🎯 openAuth");
+      console.log("🎯 openAuth (modal)");
 
-      if (!window.lioraUI) {
-        console.warn("🚫 UI Router não disponível");
+      if (window.lioraAuthUI?.open) {
+        window.lioraAuthUI.open();
         return;
       }
 
-      window.lioraUI.show("liora-auth");
-    },
-
-    loginSuccess(user) {
-      console.log("🎯 loginSuccess", user);
-
-      window.lioraAuth.user = user;
-      localStorage.setItem("liora:user", JSON.stringify(user));
-
-      window.dispatchEvent(new Event("liora:render-auth-ui"));
-
-      if (window.lioraUI) {
-        window.lioraUI.show("liora-home");
-      }
+      console.warn("⚠️ Auth UI modal não disponível");
     },
 
     logout() {
       console.log("🎯 logout");
 
-      window.lioraAuth.user = null;
-      localStorage.removeItem("liora:user");
-
-      window.dispatchEvent(new Event("liora:render-auth-ui"));
-
-      if (window.lioraUI) {
-        window.lioraUI.show("liora-home");
+      if (window.lioraAuth?.logout) {
+        window.lioraAuth.logout();
       }
     },
 
@@ -77,7 +55,7 @@
     openSimulados() {
       console.log("🎯 openSimulados");
 
-      if (!window.lioraAuth.user) {
+      if (!window.lioraAuth?.user) {
         this.openAuth();
         return;
       }
@@ -96,7 +74,7 @@
     openDashboard() {
       console.log("🎯 openDashboard");
 
-      if (!window.lioraAuth.user) {
+      if (!window.lioraAuth?.user) {
         this.openAuth();
         return;
       }
@@ -121,8 +99,6 @@
     if (!el) return;
 
     const action = el.dataset.action;
-    if (!action) return;
-
     const fn = window.lioraActions?.[action];
 
     if (typeof fn !== "function") {
@@ -130,8 +106,4 @@
       return;
     }
 
-    console.log("🧭 Ação disparada:", action);
-    fn.call(window.lioraActions);
-  });
-
-})();
+    cons
