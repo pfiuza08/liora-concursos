@@ -1,12 +1,10 @@
 /* ============================================================
    LIORA — STYLE BASE (GLOBAL CANÔNICO)
-   Origem: v79-PREMIUM-C10 (extraído com segurança)
-   Papel: fundação visual + comportamento base
-   NÃO contém CSS de features
+   Papel: fundação visual + layout estável
 ============================================================ */
 
 /* ------------------------------------------------------------
-   🎨 DESIGN TOKENS — DARK (default)
+   🎨 DESIGN TOKENS
 ------------------------------------------------------------ */
 :root {
   --brand: #c44b04;
@@ -23,7 +21,7 @@
 }
 
 /* ------------------------------------------------------------
-   🌞 LIGHT MODE — html.light
+   🌞 LIGHT MODE
 ------------------------------------------------------------ */
 html.light {
   --fg: #2e1c12;
@@ -37,7 +35,7 @@ html.light {
 }
 
 /* ------------------------------------------------------------
-   🔧 RESET GLOBAL
+   🔧 RESET
 ------------------------------------------------------------ */
 *,
 *::before,
@@ -50,9 +48,6 @@ html, body {
   padding: 0;
 }
 
-/* ------------------------------------------------------------
-   🧠 BASE TIPOGRÁFICA
------------------------------------------------------------- */
 body {
   background: var(--bg);
   color: var(--fg);
@@ -63,18 +58,61 @@ body {
   transition: background .3s ease, color .3s ease;
 }
 
-.text-muted { color: var(--muted); }
-.text-center { text-align: center; }
-
 /* ------------------------------------------------------------
-   🧱 ESTRUTURA GLOBAL DO APP
+   🧱 SCREENS — SISTEMA CANÔNICO
+   (HOME / APP / PREMIUM)
 ------------------------------------------------------------ */
-#liora-home,
-#liora-app,
-#liora-premium,
-#liora-auth {
+.liora-screen {
+  display: none;
   width: 100%;
   min-height: 100vh;
+}
+
+.liora-screen.is-active {
+  display: block;
+}
+
+/* Screens válidas */
+#liora-home,
+#liora-app,
+#liora-premium {
+  width: 100%;
+  min-height: 100vh;
+}
+
+/* ------------------------------------------------------------
+   🔐 LOGIN — MODAL REAL (FORA DO ROUTER)
+------------------------------------------------------------ */
+#liora-auth {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+
+  display: none; /* começa fechado */
+  align-items: center;
+  justify-content: center;
+
+  background: var(--bg);
+}
+
+/* Login aberto */
+#liora-auth.is-open {
+  display: flex;
+}
+
+/* Enquanto login estiver aberto */
+body.liora-modal-open {
+  overflow: hidden;
+}
+
+/* Card do login */
+.liora-auth-card {
+  width: 100%;
+  max-width: 420px;
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 1.8rem;
+  box-shadow: 0 30px 80px rgba(0,0,0,0.45);
 }
 
 /* ------------------------------------------------------------
@@ -107,20 +145,9 @@ button,
 }
 
 .btn-secondary {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
   background: var(--bg2);
   border: 1px solid var(--border);
   color: var(--fg);
-  padding: 0.7rem 1.2rem;
-  border-radius: var(--radius);
-  transition: var(--transition);
-}
-
-.btn-secondary:hover {
-  background: var(--hover);
-  border-color: var(--brand);
 }
 
 /* ------------------------------------------------------------
@@ -135,8 +162,6 @@ textarea {
   padding: 0.65rem 0.8rem;
   border-radius: var(--radius);
   width: 100%;
-  font-family: inherit;
-  transition: var(--transition);
 }
 
 input:focus,
@@ -167,10 +192,9 @@ a {
 }
 a:hover { text-decoration: underline; }
 
-/* =========================================================
-   🧯 MODAL SYSTEM — PRESERVADO (INALTERADO)
-========================================================= */
-
+/* ------------------------------------------------------------
+   🧯 MODAIS CLÁSSICOS (SIMULADO / ERRO / LOADING)
+------------------------------------------------------------ */
 .liora-modal-backdrop {
   position: fixed;
   inset: 0;
@@ -196,127 +220,9 @@ a:hover { text-decoration: underline; }
   overflow: hidden;
 }
 
-/* =========================================================
-   🔑 UI SCREENS — CONTRATO CANÔNICO
-========================================================= */
-
-.liora-screen {
-  display: none;
-}
-
-.liora-screen.is-active {
-  display: block;
-}
-
-/* =========================================================
-   🔥 PATCH DEFINITIVO — LOGIN COMO SCREEN (NÃO MODAL)
-========================================================= */
-
-/* O login NÃO pode ser overlay */
-#liora-auth {
-  position: static !important;
-  inset: auto !important;
-  z-index: auto !important;
-  display: block;
-}
-
-/* Login respeita o router */
-#liora-auth.liora-screen {
-  display: none;
-}
-
-#liora-auth.liora-screen.is-active {
-  display: block;
-}
-
-/* Login IGNORA estado de modal */
-body.liora-modal-open #liora-auth {
-  visibility: visible !important;
-  opacity: 1 !important;
-}
-
-/* Wrapper interno para centralizar o card */
-.liora-auth-wrapper {
-  min-height: 70vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1rem;
-}
-
-.liora-auth-card {
-  width: 100%;
-  max-width: 420px;
-}
-/* =========================================================
-   🔁 PATCH FINAL — SCREEN SYSTEM REAL (ANTI-EMPILHAMENTO)
-   ========================================================= */
-
-/* Todas as telas são camadas independentes */
-.liora-screen {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  min-height: 100vh;
-  display: none;
-}
-
-/* Apenas a tela ativa aparece */
-.liora-screen.is-active {
-  display: block;
-}
-
-/* Garante que nenhuma tela empilhe no fluxo */
-#liora-home,
-#liora-auth,
-#liora-app,
-#liora-premium {
-  position: absolute;
-  inset: 0;
-}
-
-/* Ordem visual explícita (opcional, mas seguro) */
-#liora-home    { z-index: 1; }
-#liora-auth    { z-index: 2; }
-#liora-app     { z-index: 1; }
-#liora-premium { z-index: 1; }
-
-/* =========================================================
-   🧼 PATCH FINAL — ISOLAMENTO TOTAL DE SCREENS
-========================================================= */
-
-/* Container raiz das telas */
-#liora-home,
-#liora-auth,
-#liora-app,
-#liora-premium {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  min-height: 100vh;
-  overflow-y: auto;
-}
-
-/* Apenas a tela ativa existe visualmente */
-.liora-screen {
-  display: none;
-}
-
-.liora-screen.is-active {
-  display: block;
-}
-
-/* Qualquer card de login FORA da screen auth é ocultado */
-#liora-home .liora-auth-card,
-#liora-home .liora-auth-wrapper,
-#liora-home [data-auth],
-#liora-home #liora-auth-card {
-  display: none !important;
-}
-/* =========================================================
-   🔐 ESCONDER HEADER NA TELA DE LOGIN
-========================================================= */
-
-body:has(#liora-auth.is-active) header {
+/* ------------------------------------------------------------
+   🔐 HEADER — ESCONDE DURANTE LOGIN
+------------------------------------------------------------ */
+body.liora-modal-open header {
   display: none;
 }
