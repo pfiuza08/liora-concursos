@@ -313,3 +313,10 @@ body.liora-modal-open #liora-auth {
 #liora-home #liora-auth-card {
   display: none !important;
 }
+/* =========================================================
+   🔐 ESCONDER HEADER NA TELA DE LOGIN
+========================================================= */
+
+body:has(#liora-auth.is-active) header {
+  display: none;
+}
