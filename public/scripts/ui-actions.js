@@ -1,13 +1,18 @@
 // =======================================================
 // 🎯 LIORA — UI ACTIONS (ORQUESTRADOR ÚNICO)
-// - NÃO navega auth
-// - NÃO fecha auth
-// - Router só para telas reais
-// - Auth é modal independente
+// - Fonte única de decisões de ação
+// - NÃO renderiza telas
+// - NÃO controla auth modal diretamente
+// - Binder canônico via data-action
 // =======================================================
 
 (function () {
-  console.log("🎯 UI Actions inicializado (canônico)");
+  console.log("🎯 UI Actions inicializado");
+
+  // ------------------------------------------------------
+  // ESTADO GLOBAL DE AUTH (somente leitura aqui)
+  // ------------------------------------------------------
+  window.lioraAuth = window.lioraAuth || { user: null };
 
   // ------------------------------------------------------
   // AÇÕES CANÔNICAS
@@ -15,25 +20,23 @@
   window.lioraActions = {
 
     // =============================
-    // AUTH (MODAL)
+    // AUTH
     // =============================
     openAuth() {
-      console.log("🎯 openAuth (modal)");
+      console.log("🎯 openAuth");
 
-      if (window.lioraAuthUI?.open) {
-        window.lioraAuthUI.open();
-        return;
-      }
-
-      console.warn("⚠️ Auth UI modal não disponível");
+      // auth é MODAL → apenas dispara
+      document.dispatchEvent(new Event("liora:open-auth"));
     },
 
     logout() {
       console.log("🎯 logout");
 
-      if (window.lioraAuth?.logout) {
-        window.lioraAuth.logout();
-      }
+      window.lioraAuth.user = null;
+      localStorage.removeItem("liora:user");
+
+      window.dispatchEvent(new Event("liora:render-auth-ui"));
+      window.dispatchEvent(new Event("liora:go-home"));
     },
 
     // =============================
@@ -55,7 +58,7 @@
     openSimulados() {
       console.log("🎯 openSimulados");
 
-      if (!window.lioraAuth?.user) {
+      if (!window.lioraAuth.user) {
         this.openAuth();
         return;
       }
@@ -74,7 +77,7 @@
     openDashboard() {
       console.log("🎯 openDashboard");
 
-      if (!window.lioraAuth?.user) {
+      if (!window.lioraAuth.user) {
         this.openAuth();
         return;
       }
@@ -99,11 +102,17 @@
     if (!el) return;
 
     const action = el.dataset.action;
-    const fn = window.lioraActions?.[action];
+    if (!action) return;
+
+    const fn = window.lioraActions[action];
 
     if (typeof fn !== "function") {
       console.warn("⚠️ Ação não registrada:", action);
       return;
     }
 
-    cons
+    console.log("🧭 Ação disparada:", action);
+    fn.call(window.lioraActions);
+  });
+
+})();
