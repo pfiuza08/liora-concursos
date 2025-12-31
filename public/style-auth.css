@@ -263,3 +263,29 @@ html.light .liora-input-group input:focus {
     #000 70%
   );
 }
+/* =========================================================
+   🔐 AUTH — MODAL FULLSCREEN (CANÔNICO)
+   ========================================================= */
+
+/* Login fora do fluxo do layout */
+#liora-auth {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+
+  display: none;              /* começa fechado */
+  align-items: center;
+  justify-content: center;
+
+  background: var(--bg);
+}
+
+/* Login aberto */
+#liora-auth.is-open {
+  display: flex;
+}
+
+/* Enquanto login está aberto, bloqueia scroll do app */
+body.liora-modal-open {
+  overflow: hidden;
+}
