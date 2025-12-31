@@ -578,66 +578,92 @@
     <section id="layer-modal">
     
       <!-- =========================================================
-           LOGIN — MODAL REAL (FULLSCREEN)
-      ========================================================= -->
-      <section id="liora-auth"
-               class="liora-modal-backdrop hidden"
-               aria-hidden="true">
-    
-        <div class="liora-modal-card liora-auth-card" role="dialog" aria-modal="true">
-    
-          <h2 class="text-xl font-semibold mb-2">Acessar Liora</h2>
-          <p class="text-sm text-[var(--muted)] mb-6">
-            Entre para acessar seus estudos em qualquer dispositivo.
-          </p>
-    
-          <form id="liora-auth-form" class="space-y-4">
-    
-            <!-- EMAIL -->
-            <div class="liora-input-group">
-              <label for="auth-email">E-mail</label>
-              <input id="auth-email" type="email" required />
-            </div>
-    
-            <!-- SENHA -->
-            <div class="liora-input-group liora-password-field">
-              <label for="auth-senha">Senha</label>
-              <div class="liora-password-wrapper">
-                <input id="auth-senha" type="password" required />
-                <button type="button"
-                        id="toggle-password"
-                        class="liora-password-toggle"
-                        aria-label="Mostrar senha">
-                  👁️
-                </button>
-              </div>
-            </div>
-    
-            <div id="liora-auth-error" class="text-sm text-red-400"></div>
-    
-            <button type="submit" class="btn-primary w-full">
-              OK
-            </button>
-    
-            <button type="button"
-                    id="liora-auth-forgot"
-                    class="text-xs text-[var(--muted)]">
-              Esqueci minha senha
-            </button>
-          </form>
-    
-          <button id="liora-auth-toggle-mode"
-                  class="mt-4 text-sm text-[var(--brand)]">
-            Criar conta
+     🔐 LOGIN — MODAL REAL (FULLSCREEN · CANÔNICO)
+     - NÃO é screen
+     - NÃO usa liora-modal-backdrop
+     - Fica fora do fluxo do layout
+========================================================= -->
+<section id="liora-auth"
+         class="liora-auth-modal hidden"
+         aria-hidden="true">
+
+  <div class="liora-auth-card" role="dialog" aria-modal="true">
+
+    <h2 class="text-xl font-semibold mb-2">Acessar Liora</h2>
+    <p class="text-sm text-[var(--muted)] mb-6">
+      Entre para acessar seus estudos em qualquer dispositivo.
+    </p>
+
+    <form id="liora-auth-form" class="space-y-4">
+
+      <!-- EMAIL -->
+      <div class="liora-input-group">
+        <label for="auth-email">E-mail</label>
+        <input
+          id="auth-email"
+          type="email"
+          required
+          autocomplete="email"
+        />
+      </div>
+
+      <!-- SENHA -->
+      <div class="liora-input-group liora-password-field">
+        <label for="auth-senha">Senha</label>
+
+        <div class="liora-password-wrapper">
+          <input
+            id="auth-senha"
+            type="password"
+            required
+            autocomplete="current-password"
+          />
+
+          <button
+            type="button"
+            id="toggle-password"
+            class="liora-password-toggle"
+            aria-label="Mostrar senha">
+            👁️
           </button>
-    
-          <button id="liora-auth-back"
-                  class="mt-6 text-xs text-[var(--muted)]">
-            ← Voltar para início
-          </button>
-    
         </div>
-      </section>
+      </div>
+
+      <!-- ERRO -->
+      <div id="liora-auth-error" class="text-sm text-red-400"></div>
+
+      <!-- SUBMIT -->
+      <button type="submit" class="btn-primary w-full">
+        OK
+      </button>
+
+      <!-- ESQUECI SENHA -->
+      <button
+        type="button"
+        id="liora-auth-forgot"
+        class="text-xs text-[var(--muted)]">
+        Esqueci minha senha
+      </button>
+
+    </form>
+
+    <!-- CRIAR CONTA -->
+    <button
+      id="liora-auth-toggle-mode"
+      class="mt-4 text-sm text-[var(--brand)]">
+      Criar conta
+    </button>
+
+    <!-- VOLTAR -->
+    <button
+      id="liora-auth-back"
+      class="mt-6 text-xs text-[var(--muted)]">
+      ← Voltar para início
+    </button>
+
+  </div>
+</section>
+
     
       <!-- =========================================================
            SIMULADO — CONFIGURAÇÃO
