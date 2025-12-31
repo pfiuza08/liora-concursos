@@ -246,4 +246,15 @@ body.liora-modal-open header {
   opacity: 0.9;
 }
 
+/* =========================================================
+   🔐 LOGIN — BLINDAGEM FINAL
+========================================================= */
+
+#liora-auth.hidden {
+  display: none !important;
+}
+
+#liora-auth.is-open {
+  display: flex !important;
+}
 
