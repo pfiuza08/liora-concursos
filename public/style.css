@@ -9,27 +9,16 @@
    🎨 DESIGN TOKENS — DARK (default)
 ------------------------------------------------------------ */
 :root {
-  /* Brand */
   --brand: #c44b04;
-
-  /* Backgrounds */
   --bg: #0b0b0b;
   --bg2: #141414;
   --card: #181818;
   --hover: #1f1f1f;
-
-  /* Text */
   --fg: #ffffff;
   --muted: #bcbcbc;
-
-  /* UI */
   --border: #2a2a2a;
   --radius: 14px;
-
-  /* Motion */
   --transition: 0.25s ease;
-
-  /* Shadows */
   --shadow: 0 4px 16px rgba(0,0,0,0.4);
 }
 
@@ -44,7 +33,6 @@ html.light {
   --hover: #f1e4d8;
   --border: #dccbbb;
   --muted: #7b6a5d;
-
   --shadow: 0 4px 12px rgba(0,0,0,0.08);
 }
 
@@ -72,11 +60,9 @@ body {
                "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   line-height: 1.6;
   overflow-x: hidden;
-
   transition: background .3s ease, color .3s ease;
 }
 
-/* Text helpers */
 .text-muted { color: var(--muted); }
 .text-center { text-align: center; }
 
@@ -84,18 +70,15 @@ body {
    🧱 ESTRUTURA GLOBAL DO APP
 ------------------------------------------------------------ */
 #liora-home,
-#liora-app {
-  min-height: 100vh;
+#liora-app,
+#liora-premium,
+#liora-auth {
   width: 100%;
-}
-
-#liora-app {
-  display: flex;
-  flex-direction: column;
+  min-height: 100vh;
 }
 
 /* ------------------------------------------------------------
-   🔘 BOTÕES — BASE COMPORTAMENTAL
+   🔘 BOTÕES
 ------------------------------------------------------------ */
 button,
 .btn {
@@ -103,69 +86,45 @@ button,
   cursor: pointer;
 }
 
-/* Botão base */
 .btn,
 .btn-primary {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-
   padding: 0.75rem 1.2rem;
   border-radius: var(--radius);
   font-weight: 600;
-
   border: none;
   background: var(--brand);
-  color: #ffffff;
-
+  color: #fff;
   transition: var(--transition);
 }
 
-/* Hover */
 .btn:hover,
 .btn-primary:hover {
   filter: brightness(1.12);
   transform: translateY(-1px);
 }
 
-/* Active */
-.btn:active,
-.btn-primary:active {
-  transform: translateY(0);
-}
-
-/* Disabled */
-.btn:disabled,
-.btn-primary:disabled {
-  opacity: 0.6;
-  cursor: default;
-  transform: none;
-}
-
-/* Botão secundário base */
 .btn-secondary {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-
   background: var(--bg2);
   border: 1px solid var(--border);
   color: var(--fg);
-
   padding: 0.7rem 1.2rem;
   border-radius: var(--radius);
-
   transition: var(--transition);
 }
 
 .btn-secondary:hover {
   background: var(--hover);
   border-color: var(--brand);
-  transform: translateY(-1px);
 }
 
 /* ------------------------------------------------------------
-   ⌨️ INPUTS — BASE
+   ⌨️ INPUTS
 ------------------------------------------------------------ */
 input,
 select,
@@ -173,11 +132,9 @@ textarea {
   background: var(--bg2);
   border: 1px solid var(--border);
   color: var(--fg);
-
   padding: 0.65rem 0.8rem;
   border-radius: var(--radius);
   width: 100%;
-
   font-family: inherit;
   transition: var(--transition);
 }
@@ -191,24 +148,10 @@ textarea:focus {
 }
 
 /* ------------------------------------------------------------
-   🧩 HELPERS DE LAYOUT (USO TRANSVERSAL)
+   🧩 HELPERS
 ------------------------------------------------------------ */
-.hidden {
-  display: none !important;
-}
-
-.visible {
-  display: flex;
-}
-
-.flex {
-  display: flex;
-}
-
-.inline-flex {
-  display: inline-flex;
-}
-
+.hidden { display: none !important; }
+.flex { display: flex; }
 .flex-center {
   display: flex;
   align-items: center;
@@ -222,185 +165,16 @@ a {
   color: var(--brand);
   text-decoration: none;
 }
+a:hover { text-decoration: underline; }
 
-a:hover {
-  text-decoration: underline;
-}
-
-/* ------------------------------------------------------------
-   🧯 SEGURANÇA
-------------------------------------------------------------
-   ❌ NÃO adicionar aqui:
-   - wizard
-   - simulados
-   - dashboard
-   - auth
-   - premium
-   - modais específicos
------------------------------------------------------------- */
-/* Backdrop padrão */
-.liora-modal-backdrop {
-  pointer-events: none;
-  opacity: 0;
-}
-
-/* Só interage quando visível */
-.liora-modal-backdrop.visible {
-  pointer-events: auto;
-  opacity: 1;
-}
-
-/* hidden SEMPRE remove do fluxo */
-.liora-modal-backdrop.hidden {
-  display: none !important;
-}
-
-.liora-auth-btn {
-  pointer-events: auto;
-  z-index: 20;
-  position: relative;
-}
 /* =========================================================
-   MODAIS — CONTRATO CANÔNICO (OBRIGATÓRIO)
+   🧯 MODAL SYSTEM — PRESERVADO (INALTERADO)
 ========================================================= */
-
-/* Backdrop sempre começa morto */
-.liora-modal-backdrop,
-.sim-modal-backdrop {
-  display: flex;
-  opacity: 0;
-  pointer-events: none;
-  z-index: -1;
-  transition: opacity 0.25s ease;
-}
-
-/* Backdrop ativo */
-.liora-modal-backdrop.is-open,
-.sim-modal-backdrop.is-open {
-  opacity: 1;
-  pointer-events: auto;
-  z-index: 10000;
-}
-
-/* Hidden sempre vence */
-.hidden {
-  display: none !important;
-}
-/* =========================================================
-   🔒 PATCH FINAL — VISIBILIDADE REAL DOS MODAIS
-   ========================================================= */
-
-/* TODOS os backdrops começam mortos */
-.liora-modal-backdrop,
-.sim-modal-backdrop {
-  position: fixed;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  opacity: 0 !important;
-  pointer-events: none !important;
-  z-index: -1 !important;
-
-  transition: opacity 0.25s ease;
-}
-
-/* SOMENTE o backdrop ativo aparece */
-.liora-modal-backdrop.is-open,
-.sim-modal-backdrop.is-open {
-  opacity: 1 !important;
-  pointer-events: auto !important;
-  z-index: 10000 !important;
-}
-
-/* O card do modal sempre acima do backdrop */
-.liora-modal,
-.sim-modal,
-.liora-modal-card {
-  position: relative;
-  z-index: 10001 !important;
-}
-
-/* hidden sempre vence */
-.hidden {
-  display: none !important;
-}
-/* =========================================================
-   🔐 MODAIS — GARANTIA DE TOPO ABSOLUTO
-========================================================= */
-.liora-modal-backdrop {
-  position: fixed !important;
-  inset: 0 !important;
-  z-index: 2147483647 !important; /* acima de qualquer coisa */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* Card do modal */
-.liora-modal-card {
-  position: relative;
-  z-index: 2147483648;
-}
-/* Quando qualquer modal estiver aberto */
-body.liora-modal-open #liora-home,
-body.liora-modal-open #liora-app,
-body.liora-modal-open .liora-home,
-body.liora-modal-open .liora-app {
-  position: relative;
-  z-index: 1;
-  transform: none !important;
-  filter: none !important;
-}
-/* =========================================================
-   🔐 PASSO 2 — Neutraliza stacking context da Home
-   Ativo SOMENTE quando modal está aberto
-========================================================= */
-body.liora-modal-open #liora-home,
-body.liora-modal-open #liora-app,
-body.liora-modal-open .liora-home,
-body.liora-modal-open .liora-app {
-  transform: none !important;
-  filter: none !important;
-  will-change: auto !important;
-  opacity: 1 !important;
-  z-index: 1;
-}
-/* =========================================================
-   🔐 MODAL — INTERAÇÃO GARANTIDA
-========================================================= */
-
-/* Modal visível precisa aceitar clique */
-#liora-auth-modal {
-  pointer-events: auto;
-}
-
-/* Backdrop + card sempre clicáveis */
-.liora-modal-backdrop,
-.liora-modal-card {
-  pointer-events: auto;
-}
-
-/* Quando escondido, aí sim bloqueia clique */
-#liora-auth-modal.hidden {
-  pointer-events: none;
-}
-/* =========================================================
-   🔕 DESATIVA HOME QUANDO MODAL ESTÁ ABERTO
-========================================================= */
-body.liora-modal-open #liora-home {
-  visibility: hidden;
-}
-
-/* ============================================================
-   LIORA — MODAL SYSTEM (FASE 1A · ESTÁVEL)
-============================================================ */
 
 .liora-modal-backdrop {
   position: fixed;
   inset: 0;
-  display: none;              /* 🔑 contrato único */
+  display: none;
   align-items: center;
   justify-content: center;
   background: rgba(0,0,0,0.72);
@@ -412,178 +186,19 @@ body.liora-modal-open #liora-home {
 }
 
 .liora-modal-card {
-  background: var(--card, #181818);
-  color: var(--fg, #fff);
+  background: var(--card);
+  color: var(--fg);
   width: 100%;
   max-width: 420px;
   max-height: 90vh;
-  border-radius: 14px;
+  border-radius: var(--radius);
   box-shadow: 0 20px 60px rgba(0,0,0,0.5);
   overflow: hidden;
-  pointer-events: auto;
 }
 
-/* botão fechar */
-.liora-modal-close {
-  background: none;
-  border: none;
-  color: inherit;
-  font-size: 1.2rem;
-  cursor: pointer;
-}
-
-/* ================================
-   CANONICAL APP SCREEN
-================================ */
-
-#liora-app {
-  min-height: calc(100vh - 120px); /* header */
-  display: block;
-  position: relative;
-}
-
-/* todas as telas internas */
-#liora-app > section,
-#liora-app > div {
-  width: 100%;
-}
-
-/* garante topo visível */
-#liora-app,
-#liora-layout {
-  scroll-behavior: auto;
-}
-#liora-premium {
-  min-height: calc(100vh - 120px);
-}
 /* =========================================================
-   LIORA PREMIUM — SCREEN CANÔNICA
+   🔑 UI SCREENS — CONTRATO CANÔNICO
 ========================================================= */
-
-.liora-premium-screen {
-  min-height: 100vh;
-  width: 100%;
-  display: block;
-  background: var(--bg);
-}
-
-.liora-premium-container {
-  max-width: 960px;
-  margin: 0 auto;
-  padding: 64px 20px 96px;
-  display: flex;
-  flex-direction: column;
-  gap: 56px;
-}
-
-/* HEADER */
-.liora-premium-header {
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.liora-premium-badge {
-  align-self: center;
-  font-size: 0.7rem;
-  font-weight: 600;
-  padding: 6px 14px;
-  border-radius: 999px;
-  background: rgba(196, 75, 4, 0.15);
-  color: var(--brand);
-}
-
-.liora-premium-title {
-  font-size: clamp(1.8rem, 4vw, 2.6rem);
-  font-weight: 700;
-}
-
-.liora-premium-subtitle {
-  font-size: 0.95rem;
-  color: var(--muted);
-  max-width: 620px;
-  margin: 0 auto;
-}
-
-/* GRID */
-.liora-premium-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 20px;
-}
-
-.liora-premium-card {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 20px;
-}
-
-.liora-premium-card h3 {
-  font-size: 1rem;
-  font-weight: 600;
-  margin-bottom: 6px;
-}
-
-.liora-premium-card p {
-  font-size: 0.85rem;
-  color: var(--muted);
-}
-
-/* COMPARAÇÃO */
-.liora-premium-compare {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 24px;
-}
-
-.liora-premium-compare h3 {
-  font-size: 1rem;
-  font-weight: 600;
-  margin-bottom: 12px;
-}
-
-.liora-premium-compare ul {
-  font-size: 0.85rem;
-  color: var(--muted);
-  list-style: none;
-  padding: 0;
-}
-
-.liora-premium-compare li {
-  margin-bottom: 6px;
-}
-
-/* CTA */
-.liora-premium-cta {
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.liora-premium-btn {
-  font-size: 1rem;
-  padding: 14px;
-}
-
-.liora-premium-footnote {
-  font-size: 0.7rem;
-  color: var(--muted);
-}
-
-/* MOBILE AJUSTE */
-@media (max-width: 480px) {
-  .liora-premium-container {
-    padding-top: 48px;
-    gap: 40px;
-  }
-}
-/* =====================================================
-   LIORA — UI SCREENS (CANONICAL)
-   ===================================================== */
 
 .liora-screen {
   display: none;
@@ -593,3 +208,43 @@ body.liora-modal-open #liora-home {
   display: block;
 }
 
+/* =========================================================
+   🔥 PATCH DEFINITIVO — LOGIN COMO SCREEN (NÃO MODAL)
+========================================================= */
+
+/* O login NÃO pode ser overlay */
+#liora-auth {
+  position: static !important;
+  inset: auto !important;
+  z-index: auto !important;
+  display: block;
+}
+
+/* Login respeita o router */
+#liora-auth.liora-screen {
+  display: none;
+}
+
+#liora-auth.liora-screen.is-active {
+  display: block;
+}
+
+/* Login IGNORA estado de modal */
+body.liora-modal-open #liora-auth {
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+/* Wrapper interno para centralizar o card */
+.liora-auth-wrapper {
+  min-height: 70vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.liora-auth-card {
+  width: 100%;
+  max-width: 420px;
+}
