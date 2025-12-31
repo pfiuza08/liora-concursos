@@ -572,198 +572,215 @@
         </div>
       </section>
     
-    <!-- ============================================================
-     LAYER MODAL (todos os modais aqui)
-    ============================================================ -->
-    <section id="layer-modal">
-    
-      <!-- =========================================================
-     🔐 LOGIN — MODAL REAL (FULLSCREEN · CANÔNICO)
-     - NÃO é screen
-     - NÃO usa liora-modal-backdrop
-     - Fica fora do fluxo do layout
-========================================================= -->
-<section id="liora-auth"
-         class="liora-auth-modal hidden"
-         aria-hidden="true">
+<!-- ============================================================
+     🧱 LAYER MODAL — CANÔNICO
+     - Container exclusivo de overlays
+     - Fora do fluxo do layout
+     - Z-index único
+============================================================ -->
+<section id="layer-modal" aria-hidden="true">
 
-  <div class="liora-auth-card" role="dialog" aria-modal="true">
+  <!-- =========================================================
+       🔐 LOGIN — MODAL REAL (FULLSCREEN)
+       - NÃO é screen
+       - NÃO usa backdrop
+       - Controlado apenas por auth-ui.js
+  ========================================================= -->
+  <section id="liora-auth"
+           class="liora-auth-modal hidden"
+           role="dialog"
+           aria-modal="true"
+           aria-hidden="true">
 
-    <h2 class="text-xl font-semibold mb-2">Acessar Liora</h2>
-    <p class="text-sm text-[var(--muted)] mb-6">
-      Entre para acessar seus estudos em qualquer dispositivo.
-    </p>
+    <div class="liora-auth-card">
 
-    <form id="liora-auth-form" class="space-y-4">
+      <h2 class="text-xl font-semibold mb-2">Acessar Liora</h2>
+      <p class="text-sm text-[var(--muted)] mb-6">
+        Entre para acessar seus estudos em qualquer dispositivo.
+      </p>
 
-      <!-- EMAIL -->
-      <div class="liora-input-group">
-        <label for="auth-email">E-mail</label>
-        <input
-          id="auth-email"
-          type="email"
-          required
-          autocomplete="email"
-        />
-      </div>
+      <form id="liora-auth-form" class="space-y-4">
 
-      <!-- SENHA -->
-      <div class="liora-input-group liora-password-field">
-        <label for="auth-senha">Senha</label>
-
-        <div class="liora-password-wrapper">
+        <!-- EMAIL -->
+        <div class="liora-input-group">
+          <label for="auth-email">E-mail</label>
           <input
-            id="auth-senha"
-            type="password"
+            id="auth-email"
+            type="email"
             required
-            autocomplete="current-password"
+            autocomplete="email"
           />
-
-          <button
-            type="button"
-            id="toggle-password"
-            class="liora-password-toggle"
-            aria-label="Mostrar senha">
-            👁️
-          </button>
         </div>
-      </div>
 
-      <!-- ERRO -->
-      <div id="liora-auth-error" class="text-sm text-red-400"></div>
+        <!-- SENHA -->
+        <div class="liora-input-group liora-password-field">
+          <label for="auth-senha">Senha</label>
 
-      <!-- SUBMIT -->
-      <button type="submit" class="btn-primary w-full">
-        OK
-      </button>
+          <div class="liora-password-wrapper">
+            <input
+              id="auth-senha"
+              type="password"
+              required
+              autocomplete="current-password"
+            />
+            <button
+              type="button"
+              id="toggle-password"
+              class="liora-password-toggle"
+              aria-label="Mostrar senha">
+              👁️
+            </button>
+          </div>
+        </div>
 
-      <!-- ESQUECI SENHA -->
+        <!-- ERRO -->
+        <div id="liora-auth-error" class="text-sm text-red-400"></div>
+
+        <!-- SUBMIT -->
+        <button type="submit" class="btn-primary w-full">
+          OK
+        </button>
+
+        <!-- ESQUECI SENHA -->
+        <button
+          type="button"
+          id="liora-auth-forgot"
+          class="text-xs text-[var(--muted)]">
+          Esqueci minha senha
+        </button>
+
+      </form>
+
+      <!-- CRIAR CONTA -->
       <button
-        type="button"
-        id="liora-auth-forgot"
-        class="text-xs text-[var(--muted)]">
-        Esqueci minha senha
+        id="liora-auth-toggle-mode"
+        class="mt-4 text-sm text-[var(--brand)]">
+        Criar conta
       </button>
 
-    </form>
+      <!-- VOLTAR -->
+      <button
+        id="liora-auth-back"
+        class="mt-6 text-xs text-[var(--muted)]">
+        ← Voltar para início
+      </button>
 
-    <!-- CRIAR CONTA -->
-    <button
-      id="liora-auth-toggle-mode"
-      class="mt-4 text-sm text-[var(--brand)]">
-      Criar conta
-    </button>
+    </div>
+  </section>
 
-    <!-- VOLTAR -->
-    <button
-      id="liora-auth-back"
-      class="mt-6 text-xs text-[var(--muted)]">
-      ← Voltar para início
-    </button>
+  <!-- =========================================================
+       ⚙️ SIMULADO — CONFIGURAÇÃO
+       (modal com backdrop)
+  ========================================================= -->
+  <div id="sim-modal-backdrop"
+       class="liora-modal-backdrop hidden"
+       role="dialog"
+       aria-modal="true"
+       aria-hidden="true">
 
+    <div class="liora-modal-card sim-modal">
+
+      <button class="liora-modal-close"
+              data-close
+              aria-label="Fechar">✕</button>
+
+      <h3 class="sim-modal-title">Configurar simulado</h3>
+
+      <div class="sim-modal-body liora-modal-scroll">
+
+        <label class="sim-label">Banca</label>
+        <select id="sim-modal-banca" class="sim-input">
+          <option value="FGV">FGV</option>
+          <option value="CESPE">Cebraspe (CESPE)</option>
+          <option value="VUNESP">VUNESP</option>
+          <option value="FCC">FCC</option>
+          <option value="QUADRIX">Quadrix</option>
+          <option value="IBFC">IBFC</option>
+        </select>
+
+        <label class="sim-label">Quantidade</label>
+        <input id="sim-modal-qtd"
+               type="number"
+               value="5"
+               min="1"
+               class="sim-input">
+
+        <label class="sim-label">Tempo (minutos)</label>
+        <input id="sim-modal-tempo"
+               type="number"
+               value="30"
+               min="5"
+               class="sim-input">
+
+        <label class="sim-label">Dificuldade</label>
+        <select id="sim-modal-dificuldade" class="sim-input">
+          <option value="misturado">Misturado</option>
+          <option value="facil">Fácil</option>
+          <option value="medio">Médio</option>
+          <option value="dificil">Difícil</option>
+        </select>
+
+        <label class="sim-label">Tema (opcional)</label>
+        <input id="sim-modal-tema" type="text" class="sim-input">
+
+        <p id="sim-modal-aviso-estudos"
+           class="text-xs text-[var(--muted)] mt-3 hidden"></p>
+      </div>
+
+      <div class="sim-modal-footer">
+        <button id="sim-modal-iniciar"
+                class="btn-primary w-full">
+          Iniciar simulado
+        </button>
+      </div>
+    </div>
   </div>
-</section>
 
-    
-      <!-- =========================================================
-           SIMULADO — CONFIGURAÇÃO
-      ========================================================= -->
-      <div id="sim-modal-backdrop"
-           class="liora-modal-backdrop hidden"
-           aria-hidden="true">
-    
-        <div class="liora-modal-card sim-modal"
-             role="dialog"
-             aria-modal="true">
-    
-          <button class="liora-modal-close" data-close aria-label="Fechar">✕</button>
-    
-          <h3 class="sim-modal-title">Configurar simulado</h3>
-    
-          <div class="sim-modal-body liora-modal-scroll">
-    
-            <label class="sim-label">Banca</label>
-            <select id="sim-modal-banca" class="sim-input">
-              <option value="FGV">FGV</option>
-              <option value="CESPE">Cebraspe (CESPE)</option>
-              <option value="VUNESP">VUNESP</option>
-              <option value="FCC">FCC</option>
-              <option value="QUADRIX">Quadrix</option>
-              <option value="IBFC">IBFC</option>
-            </select>
-    
-            <label class="sim-label">Quantidade</label>
-            <input id="sim-modal-qtd" type="number" value="5" min="1" class="sim-input">
-    
-            <label class="sim-label">Tempo (minutos)</label>
-            <input id="sim-modal-tempo" type="number" value="30" min="5" class="sim-input">
-    
-            <label class="sim-label">Dificuldade</label>
-            <select id="sim-modal-dificuldade" class="sim-input">
-              <option value="misturado">Misturado</option>
-              <option value="facil">Fácil</option>
-              <option value="medio">Médio</option>
-              <option value="dificil">Difícil</option>
-            </select>
-    
-            <label class="sim-label">Tema (opcional)</label>
-            <input id="sim-modal-tema" type="text" class="sim-input">
-    
-            <p id="sim-modal-aviso-estudos"
-               class="text-xs text-[var(--muted)] mt-3 hidden"></p>
-          </div>
-    
-          <div class="sim-modal-footer">
-            <button id="sim-modal-iniciar" class="btn-primary w-full">
-              Iniciar simulado
-            </button>
-          </div>
-        </div>
+  <!-- =========================================================
+       ⚠️ ERRO GLOBAL
+  ========================================================= -->
+  <div id="liora-error"
+       class="liora-modal-backdrop hidden"
+       role="alertdialog"
+       aria-modal="true"
+       aria-hidden="true">
+
+    <div class="liora-modal-card liora-error-card">
+
+      <button class="liora-modal-close"
+              data-close
+              aria-label="Fechar">✕</button>
+
+      <div class="liora-error-icon">⚠️</div>
+      <h3 class="liora-error-title">Algo deu errado</h3>
+      <p id="liora-error-message">Ocorreu um erro inesperado.</p>
+
+      <div class="liora-error-actions">
+        <button id="liora-error-retry" class="btn-primary">
+          Tentar novamente
+        </button>
+        <button id="liora-error-back" class="btn-secondary">
+          Voltar ao início
+        </button>
       </div>
-    
-      <!-- =========================================================
-           ERRO GLOBAL
-      ========================================================= -->
-      <div id="liora-error"
-           class="liora-modal-backdrop hidden"
-           aria-hidden="true">
-    
-        <div class="liora-modal-card liora-error-card"
-             role="alertdialog">
-    
-          <button class="liora-modal-close" data-close aria-label="Fechar">✕</button>
-    
-          <div class="liora-error-icon">⚠️</div>
-          <h3 class="liora-error-title">Algo deu errado</h3>
-          <p id="liora-error-message">Ocorreu um erro inesperado.</p>
-    
-          <div class="liora-error-actions">
-            <button id="liora-error-retry" class="btn-primary">
-              Tentar novamente
-            </button>
-            <button id="liora-error-back" class="btn-secondary">
-              Voltar ao início
-            </button>
-          </div>
-        </div>
-      </div>
-    
-      <!-- =========================================================
-           LOADING GLOBAL
-      ========================================================= -->
-      <div id="liora-loading"
-           class="liora-modal-backdrop hidden"
-           aria-hidden="true">
-    
-        <div class="liora-modal-card liora-loading-card"
-             role="status">
-    
-          <div class="liora-spinner"></div>
-          <p id="liora-loading-text">Carregando…</p>
-        </div>
-      </div>
-    
-    </section>
+    </div>
+  </div>
+
+  <!-- =========================================================
+       ⏳ LOADING GLOBAL
+  ========================================================= -->
+  <div id="liora-loading"
+       class="liora-modal-backdrop hidden"
+       role="status"
+       aria-hidden="true">
+
+    <div class="liora-modal-card liora-loading-card">
+      <div class="liora-spinner"></div>
+      <p id="liora-loading-text">Carregando…</p>
+    </div>
+  </div>
+
+</section>
 
 
   <!-- ============================================================
