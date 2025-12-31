@@ -1,14 +1,12 @@
 // =======================================================
-// 🔐 LIORA AUTH UI — vFINAL-STABLE-LAZY-FLOW
-// - Inicializa SOMENTE quando a UI liora-auth está ativa
-// - NÃO força navegação (router decide)
-// - Totalmente defensivo (zero null.addEventListener)
-// - Compatível com UI Router + Auth Core
+// 🔐 LIORA AUTH UI — vFINAL-COMPAT-AUTH-v3.2
+// - Compatível com auth.js v3.2 (Firebase)
+// - NÃO força navegação automática
+// - HOME é sempre a tela inicial
+// - Login só navega após sucesso explícito
 // =======================================================
 
 (function () {
-  let authEl = null;
-  let ready = false;
   let bound = false;
 
   // ------------------------------------------------------
@@ -22,16 +20,10 @@
   // Bind da tela de auth
   // ------------------------------------------------------
   function bindAuthUI() {
-    authEl = $("liora-auth");
-    if (!authEl) {
-      console.warn("🔐 Auth UI: container não encontrado");
-      return false;
-    }
+    const authEl = $("liora-auth");
+    if (!authEl) return false;
 
-    // registro é idempotente
     window.lioraUI?.register?.("liora-auth", authEl);
-
-    ready = true;
     console.log("🔐 Auth UI pronta");
     return true;
   }
@@ -42,7 +34,6 @@
   function bindTogglePassword() {
     const toggle = $("toggle-password");
     const input = $("auth-senha");
-
     if (!toggle || !input) return;
 
     toggle.addEventListener("click", () => {
@@ -53,30 +44,40 @@
   }
 
   // ------------------------------------------------------
-  // Login (integração com auth.js / lioraActions)
+  // Login REAL (Firebase)
   // ------------------------------------------------------
   function bindLoginForm() {
     const form = $("liora-auth-form");
+    const errorBox = $("liora-auth-error");
     if (!form) return;
 
-    form.addEventListener("submit", (e) => {
+    form.addEventListener("submit", async (e) => {
       e.preventDefault();
+      if (errorBox) errorBox.textContent = "";
 
       const email = $("auth-email")?.value?.trim();
       const senha = $("auth-senha")?.value?.trim();
 
       if (!email || !senha) {
-        alert("Informe e-mail e senha");
+        if (errorBox) errorBox.textContent = "Informe e-mail e senha.";
         return;
       }
 
-      console.log("🔐 Login solicitado:", email);
+      try {
+        console.log("🔐 Login solicitado:", email);
 
-      // 🔁 Delegação TOTAL para auth.js / state
-      window.lioraActions?.loginRequest?.({
-        email,
-        senha
-      });
+        await window.lioraAuth.login(email, senha);
+
+        // ✅ SOMENTE AQUI navegamos
+        window.lioraUI.show("liora-app");
+
+      } catch (err) {
+        const msg =
+          window.lioraAuth?.error ||
+          "Não foi possível entrar. Verifique seus dados.";
+
+        if (errorBox) errorBox.textContent = msg;
+      }
     });
   }
 
@@ -93,14 +94,14 @@
   }
 
   // ------------------------------------------------------
-  // Voltar para início (ação explícita do usuário)
+  // Voltar para HOME (ação explícita)
   // ------------------------------------------------------
   function bindBackHome() {
     const btn = $("liora-auth-back");
     if (!btn) return;
 
     btn.addEventListener("click", () => {
-      window.lioraUI?.show?.("liora-home");
+      window.lioraUI.show("liora-home");
     });
   }
 
@@ -111,16 +112,21 @@
     const btn = $("liora-auth-forgot");
     if (!btn) return;
 
-    btn.addEventListener("click", () => {
+    btn.addEventListener("click", async () => {
       const email = prompt("Digite seu e-mail para recuperação:");
       if (!email) return;
 
-      alert("Se o e-mail existir, você receberá instruções.");
+      try {
+        await window.lioraAuth.resetPassword(email);
+        alert("E-mail de redefinição enviado.");
+      } catch {
+        alert("Não foi possível enviar o e-mail.");
+      }
     });
   }
 
   // ------------------------------------------------------
-  // Inicialização segura (executa UMA vez)
+  // Init (lazy, uma vez)
   // ------------------------------------------------------
   function init() {
     if (bound) return;
@@ -136,14 +142,7 @@
   }
 
   // ------------------------------------------------------
-  // Lazy init via UI Router
+  // Lazy init via router
   // ------------------------------------------------------
   document.addEventListener("ui:liora-auth", init);
-
-  // ------------------------------------------------------
-  // API pública mínima
-  // ------------------------------------------------------
-  window.lioraAuthUI = {
-    ready: () => ready
-  };
 })();
