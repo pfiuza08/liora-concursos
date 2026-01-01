@@ -285,3 +285,41 @@ body.liora-modal-open header {
     bottom: 2rem;
   }
 }
+/* =========================================================
+   📱 HOME — BLOCO "SEU ESTUDO" (MOBILE)
+========================================================= */
+
+@media (max-width: 640px) {
+  #liora-seu-estudo {
+    margin-top: 1.5rem;
+    padding: 1rem;
+    border-radius: 12px;
+  }
+
+  #liora-seu-estudo h3 {
+    font-size: 0.95rem;
+  }
+
+  #liora-seu-estudo button {
+    font-size: 0.8rem;
+    padding: 0.55rem 0.7rem;
+  }
+
+  #home-resumo-estudo {
+    font-size: 0.75rem;
+  }
+}
+/* =========================================================
+   📱 HOME — ALTURA CORRETA NO MOBILE
+========================================================= */
+
+@media (max-width: 640px) {
+  #liora-home {
+    min-height: calc(100vh - 96px); /* header */
+  }
+
+  #liora-home > div {
+    padding-top: 1.5rem;
+    padding-bottom: 2rem;
+  }
+}
