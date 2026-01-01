@@ -68,27 +68,32 @@
     // ------------------------------------------------------
     // HOME / APP
     // ------------------------------------------------------
-    function showHome() {
-      app?.classList.add("hidden");
-      home?.classList.remove("hidden");
-
-      hideAllPanels();
-
-      fabHome?.classList.add("hidden");
-      fabSim?.classList.add("hidden");
-
-      resetScroll();
+   function showHome() {
+    document.querySelectorAll(".liora-screen").forEach(el =>
+      el.classList.remove("is-active")
+    );
+  
+    home?.classList.add("is-active");
+  
+    fabHome?.classList.add("hidden");
+    fabSim?.classList.add("hidden");
+  
+    resetScroll();
+  }
+  
+  function showApp() {
+    document.querySelectorAll(".liora-screen").forEach(el =>
+      el.classList.remove("is-active")
+    );
+  
+    app?.classList.add("is-active");
+  
+    fabHome?.classList.remove("hidden");
+    fabSim?.classList.add("hidden");
+  
+    resetScroll();
     }
 
-    function showApp() {
-      home?.classList.add("hidden");
-      app?.classList.remove("hidden");
-
-      fabHome?.classList.remove("hidden");
-      fabSim?.classList.add("hidden");
-
-      resetScroll();
-    }
 
     // ------------------------------------------------------
     // HEADER — AUTH REATIVO
