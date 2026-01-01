@@ -257,3 +257,31 @@ body.liora-modal-open header {
 #liora-auth.is-open {
   display: flex !important;
 }
+/* =========================================================
+   📱 FAB — MOBILE FIRST (SAFE AREA)
+========================================================= */
+
+.sim-fab {
+  position: fixed;
+  right: 1rem;
+  bottom: calc(1rem + env(safe-area-inset-bottom));
+  z-index: 10000;
+
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 1.25rem;
+}
+
+/* desktop pode ficar um pouco mais afastado */
+@media (min-width: 768px) {
+  .sim-fab {
+    right: 2rem;
+    bottom: 2rem;
+  }
+}
