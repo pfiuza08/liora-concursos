@@ -323,3 +323,55 @@ body.liora-modal-open header {
     padding-bottom: 2rem;
   }
 }
+/* =========================================================
+   📱 HOME — BLOCO "SEU ESTUDO" (AJUSTE DEFINITIVO)
+========================================================= */
+
+@media (max-width: 640px) {
+
+  /* container do bloco */
+  #liora-seu-estudo {
+    margin-top: 1.25rem;
+    padding: 0.75rem 0.75rem 0.9rem;
+    border-radius: 12px;
+    background: transparent; /* não competir com cards */
+  }
+
+  /* título */
+  #liora-seu-estudo h3 {
+    font-size: 0.85rem;
+    font-weight: 500;
+    opacity: 0.85;
+    margin-bottom: 0.5rem;
+  }
+
+  /* área dos botões */
+  #liora-seu-estudo .liora-estudo-acoes {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: center;
+    align-items: center;
+  }
+
+  /* botões (play / planos) */
+  #liora-seu-estudo button {
+    padding: 0.45rem 0.6rem;
+    font-size: 0.75rem;
+    gap: 0.4rem;
+  }
+
+  /* ícones grandes → reduz */
+  #liora-seu-estudo .btn-icone svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  /* texto de resumo */
+  #home-resumo-estudo {
+    margin-top: 0.5rem;
+    font-size: 0.7rem;
+    opacity: 0.7;
+    line-height: 1.3;
+  }
+}
+
