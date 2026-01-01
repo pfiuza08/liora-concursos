@@ -408,4 +408,27 @@ body.liora-modal-open header {
     line-height: 1.2;
   }
 }
+/* =========================================================
+   🔧 FIX REAL — ÍCONES DO BLOCO "SEU ESTUDO"
+   (ícones são texto, não SVG)
+========================================================= */
+
+/* escopo exato do bloco */
+#liora-home h3 + div button {
+  font-size: 0.85rem;   /* ↓ força redução do ícone */
+  line-height: 1;
+}
+
+/* se houver span ou pseudo-elemento */
+#liora-home h3 + div button::before,
+#liora-home h3 + div button::after {
+  font-size: 0.85rem;
+}
+
+/* mobile: ainda menor */
+@media (max-width: 640px) {
+  #liora-home h3 + div button {
+    font-size: 0.7rem;
+  }
+}
 
