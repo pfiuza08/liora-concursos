@@ -156,12 +156,26 @@
       document.getElementById("area-dashboard")?.classList.remove("hidden");
     });
 
-    window.addEventListener("liora:open-premium", () => {
-      showApp();
-      hideAllPanels();
-      document.getElementById("liora-premium")?.classList.remove("hidden");
-      resetScroll();
-    });
+   window.addEventListener("liora:open-premium", () => {
+    // desativa todas as screens
+    document.querySelectorAll(".liora-screen").forEach(el =>
+      el.classList.remove("is-active")
+    );
+  
+    // ativa premium como screen
+    const premium = document.getElementById("liora-premium");
+    premium?.classList.add("is-active");
+  
+    // FABs
+    fabHome?.classList.remove("hidden");
+    fabSim?.classList.add("hidden");
+  
+    // reset de scroll
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+    window.scrollTo(0, 0);
+  });
+
 
     // ------------------------------------------------------
     // ESTADO INICIAL
