@@ -48,22 +48,12 @@
       window.scrollTo(0, 0);
     }
 
-    function hideAllPanels() {
-      [
-        "painel-estudo",
-        "painel-tema",
-        "painel-upload",
-        "area-plano",
-        "liora-sessoes",
-        "area-simulado",
-        "liora-sim-config",
-        "area-dashboard",
-        "liora-premium"
-      ].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.classList.add("hidden");
-      });
-    }
+   function hideAllPanels() {
+    app?.querySelectorAll(
+    "#painel-estudo, #painel-tema, #painel-upload, #area-plano, #liora-sessoes, #area-simulado, #liora-sim-config, #area-dashboard"
+     ).forEach(el => el.classList.add("hidden"));
+   }
+
 
     // ------------------------------------------------------
     // HOME / APP
