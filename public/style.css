@@ -441,5 +441,9 @@ body.liora-modal-open header {
     height: 16px;
   }
 }
+.liora-password-toggle {
+  font-size: 1.05rem;
+  line-height: 1;
+}
 
 
