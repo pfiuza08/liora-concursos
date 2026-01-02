@@ -446,7 +446,8 @@ body.liora-modal-open header {
   line-height: 1;
 }
 /* ===============================
-   🔐 PASSWORD TOGGLE — FIX MOBILE
+   🔐 PASSWORD TOGGLE — CANÔNICO
+   Simples, estável, mobile-safe
 =============================== */
 
 .liora-password-wrapper {
@@ -457,7 +458,7 @@ body.liora-modal-open header {
 
 .liora-password-wrapper input {
   width: 100%;
-  padding-right: 3.2rem; /* espaço real para o botão */
+  padding-right: 3rem; /* espaço para o botão */
 }
 
 .liora-password-toggle {
@@ -466,107 +467,25 @@ body.liora-modal-open header {
   top: 50%;
   transform: translateY(-50%);
 
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
 
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
 
-  background: none;
-  border: none;
-  cursor: pointer;
-
-  color: var(--muted);
-  opacity: 0.8;
-}
-/* ===============================
-   🔐 TOGGLE DE SENHA — OLHO REAL
-=============================== */
-
-.liora-password-toggle {
-  position: absolute;
-  right: 0.9rem;
-  top: 50%;
-  transform: translateY(-50%);
   background: none;
   border: none;
   padding: 0;
+
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  font-size: 1rem;
+
   color: var(--muted);
-}
-
-/* tamanho do ícone */
-.liora-password-toggle svg {
-  width: 20px;
-  height: 20px;
-  stroke: currentColor;
-  fill: none;
-  stroke-width: 1.8;
-}
-
-/* estado inicial */
-.liora-password-toggle .icon-eye-closed {
-  display: none;
-}
-
-/* quando senha está visível */
-.liora-password-toggle.is-visible .icon-eye-open {
-  display: none;
-}
-
-.liora-password-toggle.is-visible .icon-eye-closed {
-  display: block;
+  opacity: 0.85;
 }
 
 .liora-password-toggle:hover {
   opacity: 1;
   color: var(--fg);
 }
-
-/* ÍCONES */
-.liora-password-toggle svg {
-  width: 20px;
-  height: 20px;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 1.8;
-}
-
-/* Estado visível */
-.icon-eye-closed {
-  display: none;
-}
-
-/* Quando senha está visível */
-.liora-password-toggle.is-visible .icon-eye-open {
-  display: none;
-}
-
-.liora-password-toggle.is-visible .icon-eye-closed {
-  display: block;
-}
-.liora-password-wrapper {
-  position: relative;
-}
-
-.liora-password-toggle {
-  position: absolute;
-  right: 0.9rem;
-  top: 50%;
-  transform: translateY(-50%);
-  background: none;
-  border: none;
-  padding: 0;
-  cursor: pointer;
-  color: var(--muted);
-}
-
-.liora-password-toggle:hover {
-  color: var(--fg);
-}
-
-
