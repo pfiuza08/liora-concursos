@@ -504,3 +504,45 @@ body.liora-modal-open header {
   color: #ff7b7b;        /* vermelho suave */
   font-size: 1.15rem;   /* X um pouco maior */
 }
+/* ===============================
+   🔐 PASSWORD TOGGLE — FINAL FIX
+=============================== */
+
+.liora-password-wrapper {
+  position: relative;
+}
+
+.liora-password-wrapper input {
+  padding-right: 3.2rem;
+}
+
+.liora-password-toggle {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+
+  width: 30px;
+  height: 30px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: rgba(255,255,255,0.08);
+  border: none;
+  border-radius: 999px;
+
+  font-size: 0.9rem;
+  font-weight: 700;
+  line-height: 1;
+
+  color: #fff;
+  cursor: pointer;
+}
+
+/* estado senha visível */
+.liora-password-toggle.is-visible {
+  background: rgba(196,75,4,0.25);
+  color: #fff;
+}
