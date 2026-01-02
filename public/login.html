@@ -31,25 +31,28 @@
           required>
       </div>
 
-      <!-- SENHA (olho só quando faz sentido) -->
+      <!-- SENHA COM TOGGLE OLHO / X -->
       <div class="liora-input-group">
         <div class="liora-password-wrapper">
           <input
             id="auth-senha"
             type="password"
-            placeholder="Senha"
+            required
             autocomplete="current-password"
-            required>
-
+            placeholder="Senha"
+          />
+      
           <button
             type="button"
             id="toggle-password"
             class="liora-password-toggle"
-            aria-label="Mostrar senha">
+            aria-label="Mostrar ou ocultar senha"
+            aria-pressed="false">
             👁️
           </button>
         </div>
       </div>
+
 
       <!-- BOTÃO -->
       <button id="login-btn" type="submit" class="btn-primary w-full py-2">
