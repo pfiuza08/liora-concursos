@@ -65,7 +65,7 @@
       e.preventDefault();
       const hidden = input.type === "password";
       input.type = hidden ? "text" : "password";
-      toggle.textContent = hidden ? "🙈" : "👁️";
+      toggle.textContent = hidden ? "👁️‍🗨️" : "👁️";
     });
   }
 
