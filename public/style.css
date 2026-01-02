@@ -475,16 +475,18 @@ body.liora-modal-open header {
   padding: 0;
   cursor: pointer;
 
-  /* 🔑 garante que o emoji aparece */
-  color: var(--fg);
+  /* 🔑 AQUI ESTÁ O SEGREDO */
+  font-family:
+    "Apple Color Emoji",
+    "Segoe UI Emoji",
+    "Segoe UI Symbol",
+    "Noto Color Emoji",
+    system-ui;
+
   font-size: 18px;
   line-height: 1;
+  color: var(--fg);
 
-  /* não “selecionar” sem querer */
   user-select: none;
   -webkit-tap-highlight-color: transparent;
-}
-
-.liora-password-toggle:hover {
-  opacity: 0.9;
 }
