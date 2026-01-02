@@ -480,6 +480,47 @@ body.liora-modal-open header {
   color: var(--muted);
   opacity: 0.8;
 }
+/* ===============================
+   🔐 TOGGLE DE SENHA — OLHO REAL
+=============================== */
+
+.liora-password-toggle {
+  position: absolute;
+  right: 0.9rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+}
+
+/* tamanho do ícone */
+.liora-password-toggle svg {
+  width: 20px;
+  height: 20px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.8;
+}
+
+/* estado inicial */
+.liora-password-toggle .icon-eye-closed {
+  display: none;
+}
+
+/* quando senha está visível */
+.liora-password-toggle.is-visible .icon-eye-open {
+  display: none;
+}
+
+.liora-password-toggle.is-visible .icon-eye-closed {
+  display: block;
+}
 
 .liora-password-toggle:hover {
   opacity: 1;
