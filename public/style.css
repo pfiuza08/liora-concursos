@@ -409,26 +409,37 @@ body.liora-modal-open header {
   }
 }
 /* =========================================================
-   🔧 FIX REAL — ÍCONES DO BLOCO "SEU ESTUDO"
-   (ícones são texto, não SVG)
+   🔧 FIX DEFINITIVO — ÍCONES DO BLOCO "SEU ESTUDO"
+   SVG com tamanho controlado (não herda font-size)
 ========================================================= */
 
-/* escopo exato do bloco */
-#liora-home h3 + div button {
-  font-size: 0.85rem;   /* ↓ força redução do ícone */
-  line-height: 1;
+#liora-seu-estudo .btn-icone {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
 }
 
-/* se houver span ou pseudo-elemento */
-#liora-home h3 + div button::before,
-#liora-home h3 + div button::after {
-  font-size: 0.85rem;
+#liora-seu-estudo .btn-icone svg {
+  width: 18px;
+  height: 18px;
+  display: block;
 }
 
-/* mobile: ainda menor */
+/* ajuste fino mobile */
 @media (max-width: 640px) {
-  #liora-home h3 + div button {
-    font-size: 0.7rem;
+  #liora-seu-estudo .btn-icone {
+    width: 32px;
+    height: 32px;
+  }
+
+  #liora-seu-estudo .btn-icone svg {
+    width: 16px;
+    height: 16px;
   }
 }
+
 
