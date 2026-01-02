@@ -4,27 +4,103 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Entrar – Liora</title>
-  <meta name="description" content="Acesse sua conta da Liora e continue seus planos de estudo em qualquer dispositivo.">
+
+  <meta name="description"
+        content="Acesse sua conta da Liora e continue seus planos de estudo em qualquer dispositivo.">
+
   <link rel="stylesheet" href="/style.css">
 </head>
 
 <body class="grid place-items-center min-h-screen px-6">
 
-  <div class="bg-[var(--card)] p-8 rounded-2xl shadow-xl w-full max-w-md text-center">
-    <h1 class="text-2xl font-bold mb-6">Acessar sua conta</h1>
+  <div class="bg-[var(--card)] p-8 rounded-2xl shadow-xl w-full max-w-md">
 
-    <div class="space-y-3">
-      <input id="login-email" type="email" placeholder="Seu e-mail" class="liora-input w-full">
-      <input id="login-senha" type="password" placeholder="Senha" class="liora-input w-full">
+    <h1 class="text-2xl font-bold mb-6 text-center">
+      Acessar sua conta
+    </h1>
 
-      <button id="login-btn" class="btn-primary w-full py-2">Entrar</button>
-    </div>
+    <form class="space-y-4">
 
-    <p class="text-sm mt-4">
+      <!-- EMAIL -->
+      <div class="liora-input-group">
+        <input
+          id="login-email"
+          type="email"
+          placeholder="Seu e-mail"
+          autocomplete="email"
+          required>
+      </div>
+
+      <!-- SENHA COM OLHO -->
+      <div class="liora-input-group">
+        <div class="liora-password-wrapper">
+
+          <input
+            id="login-senha"
+            type="password"
+            placeholder="Senha"
+            autocomplete="current-password"
+            required>
+
+          <button
+            type="button"
+            id="toggle-password"
+            class="liora-password-toggle"
+            aria-label="Mostrar senha"
+            aria-pressed="false">
+
+            <!-- OLHO ABERTO -->
+            <svg class="icon-eye-open" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 5C6.5 5 2.1 8.6 1 12c1.1 3.4 5.5 7 11 7s9.9-3.6 11-7c-1.1-3.4-5.5-7-11-7z"/>
+              <circle cx="12" cy="12" r="3.2"/>
+            </svg>
+
+            <!-- OLHO FECHADO -->
+            <svg class="icon-eye-closed" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M2 5l17 17"/>
+              <path d="M12 5C6.5 5 2.1 8.6 1 12c.5 1.6 1.7 3.3 3.4 4.8"/>
+              <path d="M9.5 9.5a3.5 3.5 0 004.9 4.9"/>
+              <path d="M14.5 14.5L9.5 9.5"/>
+            </svg>
+
+          </button>
+        </div>
+      </div>
+
+      <!-- BOTÃO -->
+      <button id="login-btn" type="submit" class="btn-primary w-full py-2">
+        Entrar
+      </button>
+
+    </form>
+
+    <p class="text-sm mt-4 text-center">
       Ainda não possui conta?
-      <a href="/cadastro" class="text-[var(--brand)] underline">Criar conta</a>
+      <a href="/cadastro" class="text-[var(--brand)] underline">
+        Criar conta
+      </a>
     </p>
+
   </div>
+
+  <!-- JS DO OLHO -->
+  <script>
+    (function () {
+      const input  = document.getElementById("login-senha");
+      const toggle = document.getElementById("toggle-password");
+
+      if (!input || !toggle) return;
+
+      toggle.addEventListener("click", () => {
+        const visible = input.type === "text";
+
+        input.type = visible ? "password" : "text";
+        toggle.classList.toggle("is-visible", !visible);
+        toggle.setAttribute("aria-pressed", String(!visible));
+      });
+    })();
+  </script>
 
 </body>
 </html>
+
