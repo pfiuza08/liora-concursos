@@ -19,39 +19,34 @@
   // ------------------------------------------------------
   // Controle do modal
   // ------------------------------------------------------
-  function openAuth() {
-    const auth = $("liora-auth");
-    if (!auth) return;
-
-    auth.classList.remove("hidden");
-    auth.classList.add("is-open");
-
+    function openAuth() {
+    const modal = document.getElementById("liora-auth");
+    if (!modal) return;
+  
+    modal.classList.remove("hidden");
     document.body.classList.add("liora-modal-open");
-    document.body.style.overflow = "hidden";
-
-    const err = $("liora-auth-error");
-    if (err) err.textContent = "";
-
-    const senha = $("auth-senha");
-    if (senha) senha.value = "";
-
-    setTimeout(() => $("auth-email")?.focus(), 50);
-
+  
+    const email = document.getElementById("auth-email");
+    email && email.focus();
+  
     console.log("🔐 Auth aberto (modal)");
   }
-
+  
   function closeAuth() {
-    const auth = $("liora-auth");
-    if (!auth) return;
-
-    auth.classList.remove("is-open");
-    auth.classList.add("hidden");
-
+    // 🔑 REMOVE FOCO ANTES DE ESCONDER
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+  
+    const modal = document.getElementById("liora-auth");
+    if (!modal) return;
+  
+    modal.classList.add("hidden");
     document.body.classList.remove("liora-modal-open");
-    document.body.style.overflow = "";
-
+  
     console.log("🔐 Auth fechado (modal)");
   }
+
 
   // ------------------------------------------------------
   // Mostrar / esconder senha
