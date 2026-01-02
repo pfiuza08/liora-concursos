@@ -50,6 +50,7 @@
             aria-pressed="false">
             👁️
           </button>
+
         </div>
       </div>
 
@@ -71,23 +72,26 @@
   </div>
 
   <script>
-  (function () {
-    const input  = document.getElementById("auth-senha");
-    const toggle = document.getElementById("toggle-password");
-    if (!input || !toggle) return;
-  
-    toggle.addEventListener("click", () => {
-      const visible = input.type === "text";
-  
-      input.type = visible ? "password" : "text";
-  
-      toggle.textContent = visible ? "👁️" : "X";
-      toggle.classList.toggle("is-visible", !visible);
-      toggle.setAttribute("aria-pressed", String(!visible));
-    });
-  })();
-  </script>
-
+    (function () {
+      const input  = document.getElementById("auth-senha");
+      const toggle = document.getElementById("toggle-password");
+      if (!input || !toggle) return;
+    
+      // estado inicial
+      toggle.textContent = "👁️";
+      toggle.setAttribute("aria-pressed", "false");
+    
+      toggle.addEventListener("click", (e) => {
+        e.preventDefault();
+    
+        const isVisible = input.type === "text";
+        input.type = isVisible ? "password" : "text";
+    
+        toggle.textContent = isVisible ? "👁️" : "❌";
+        toggle.setAttribute("aria-pressed", String(!isVisible));
+      });
+    })();
+    </script>
 
 </body>
 </html>
