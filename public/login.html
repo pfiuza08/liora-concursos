@@ -31,15 +31,16 @@
           required>
       </div>
 
-      <!-- SENHA COM OLHO -->
+      <!-- SENHA (olho só quando faz sentido) -->
       <div class="liora-input-group">
         <div class="liora-password-wrapper">
           <input
             id="auth-senha"
             type="password"
-            required
-          />
-        
+            placeholder="Senha"
+            autocomplete="current-password"
+            required>
+
           <button
             type="button"
             id="toggle-password"
@@ -48,7 +49,6 @@
             👁️
           </button>
         </div>
-
       </div>
 
       <!-- BOTÃO -->
@@ -67,39 +67,24 @@
 
   </div>
 
-  <!-- JS DO OLHO -->
+  <!-- JS DO OLHO — versão adulta e estável -->
   <script>
     (function () {
-      const input  = document.getElementById("login-senha") || document.getElementById("auth-senha");
+      const input  = document.getElementById("auth-senha");
       const toggle = document.getElementById("toggle-password");
-    
-      const eyeOpen   = document.getElementById("eye-open");
-      const eyePupil  = document.getElementById("eye-pupil");
-      const eyeClosed = document.getElementById("eye-closed");
-    
+
       if (!input || !toggle) return;
-    
-      toggle.addEventListener("click", () => {
-        const isVisible = input.type === "text";
-    
-        input.type = isVisible ? "password" : "text";
-        toggle.setAttribute("aria-pressed", String(!isVisible));
-    
-        if (isVisible) {
-          // volta para olho aberto
-          eyeOpen.style.display   = "block";
-          eyePupil.style.display = "block";
-          eyeClosed.style.display = "none";
-        } else {
-          // olho fechado (semi-elipse)
-          eyeOpen.style.display   = "none";
-          eyePupil.style.display = "none";
-          eyeClosed.style.display = "block";
-        }
+
+      toggle.addEventListener("click", function () {
+        const isHidden = input.type === "password";
+
+        input.type = isHidden ? "text" : "password";
+
+        // 👁️ some quando a senha está visível
+        toggle.style.display = isHidden ? "none" : "inline-flex";
       });
     })();
-    </script>
+  </script>
 
 </body>
 </html>
-
