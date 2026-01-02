@@ -70,21 +70,24 @@
 
   </div>
 
- <script>
-(function () {
-  const input  = document.getElementById("auth-senha");
-  const toggle = document.getElementById("toggle-password");
-  if (!input || !toggle) return;
+  <script>
+  (function () {
+    const input  = document.getElementById("auth-senha");
+    const toggle = document.getElementById("toggle-password");
+    if (!input || !toggle) return;
+  
+    toggle.addEventListener("click", () => {
+      const visible = input.type === "text";
+  
+      input.type = visible ? "password" : "text";
+  
+      toggle.textContent = visible ? "👁️" : "X";
+      toggle.classList.toggle("is-visible", !visible);
+      toggle.setAttribute("aria-pressed", String(!visible));
+    });
+  })();
+  </script>
 
-  toggle.addEventListener("click", () => {
-    const isVisible = input.type === "text";
-
-    input.type = isVisible ? "password" : "text";
-    toggle.textContent = isVisible ? "👁️" : "×";
-    toggle.setAttribute("aria-pressed", String(!isVisible));
-  });
-})();
-</script>
 
 </body>
 </html>
