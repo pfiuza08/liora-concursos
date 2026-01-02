@@ -88,18 +88,18 @@
     (function () {
       const input  = document.getElementById("login-senha");
       const toggle = document.getElementById("toggle-password");
-
+  
       if (!input || !toggle) return;
-
+  
       toggle.addEventListener("click", () => {
         const visible = input.type === "text";
-
+  
         input.type = visible ? "password" : "text";
         toggle.classList.toggle("is-visible", !visible);
         toggle.setAttribute("aria-pressed", String(!visible));
       });
     })();
-  </script>
+  </script>  
 
 </body>
 </html>
