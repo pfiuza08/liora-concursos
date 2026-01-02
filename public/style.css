@@ -445,5 +445,68 @@ body.liora-modal-open header {
   font-size: 1.05rem;
   line-height: 1;
 }
+/* ===============================
+   🔐 PASSWORD TOGGLE — FIX MOBILE
+=============================== */
+
+.liora-password-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.liora-password-wrapper input {
+  width: 100%;
+  padding-right: 3.2rem; /* espaço real para o botão */
+}
+
+.liora-password-toggle {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 32px;
+  height: 32px;
+
+  background: none;
+  border: none;
+  cursor: pointer;
+
+  color: var(--muted);
+  opacity: 0.8;
+}
+
+.liora-password-toggle:hover {
+  opacity: 1;
+  color: var(--fg);
+}
+
+/* ÍCONES */
+.liora-password-toggle svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+}
+
+/* Estado visível */
+.icon-eye-closed {
+  display: none;
+}
+
+/* Quando senha está visível */
+.liora-password-toggle.is-visible .icon-eye-open {
+  display: none;
+}
+
+.liora-password-toggle.is-visible .icon-eye-closed {
+  display: block;
+}
 
 
