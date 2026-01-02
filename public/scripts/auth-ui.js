@@ -56,22 +56,22 @@
   // ------------------------------------------------------
   // Mostrar / esconder senha
   // ------------------------------------------------------
-    function bindTogglePassword() {
-    const toggle = $("toggle-password");
-    const input  = $("auth-senha");
+   function bindTogglePassword() {
+    const toggle = document.getElementById("toggle-password");
+    const input  = document.getElementById("auth-senha");
     if (!toggle || !input) return;
   
     toggle.addEventListener("click", (e) => {
       e.preventDefault();
   
-      const visible = input.type === "text";
-      input.type = visible ? "password" : "text";
+      const isHidden = input.type === "password";
   
-      toggle.classList.toggle("is-visible", !visible);
-      toggle.setAttribute("aria-pressed", String(!visible));
+      input.type = isHidden ? "text" : "password";
+  
+      // 👁️ some quando a senha está visível
+      toggle.classList.toggle("hidden", isHidden);
     });
   }
-
 
   // ------------------------------------------------------
   // Login REAL (Firebase)
