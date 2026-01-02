@@ -446,8 +446,8 @@ body.liora-modal-open header {
   line-height: 1;
 }
 /* ===============================
-   🔐 PASSWORD TOGGLE — CANÔNICO
-   Simples, estável, mobile-safe
+   🔐 PASSWORD TOGGLE — OLHO / X
+   Mobile + Desktop estável
 =============================== */
 
 .liora-password-wrapper {
@@ -458,7 +458,7 @@ body.liora-modal-open header {
 
 .liora-password-wrapper input {
   width: 100%;
-  padding-right: 3rem; /* espaço para o botão */
+  padding-right: 3rem;
 }
 
 .liora-password-toggle {
@@ -467,12 +467,12 @@ body.liora-modal-open header {
   top: 50%;
   transform: translateY(-50%);
 
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-
   width: 28px;
   height: 28px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
   background: none;
   border: none;
