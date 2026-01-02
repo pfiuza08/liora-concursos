@@ -489,3 +489,18 @@ body.liora-modal-open header {
   opacity: 1;
   color: var(--fg);
 }
+/* ===============================
+   🔐 PASSWORD TOGGLE — VISUAL FIX
+=============================== */
+
+/* estado padrão (olho) */
+.liora-password-toggle {
+  color: var(--muted);
+  font-weight: 600;
+}
+
+/* quando senha está visível → mostra X */
+.liora-password-toggle[aria-pressed="true"] {
+  color: #ff7b7b;        /* vermelho suave */
+  font-size: 1.15rem;   /* X um pouco maior */
+}
