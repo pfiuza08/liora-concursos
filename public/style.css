@@ -446,66 +446,7 @@ body.liora-modal-open header {
   line-height: 1;
 }
 /* ===============================
-   🔐 PASSWORD TOGGLE — OLHO / X
-   Mobile + Desktop estável
-=============================== */
-
-.liora-password-wrapper {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-
-.liora-password-wrapper input {
-  width: 100%;
-  padding-right: 3rem;
-}
-
-.liora-password-toggle {
-  position: absolute;
-  right: 0.75rem;
-  top: 50%;
-  transform: translateY(-50%);
-
-  width: 28px;
-  height: 28px;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  background: none;
-  border: none;
-  padding: 0;
-
-  cursor: pointer;
-  font-size: 1rem;
-
-  color: var(--muted);
-  opacity: 0.85;
-}
-
-.liora-password-toggle:hover {
-  opacity: 1;
-  color: var(--fg);
-}
-/* ===============================
-   🔐 PASSWORD TOGGLE — VISUAL FIX
-=============================== */
-
-/* estado padrão (olho) */
-.liora-password-toggle {
-  color: var(--muted);
-  font-weight: 600;
-}
-
-/* quando senha está visível → mostra X */
-.liora-password-toggle[aria-pressed="true"] {
-  color: #ff7b7b;        /* vermelho suave */
-  font-size: 1.15rem;   /* X um pouco maior */
-}
-/* ===============================
-   🔐 PASSWORD TOGGLE — FINAL FIX
+   🔐 PASSWORD TOGGLE — EMOJI FIX (MOBILE + DESKTOP)
 =============================== */
 
 .liora-password-wrapper {
@@ -522,27 +463,28 @@ body.liora-modal-open header {
   top: 50%;
   transform: translateY(-50%);
 
-  width: 30px;
-  height: 30px;
+  width: 36px;
+  height: 36px;
 
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
 
-  background: rgba(255,255,255,0.08);
-  border: none;
-  border-radius: 999px;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
 
-  font-size: 0.9rem;
-  font-weight: 700;
+  /* 🔑 garante que o emoji aparece */
+  color: var(--fg);
+  font-size: 18px;
   line-height: 1;
 
-  color: #fff;
-  cursor: pointer;
+  /* não “selecionar” sem querer */
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
-/* estado senha visível */
-.liora-password-toggle.is-visible {
-  background: rgba(196,75,4,0.25);
-  color: #fff;
+.liora-password-toggle:hover {
+  opacity: 0.9;
 }
