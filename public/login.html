@@ -77,18 +77,12 @@
       const toggle = document.getElementById("toggle-password");
       if (!input || !toggle) return;
     
-      // estado inicial
       toggle.textContent = "👁️";
-      toggle.setAttribute("aria-pressed", "false");
     
-      toggle.addEventListener("click", (e) => {
-        e.preventDefault();
-    
-        const isVisible = input.type === "text";
-        input.type = isVisible ? "password" : "text";
-    
-        toggle.textContent = isVisible ? "👁️" : "✕";
-        toggle.setAttribute("aria-pressed", String(!isVisible));
+      toggle.addEventListener("click", () => {
+        const visible = input.type === "text";
+        input.type = visible ? "password" : "text";
+        toggle.textContent = visible ? "👁️" : "❌";
       });
     })();
     </script>
