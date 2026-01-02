@@ -70,24 +70,21 @@
 
   </div>
 
-  <!-- JS DO OLHO — versão adulta e estável -->
-  <script>
-    (function () {
-      const input  = document.getElementById("auth-senha");
-      const toggle = document.getElementById("toggle-password");
+ <script>
+(function () {
+  const input  = document.getElementById("auth-senha");
+  const toggle = document.getElementById("toggle-password");
+  if (!input || !toggle) return;
 
-      if (!input || !toggle) return;
+  toggle.addEventListener("click", () => {
+    const isVisible = input.type === "text";
 
-      toggle.addEventListener("click", function () {
-        const isHidden = input.type === "password";
-
-        input.type = isHidden ? "text" : "password";
-
-        // 👁️ some quando a senha está visível
-        toggle.style.display = isHidden ? "none" : "inline-flex";
-      });
-    })();
-  </script>
+    input.type = isVisible ? "password" : "text";
+    toggle.textContent = isVisible ? "👁️" : "✕";
+    toggle.setAttribute("aria-pressed", String(!isVisible));
+  });
+})();
+</script>
 
 </body>
 </html>
