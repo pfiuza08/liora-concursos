@@ -486,3 +486,47 @@ a:hover { text-decoration: underline; }
 #liora-auth:not(.hidden) {
   display: flex;
 }
+/* ==========================================================
+   🔐 HEADER — USER INFO MOBILE SAFE
+========================================================== */
+
+/* Container direito do header (usuário + botões) */
+header > .flex.items-center.gap-4 {
+  max-width: 100%;
+  overflow: hidden;
+}
+
+/* Bloco com nome e status do usuário */
+#liora-user-info {
+  flex: 1 1 auto;
+  min-width: 0;       /* 🔑 ESSENCIAL para truncar texto em flex */
+  max-width: 100%;
+}
+
+/* Nome do usuário */
+#liora-user-name {
+  display: block;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* Status do usuário (opcional, mas seguro) */
+#liora-user-status {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* Botão sair — nunca pode sumir */
+#btn-logout {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+/* Ajuste fino para mobile */
+@media (max-width: 480px) {
+  #liora-user-info {
+    max-width: 55vw;
+  }
+}
