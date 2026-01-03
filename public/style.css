@@ -776,4 +776,55 @@ main {
   border: none;
   padding: 12px 0;
 }
+/* ============================================================
+   LIORA — SEMÂNTICA VISUAL DE CONTEÚDO
+   Camada adicional (não altera estilos existentes)
+============================================================ */
+
+/* Bloco explicativo padrão */
+.liora-block {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px 22px;
+  margin: 20px 0;
+}
+
+/* Pergunta */
+.liora-block--question {
+  border-left: 4px solid var(--brand);
+  background: rgba(196,75,4,0.08);
+}
+
+/* Resposta */
+.liora-block--answer {
+  border-left: 4px solid #2ecc71;
+  background: rgba(46,204,113,0.08);
+}
+
+/* Atenção / alerta */
+.liora-block--alert {
+  border-left: 4px solid #f39c12;
+  background: rgba(243,156,18,0.12);
+}
+
+/* Exemplo */
+.liora-block--example {
+  border-left: 4px solid #3498db;
+  background: rgba(52,152,219,0.10);
+}
+
+/* Título interno do bloco */
+.liora-block h4 {
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+/* Texto dentro dos blocos */
+.liora-block p,
+.liora-block li {
+  font-size: 1rem;
+  line-height: 1.6;
+}
 
