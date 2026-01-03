@@ -608,4 +608,34 @@ header > .flex.items-center.gap-4 {
   display: inline-flex !important;
   flex: 0 0 auto;
 }
+/* ==========================================================
+   📌 LIORA — STICKY HEADER (VERSÃO 1)
+   - Compacta ao rolar para baixo
+   - Expande ao rolar para cima
+========================================================== */
+
+/* Header sticky base */
+header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: var(--bg);
+  transition: all 0.25s ease;
+}
+
+/* Estado compacto */
+header.header--compact {
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+}
+
+/* Reduz visual no modo compacto */
+header.header--compact h1 {
+  font-size: 0.95rem;
+}
+
+/* Subtítulo some no compacto */
+header.header--compact p {
+  display: none;
+}
 
