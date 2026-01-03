@@ -72,20 +72,19 @@
   </div>
 
   <script>
-    (function () {
-      const input  = document.getElementById("auth-senha");
-      const toggle = document.getElementById("toggle-password");
-      if (!input || !toggle) return;
-    
-      toggle.textContent = "👁️";
-    
-      toggle.addEventListener("click", () => {
-        const visible = input.type === "text";
-        input.type = visible ? "password" : "text";
-        toggle.textContent = visible ? "👁️" : "❌";
-      });
-    })();
-    </script>
+  (function () {
+    const input  = document.getElementById("auth-senha");
+    const toggle = document.getElementById("toggle-password");
+    if (!input || !toggle) return;
+
+    toggle.addEventListener("click", () => {
+      const hidden = input.type === "password";
+      input.type = hidden ? "text" : "password";
+      toggle.textContent = hidden ? "🙈" : "👁️";
+    });
+  })();
+</script>
+
 
 </body>
 </html>
