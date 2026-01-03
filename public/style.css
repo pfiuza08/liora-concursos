@@ -730,4 +730,50 @@ main {
     font-size: 1rem;
   }
 }
+/* ==========================================================
+   🧱 LIORA — PADRÃO DE CARDS INTERNOS
+   Usar para: blocos, explicações, FAQs, seções longas
+========================================================== */
+
+/* Card interno base */
+.liora-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px 22px;
+}
+
+/* Ritmo interno */
+.liora-card > * + * {
+  margin-top: 0.75rem;
+}
+
+/* Título do card */
+.liora-card h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+/* Texto dentro do card */
+.liora-card p {
+  font-size: 0.95rem;
+  line-height: 1.55;
+}
+
+/* Listas dentro do card */
+.liora-card ul {
+  padding-left: 1.2rem;
+}
+
+.liora-card li {
+  margin-bottom: 0.4rem;
+}
+
+/* Card “neutro” para FAQ / accordion */
+.liora-card--flat {
+  background: transparent;
+  border: none;
+  padding: 12px 0;
+}
 
