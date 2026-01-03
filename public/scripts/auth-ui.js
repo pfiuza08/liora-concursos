@@ -1,75 +1,65 @@
 // =======================================================
-// 🔐 LIORA AUTH UI — vFINAL-CANONICAL-MODAL
+// 🔐 LIORA AUTH UI — vFINAL-STABLE-MONKEY 🐵
 // - Compatível com auth.js v3.2 (Firebase)
-// - LOGIN É MODAL (fora do router)
-// - HOME é sempre a base
-// - Auth apenas abre / fecha camada
+// - Login é MODAL (não screen)
+// - Não interfere no router
+// - Não mexe em aria-hidden
+// - Toggle de senha simples (emoji)
 // =======================================================
 
 (function () {
   let bound = false;
 
   // ------------------------------------------------------
-  // Utilitário seguro
+  // Utilitário
   // ------------------------------------------------------
   function $(id) {
     return document.getElementById(id);
   }
 
   // ------------------------------------------------------
-  // Controle do modal
+  // Abrir / fechar modal de login
   // ------------------------------------------------------
-    function openAuth() {
-    const modal = document.getElementById("liora-auth");
-    if (!modal) return;
-  
-    modal.classList.remove("hidden");
+  function openAuth() {
+    const auth = $("liora-auth");
+    if (!auth) return;
+
+    auth.classList.remove("hidden");
     document.body.classList.add("liora-modal-open");
-  
-    const email = document.getElementById("auth-email");
-    email && email.focus();
-  
-    console.log("🔐 Auth aberto (modal)");
+
+    $("liora-auth-error") && ($("liora-auth-error").textContent = "");
+    $("auth-email")?.focus();
+
+    console.log("🔐 Auth aberto");
   }
-  
+
   function closeAuth() {
-    // 🔑 REMOVE FOCO ANTES DE ESCONDER
-    if (document.activeElement instanceof HTMLElement) {
-      document.activeElement.blur();
-    }
-  
-    const modal = document.getElementById("liora-auth");
-    if (!modal) return;
-  
-    modal.classList.add("hidden");
+    const auth = $("liora-auth");
+    if (!auth) return;
+
+    auth.classList.add("hidden");
     document.body.classList.remove("liora-modal-open");
-  
-    console.log("🔐 Auth fechado (modal)");
+
+    console.log("🔐 Auth fechado");
   }
 
+  // ------------------------------------------------------
+  // Toggle simples de senha (🐵)
+  // ------------------------------------------------------
+  function bindTogglePassword() {
+    const input  = $("auth-senha");
+    const toggle = $("toggle-password");
+    if (!input || !toggle) return;
 
-  // ------------------------------------------------------
-  // Mostrar / esconder senha
-  // ------------------------------------------------------
-   function bindTogglePassword() {
-    const toggle = document.getElementById("toggle-password");
-    const input  = document.getElementById("auth-senha");
-    if (!toggle || !input) return;
-  
-    toggle.addEventListener("click", (e) => {
-      e.preventDefault();
-  
-      const isHidden = input.type === "password";
-  
-      input.type = isHidden ? "text" : "password";
-  
-      // 👁️ some quando a senha está visível
-      toggle.classList.toggle("hidden", isHidden);
+    toggle.addEventListener("click", () => {
+      const hidden = input.type === "password";
+      input.type = hidden ? "text" : "password";
+      toggle.textContent = hidden ? "🙈" : "👁️";
     });
   }
 
   // ------------------------------------------------------
-  // Login REAL (Firebase)
+  // Login real (Firebase)
   // ------------------------------------------------------
   function bindLoginForm() {
     const form = $("liora-auth-form");
@@ -78,55 +68,30 @@
 
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
-      if (errorBox) errorBox.textContent = "";
+      errorBox && (errorBox.textContent = "");
 
       const email = $("auth-email")?.value?.trim();
       const senha = $("auth-senha")?.value?.trim();
 
       if (!email || !senha) {
-        if (errorBox) errorBox.textContent = "Informe e-mail e senha.";
+        errorBox && (errorBox.textContent = "Informe e-mail e senha.");
         return;
       }
 
       try {
         console.log("🔐 Login solicitado:", email);
         await window.lioraAuth.login(email, senha);
-        window.dispatchEvent(new Event("liora:render-auth-ui"));
+
         // sucesso → fecha modal
         closeAuth();
 
-      } catch {
+      } catch (err) {
         const msg =
           window.lioraAuth?.error ||
           "Não foi possível entrar. Verifique seus dados.";
 
-        if (errorBox) errorBox.textContent = msg;
+        errorBox && (errorBox.textContent = msg);
       }
-    });
-  }
-
-  // ------------------------------------------------------
-  // Criar conta (placeholder)
-  // ------------------------------------------------------
-  function bindCreateAccount() {
-    const btn = $("liora-auth-toggle-mode");
-    if (!btn) return;
-
-    btn.addEventListener("click", () => {
-      alert("Criação de conta será liberada em breve 🙂");
-    });
-  }
-
-  // ------------------------------------------------------
-  // Voltar (fecha modal)
-  // ------------------------------------------------------
-  function bindBackHome() {
-    const btn = $("liora-auth-back");
-    if (!btn) return;
-
-    btn.addEventListener("click", (e) => {
-      e.preventDefault();
-      closeAuth();
     });
   }
 
@@ -151,8 +116,27 @@
   }
 
   // ------------------------------------------------------
-  // Botão "Entrar" do header
+  // Botões auxiliares
   // ------------------------------------------------------
+  function bindBackButton() {
+    const btn = $("liora-auth-back");
+    if (!btn) return;
+
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
+      closeAuth();
+    });
+  }
+
+  function bindCreateAccount() {
+    const btn = $("liora-auth-toggle-mode");
+    if (!btn) return;
+
+    btn.addEventListener("click", () => {
+      alert("Criação de conta será liberada em breve 🙂");
+    });
+  }
+
   function bindHeaderLogin() {
     const btn = $("btn-login");
     if (!btn) return;
@@ -164,7 +148,18 @@
   }
 
   // ------------------------------------------------------
-  // Init (uma vez)
+  // Fecha modal quando auth muda
+  // ------------------------------------------------------
+  function bindAuthChanged() {
+    window.addEventListener("liora:auth-changed", () => {
+      if (window.lioraAuth?.user) {
+        closeAuth();
+      }
+    });
+  }
+
+  // ------------------------------------------------------
+  // Init
   // ------------------------------------------------------
   function init() {
     if (bound) return;
@@ -172,15 +167,16 @@
 
     bindTogglePassword();
     bindLoginForm();
-    bindCreateAccount();
-    bindBackHome();
     bindRecoverPassword();
+    bindBackButton();
+    bindCreateAccount();
     bindHeaderLogin();
+    bindAuthChanged();
 
-    // estado inicial garantido
+    // garante estado inicial fechado
     closeAuth();
 
-    console.log("🔐 Auth UI inicializado (modal canônico)");
+    console.log("🔐 Auth UI inicializado (estado estável 🐵)");
   }
 
   document.addEventListener("DOMContentLoaded", init);
