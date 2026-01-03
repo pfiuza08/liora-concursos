@@ -469,3 +469,20 @@ a:hover { text-decoration: underline; }
 .liora-password-toggle:hover {
   color: var(--fg);
 }
+/* 🔐 LOGIN MODAL — CANÔNICO */
+#liora-auth {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+
+  display: none;
+  align-items: center;
+  justify-content: center;
+
+  background: rgba(0,0,0,0.65);
+}
+
+/* aberto */
+#liora-auth:not(.hidden) {
+  display: flex;
+}
