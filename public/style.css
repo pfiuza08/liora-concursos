@@ -638,4 +638,96 @@ header.header--compact h1 {
 header.header--compact p {
   display: none;
 }
+/* ==========================================================
+   🎨 LIORA — REFINO DE LAYOUT PROFISSIONAL
+   Objetivo:
+   - Retomar visual premium
+   - Melhorar leitura em telas longas
+   - Corrigir sensação de coluna estreita
+   - Mobile first, sem pirotecnia
+========================================================== */
+
+/* ----------------------------------------------------------
+   📐 CONTAINER PRINCIPAL DA PÁGINA
+---------------------------------------------------------- */
+
+.liora-page,
+main {
+  max-width: 980px;            /* Mais presença no desktop */
+  margin: 0 auto;
+  padding: 24px 20px 64px;
+}
+
+/* ----------------------------------------------------------
+   🧱 CARD RAIZ DO CONTEÚDO (âncora visual)
+---------------------------------------------------------- */
+
+.liora-content-card {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 28px 28px 32px;
+  box-shadow: var(--shadow);
+}
+
+/* Ritmo vertical automático entre blocos */
+.liora-content-card > * + * {
+  margin-top: 1.25rem;
+}
+
+/* ----------------------------------------------------------
+   🏷️ HIERARQUIA DE TÍTULOS
+---------------------------------------------------------- */
+
+.liora-content-card h2 {
+  font-size: 1.35rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.liora-content-card h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-top: 1.75rem;
+  margin-bottom: 0.5rem;
+}
+
+/* ----------------------------------------------------------
+   📄 TEXTO LONGO E LISTAS
+---------------------------------------------------------- */
+
+.liora-content-card p {
+  line-height: 1.6;
+}
+
+.liora-content-card ul {
+  padding-left: 1.25rem;
+}
+
+.liora-content-card li {
+  margin-bottom: 0.5rem;
+  line-height: 1.55;
+}
+
+/* ----------------------------------------------------------
+   📱 AJUSTES FINOS PARA MOBILE
+---------------------------------------------------------- */
+
+@media (max-width: 480px) {
+  .liora-page,
+  main {
+    padding: 16px 14px 48px;
+  }
+
+  .liora-content-card {
+    padding: 20px 16px 24px;
+  }
+
+  .liora-content-card h2 {
+    font-size: 1.2rem;
+  }
+
+  .liora-content-card h3 {
+    font-size: 1rem;
+  }
+}
 
