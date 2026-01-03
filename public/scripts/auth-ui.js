@@ -82,7 +82,9 @@
         console.log("🔐 Login solicitado:", email);
         await window.lioraAuth.login(email, senha);
 
-        // sucesso → fecha modal
+         // 🔑 força re-render do header
+        window.dispatchEvent(new Event("liora:render-auth-ui"));
+
         closeAuth();
 
       } catch (err) {
