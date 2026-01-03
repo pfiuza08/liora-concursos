@@ -445,16 +445,12 @@ body.liora-modal-open header {
   font-size: 1.05rem;
   line-height: 1;
 }
-/* ===============================
-   🔐 PASSWORD TOGGLE — EMOJI FIX (MOBILE + DESKTOP)
-=============================== */
-
 .liora-password-wrapper {
   position: relative;
 }
 
 .liora-password-wrapper input {
-  padding-right: 3.2rem;
+  padding-right: 3rem;
 }
 
 .liora-password-toggle {
@@ -462,31 +458,14 @@ body.liora-modal-open header {
   right: 0.75rem;
   top: 50%;
   transform: translateY(-50%);
-
-  width: 36px;
-  height: 36px;
-
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-
   background: none;
-  border: 0;
-  padding: 0;
+  border: none;
   cursor: pointer;
-
-  /* 🔑 AQUI ESTÁ O SEGREDO */
-  font-family:
-    "Apple Color Emoji",
-    "Segoe UI Emoji",
-    "Segoe UI Symbol",
-    "Noto Color Emoji",
-    system-ui;
-
-  font-size: 18px;
+  font-size: 1.1rem;
   line-height: 1;
-  color: var(--fg);
+  color: var(--muted);
+}
 
-  user-select: none;
-  -webkit-tap-highlight-color: transparent;
+.liora-password-toggle:hover {
+  color: var(--fg);
 }
