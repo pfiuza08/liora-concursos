@@ -533,4 +533,79 @@ header > .flex.items-center.gap-4 {
 #btn-theme {
   display: inline-flex !important;
 }
+/* ==========================================================
+   🔐 LIORA — HEADER RESPONSIVO (MOBILE SAFE)
+   Corrige:
+   - Botão Sair fora da tela
+   - Botão Tema invisível
+   - Nome de usuário empurrando layout
+========================================================== */
+
+/* Header pode quebrar no mobile */
+header {
+  flex-wrap: wrap;
+}
+
+/* Bloco esquerdo (logo + título + subtítulo) */
+header > .flex.items-center.gap-3 {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* Trunca título para não empurrar o header */
+header h1 {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* Subtítulo não deve roubar espaço no mobile */
+@media (max-width: 480px) {
+  header p {
+    display: none;
+  }
+}
+
+/* Bloco direito (usuário + botões) */
+header > .flex.items-center.gap-4 {
+  flex-shrink: 0;     /* nunca encolhe */
+  margin-left: auto; /* mantém à direita */
+  max-width: 100%;
+  overflow: hidden;
+}
+
+/* Info do usuário */
+#liora-user-info {
+  flex: 1 1 auto;
+  min-width: 0;      /* 🔑 essencial para truncar texto */
+  max-width: 100%;
+  text-align: right;
+}
+
+/* Nome do usuário */
+#liora-user-name {
+  display: block;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* Status do usuário */
+#liora-user-status {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* Botão sair nunca pode sumir */
+#btn-logout {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+/* Botão de tema SEMPRE visível */
+#btn-theme {
+  display: inline-flex !important;
+  flex: 0 0 auto;
+}
 
