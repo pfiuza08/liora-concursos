@@ -232,9 +232,9 @@ a:hover { text-decoration: underline; }
 /* ------------------------------------------------------------
    🔐 HEADER — ESCONDE DURANTE LOGIN
 ------------------------------------------------------------ */
-body.liora-modal-open header {
+/* body.liora-modal-open header {
   display: none;
-}
+} */
 /* =========================================================
    📐 AJUSTE — BLOCO "SEU ESTUDO"
 ========================================================= */
