@@ -320,65 +320,81 @@
           </div>
         </div>
 
-        <!-- LISTA DE TÓPICOS DO PLANO -->
-        <div id="area-plano" class="space-y-6 hidden">
-          <div class="flex justify-between items-baseline">
-            <h3 class="section-title">Seu Plano de Estudo</h3>
-            <p id="ctx" class="text-sm text-[var(--muted)]"></p>
+        <!-- ============================= -->
+        <!-- PLANO + SESSÕES -->
+        <!-- ============================= -->
+        <div id="area-plano" class="liora-plano hidden">
+        
+          <div class="liora-plano-header">
+            <h2 class="liora-plano-titulo">Seu Plano de Estudo</h2>
+            <p id="ctx" class="liora-plano-contexto"></p>
           </div>
-          <div id="plano" class="space-y-4"></div>
+        
+          <div id="plano" class="liora-plano-sessoes"></div>
+        
         </div>
-
-        <!-- WIZARD -->
-        <div id="liora-sessoes" class="hidden space-y-6">
-          <h3 id="liora-tema-ativo" class="text-lg font-semibold"></h3>
-
+        
+        <!-- ============================= -->
+        <!-- SESSÃO ATIVA / WIZARD -->
+        <!-- ============================= -->
+        <div id="liora-sessoes" class="liora-sessao-area hidden">
+        
+          <div class="liora-sessao-header">
+            <span class="liora-sessao-etiqueta">Sessão atual</span>
+            <h3 id="liora-tema-ativo" class="liora-sessao-tema"></h3>
+          </div>
+        
           <div class="liora-wizard-card">
-            <div id="liora-sessao-progress" class="text-sm text-[var(--muted)] mb-2"></div>
+        
+            <div id="liora-sessao-progress" class="liora-sessao-progress"></div>
             <h4 id="liora-sessao-titulo" class="liora-wizard-title"></h4>
-
+        
             <div class="liora-wizard-section">
               <h5>OBJETIVO</h5>
               <p id="liora-sessao-objetivo"></p>
             </div>
-
+        
             <div class="liora-wizard-section">
               <h5>CONTEÚDO</h5>
               <div id="liora-sessao-conteudo"></div>
             </div>
-
+        
             <div class="liora-wizard-section">
               <h5>ANALOGIAS</h5>
               <div id="liora-sessao-analogias"></div>
             </div>
-
+        
             <div class="liora-wizard-section">
               <h5>ATIVAÇÃO</h5>
               <ul id="liora-sessao-ativacao"></ul>
             </div>
-
+        
             <div class="liora-wizard-section">
               <h5>TESTE RÁPIDO</h5>
               <div id="liora-sessao-quiz"></div>
               <p id="liora-sessao-quiz-feedback" class="liora-quiz-feedback"></p>
             </div>
-
+        
             <div class="liora-wizard-section">
               <h5>FLASHCARDS</h5>
               <div id="liora-sessao-flashcards" class="liora-flashcards-box"></div>
             </div>
-
+        
             <div class="liora-wizard-section">
               <h5>MAPA MENTAL</h5>
               <pre id="liora-sessao-mapa" class="liora-mapa-mental"></pre>
             </div>
           </div>
-
-          <div class="flex justify-between gap-3">
+        
+          <!-- ============================= -->
+          <!-- NAVEGAÇÃO DA SESSÃO -->
+          <!-- ============================= -->
+          <div class="liora-sessao-navegacao">
             <button id="liora-btn-voltar" class="btn-secondary">◀ Voltar</button>
             <button id="liora-btn-revisar" class="btn-secondary">✓ Revisar</button>
             <button id="liora-btn-proxima" class="btn-primary">Próxima ▶</button>
           </div>
+        
         </div>
 
         <!-- SIMULADOS -->
