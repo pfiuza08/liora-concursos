@@ -827,4 +827,85 @@ main {
   font-size: 1rem;
   line-height: 1.6;
 }
+/* ============================================================
+   LIORA — PLANO & SESSÕES (LAYOUT PROFISSIONAL)
+============================================================ */
+
+/* ---------- PLANO ---------- */
+
+.liora-plano {
+  max-width: 980px;
+  margin: 0 auto 32px;
+}
+
+.liora-plano-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 14px;
+}
+
+.liora-plano-titulo {
+  font-size: 1.35rem;
+  font-weight: 700;
+}
+
+.liora-plano-contexto {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.liora-plano-sessoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+/* ---------- SESSÃO ATIVA ---------- */
+
+.liora-sessao-area {
+  max-width: 980px;
+  margin: 0 auto;
+}
+
+.liora-sessao-header {
+  margin-bottom: 14px;
+}
+
+.liora-sessao-etiqueta {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  color: var(--muted);
+}
+
+.liora-sessao-tema {
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+/* ---------- NAVEGAÇÃO ---------- */
+
+.liora-sessao-navegacao {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 28px;
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+  .liora-plano-header {
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .liora-sessao-navegacao {
+    flex-direction: column;
+  }
+
+  .liora-sessao-navegacao button {
+    width: 100%;
+  }
+}
 
