@@ -1,4 +1,4 @@
-// ==========================================================
+F// ==========================================================
 // 🧠 LIORA — CORE v78-FREEMIUM-A4-COMMERCIAL
 // ----------------------------------------------------------
 // Inclui:
@@ -520,28 +520,36 @@
       }
     }
 
-    // --------------------------------------------------------
-    // 🌟 CONTEXTO LATERAL (estrutura do plano / origem)
-    // - NÃO repete o tema (Opção A)
-    // - Mantém nome do PDF quando origem = upload
-    // --------------------------------------------------------
-    function atualizarContextoLateral() {
-      if (!els.ctx) return;
-    
-      // Caso especial: plano gerado a partir de PDF
-      if (wizard.origem === "upload" && wizard.pdfNome) {
-        els.ctx.textContent = `PDF: ${wizard.pdfNome}`;
-        return;
-      }
-    
-      // Plano por tema: mostrar apenas estrutura (não o tema)
-      const plano = window.lioraEstudos?.getPlanoAtivo?.();
-      if (plano?.sessoes?.length) {
-        els.ctx.textContent = `${plano.sessoes.length} sessões`;
-      } else {
-        els.ctx.textContent = "";
-      }
+   // --------------------------------------------------------
+  // 🌟 CONTEXTO LATERAL (somente quando há plano visível)
+  // --------------------------------------------------------
+  function atualizarContextoLateral() {
+    if (!els.ctx) return;
+  
+    // Se a área do plano NÃO está visível, não mostrar contexto
+    const areaPlano = document.getElementById("area-plano");
+    const planoVisivel =
+      areaPlano && !areaPlano.classList.contains("hidden");
+  
+    if (!planoVisivel) {
+      els.ctx.textContent = "";
+      return;
     }
+  
+    // Caso especial: plano gerado a partir de PDF
+    if (wizard.origem === "upload" && wizard.pdfNome) {
+      els.ctx.textContent = `PDF: ${wizard.pdfNome}`;
+      return;
+    }
+  
+    // Plano por tema: mostrar apenas estrutura
+    const plano = window.lioraEstudos?.getPlanoAtivo?.();
+    if (plano?.sessoes?.length) {
+      els.ctx.textContent = `${plano.sessoes.length} sessões`;
+    } else {
+      els.ctx.textContent = "";
+    }
+  }
 
     // --------------------------------------------------------
     // 📂 LABEL DO UPLOAD — mostra nome do PDF selecionado
