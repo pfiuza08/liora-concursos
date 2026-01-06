@@ -521,15 +521,23 @@
     }
 
     // --------------------------------------------------------
-    // 🌟 CONTEXTO LATERAL (mostra tema ou nome do PDF)
+    // 🌟 CONTEXTO LATERAL (estrutura do plano / origem)
+    // - NÃO repete o tema (Opção A)
+    // - Mantém nome do PDF quando origem = upload
     // --------------------------------------------------------
     function atualizarContextoLateral() {
       if (!els.ctx) return;
-
+    
+      // Caso especial: plano gerado a partir de PDF
       if (wizard.origem === "upload" && wizard.pdfNome) {
         els.ctx.textContent = `PDF: ${wizard.pdfNome}`;
-      } else if (wizard.tema) {
-        els.ctx.textContent = wizard.tema;
+        return;
+      }
+    
+      // Plano por tema: mostrar apenas estrutura (não o tema)
+      const plano = window.lioraEstudos?.getPlanoAtivo?.();
+      if (plano?.sessoes?.length) {
+        els.ctx.textContent = `${plano.sessoes.length} sessões`;
       } else {
         els.ctx.textContent = "";
       }
