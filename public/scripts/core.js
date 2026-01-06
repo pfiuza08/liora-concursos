@@ -1,4 +1,4 @@
-F// ==========================================================
+// ==========================================================
 // 🧠 LIORA — CORE v78-FREEMIUM-A4-COMMERCIAL
 // ----------------------------------------------------------
 // Inclui:
@@ -520,36 +520,20 @@ F// ==========================================================
       }
     }
 
-   // --------------------------------------------------------
-  // 🌟 CONTEXTO LATERAL (somente quando há plano visível)
-  // --------------------------------------------------------
-  function atualizarContextoLateral() {
-    if (!els.ctx) return;
-  
-    // Se a área do plano NÃO está visível, não mostrar contexto
-    const areaPlano = document.getElementById("area-plano");
-    const planoVisivel =
-      areaPlano && !areaPlano.classList.contains("hidden");
-  
-    if (!planoVisivel) {
-      els.ctx.textContent = "";
-      return;
+     // --------------------------------------------------------
+    // 🌟 CONTEXTO LATERAL (mostra tema ou nome do PDF)
+    // --------------------------------------------------------
+    function atualizarContextoLateral() {
+      if (!els.ctx) return;
+    
+      if (wizard.origem === "upload" && wizard.pdfNome) {
+        els.ctx.textContent = `PDF: ${wizard.pdfNome}`;
+      } else if (wizard.tema) {
+        els.ctx.textContent = wizard.tema;
+      } else {
+        els.ctx.textContent = "";
+      }
     }
-  
-    // Caso especial: plano gerado a partir de PDF
-    if (wizard.origem === "upload" && wizard.pdfNome) {
-      els.ctx.textContent = `PDF: ${wizard.pdfNome}`;
-      return;
-    }
-  
-    // Plano por tema: mostrar apenas estrutura
-    const plano = window.lioraEstudos?.getPlanoAtivo?.();
-    if (plano?.sessoes?.length) {
-      els.ctx.textContent = `${plano.sessoes.length} sessões`;
-    } else {
-      els.ctx.textContent = "";
-    }
-  }
 
     // --------------------------------------------------------
     // 📂 LABEL DO UPLOAD — mostra nome do PDF selecionado
