@@ -19,11 +19,13 @@
 
     bloco.classList.toggle("hidden", !deveMostrar);
 
-    if (deveMostrar && resumo && planoAtivo) {
-      const tema = planoAtivo.tema || "Estudo ativo";
-      const qtd = planoAtivo.sessoes?.length || 0;
-      resumo.textContent = `Tema ativo: ${tema} — ${qtd} sessões`;
-    }
+   if (deveMostrar && resumo && planoAtivo) {
+    const qtd = planoAtivo.sessoes?.length || 0;
+  
+    // Contexto estrutural do plano (sem repetir o tema)
+    resumo.textContent = `${qtd} sessões`;
+  }
+
   }
 
   // 🔔 eventos canônicos
