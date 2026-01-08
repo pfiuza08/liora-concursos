@@ -1234,4 +1234,92 @@ html.light .liora-flashcard.open {
   border-left: 4px solid var(--brand);
   line-height: 1.6;
 }
+/* =========================================================
+   🔘 BOTÕES — PADRÃO LIORA (Wizard + Geral)
+========================================================= */
+
+:root {
+  --btn-radius: 999px;
+  --btn-padding-y: 10px;
+  --btn-padding-x: 18px;
+  --btn-font-size: 0.95rem;
+}
+
+/* -------- BASE -------- */
+button,
+.btn-primary,
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  padding: var(--btn-padding-y) var(--btn-padding-x);
+  border-radius: var(--btn-radius);
+  font-size: var(--btn-font-size);
+  font-weight: 500;
+  line-height: 1;
+
+  cursor: pointer;
+  transition: all 0.18s ease;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+
+/* -------- SECUNDÁRIO -------- */
+.btn-secondary,
+#liora-btn-voltar,
+#liora-btn-revisar {
+  background: transparent;
+  color: var(--fg);
+  border: 1px solid var(--border);
+}
+
+.btn-secondary:hover:not(:disabled),
+#liora-btn-voltar:hover:not(:disabled),
+#liora-btn-revisar:hover:not(:disabled) {
+  border-color: var(--brand);
+  color: var(--brand);
+}
+
+/* -------- PRIMÁRIO -------- */
+.btn-primary,
+#liora-btn-proxima {
+  background: var(--brand);
+  color: #fff;
+  border: 1px solid var(--brand);
+}
+
+.btn-primary:hover:not(:disabled),
+#liora-btn-proxima:hover:not(:disabled) {
+  filter: brightness(1.05);
+}
+
+/* -------- DESABILITADO -------- */
+button:disabled,
+.liora-btn-disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* -------- FOOTER DO WIZARD -------- */
+#liora-sessoes > .flex {
+  margin-top: 28px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+/* -------- MOBILE -------- */
+@media (max-width: 640px) {
+  #liora-sessoes > .flex {
+    flex-direction: column;
+  }
+
+  #liora-btn-voltar,
+  #liora-btn-revisar,
+  #liora-btn-proxima {
+    width: 100%;
+  }
+}
 
