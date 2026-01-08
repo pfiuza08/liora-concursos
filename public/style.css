@@ -1100,4 +1100,46 @@ html.light .liora-quiz-option.correct {
 html.light .liora-quiz-option.incorrect {
   background: #fdecea;
 }
+/* ============================================================
+   LIORA — FLASHCARDS INTERATIVOS
+============================================================ */
+
+.liora-flashcard {
+  cursor: pointer;
+  transition: all .25s ease;
+}
+
+.liora-flashcard .fc-question {
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+/* Resposta escondida */
+.liora-flashcard .fc-answer {
+  margin-top: 12px;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: var(--muted);
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: all .3s ease;
+}
+
+/* Aberto */
+.liora-flashcard.open .fc-answer {
+  max-height: 400px;
+  opacity: 1;
+}
+
+/* Destaque visual quando aberto */
+.liora-flashcard.open {
+  background: rgba(196,75,4,0.18);
+  border-color: var(--brand);
+}
+
+/* Light mode */
+html.light .liora-flashcard.open {
+  background: #fff4ec;
+}
 
