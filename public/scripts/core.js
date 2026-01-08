@@ -787,43 +787,63 @@ if (els.wizardQuiz) {
     opt.type = "button";
     opt.textContent = texto;
 
-    opt.addEventListener("click", () => {
-      if (respondeu) return;
-      respondeu = true;
+   opt.addEventListener("click", () => {
+  els.wizardQuiz
+    .querySelectorAll(".liora-quiz-option")
+    .forEach((o) =>
+      o.classList.remove("selected", "correct", "incorrect")
+    );
 
-      const correta = idx === Number(q.corretaIndex);
+  opt.classList.add("selected");
 
-      els.wizardQuiz
-        .querySelectorAll(".liora-quiz-item")
-        .forEach((b, i) => {
-          b.disabled = true;
-          if (i === q.corretaIndex) b.classList.add("correta");
-          else if (i === idx) b.classList.add("errada");
-        });
+  const acertou = !!altObj.correta;
 
-      const feedback = document.createElement("div");
-      feedback.className = "liora-quiz-feedback";
+  // Remove feedback anterior
+  const oldFeedback = els.wizardQuiz.querySelector(".liora-quiz-feedback");
+  if (oldFeedback) oldFeedback.remove();
 
-      if (correta) {
-        feedback.innerHTML = `✅ <strong>Correto!</strong><br>${q.explicacao || "Muito bem!"}`;
-      } else {
-        feedback.innerHTML = `❌ <strong>Não é bem isso.</strong><br>${q.explicacao || "Releia o conceito e tente novamente mais tarde."}`;
-      }
+  // Feedback pedagógico
+  const feedback = document.createElement("div");
+  feedback.className = "liora-quiz-feedback " + (acertou ? "correct" : "incorrect");
 
-      els.wizardQuiz.appendChild(feedback);
+  if (acertou) {
+    opt.classList.add("correct");
 
-      // 📊 registra no Study Manager
-      if (window.lioraEstudos?.registrarQuizResultado && s?.id) {
-        window.lioraEstudos.registrarQuizResultado(s.id, {
-          acertou: correta,
-          tentativas: 1,
-        });
-      }
+    feedback.innerHTML = `
+      <strong>✅ Correto!</strong>
+      ${q.explicacao || "Você identificou corretamente o conceito central da questão."}
+      <br><br>
+      💡 <em>Dica:</em> Em provas, isso costuma aparecer como uma pergunta sobre
+      <strong>identificação de padrões e generalização</strong>.
+    `;
+  } else {
+    opt.classList.add("incorrect");
+
+    const explicacaoErrada =
+      Array.isArray(q.explicacoes) && q.explicacoes[altObj.indiceOriginal]
+        ? q.explicacoes[altObj.indiceOriginal]
+        : "Essa alternativa parece correta, mas não representa o conceito principal.";
+
+    feedback.innerHTML = `
+      <strong>⚠️ Ainda não.</strong>
+      ${explicacaoErrada}
+      <br><br>
+      ✔️ <em>Reforce:</em> IA Generativa aprende observando exemplos e extraindo padrões,
+      não copiando literalmente nem inventando do nada.
+    `;
+  }
+
+  els.wizardQuiz.appendChild(feedback);
+
+  // Registrar no Study Manager
+  if (window.lioraEstudos?.registrarQuizResultado && s?.id) {
+    window.lioraEstudos.registrarQuizResultado(s.id, {
+      acertou,
+      tentativas: 1,
     });
+  }
+});
 
-    els.wizardQuiz.appendChild(opt);
-  });
-}
 
 // ----------------------- FLASHCARDS PREMIUM + Estudos -------------------
 if (els.wizardFlashcards) {
