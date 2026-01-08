@@ -1142,4 +1142,53 @@ html.light .liora-quiz-option.incorrect {
 html.light .liora-flashcard.open {
   background: #fff4ec;
 }
+/* ===============================
+   FLASHCARDS — INTERAÇÃO
+================================ */
+
+.liora-flashcard {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  background: var(--card);
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.liora-flashcard:hover {
+  border-color: var(--brand);
+}
+
+/* Pergunta */
+.liora-flashcard-q {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+}
+
+/* Ícone ▸ */
+.liora-flashcard-icon {
+  transition: transform 0.2s ease;
+}
+
+/* Resposta — ESCONDIDA por padrão */
+.liora-flashcard-a {
+  display: none;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--border);
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+/* Estado ABERTO */
+.liora-flashcard.open .liora-flashcard-a {
+  display: block;
+}
+
+.liora-flashcard.open .liora-flashcard-icon {
+  transform: rotate(90deg);
+}
 
