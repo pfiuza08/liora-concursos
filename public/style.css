@@ -974,4 +974,78 @@ main {
 .liora-mapa-mental {
   background: rgba(255,255,255,0.03);
 }
+/* ============================================================
+   LIORA — CONTEÚDO | AJUSTES MODO CLARO (LEITURA)
+============================================================ */
+
+html.light .liora-wizard-card {
+  background: #ffffff;
+  border: 1px solid #e6e6e6;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.04);
+}
+
+/* Remove “caixas pesadas” no light */
+html.light .liora-wizard-section {
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin-top: 32px;
+}
+
+/* Títulos das seções */
+html.light .liora-wizard-section h5 {
+  color: var(--brand);
+  font-size: 0.75rem;
+  letter-spacing: 0.14em;
+  margin-bottom: 10px;
+}
+
+/* Texto principal — leitura confortável */
+html.light #liora-sessao-conteudo p,
+html.light #liora-sessao-conteudo li {
+  color: #222;
+  font-size: 1.05rem;
+  line-height: 1.8;
+}
+
+/* Listas mais “arejadas” */
+html.light #liora-sessao-conteudo ul {
+  padding-left: 22px;
+  margin-top: 8px;
+}
+
+/* Destaques sem poluir */
+html.light #liora-sessao-conteudo strong,
+html.light #liora-sessao-conteudo b {
+  color: #c44b04;
+  font-weight: 600;
+}
+
+/* OBJETIVO no light: destaque sutil */
+html.light #liora-sessao-objetivo {
+  background: #faf5f1;
+  border-left: 4px solid var(--brand);
+  color: #333;
+  padding: 14px 18px;
+}
+
+/* ANALOGIAS e ATIVAÇÃO — texto fluido */
+html.light #liora-sessao-analogias,
+html.light #liora-sessao-ativacao {
+  color: #333;
+}
+
+/* Quiz / Flashcards no light */
+html.light .liora-quiz-option,
+html.light .liora-flashcard {
+  background: #fafafa;
+  border: 1px solid #ddd;
+}
+
+/* Mapa mental no light */
+html.light .liora-mapa-mental {
+  background: #f7f7f7;
+  border: 1px solid #ddd;
+  color: #222;
+}
 
