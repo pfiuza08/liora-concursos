@@ -1357,3 +1357,46 @@ button:disabled,
   cursor: not-allowed;
   pointer-events: none;
 }
+/* =========================================================
+   🧪 TESTE RÁPIDO — FIX DE LAYOUT (DESKTOP + MOBILE)
+========================================================= */
+
+.liora-quiz-option {
+  display: flex;
+  align-items: flex-start;          /* ⬅️ alinha pelo topo */
+  justify-content: flex-start;      /* ⬅️ remove centralização */
+  gap: 12px;
+
+  width: 100%;
+  max-width: 100%;
+
+  padding: 14px 16px;
+  box-sizing: border-box;
+
+  text-align: left;                 /* ⬅️ texto alinhado */
+  white-space: normal;              /* ⬅️ quebra de linha */
+  word-break: break-word;
+
+  overflow-wrap: anywhere;
+}
+
+/* Texto da alternativa */
+.liora-quiz-option-text {
+  flex: 1;
+  line-height: 1.45;
+  text-align: left;
+}
+
+/* Input / bolinha não empurra layout */
+.liora-quiz-option input {
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+/* Mobile: mais respiro lateral */
+@media (max-width: 640px) {
+  .liora-quiz-option {
+    padding: 12px 14px;
+    font-size: 0.95rem;
+  }
+}
