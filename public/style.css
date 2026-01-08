@@ -1358,47 +1358,49 @@ button:disabled,
   pointer-events: none;
 }
 /* =========================================================
-   🧪 TESTE RÁPIDO — CORREÇÃO DEFINITIVA DE LAYOUT
-   Remove QUALQUER centralização herdada
+   🧪 TESTE RÁPIDO — CORREÇÃO DEFINITIVA (PARENT + FILHOS)
 ========================================================= */
 
-/* Wrapper do teste rápido */
-.liora-quiz,
-.liora-quiz * {
-  box-sizing: border-box;
+/* Container do Teste Rápido */
+.liora-quiz {
+  width: 100%;
+  max-width: 100%;
+  display: block;               /* ⬅️ mata grid/flex centralizador */
+  text-align: left;             /* ⬅️ remove herança de center */
 }
 
-/* Container principal */
-.liora-quiz {
+/* Garante que a seção não centralize filhos */
+.liora-wizard-section:has(.liora-quiz) {
+  align-items: stretch !important;
   text-align: left !important;
 }
 
-/* Cada alternativa */
+/* Alternativas */
 .liora-quiz-option {
-  display: flex !important;
-  align-items: flex-start !important;
-  justify-content: flex-start !important;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
 
-  width: 100% !important;
-  max-width: 100% !important;
+  width: 100%;
+  max-width: 100%;
 
   padding: 14px 16px;
-  margin: 0;
+  box-sizing: border-box;
 
-  text-align: left !important;
-  white-space: normal !important;
+  text-align: left;
+  white-space: normal;
   word-break: break-word;
   overflow-wrap: anywhere;
 }
 
-/* Texto da alternativa */
+/* Texto */
 .liora-quiz-option-text {
   flex: 1;
-  text-align: left !important;
+  text-align: left;
   line-height: 1.45;
 }
 
-/* Bolinha / marcador */
+/* Input / bolinha */
 .liora-quiz-option input,
 .liora-quiz-dot {
   flex-shrink: 0;
