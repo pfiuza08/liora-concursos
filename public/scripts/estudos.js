@@ -504,25 +504,28 @@
     },
 
     completeSession(id) {
-      api.concluirSessao(id);
-    },
-  };
+    api.concluirSessao(id);
+  },
+};
+
+// ============================================================
+// 🌐 EXPÕE API GLOBAL
+// ============================================================
+window.lioraEstudos = api;
+
 // ============================================================
 // 🧭 UI — Atualização de contexto do plano (Opção A)
 // Mostra apenas metadados no cabeçalho do plano
 // Tema fica exclusivo da sessão ativa
 // ============================================================
-
 window.addEventListener("liora:plan-updated", () => {
   const plano = window.lioraEstudos?.getPlanoAtivo?.();
   if (!plano) return;
 
-  // Atualiza contexto do plano (ex: "6 sessões • nível iniciante")
+  // Contexto lateral do plano (ex: "6 sessões • nível iniciante")
   const ctx = document.getElementById("ctx");
   if (ctx) {
     const total = plano.sessoes?.length || 0;
-
-    // nível é opcional (se existir no futuro)
     const nivelTexto = plano.nivel
       ? `nível ${String(plano.nivel).toLowerCase()}`
       : "";
@@ -530,10 +533,14 @@ window.addEventListener("liora:plan-updated", () => {
     ctx.textContent = `${total} sessões${nivelTexto ? " • " + nivelTexto : ""}`;
   }
 
-  // Atualiza tema APENAS na sessão ativa
+  // Tema aparece APENAS na sessão ativa
   const temaAtivo = document.getElementById("liora-tema-ativo");
   if (temaAtivo) {
     temaAtivo.textContent = plano.tema || "";
   }
-  window.lioraEstudos = api;
+});
+
+// ============================================================
+// 🔚 FECHAMENTO DO IIFE
+// ============================================================
 })();
