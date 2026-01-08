@@ -1322,4 +1322,38 @@ button:disabled,
     width: 100%;
   }
 }
+/* =========================================================
+   🔥 FIX DEFINITIVO — BOTÃO PRÓXIMA
+   (força padrão visual do primary)
+========================================================= */
 
+#liora-btn-proxima {
+  background: var(--brand) !important;
+  color: #fff !important;
+  border: 1px solid var(--brand) !important;
+
+  padding: 10px 18px !important;
+  border-radius: 999px !important;
+
+  font-size: 0.95rem !important;
+  font-weight: 500 !important;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  transition: all 0.18s ease;
+}
+
+/* Hover */
+#liora-btn-proxima:hover:not(:disabled) {
+  filter: brightness(1.05);
+}
+
+/* Disabled */
+#liora-btn-proxima:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  pointer-events: none;
+}
