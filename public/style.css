@@ -908,4 +908,70 @@ main {
     width: 100%;
   }
 }
+/* ============================================================
+   LIORA — CONTEÚDO PREMIUM (LEITURA & FOCO)
+   Evolução visual sem alterar estrutura
+============================================================ */
+
+/* Card principal mais confortável */
+.liora-wizard-card {
+  background: linear-gradient(
+    180deg,
+    var(--card) 0%,
+    #111 100%
+  );
+}
+
+/* Blocos internos da sessão */
+.liora-wizard-section {
+  margin-top: 28px;
+  padding: 18px 20px;
+  border-radius: 14px;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid var(--border);
+}
+
+/* Título das seções (OBJETIVO, CONTEÚDO, etc.) */
+.liora-wizard-section h5 {
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  font-weight: 700;
+  color: var(--brand);
+  margin-bottom: 12px;
+}
+
+/* Conteúdo textual */
+#liora-sessao-conteudo p,
+#liora-sessao-conteudo li {
+  font-size: 1.05rem;
+  line-height: 1.75;
+  color: #eaeaea;
+}
+
+/* Listas mais legíveis */
+#liora-sessao-conteudo ul {
+  padding-left: 20px;
+  margin-top: 10px;
+}
+
+/* Destaques cognitivos */
+#liora-sessao-conteudo strong,
+#liora-sessao-conteudo b {
+  color: var(--brand);
+  font-weight: 600;
+}
+
+/* Objetivo com identidade própria */
+#liora-sessao-objetivo {
+  background: rgba(196,75,4,0.08);
+  border-left: 4px solid var(--brand);
+  color: #f2f2f2;
+}
+
+/* Quiz, Flashcards e Mapa mais integrados */
+.liora-quiz-option,
+.liora-flashcard,
+.liora-mapa-mental {
+  background: rgba(255,255,255,0.03);
+}
 
