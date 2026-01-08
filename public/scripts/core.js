@@ -761,124 +761,69 @@ e sempre inclua de 3 a 6 flashcards.
           : "<p class='liora-muted'>Nenhuma pergunta de ativação disponível.</p>";
       }
 
-      // ----------------------- QUIZ (Premium + Estudos) -----------------------
-      if (els.wizardQuiz) {
-        els.wizardQuiz.innerHTML = "";
+     // ----------------------- TESTE RÁPIDO (QUIZ DIDÁTICO) -----------------------
+if (els.wizardQuiz) {
+  els.wizardQuiz.innerHTML = "";
 
-        const q = s.quiz || {};
+  const q = s.quiz || {};
+  const alternativas = Array.isArray(q.alternativas) ? q.alternativas : [];
 
-        let alternativasBrutas = Array.isArray(q.alternativas)
-          ? q.alternativas.filter((a) => !!String(a || "").trim())
-          : [];
+  if (!q.pergunta || alternativas.length < 2) {
+    els.wizardQuiz.innerHTML =
+      "<p class='liora-muted'>Teste rápido indisponível para esta sessão.</p>";
+    return;
+  }
 
-        const explicacoesArr = Array.isArray(q.explicacoes)
-          ? q.explicacoes
-          : [];
+  let respondeu = false;
 
-        if (!q.pergunta && alternativasBrutas.length) {
-          q.pergunta = "Analise as alternativas e escolha a melhor resposta.";
-        }
+  const perguntaEl = document.createElement("h4");
+  perguntaEl.className = "liora-quiz-pergunta";
+  perguntaEl.textContent = q.pergunta;
+  els.wizardQuiz.appendChild(perguntaEl);
 
-        if (alternativasBrutas.length < 2) {
-          console.warn("A3.2: Quiz muito fraco → fallback ativado");
-          q.pergunta = q.pergunta || "Qual das opções abaixo está mais correta?";
-          alternativasBrutas = [
-            alternativasBrutas[0] || "Resposta considerada correta.",
-            "Não sei responder.",
-          ];
-          q.corretaIndex = 0;
-        }
+  alternativas.forEach((texto, idx) => {
+    const opt = document.createElement("button");
+    opt.className = "liora-quiz-item";
+    opt.type = "button";
+    opt.textContent = texto;
 
-        if (q.pergunta) {
-          const pergunta = document.createElement("p");
-          pergunta.className = "liora-quiz-question";
-          pergunta.textContent = q.pergunta;
-          els.wizardQuiz.appendChild(pergunta);
-        }
+    opt.addEventListener("click", () => {
+      if (respondeu) return;
+      respondeu = true;
 
-        let alternativas = alternativasBrutas.map((alt, i) => ({
-          texto: String(alt)
-            .replace(/\n/g, " ")
-            .replace(/<\/?[^>]+(>|$)/g, ""),
-          indiceOriginal: i,
-          corretaOriginal: i === Number(q.corretaIndex),
-        }));
+      const correta = idx === Number(q.corretaIndex);
 
-        if (!alternativas.some((a) => a.corretaOriginal)) {
-          alternativas[0].corretaOriginal = true;
-        }
+      els.wizardQuiz
+        .querySelectorAll(".liora-quiz-item")
+        .forEach((b, i) => {
+          b.disabled = true;
+          if (i === q.corretaIndex) b.classList.add("correta");
+          else if (i === idx) b.classList.add("errada");
+        });
 
-        alternativas = shuffle(alternativas);
+      const feedback = document.createElement("div");
+      feedback.className = "liora-quiz-feedback";
 
-        alternativas = alternativas.map((alt, idx) => ({
-          ...alt,
-          idx,
-          correta: alt.corretaOriginal,
-        }));
+      if (correta) {
+        feedback.innerHTML = `✅ <strong>Correto!</strong><br>${q.explicacao || "Muito bem!"}`;
+      } else {
+        feedback.innerHTML = `❌ <strong>Não é bem isso.</strong><br>${q.explicacao || "Releia o conceito e tente novamente mais tarde."}`;
+      }
 
-        alternativas.forEach((altObj) => {
-          const opt = document.createElement("div");
-          opt.className = "liora-quiz-option";
-          opt.dataset.index = String(altObj.idx);
+      els.wizardQuiz.appendChild(feedback);
 
-          opt.innerHTML = `
-            <input type="radio" name="quiz-${wizard.atual}" value="${altObj.idx}">
-            <span class="liora-quiz-option-text">${altObj.texto}</span>
-            <span class="liora-quiz-dot"></span>
-          `;
-
-          opt.addEventListener("click", () => {
-            els.wizardQuiz
-              .querySelectorAll(".liora-quiz-option")
-              .forEach((o) =>
-                o.classList.remove("selected", "correct", "incorrect")
-              );
-
-            opt.classList.add("selected");
-
-            const expEspecifica =
-              explicacoesArr[altObj.indiceOriginal]
-                ? String(explicacoesArr[altObj.indiceOriginal])
-                : "";
-
-            const baseFallback = q.explicacao || "";
-
-            let textoFinal = "";
-            const acertou = !!altObj.correta;
-
-            if (acertou) {
-              opt.classList.add("correct");
-              textoFinal = expEspecifica || baseFallback || "";
-              textoFinal = textoFinal
-                ? `✅ Correto! ${textoFinal}`
-                : "✅ Correto!";
-              els.wizardQuizFeedback.style.color = "var(--brand)";
-            } else {
-              opt.classList.add("incorrect");
-              textoFinal = expEspecifica || baseFallback || "";
-              textoFinal = textoFinal
-                ? `❌ Errado. ${textoFinal}`
-                : "❌ Errado. Releia a pergunta e tente novamente.";
-              els.wizardQuizFeedback.style.color = "var(--muted)";
-            }
-
-            // Registrar evento de quiz no Study Manager (A4)
-            if (window.lioraEstudos?.registrarQuizResultado && s?.id) {
-              window.lioraEstudos.registrarQuizResultado(s.id, {
-                acertou,
-                tentativas: 1,
-              });
-            }
-
-            els.wizardQuizFeedback.innerHTML = textoFinal;
-            els.wizardQuizFeedback.classList.remove("fade");
-            void els.wizardQuizFeedback.offsetWidth;
-            els.wizardQuizFeedback.classList.add("fade");
-          });
-
-          els.wizardQuiz.appendChild(opt);
+      // 📊 registra no Study Manager
+      if (window.lioraEstudos?.registrarQuizResultado && s?.id) {
+        window.lioraEstudos.registrarQuizResultado(s.id, {
+          acertou: correta,
+          tentativas: 1,
         });
       }
+    });
+
+    els.wizardQuiz.appendChild(opt);
+  });
+}
 
 // ----------------------- FLASHCARDS PREMIUM + Estudos -------------------
 if (els.wizardFlashcards) {
