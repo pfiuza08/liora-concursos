@@ -880,65 +880,94 @@ e sempre inclua de 3 a 6 flashcards.
         });
       }
 
-      // ----------------------- FLASHCARDS PREMIUM + Estudos -------------------
-      if (els.wizardFlashcards) {
-        let cards = Array.isArray(s.flashcards) ? s.flashcards : [];
+// ----------------------- FLASHCARDS PREMIUM + Estudos -------------------
+if (els.wizardFlashcards) {
+  let cards = Array.isArray(s.flashcards) ? s.flashcards : [];
 
-        cards = cards
-          .map((fc) => {
-            if (fc?.q && fc?.a) return fc;
-            if (fc?.pergunta && fc?.resposta)
-              return { q: fc.pergunta, a: fc.resposta };
-            if (typeof fc === "string") {
-              const partes = fc.split("|");
-              if (partes.length >= 2) {
-                return {
-                  q: partes[0].replace(/Pergunta:?/i, "").trim(),
-                  a: partes[1].replace(/Resposta:?/i, "").trim(),
-                };
-              }
-            }
-            return null;
-          })
-          .filter((x) => x && x.q && x.a);
-
-        if (!cards.length) {
-          els.wizardFlashcards.innerHTML =
-            "<p class='liora-muted'>Nenhum flashcard gerado para esta sessão.</p>";
-        } else {
-          els.wizardFlashcards.innerHTML = cards
-            .map(
-              (f, i) => `
-                <article class="liora-flashcard" data-index="${i}">
-                  <div class="liora-flashcard-q">
-                    <span class="liora-flashcard-icon">▸</span>
-                    ${f.q}
-                  </div>
-                  <div class="liora-flashcard-a">${f.a}</div>
-                </article>
-              `
-            )
-            .join("");
-
-          els.wizardFlashcards
-            .querySelectorAll(".liora-flashcard")
-            .forEach((cardEl) => {
-              cardEl.addEventListener("click", () => {
-                const abrindo = !cardEl.classList.contains("open");
-                cardEl.classList.toggle("open");
-
-                // registrar uso de flashcard no Study Manager
-                if (
-                  abrindo &&
-                  window.lioraEstudos?.registrarFlashcardUso &&
-                  s?.id
-                ) {
-                  window.lioraEstudos.registrarFlashcardUso(s.id, { qtd: 1 });
-                }
-              });
-            });
+  cards = cards
+    .map((fc) => {
+      if (fc?.q && fc?.a) return fc;
+      if (fc?.pergunta && fc?.resposta)
+        return { q: fc.pergunta, a: fc.resposta };
+      if (typeof fc === "string") {
+        const partes = fc.split("|");
+        if (partes.length >= 2) {
+          return {
+            q: partes[0].replace(/Pergunta:?/i, "").trim(),
+            a: partes[1].replace(/Resposta:?/i, "").trim(),
+          };
         }
       }
+      return null;
+    })
+    .filter((x) => x && x.q && x.a);
+
+  if (!cards.length) {
+    els.wizardFlashcards.innerHTML =
+      "<p class='liora-muted'>Nenhum flashcard gerado para esta sessão.</p>";
+  } else {
+    els.wizardFlashcards.innerHTML = cards
+      .map(
+        (f, i) => `
+          <article 
+            class="liora-flashcard" 
+            data-index="${i}" 
+            tabindex="0"
+            role="button"
+            aria-expanded="false"
+          >
+            <div class="liora-flashcard-q">
+              <span class="liora-flashcard-icon">▸</span>
+              ${f.q}
+            </div>
+            <div class="liora-flashcard-a">
+              ${f.a}
+            </div>
+          </article>
+        `
+      )
+      .join("");
+
+    els.wizardFlashcards
+      .querySelectorAll(".liora-flashcard")
+      .forEach((cardEl) => {
+        const toggle = () => {
+          const abrindo = !cardEl.classList.contains("open");
+
+          // fecha os outros
+          els.wizardFlashcards
+            .querySelectorAll(".liora-flashcard.open")
+            .forEach((el) => {
+              if (el !== cardEl) {
+                el.classList.remove("open");
+                el.setAttribute("aria-expanded", "false");
+              }
+            });
+
+          cardEl.classList.toggle("open", abrindo);
+          cardEl.setAttribute("aria-expanded", String(abrindo));
+
+          // registrar uso no Study Manager
+          if (
+            abrindo &&
+            window.lioraEstudos?.registrarFlashcardUso &&
+            s?.id
+          ) {
+            window.lioraEstudos.registrarFlashcardUso(s.id, { qtd: 1 });
+          }
+        };
+
+        cardEl.addEventListener("click", toggle);
+
+        cardEl.addEventListener("keydown", (e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            toggle();
+          }
+        });
+      });
+  }
+}
 
       // ----------------------- MAPA MENTAL PREMIUM -----------------------
       if (els.wizardMapa) {
