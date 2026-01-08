@@ -1048,4 +1048,56 @@ html.light .liora-mapa-mental {
   border: 1px solid #ddd;
   color: #222;
 }
+/* ============================================================
+   LIORA — TESTE RÁPIDO (QUIZ PREMIUM)
+============================================================ */
+
+.liora-quiz-question {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+.liora-quiz-option {
+  position: relative;
+  padding: 14px 16px;
+  border-radius: 12px;
+  transition: all .2s ease;
+}
+
+.liora-quiz-option:hover {
+  transform: translateY(-1px);
+  border-color: var(--brand);
+}
+
+/* Selecionada */
+.liora-quiz-option.selected {
+  background: rgba(196,75,4,0.12);
+  border-color: var(--brand);
+}
+
+/* Correta */
+.liora-quiz-option.correct {
+  background: rgba(46,204,113,0.18);
+  border-color: #2ecc71;
+}
+
+/* Errada */
+.liora-quiz-option.incorrect {
+  background: rgba(231,76,60,0.18);
+  border-color: #e74c3c;
+}
+
+/* Light mode */
+html.light .liora-quiz-option {
+  background: #fafafa;
+}
+
+html.light .liora-quiz-option.correct {
+  background: #eafaf1;
+}
+
+html.light .liora-quiz-option.incorrect {
+  background: #fdecea;
+}
 
