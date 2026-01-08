@@ -1191,4 +1191,47 @@ html.light .liora-flashcard.open {
 .liora-flashcard.open .liora-flashcard-icon {
   transform: rotate(90deg);
 }
+/* ===============================
+   TESTE RÁPIDO — QUIZ
+================================ */
+
+.liora-quiz-pergunta {
+  margin-bottom: 12px;
+  font-weight: 600;
+}
+
+.liora-quiz-item {
+  width: 100%;
+  text-align: left;
+  padding: 12px 14px;
+  margin-bottom: 8px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.liora-quiz-item:hover:not(:disabled) {
+  border-color: var(--brand);
+}
+
+.liora-quiz-item.correta {
+  border-color: #2ecc71;
+  background: rgba(46, 204, 113, 0.15);
+}
+
+.liora-quiz-item.errada {
+  border-color: #e74c3c;
+  background: rgba(231, 76, 60, 0.15);
+}
+
+.liora-quiz-feedback {
+  margin-top: 12px;
+  padding: 12px;
+  border-radius: 10px;
+  background: var(--bg2);
+  border-left: 4px solid var(--brand);
+  line-height: 1.6;
+}
 
