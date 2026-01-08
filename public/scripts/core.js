@@ -761,7 +761,7 @@ e sempre inclua de 3 a 6 flashcards.
           : "<p class='liora-muted'>Nenhuma pergunta de ativação disponível.</p>";
       }
 
-     // ----------------------- TESTE RÁPIDO (QUIZ DIDÁTICO) -----------------------
+// ----------------------- TESTE RÁPIDO (QUIZ DIDÁTICO) -----------------------
 if (els.wizardQuiz) {
   els.wizardQuiz.innerHTML = "";
 
@@ -771,78 +771,66 @@ if (els.wizardQuiz) {
   if (!q.pergunta || alternativas.length < 2) {
     els.wizardQuiz.innerHTML =
       "<p class='liora-muted'>Teste rápido indisponível para esta sessão.</p>";
-    return;
-  }
-
-  let respondeu = false;
-
-  const perguntaEl = document.createElement("h4");
-  perguntaEl.className = "liora-quiz-pergunta";
-  perguntaEl.textContent = q.pergunta;
-  els.wizardQuiz.appendChild(perguntaEl);
-
-  alternativas.forEach((texto, idx) => {
-    const opt = document.createElement("button");
-    opt.className = "liora-quiz-item";
-    opt.type = "button";
-    opt.textContent = texto;
-
-   opt.addEventListener("click", () => {
-  els.wizardQuiz
-    .querySelectorAll(".liora-quiz-option")
-    .forEach((o) =>
-      o.classList.remove("selected", "correct", "incorrect")
-    );
-
-  opt.classList.add("selected");
-
-  const acertou = !!altObj.correta;
-
-  // Remove feedback anterior
-  const oldFeedback = els.wizardQuiz.querySelector(".liora-quiz-feedback");
-  if (oldFeedback) oldFeedback.remove();
-
-  // Feedback pedagógico
-  const feedback = document.createElement("div");
-  feedback.className = "liora-quiz-feedback " + (acertou ? "correct" : "incorrect");
-
-  if (acertou) {
-    opt.classList.add("correct");
-
-    feedback.innerHTML = `
-      <strong>✅ Correto!</strong>
-      ${q.explicacao || "Você identificou corretamente o conceito central da questão."}
-      <br><br>
-      💡 <em>Dica:</em> Em provas, isso costuma aparecer como uma pergunta sobre
-      <strong>identificação de padrões e generalização</strong>.
-    `;
   } else {
-    opt.classList.add("incorrect");
+    const perguntaEl = document.createElement("h4");
+    perguntaEl.className = "liora-quiz-pergunta";
+    perguntaEl.textContent = q.pergunta;
+    els.wizardQuiz.appendChild(perguntaEl);
 
-    const explicacaoErrada =
-      Array.isArray(q.explicacoes) && q.explicacoes[altObj.indiceOriginal]
-        ? q.explicacoes[altObj.indiceOriginal]
-        : "Essa alternativa parece correta, mas não representa o conceito principal.";
+    alternativas.forEach((texto, idx) => {
+      const opt = document.createElement("button");
+      opt.className = "liora-quiz-option";
+      opt.type = "button";
+      opt.textContent = texto;
 
-    feedback.innerHTML = `
-      <strong>⚠️ Ainda não.</strong>
-      ${explicacaoErrada}
-      <br><br>
-      ✔️ <em>Reforce:</em> IA Generativa aprende observando exemplos e extraindo padrões,
-      não copiando literalmente nem inventando do nada.
-    `;
-  }
+      opt.addEventListener("click", () => {
+        els.wizardQuiz
+          .querySelectorAll(".liora-quiz-option")
+          .forEach((o) =>
+            o.classList.remove("selected", "correct", "incorrect")
+          );
 
-  els.wizardQuiz.appendChild(feedback);
+        opt.classList.add("selected");
 
-  // Registrar no Study Manager
-  if (window.lioraEstudos?.registrarQuizResultado && s?.id) {
-    window.lioraEstudos.registrarQuizResultado(s.id, {
-      acertou,
-      tentativas: 1,
+        const acertou = idx === q.corretaIndex;
+
+        const oldFeedback =
+          els.wizardQuiz.querySelector(".liora-quiz-feedback");
+        if (oldFeedback) oldFeedback.remove();
+
+        const feedback = document.createElement("div");
+        feedback.className =
+          "liora-quiz-feedback " + (acertou ? "correct" : "incorrect");
+
+        if (acertou) {
+          opt.classList.add("correct");
+          feedback.innerHTML = `
+            <strong>✅ Correto!</strong>
+            ${q.explicacao || "Você identificou corretamente o conceito central da questão."}
+          `;
+        } else {
+          opt.classList.add("incorrect");
+          feedback.innerHTML = `
+            <strong>⚠️ Ainda não.</strong>
+            Essa alternativa não representa corretamente o conceito principal.
+          `;
+        }
+
+        els.wizardQuiz.appendChild(feedback);
+
+        if (window.lioraEstudos?.registrarQuizResultado && s?.id) {
+          window.lioraEstudos.registrarQuizResultado(s.id, {
+            acertou,
+            tentativas: 1,
+          });
+        }
+      });
+
+      els.wizardQuiz.appendChild(opt);
     });
   }
-});
+}
+
 
 
 // ----------------------- FLASHCARDS PREMIUM + Estudos -------------------
