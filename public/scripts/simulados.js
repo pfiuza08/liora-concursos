@@ -253,14 +253,33 @@
 
       window.lioraLoading?.show?.("Gerando simulado...");
 
-    try {
-      const raw = await gerarQuestoes(STATE.config);
-      const lista = prepararQuestoes(raw);
+   //try {
+   //   const raw = await gerarQuestoes(STATE.config);
+  //    const lista = prepararQuestoes(raw);
 
-      if (!Array.isArray(lista) || lista.length === 0) {
-        throw new Error("Lista de questões vazia/invalidada após prepararQuestoes.");
-      }
+  //    if (!Array.isArray(lista) || lista.length === 0) {
+  //      throw new Error("Lista de questões vazia/invalidada após prepararQuestoes.");
+   //   } 
 
+  try {
+  console.log("🧪 BYPASS IA — gerando questão local");
+
+  const lista = prepararQuestoes([
+    {
+      enunciado: "Questão de teste — você está vendo isso?",
+      alternativas: ["Sim", "Não", "Talvez", "Nunca"],
+      corretaIndex: 0,
+      explicacaoCorreta: "Se você vê esta questão, o render está funcionando.",
+      explicacoesErradas: ["Não", "Talvez", "Nunca"]
+    }
+  ]);
+
+  if (!Array.isArray(lista) || lista.length === 0) {
+    throw new Error("Lista local inválida.");
+  }
+
+      
+      
       STATE.questoes = lista;
       STATE.atual = 0;
 
