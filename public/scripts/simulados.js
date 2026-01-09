@@ -368,6 +368,9 @@ Retorne APENAS JSON válido no formato:
   // RENDER QUESTÃO
   // -------------------------------------------------
   function renderQuestao() {
+
+    console.log("🧪 renderQuestao chamado", STATE);
+
     const els = getEls();
 
     // Blindagem: sem container, não renderiza
