@@ -798,23 +798,52 @@ if (els.wizardQuiz) {
           els.wizardQuiz.querySelector(".liora-quiz-feedback");
         if (oldFeedback) oldFeedback.remove();
 
-        const feedback = document.createElement("div");
-        feedback.className =
-          "liora-quiz-feedback " + (acertou ? "correct" : "incorrect");
-
-        if (acertou) {
-          opt.classList.add("correct");
-          feedback.innerHTML = `
-            <strong>✅ Correto!</strong>
-            ${q.explicacao || "Você identificou corretamente o conceito central da questão."}
-          `;
-        } else {
-          opt.classList.add("incorrect");
-          feedback.innerHTML = `
-            <strong>⚠️ Ainda não.</strong>
-            Essa alternativa não representa corretamente o conceito principal.
-          `;
-        }
+        // Feedback pedagógico progressivo
+          const feedback = document.createElement("div");
+          feedback.className =
+            "liora-quiz-feedback " + (acertou ? "correct" : "incorrect");
+          
+          if (acertou) {
+            opt.classList.add("correct");
+          
+            feedback.innerHTML = `
+              <div class="liora-feedback-title">✅ Correto!</div>
+          
+              <div class="liora-feedback-text">
+                ${q.explicacao ||
+                  "Você identificou corretamente o conceito central da questão."}
+              </div>
+          
+              <div class="liora-feedback-mini">
+                💡 <strong>Por que isso importa?</strong><br>
+                Em provas, esse conceito costuma aparecer como perguntas sobre
+                <em>identificação de padrões</em> e <em>generalização</em>.
+              </div>
+            `;
+          } else {
+            opt.classList.add("incorrect");
+          
+            const explicacaoErrada =
+              Array.isArray(q.explicacoes) && q.explicacoes[idx]
+                ? q.explicacoes[idx]
+                : "Essa alternativa parece plausível, mas não explica como o aprendizado realmente acontece.";
+          
+            feedback.innerHTML = `
+              <div class="liora-feedback-title">⚠️ Ainda não</div>
+          
+              <div class="liora-feedback-text">
+                ${explicacaoErrada}
+              </div>
+          
+              <div class="liora-feedback-mini">
+                ✔️ <strong>Pense assim:</strong><br>
+                A IA aprende observando muitos exemplos e extraindo padrões,
+                não copiando literalmente nem inventando do nada.
+              </div>
+            `;
+          }
+          
+          els.wizardQuiz.appendChild(feedback);
 
         els.wizardQuiz.appendChild(feedback);
 
