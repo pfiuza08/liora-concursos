@@ -1,5 +1,5 @@
 // =============================================================
-// 🧠 LIORA — SIMULADOS v103.9-CANONICAL
+// 🧠 LIORA — SIMULADOS v104-CANONICAL
 // - Free: experiência completa com limites
 // - Premium: ilimitado + histórico
 // - Shuffle real das alternativas
@@ -8,7 +8,7 @@
 // =============================================================
 
 (function () {
-  console.log("🟢 Liora Simulados v103.9 carregado");
+  console.log("🟢 Liora Simulados v104 carregado");
 
   // -------------------------------------------------
   // STATE LOCAL
@@ -68,7 +68,6 @@
 
   // -------------------------------------------------
   // ABRIR MODAL DE CONFIGURAÇÃO
-  // (mantido como está no projeto atual)
   // -------------------------------------------------
   function abrirModal(access) {
     const els = getEls();
@@ -85,9 +84,9 @@
   }
 
   // -------------------------------------------------
-  // EVENTO GLOBAL — ABRIR SIMULADO
+  // EVENTO — ABRIR CONFIG SIMULADO
   // -------------------------------------------------
-  window.addEventListener("liora:abrir-simulado", () => {
+  window.addEventListener("liora:open-simulados", () => {
     const access = getSimuladoAccess();
 
     if (!access.ok && access.reason === "login") {
@@ -101,7 +100,7 @@
     }
 
     if (!access.ok) {
-      alert("Erro ao verificar acesso.");
+      window.lioraError?.show("Erro ao verificar acesso ao simulado.");
       return;
     }
 
@@ -109,11 +108,9 @@
   });
 
   // -------------------------------------------------
-  // INICIAR SIMULADO
+  // EVENTO — START SIMULADO (CANÔNICO)
   // -------------------------------------------------
-  document.addEventListener("click", async (e) => {
-    if (!e.target.closest("#sim-modal-iniciar")) return;
-
+  window.addEventListener("liora:start-simulado", async () => {
     const els = getEls();
     const access = getSimuladoAccess();
     if (!access.ok) return;
@@ -141,6 +138,15 @@
       console.error(e);
       window.lioraLoading?.hide();
       window.lioraError?.show("Erro ao gerar simulado.");
+    }
+  });
+
+  // -------------------------------------------------
+  // BOTÃO INICIAR (DISPARA EVENTO)
+  // -------------------------------------------------
+  document.addEventListener("click", (e) => {
+    if (e.target.closest("#sim-modal-iniciar")) {
+      document.dispatchEvent(new Event("liora:start-simulado"));
     }
   });
 
@@ -313,7 +319,7 @@ Retorne APENAS JSON válido no formato:
     );
 
     qs("sim-refazer")?.addEventListener("click", () =>
-      window.dispatchEvent(new Event("liora:abrir-simulado"))
+      window.dispatchEvent(new Event("liora:open-simulados"))
     );
 
     qs("sim-upgrade")?.addEventListener("click", () =>
