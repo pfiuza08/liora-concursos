@@ -1415,7 +1415,7 @@ button:disabled,
   }
 }
 /* =========================================================
-   🎓 FEEDBACK PEDAGÓGICO — TESTE RÁPIDO
+   🧠 FEEDBACK PEDAGÓGICO — QUIZ (DARK + LIGHT)
 ========================================================= */
 
 .liora-quiz-feedback {
@@ -1424,35 +1424,47 @@ button:disabled,
   border-radius: 12px;
   font-size: 0.95rem;
   line-height: 1.45;
-  background: rgba(255, 255, 255, 0.03);
-  border-left: 4px solid var(--border);
-  animation: fadeInFeedback 0.25s ease-out;
 }
 
-.liora-quiz-feedback.correct {
-  border-left-color: #22c55e;
-  background: rgba(34, 197, 94, 0.08);
-  color: #eafff1;
-}
-
-.liora-quiz-feedback.incorrect {
-  border-left-color: #f59e0b;
-  background: rgba(245, 158, 11, 0.08);
-  color: #fff7e6;
-}
-
-.liora-quiz-feedback strong {
-  display: block;
+/* Título */
+.liora-feedback-title {
+  font-weight: 600;
   margin-bottom: 6px;
 }
 
-@keyframes fadeInFeedback {
-  from {
-    opacity: 0;
-    transform: translateY(4px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+/* Texto principal */
+.liora-feedback-text {
+  margin-bottom: 8px;
+}
+
+/* Mini explicação */
+.liora-feedback-mini {
+  font-size: 0.9rem;
+  opacity: 0.95;
+}
+
+/* ---------- TEMA ESCURO ---------- */
+html.dark .liora-quiz-feedback.correct {
+  background: rgba(0, 140, 80, 0.15);
+  border-left: 4px solid #00c26f;
+  color: #eafff4;
+}
+
+html.dark .liora-quiz-feedback.incorrect {
+  background: rgba(200, 80, 60, 0.15);
+  border-left: 4px solid #ff7a66;
+  color: #ffecec;
+}
+
+/* ---------- TEMA CLARO ---------- */
+html.light .liora-quiz-feedback.correct {
+  background: #e9f7f0;
+  border-left: 4px solid #1f9d6e;
+  color: #0f3d2e;
+}
+
+html.light .liora-quiz-feedback.incorrect {
+  background: #fdeeee;
+  border-left: 4px solid #d64545;
+  color: #4a1c1c;
 }
