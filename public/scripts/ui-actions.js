@@ -131,4 +131,13 @@ alert("UI-ACTIONS CARREGADO");
     console.log("🧭 Ação disparada:", action);
     fn.call(window.lioraActions, el);
   });
+
+Object.defineProperty(window, "lioraActions", {
+  configurable: false,
+  writable: false
+});
+console.log("🔒 lioraActions protegido contra sobrescrita");
+
+
+  
 })();
