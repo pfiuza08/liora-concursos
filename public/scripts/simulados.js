@@ -380,4 +380,49 @@ Dificuldade: ${config.dificuldade}.
   });
 
   document.addEventListener("liora:start-simulado", iniciarSimulado);
+ 
+// -------------------------------------------------
+// BOOTSTRAP — REGISTRA LISTENERS NO MOMENTO CERTO
+// -------------------------------------------------
+(function bootSimulados() {
+  const register = () => {
+    console.log("🧠 [Simulados] Registrando listeners (boot)");
+
+    // Abrir simulados (config)
+    window.addEventListener("liora:open-simulados", async () => {
+      console.log("🧠 [Simulados] Evento liora:open-simulados recebido");
+
+      const ready = await waitForGlobals();
+      if (!ready) {
+        window.lioraError?.show?.("Sistema ainda inicializando.");
+        return;
+      }
+
+      const access = getSimuladoAccess();
+      if (!access.ok) {
+        if (access.reason === "login") {
+          window.dispatchEvent(new Event("liora:login-required"));
+        }
+        if (access.reason === "limit") {
+          window.dispatchEvent(new Event("liora:premium-bloqueado"));
+        }
+        return;
+      }
+
+      abrirModal(access);
+    });
+
+    // Start simulado (CANÔNICO)
+    document.addEventListener("liora:start-simulado", iniciarSimulado);
+
+    console.log("🧠 [Simulados] Listeners registrados ✅");
+  };
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", register);
+  } else {
+    register();
+  }
+})();
+  
 })();
