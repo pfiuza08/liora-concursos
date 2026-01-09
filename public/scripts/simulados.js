@@ -248,7 +248,9 @@
         area.classList.remove("hidden");
         area.scrollIntoView({ behavior: "smooth", block: "start" });
       }
-      
+      // 🔕 Esconde dica inicial do simulado
+      document.getElementById("sim-hint")?.classList.add("hidden");
+
       window.lioraLoading?.show?.("Gerando simulado...");
 
     try {
