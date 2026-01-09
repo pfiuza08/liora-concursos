@@ -71,6 +71,24 @@
       window.dispatchEvent(new Event("liora:open-sim-config"));
     },
 
+    startSimulado() {
+      console.log("🎯 startSimulado");
+
+      if (!window.lioraAuth.user) {
+        this.openAuth();
+        return;
+      }
+
+      document.dispatchEvent(
+        new CustomEvent("liora:start-simulado", {
+          detail: {
+            origem: "ui-action",
+            timestamp: Date.now()
+          }
+        })
+      );
+    },
+
     // =============================
     // DASHBOARD
     // =============================
@@ -112,7 +130,7 @@
     }
 
     console.log("🧭 Ação disparada:", action);
-    fn.call(window.lioraActions);
+    fn.call(window.lioraActions, el);
   });
 
 })();
