@@ -267,6 +267,8 @@
       window.lioraUsage?.registrarSimulado?.();
       window.lioraLoading?.hide?.();
 
+      console.log("🧪 Questões prontas:", STATE.questoes);
+      
       renderQuestao();
       info("Simulado renderizado com sucesso ✅");
     } catch (e) {
