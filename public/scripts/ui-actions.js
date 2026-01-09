@@ -5,6 +5,7 @@
 // - NÃO controla auth modal diretamente
 // - Binder canônico via data-action
 // =======================================================
+alert("UI-ACTIONS CARREGADO");
 
 (function () {
   console.log("🎯 UI Actions inicializado");
