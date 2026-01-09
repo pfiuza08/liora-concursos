@@ -1468,3 +1468,20 @@ html.light .liora-quiz-feedback.incorrect {
   border-left: 4px solid #d64545;
   color: #4a1c1c;
 }
+/* ================================
+   🧪 QUIZ — FEEDBACK (LIGHT MODE)
+================================ */
+
+html.light .liora-quiz-feedback {
+  background: #f9fafb;
+  color: #1f2933;
+  border-left: 4px solid var(--brand);
+}
+
+html.light .liora-quiz-feedback.correct {
+  border-left-color: #16a34a;
+}
+
+html.light .liora-quiz-feedback.incorrect {
+  border-left-color: #dc2626;
+}
