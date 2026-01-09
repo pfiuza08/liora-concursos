@@ -241,7 +241,15 @@
 
     // Fecha modal + loading
     window.lioraModal?.close?.("sim-modal-backdrop");
-    window.lioraLoading?.show?.("Gerando simulado...");
+
+      // 🔓 MOSTRA A ÁREA DO SIMULADO
+      const area = document.getElementById("area-simulado");
+      if (area) {
+        area.classList.remove("hidden");
+        area.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+      
+      window.lioraLoading?.show?.("Gerando simulado...");
 
     try {
       const raw = await gerarQuestoes(STATE.config);
