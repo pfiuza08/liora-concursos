@@ -57,36 +57,33 @@
     // =============================
     openSimulados() {
       console.log("🎯 openSimulados");
-
-      if (!window.lioraAuth.user) {
+    
+      if (!window.lioraAuth?.user) {
         this.openAuth();
         return;
       }
-
+    
       window.dispatchEvent(new Event("liora:open-simulados"));
     },
-
+    
     openSimConfig() {
       console.log("🎯 openSimConfig");
       window.dispatchEvent(new Event("liora:open-sim-config"));
     },
-
-     startSimulado() {
-    console.log("🎯 startSimulado");
-  
-    // 🔔 DISPARO CANÔNICO DO SIMULADO
-    document.dispatchEvent(new Event("liora:start-simulado"));
-    }
-
-      if (!window.lioraAuth.user) {
+    
+    startSimulado() {
+      console.log("🎯 startSimulado");
+    
+      if (!window.lioraAuth?.user) {
         this.openAuth();
         return;
       }
-
+    
+      // 🔔 DISPARO CANÔNICO DO SIMULADO
       document.dispatchEvent(
         new CustomEvent("liora:start-simulado", {
           detail: {
-            origem: "ui-action",
+            origem: "ui-actions",
             timestamp: Date.now()
           }
         })
