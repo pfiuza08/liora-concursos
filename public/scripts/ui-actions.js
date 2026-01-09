@@ -18,14 +18,11 @@
   // AÇÕES CANÔNICAS
   // ------------------------------------------------------
   window.lioraActions = {
-
     // =============================
     // AUTH
     // =============================
     openAuth() {
       console.log("🎯 openAuth");
-
-      // auth é MODAL → apenas dispara
       document.dispatchEvent(new Event("liora:open-auth"));
     },
 
@@ -57,28 +54,28 @@
     // =============================
     openSimulados() {
       console.log("🎯 openSimulados");
-    
+
       if (!window.lioraAuth?.user) {
         this.openAuth();
         return;
       }
-    
+
       window.dispatchEvent(new Event("liora:open-simulados"));
     },
-    
+
     openSimConfig() {
       console.log("🎯 openSimConfig");
       window.dispatchEvent(new Event("liora:open-sim-config"));
     },
-    
+
     startSimulado() {
       console.log("🎯 startSimulado");
-    
+
       if (!window.lioraAuth?.user) {
         this.openAuth();
         return;
       }
-    
+
       // 🔔 DISPARO CANÔNICO DO SIMULADO
       document.dispatchEvent(
         new CustomEvent("liora:start-simulado", {
@@ -96,7 +93,7 @@
     openDashboard() {
       console.log("🎯 openDashboard");
 
-      if (!window.lioraAuth.user) {
+      if (!window.lioraAuth?.user) {
         this.openAuth();
         return;
       }
@@ -133,5 +130,4 @@
     console.log("🧭 Ação disparada:", action);
     fn.call(window.lioraActions, el);
   });
-
 })();
