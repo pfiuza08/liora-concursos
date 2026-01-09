@@ -220,38 +220,90 @@
     }
   }
 
-  // -------------------------------------------------
-  // IA
-  // -------------------------------------------------
-  async function gerarQuestoes(config, signal) {
-    const res = await fetch("/api/liora", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      signal,
-      body: JSON.stringify({
-        system: "Você é Liora, criadora de simulados educacionais.",
-        user: `
-Gere ${config.qtd} questões da banca ${config.banca}.
+// -------------------------------------------------
+// IA — GERAÇÃO DE QUESTÕES (BLINDADA)
+// -------------------------------------------------
+async function gerarQuestoes(config, signal) {
+  console.log("🧠 [Simulados] Gerando questões via /api/liora", config);
+
+  const res = await fetch("/api/liora", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    signal,
+    body: JSON.stringify({
+      system: "Você é Liora, criadora de simulados educacionais.",
+      user: `
+Retorne APENAS JSON válido.
+NÃO escreva texto explicativo.
+NÃO use markdown.
+NÃO use frases fora do JSON.
+
+Formato obrigatório:
+
+[
+  {
+    "enunciado": "string",
+    "alternativas": ["string", "string", "string", "string"],
+    "corretaIndex": 0,
+    "explicacaoCorreta": "string",
+    "explicacoesErradas": ["string", "string", "string"]
+  }
+]
+
+Gere ${config.qtd} questões.
+Banca: ${config.banca}.
 Tema: ${config.tema || "geral"}.
 Dificuldade: ${config.dificuldade}.
 `
-      })
-    });
+    })
+  });
 
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
-    const json = await res.json();
-    let raw = json.output;
-
-    if (typeof raw === "string") {
-      raw = raw.replace(/```json/gi, "").replace(/```/g, "").trim();
-    }
-
-    const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
-    if (!Array.isArray(parsed)) throw new Error("IA inválida");
-
-    return parsed;
+  if (!res.ok) {
+    throw new Error(`Erro HTTP ${res.status} ao gerar simulado`);
   }
+
+  const json = await res.json();
+  let raw = json.output;
+
+  console.log("🧪 [Simulados] IA raw output:", raw);
+
+  // -------------------------------
+  // LIMPEZA BÁSICA
+  // -------------------------------
+  if (typeof raw === "string") {
+    raw = raw
+      .replace(/```json/gi, "")
+      .replace(/```/g, "")
+      .trim();
+  }
+
+  // -------------------------------
+  // BLINDAGEM CONTRA TEXTO LIVRE
+  // -------------------------------
+  if (typeof raw !== "string" || !raw.startsWith("[")) {
+    console.error("🔴 [Simulados] IA retornou texto inválido:", raw);
+    throw new Error("IA não retornou JSON estruturado.");
+  }
+
+  // -------------------------------
+  // PARSE SEGURO
+  // -------------------------------
+  let parsed;
+  try {
+    parsed = JSON.parse(raw);
+  } catch (e) {
+    console.error("🔴 [Simulados] Erro ao parsear JSON da IA:", raw);
+    throw new Error("Falha ao interpretar resposta da IA.");
+  }
+
+  if (!Array.isArray(parsed) || parsed.length === 0) {
+    throw new Error("IA retornou lista vazia ou inválida.");
+  }
+
+  console.log("🧪 [Simulados] Questões parseadas com sucesso:", parsed.length);
+
+  return parsed;
+}
 
   // -------------------------------------------------
   // PREPARAÇÃO
