@@ -1,6 +1,7 @@
 // =============================================================
-// 🧠 LIORA — SIMULADOS v104.2-BLINDED
+// 🧠 LIORA — SIMULADOS v104.2-BLINDED (FIX EVENT TARGET)
 // - Blindado contra DOM ausente / ordem de carregamento
+// - FIX: start-simulado ouvido em document (dispatch em document)
 // - Free: experiência completa com limites
 // - Premium: ilimitado + histórico
 // - Shuffle real das alternativas
@@ -9,7 +10,7 @@
 // =============================================================
 
 (function () {
-  console.log("🟢 Liora Simulados v104.2 (BLINDED) carregado");
+  console.log("🟢 Liora Simulados v104.2 (BLINDED+FIX) carregado");
 
   // -------------------------------------------------
   // STATE LOCAL
@@ -109,13 +110,11 @@
   }
 
   function whenDomReady(fn) {
-    // Já pronto
     if (document.readyState !== "loading") {
       fn();
       return;
     }
 
-    // Espera DOMContentLoaded
     let done = false;
 
     const onReady = () => {
@@ -127,7 +126,6 @@
 
     document.addEventListener("DOMContentLoaded", onReady);
 
-    // Failsafe (caso raro de listener não disparar)
     setTimeout(() => {
       if (!done) {
         warn("Timeout esperando DOMContentLoaded. Tentando registrar mesmo assim.");
@@ -166,7 +164,6 @@
   // ABRIR MODAL DE CONFIGURAÇÃO
   // -------------------------------------------------
   function abrirModal(access) {
-    // Requer IDs do modal/config
     const ok = ensureDomEls([
       "sim-modal-backdrop",
       "sim-modal-iniciar",
@@ -195,7 +192,6 @@
   async function iniciarSimulado() {
     info("START solicitado");
 
-    // 1) DOM de render precisa existir
     const okRender = ensureDomEls([
       "sim-questao-container",
       "sim-nav",
@@ -205,7 +201,6 @@
     ]);
     if (!okRender) return;
 
-    // 2) Globais precisam existir
     const okGlobals = await waitForGlobals();
     if (!okGlobals) {
       hardFail("Sistema ainda não inicializou para gerar simulado.");
@@ -230,7 +225,6 @@
       return;
     }
 
-    // Config (qtd fixa no free via access.maxQuestoes)
     STATE.config = {
       banca: els.banca?.value || "geral",
       qtd: access.maxQuestoes,
@@ -239,47 +233,40 @@
       tempo: Number(els.tempo?.value || 0)
     };
 
-    // Fecha modal + loading
     window.lioraModal?.close?.("sim-modal-backdrop");
 
-      // 🔓 MOSTRA A ÁREA DO SIMULADO
-      const area = document.getElementById("area-simulado");
-      if (area) {
-        area.classList.remove("hidden");
-        area.scrollIntoView({ behavior: "smooth", block: "start" });
-      }
-      // 🔕 Esconde dica inicial do simulado
-      document.getElementById("sim-hint")?.classList.add("hidden");
-
-      window.lioraLoading?.show?.("Gerando simulado...");
-
-   //try {
-   //   const raw = await gerarQuestoes(STATE.config);
-  //    const lista = prepararQuestoes(raw);
-
-  //    if (!Array.isArray(lista) || lista.length === 0) {
-  //      throw new Error("Lista de questões vazia/invalidada após prepararQuestoes.");
-   //   } 
-
-  try {
-  console.log("🧪 BYPASS IA — gerando questão local");
-
-  const lista = prepararQuestoes([
-    {
-      enunciado: "Questão de teste — você está vendo isso?",
-      alternativas: ["Sim", "Não", "Talvez", "Nunca"],
-      corretaIndex: 0,
-      explicacaoCorreta: "Se você vê esta questão, o render está funcionando.",
-      explicacoesErradas: ["Não", "Talvez", "Nunca"]
+    // 🔓 MOSTRA A ÁREA DO SIMULADO
+    const area = document.getElementById("area-simulado");
+    if (area) {
+      area.classList.remove("hidden");
+      area.scrollIntoView({ behavior: "smooth", block: "start" });
     }
-  ]);
 
-  if (!Array.isArray(lista) || lista.length === 0) {
-    throw new Error("Lista local inválida.");
-  }
+    // 🔕 Esconde dica inicial do simulado (se existir)
+    document.getElementById("sim-hint")?.classList.add("hidden");
 
-      
-      
+    window.lioraLoading?.show?.("Gerando simulado...");
+
+    try {
+      // ============================
+      // 🧪 BYPASS IA (TEMPORÁRIO)
+      // ============================
+      console.log("🧪 BYPASS IA — gerando questão local");
+
+      const lista = prepararQuestoes([
+        {
+          enunciado: "Questão de teste — você está vendo isso?",
+          alternativas: ["Sim", "Não", "Talvez", "Nunca"],
+          corretaIndex: 0,
+          explicacaoCorreta: "Se você vê esta questão, o render está funcionando.",
+          explicacoesErradas: ["Não", "Talvez", "Nunca"]
+        }
+      ]);
+
+      if (!Array.isArray(lista) || lista.length === 0) {
+        throw new Error("Lista local inválida.");
+      }
+
       STATE.questoes = lista;
       STATE.atual = 0;
 
@@ -287,7 +274,7 @@
       window.lioraLoading?.hide?.();
 
       console.log("🧪 Questões prontas:", STATE.questoes);
-      
+
       renderQuestao();
       info("Simulado renderizado com sucesso ✅");
     } catch (e) {
@@ -298,7 +285,7 @@
   }
 
   // -------------------------------------------------
-  // IA
+  // IA (mantido, mas não usado enquanto BYPASS estiver ativo)
   // -------------------------------------------------
   async function gerarQuestoes(config) {
     info("Gerando questões via /api/liora", config);
@@ -327,9 +314,7 @@ Retorne APENAS JSON válido no formato:
       })
     });
 
-    if (!res.ok) {
-      throw new Error(`HTTP ${res.status} em /api/liora`);
-    }
+    if (!res.ok) throw new Error(`HTTP ${res.status} em /api/liora`);
 
     const json = await res.json();
     let raw = json.output;
@@ -341,7 +326,7 @@ Retorne APENAS JSON válido no formato:
     let parsed;
     try {
       parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
-    } catch (e) {
+    } catch {
       throw new Error("Resposta IA não é JSON válido.");
     }
 
@@ -389,12 +374,10 @@ Retorne APENAS JSON válido no formato:
   // RENDER QUESTÃO
   // -------------------------------------------------
   function renderQuestao() {
-
     console.log("🧪 renderQuestao chamado", STATE);
 
     const els = getEls();
 
-    // Blindagem: sem container, não renderiza
     if (!els.container) {
       hardFail("Container do simulado não encontrado (sim-questao-container).");
       return;
@@ -533,7 +516,7 @@ Retorne APENAS JSON válido no formato:
   }
 
   // -------------------------------------------------
-  // BINDER: botão iniciar do modal -> evento start
+  // BINDER: botão iniciar do modal -> evento start (document)
   // -------------------------------------------------
   function bindStartButton() {
     document.addEventListener("click", (e) => {
@@ -549,7 +532,7 @@ Retorne APENAS JSON válido no formato:
   function registerListeners() {
     info("Registrando listeners...");
 
-    // Abrir config
+    // Abrir config (dispatch vem de window)
     window.addEventListener("liora:open-simulados", async () => {
       info("Evento liora:open-simulados recebido");
 
@@ -579,13 +562,12 @@ Retorne APENAS JSON válido no formato:
       abrirModal(access);
     });
 
-    // Start simulado (canônico)
-    window.addEventListener("liora:start-simulado", () => {
-      info("Evento liora:start-simulado recebido");
+    // ✅ Start simulado (dispatch em document → ouve em document)
+    document.addEventListener("liora:start-simulado", () => {
+      info("Evento liora:start-simulado recebido (document)");
       iniciarSimulado();
     });
 
-    // Binds locais
     bindStartButton();
     bindNav();
 
