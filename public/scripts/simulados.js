@@ -9,6 +9,9 @@
 // - Resultado + explicações no final
 // =============================================================
 
+console.log("🚨 ESTE SIMULADOS NÃO ESTÁ SENDO USADO");
+
+
 (function () {
   console.log("🟢 Liora Simulados v105 carregado");
 
