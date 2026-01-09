@@ -761,195 +761,201 @@ e sempre inclua de 3 a 6 flashcards.
           : "<p class='liora-muted'>Nenhuma pergunta de ativação disponível.</p>";
       }
 
-// ----------------------- TESTE RÁPIDO (QUIZ DIDÁTICO) -----------------------
-if (els.wizardQuiz) {
-  els.wizardQuiz.innerHTML = "";
-
-  const q = s.quiz || {};
-  const alternativas = Array.isArray(q.alternativas) ? q.alternativas : [];
-
-  if (!q.pergunta || alternativas.length < 2) {
-    els.wizardQuiz.innerHTML =
-      "<p class='liora-muted'>Teste rápido indisponível para esta sessão.</p>";
-  } else {
-    const perguntaEl = document.createElement("h4");
-    perguntaEl.className = "liora-quiz-pergunta";
-    perguntaEl.textContent = q.pergunta;
-    els.wizardQuiz.appendChild(perguntaEl);
-
-    alternativas.forEach((texto, idx) => {
-      const opt = document.createElement("button");
-      opt.className = "liora-quiz-option";
-      opt.type = "button";
-      opt.textContent = texto;
-
-      opt.addEventListener("click", () => {
-        els.wizardQuiz
-          .querySelectorAll(".liora-quiz-option")
-          .forEach((o) =>
-            o.classList.remove("selected", "correct", "incorrect")
-          );
-
-        opt.classList.add("selected");
-
-        const acertou = idx === q.corretaIndex;
-
-        const oldFeedback =
-          els.wizardQuiz.querySelector(".liora-quiz-feedback");
-        if (oldFeedback) oldFeedback.remove();
-
-        // Feedback pedagógico progressivo
-          const feedback = document.createElement("div");
-          feedback.className =
-            "liora-quiz-feedback " + (acertou ? "correct" : "incorrect");
-          
-          if (acertou) {
-            opt.classList.add("correct");
-          
-            feedback.innerHTML = `
-              <div class="liora-feedback-title">✅ Correto!</div>
-          
-              <div class="liora-feedback-text">
+      // ----------------------- TESTE RÁPIDO (QUIZ DIDÁTICO PROGRESSIVO) -----------------------
+      if (els.wizardQuiz) {
+        els.wizardQuiz.innerHTML = "";
+      
+        const q = s.quiz || {};
+        const alternativas = Array.isArray(q.alternativas) ? q.alternativas : [];
+      
+        if (!q.pergunta || alternativas.length < 2) {
+          els.wizardQuiz.innerHTML =
+            "<p class='liora-muted'>Teste rápido indisponível para esta sessão.</p>";
+          return;
+        }
+      
+        let tentativas = 0;
+      
+        const perguntaEl = document.createElement("h4");
+        perguntaEl.className = "liora-quiz-pergunta";
+        perguntaEl.textContent = q.pergunta;
+        els.wizardQuiz.appendChild(perguntaEl);
+      
+        alternativas.forEach((texto, idx) => {
+          const opt = document.createElement("button");
+          opt.className = "liora-quiz-option";
+          opt.type = "button";
+          opt.textContent = texto;
+      
+          opt.addEventListener("click", () => {
+            tentativas++;
+      
+            els.wizardQuiz
+              .querySelectorAll(".liora-quiz-option")
+              .forEach((o) =>
+                o.classList.remove("selected", "correct", "incorrect")
+              );
+      
+            opt.classList.add("selected");
+      
+            const acertou = idx === q.corretaIndex;
+      
+            // remove feedback anterior
+            els.wizardQuiz
+              .querySelectorAll(".liora-quiz-feedback")
+              .forEach((f) => f.remove());
+      
+            const feedback = document.createElement("div");
+            feedback.className =
+              "liora-quiz-feedback " + (acertou ? "correct" : "incorrect");
+      
+            if (acertou) {
+              opt.classList.add("correct");
+      
+              feedback.innerHTML = `
+                <strong>✅ Correto!</strong><br>
                 ${q.explicacao ||
                   "Você identificou corretamente o conceito central da questão."}
-              </div>
-          
-              <div class="liora-feedback-mini">
-                💡 <strong>Por que isso importa?</strong><br>
-                Em provas, esse conceito costuma aparecer como perguntas sobre
-                <em>identificação de padrões</em> e <em>generalização</em>.
-              </div>
-            `;
-          } else {
-            opt.classList.add("incorrect");
-          
-            const explicacaoErrada =
-              Array.isArray(q.explicacoes) && q.explicacoes[idx]
-                ? q.explicacoes[idx]
-                : "Essa alternativa parece plausível, mas não explica como o aprendizado realmente acontece.";
-          
-            feedback.innerHTML = `
-              <div class="liora-feedback-title">⚠️ Ainda não</div>
-          
-              <div class="liora-feedback-text">
-                ${explicacaoErrada}
-              </div>
-          
-              <div class="liora-feedback-mini">
-                ✔️ <strong>Pense assim:</strong><br>
-                A IA aprende observando muitos exemplos e extraindo padrões,
-                não copiando literalmente nem inventando do nada.
-              </div>
-            `;
-          }
-          
-          els.wizardQuiz.appendChild(feedback);
-
-        els.wizardQuiz.appendChild(feedback);
-
-        if (window.lioraEstudos?.registrarQuizResultado && s?.id) {
-          window.lioraEstudos.registrarQuizResultado(s.id, {
-            acertou,
-            tentativas: 1,
+                <br><br>
+                💡 <em>Em provas:</em> este tipo de questão costuma testar
+                <strong>compreensão conceitual</strong>, não memorização literal.
+              `;
+      
+              // registra no Study Manager
+              if (window.lioraEstudos?.registrarQuizResultado && s?.id) {
+                window.lioraEstudos.registrarQuizResultado(s.id, {
+                  acertou: true,
+                  tentativas,
+                });
+              }
+            } else {
+              opt.classList.add("incorrect");
+      
+              if (tentativas === 1) {
+                feedback.innerHTML = `
+                  <strong>⚠️ Ainda não.</strong><br>
+                  <em>Dica:</em> releia o enunciado pensando no
+                  <strong>conceito principal</strong>, não no exemplo literal.
+                `;
+              } else {
+                const explicacaoDetalhada =
+                  Array.isArray(q.explicacoes) && q.explicacoes[idx]
+                    ? q.explicacoes[idx]
+                    : q.explicacao ||
+                      "Essa alternativa parece correta, mas não representa o conceito central.";
+      
+                feedback.innerHTML = `
+                  <strong>❌ Vamos corrigir.</strong><br>
+                  ${explicacaoDetalhada}
+                  <br><br>
+                  ✔️ <em>Essência:</em> o foco aqui é entender
+                  <strong>como o conceito funciona</strong>, não apenas o resultado.
+                `;
+              }
+      
+              if (window.lioraEstudos?.registrarQuizResultado && s?.id) {
+                window.lioraEstudos.registrarQuizResultado(s.id, {
+                  acertou: false,
+                  tentativas,
+                });
+              }
+            }
+      
+            els.wizardQuiz.appendChild(feedback);
           });
-        }
-      });
+      
+          els.wizardQuiz.appendChild(opt);
+        });
+      }
 
-      els.wizardQuiz.appendChild(opt);
-    });
-  }
-}
-
-
-
-// ----------------------- FLASHCARDS PREMIUM + Estudos -------------------
-if (els.wizardFlashcards) {
-  let cards = Array.isArray(s.flashcards) ? s.flashcards : [];
-
-  cards = cards
-    .map((fc) => {
-      if (fc?.q && fc?.a) return fc;
-      if (fc?.pergunta && fc?.resposta)
-        return { q: fc.pergunta, a: fc.resposta };
-      if (typeof fc === "string") {
-        const partes = fc.split("|");
-        if (partes.length >= 2) {
-          return {
-            q: partes[0].replace(/Pergunta:?/i, "").trim(),
-            a: partes[1].replace(/Resposta:?/i, "").trim(),
-          };
+      // ----------------------- FLASHCARDS PREMIUM + Estudos -------------------
+      if (els.wizardFlashcards) {
+        let cards = Array.isArray(s.flashcards) ? s.flashcards : [];
+      
+        cards = cards
+          .map((fc) => {
+            if (fc?.q && fc?.a) return fc;
+            if (fc?.pergunta && fc?.resposta)
+              return { q: fc.pergunta, a: fc.resposta };
+            if (typeof fc === "string") {
+              const partes = fc.split("|");
+              if (partes.length >= 2) {
+                return {
+                  q: partes[0].replace(/Pergunta:?/i, "").trim(),
+                  a: partes[1].replace(/Resposta:?/i, "").trim(),
+                };
+              }
+            }
+            return null;
+          })
+          .filter((x) => x && x.q && x.a);
+      
+        if (!cards.length) {
+          els.wizardFlashcards.innerHTML =
+            "<p class='liora-muted'>Nenhum flashcard gerado para esta sessão.</p>";
+        } else {
+          els.wizardFlashcards.innerHTML = cards
+            .map(
+              (f, i) => `
+                <article 
+                  class="liora-flashcard" 
+                  data-index="${i}" 
+                  tabindex="0"
+                  role="button"
+                  aria-expanded="false"
+                >
+                  <div class="liora-flashcard-q">
+                    <span class="liora-flashcard-icon">▸</span>
+                    ${f.q}
+                  </div>
+                  <div class="liora-flashcard-a">
+                    ${f.a}
+                  </div>
+                </article>
+              `
+            )
+            .join("");
+      
+          els.wizardFlashcards
+            .querySelectorAll(".liora-flashcard")
+            .forEach((cardEl) => {
+              const toggle = () => {
+                const abrindo = !cardEl.classList.contains("open");
+      
+                // fecha os outros
+                els.wizardFlashcards
+                  .querySelectorAll(".liora-flashcard.open")
+                  .forEach((el) => {
+                    if (el !== cardEl) {
+                      el.classList.remove("open");
+                      el.setAttribute("aria-expanded", "false");
+                    }
+                  });
+      
+                cardEl.classList.toggle("open", abrindo);
+                cardEl.setAttribute("aria-expanded", String(abrindo));
+      
+                // registrar uso no Study Manager
+                if (
+                  abrindo &&
+                  window.lioraEstudos?.registrarFlashcardUso &&
+                  s?.id
+                ) {
+                  window.lioraEstudos.registrarFlashcardUso(s.id, { qtd: 1 });
+                }
+              };
+      
+              cardEl.addEventListener("click", toggle);
+      
+              cardEl.addEventListener("keydown", (e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  toggle();
+                }
+              });
+            });
         }
       }
-      return null;
-    })
-    .filter((x) => x && x.q && x.a);
-
-  if (!cards.length) {
-    els.wizardFlashcards.innerHTML =
-      "<p class='liora-muted'>Nenhum flashcard gerado para esta sessão.</p>";
-  } else {
-    els.wizardFlashcards.innerHTML = cards
-      .map(
-        (f, i) => `
-          <article 
-            class="liora-flashcard" 
-            data-index="${i}" 
-            tabindex="0"
-            role="button"
-            aria-expanded="false"
-          >
-            <div class="liora-flashcard-q">
-              <span class="liora-flashcard-icon">▸</span>
-              ${f.q}
-            </div>
-            <div class="liora-flashcard-a">
-              ${f.a}
-            </div>
-          </article>
-        `
-      )
-      .join("");
-
-    els.wizardFlashcards
-      .querySelectorAll(".liora-flashcard")
-      .forEach((cardEl) => {
-        const toggle = () => {
-          const abrindo = !cardEl.classList.contains("open");
-
-          // fecha os outros
-          els.wizardFlashcards
-            .querySelectorAll(".liora-flashcard.open")
-            .forEach((el) => {
-              if (el !== cardEl) {
-                el.classList.remove("open");
-                el.setAttribute("aria-expanded", "false");
-              }
-            });
-
-          cardEl.classList.toggle("open", abrindo);
-          cardEl.setAttribute("aria-expanded", String(abrindo));
-
-          // registrar uso no Study Manager
-          if (
-            abrindo &&
-            window.lioraEstudos?.registrarFlashcardUso &&
-            s?.id
-          ) {
-            window.lioraEstudos.registrarFlashcardUso(s.id, { qtd: 1 });
-          }
-        };
-
-        cardEl.addEventListener("click", toggle);
-
-        cardEl.addEventListener("keydown", (e) => {
-          if (e.key === "Enter" || e.key === " ") {
-            e.preventDefault();
-            toggle();
-          }
-        });
-      });
-  }
-}
 
       // ----------------------- MAPA MENTAL PREMIUM -----------------------
       if (els.wizardMapa) {
