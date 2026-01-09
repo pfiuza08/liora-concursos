@@ -224,6 +224,9 @@
 // IA — GERAÇÃO DE QUESTÕES (BLINDADA)
 // -------------------------------------------------
 async function gerarQuestoes(config, signal) {
+
+   alert("GERARQUESTOES CHAMADA");
+  
   console.log("🧠 [Simulados] Gerando questões via /api/liora", config);
 
   const res = await fetch("/api/liora", {
