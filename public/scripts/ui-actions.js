@@ -71,8 +71,12 @@
       window.dispatchEvent(new Event("liora:open-sim-config"));
     },
 
-    startSimulado() {
-      console.log("🎯 startSimulado");
+     startSimulado() {
+    console.log("🎯 startSimulado");
+  
+    // 🔔 DISPARO CANÔNICO DO SIMULADO
+    document.dispatchEvent(new Event("liora:start-simulado"));
+    }
 
       if (!window.lioraAuth.user) {
         this.openAuth();
