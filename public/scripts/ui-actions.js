@@ -58,16 +58,24 @@ console.log("🔖 UI-ACTIONS v105-CANONICAL — carregado");
     // SIMULADOS
     // =============================
     openSimulados() {
-      console.log("🎯 openSimulados");
-
+      console.log("🎯 openSimulados (start direto)");
+    
       if (!window.lioraAuth?.user) {
         this.openAuth();
         return;
       }
-
-      // Evento único e canônico para abrir configuração
-      window.dispatchEvent(new Event("liora:open-simulados"));
+    
+      // 👉 botão Simulados inicia direto
+      document.dispatchEvent(
+        new CustomEvent("liora:start-simulado", {
+          detail: {
+            origem: "home-simulados",
+            timestamp: Date.now()
+          }
+        })
+      );
     },
+
 
     // ⚙ FAB de configuração é apenas um atalho
     // para o mesmo fluxo de abertura
