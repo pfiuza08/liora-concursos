@@ -4,7 +4,7 @@
 // =============================================================
 
 console.log(
-  "🔖 simulados.v105-final — 2026-01-12T" + new Date().toISOString()
+  "🔖 simulados.v105-final — " + new Date().toISOString()
 );
 
 (function () {
@@ -112,7 +112,7 @@ console.log(
   }
 
   // -------------------------------------------------
-  // ABRIR CONFIG
+  // ABRIR CONFIG (MODAL)
   // -------------------------------------------------
   function abrirModal(access) {
     if (
@@ -125,8 +125,7 @@ console.log(
         "sim-modal-dificuldade",
         "sim-modal-tema"
       ])
-    )
-      return;
+    ) return;
 
     const els = getEls();
     els.qtd.value = access.maxQuestoes;
@@ -150,8 +149,7 @@ console.log(
         "sim-btn-voltar",
         "sim-resultado"
       ])
-    )
-      return;
+    ) return;
 
     const ready = await waitForGlobals();
     if (!ready) {
@@ -161,10 +159,12 @@ console.log(
 
     const access = getSimuladoAccess();
     if (!access.ok) {
-      if (access.reason === "login")
+      if (access.reason === "login") {
         window.dispatchEvent(new Event("liora:login-required"));
-      if (access.reason === "limit")
+      }
+      if (access.reason === "limit") {
         window.dispatchEvent(new Event("liora:premium-bloqueado"));
+      }
       return;
     }
 
@@ -181,6 +181,7 @@ console.log(
     window.lioraModal?.close?.("sim-modal-backdrop");
 
     els.area.classList.remove("hidden");
+    els.area.style.display = "block";
     els.area.scrollIntoView({ behavior: "smooth", block: "start" });
     qs("sim-hint")?.classList.add("hidden");
 
@@ -210,14 +211,12 @@ console.log(
     } catch (e) {
       log.error("Erro ao gerar simulado", e);
       window.lioraLoading?.hide?.();
-      window.lioraError?.show?.(
-        "Erro ao gerar simulado. Tente novamente."
-      );
+      window.lioraError?.show?.("Erro ao gerar simulado.");
     }
   }
 
   // -------------------------------------------------
-  // IA — GERAÇÃO
+  // IA
   // -------------------------------------------------
   async function gerarQuestoes(config, signal) {
     log.info("Gerando questões via /api/liora", config);
@@ -230,14 +229,11 @@ console.log(
         system: "Você é Liora, criadora de simulados educacionais.",
         user: `
 Retorne APENAS JSON válido.
-NÃO use markdown.
-NÃO escreva texto fora do JSON.
 
-Formato:
 [
   {
     "enunciado": "string",
-    "alternativas": ["A", "B", "C", "D"],
+    "alternativas": ["A","B","C","D"],
     "corretaIndex": 0,
     "explicacaoCorreta": "string",
     "explicacoesErradas": ["x","y","z"]
@@ -254,9 +250,7 @@ Dificuldade: ${config.dificuldade}.
 
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
-    const json = await res.json();
-    let raw = json.output;
-
+    let raw = (await res.json()).output;
     if (typeof raw === "string") {
       raw = raw.replace(/```json/gi, "").replace(/```/g, "").trim();
     }
@@ -319,9 +313,7 @@ Dificuldade: ${config.dificuldade}.
         ${q.alternativas
           .map(
             (a, i) =>
-              `<button class="sim-alt ${
-                q.resp === i ? "selected" : ""
-              }" data-i="${i}">${a}</button>`
+              `<button class="sim-alt ${q.resp === i ? "selected" : ""}" data-i="${i}">${a}</button>`
           )
           .join("")}
       </div>
@@ -335,10 +327,7 @@ Dificuldade: ${config.dificuldade}.
     });
 
     els.btnProx.textContent =
-      STATE.atual === STATE.questoes.length - 1
-        ? "Finalizar"
-        : "Próxima";
-
+      STATE.atual === STATE.questoes.length - 1 ? "Finalizar" : "Próxima";
     els.btnVoltar.disabled = STATE.atual === 0;
   }
 
@@ -347,7 +336,6 @@ Dificuldade: ${config.dificuldade}.
   // -------------------------------------------------
   function finalizar() {
     const els = getEls();
-
     const acertos = STATE.questoes.filter(
       (q) => q.resp === q.corretaIndex
     ).length;
@@ -385,9 +373,11 @@ Dificuldade: ${config.dificuldade}.
   });
 
   // -------------------------------------------------
-  // EVENTOS
+  // EVENTOS — ALINHADOS COM UI-ACTIONS
   // -------------------------------------------------
   window.addEventListener("liora:open-simulados", async () => {
+    log.info("open-simulados recebido (WINDOW)");
+
     const ready = await waitForGlobals();
     if (!ready) return;
 
