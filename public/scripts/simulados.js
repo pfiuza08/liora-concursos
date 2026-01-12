@@ -152,10 +152,9 @@ console.log("🔖 simulados.v105-fixed — 2026-01-12T" + new Date().toISOString
   // ABRIR CONFIG
   // -------------------------------------------------
   function abrirModal(access) {
-    if (
+        if (
       !ensure([
         "sim-modal-backdrop",
-        "sim-modal-iniciar",
         "sim-modal-banca",
         "sim-modal-qtd",
         "sim-modal-tempo",
@@ -163,6 +162,7 @@ console.log("🔖 simulados.v105-fixed — 2026-01-12T" + new Date().toISOString
         "sim-modal-tema"
       ])
     ) return;
+
 
     const els = getEls();
 
