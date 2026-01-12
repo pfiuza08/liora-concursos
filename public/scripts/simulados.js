@@ -171,7 +171,12 @@ console.log("🔖 simulados.v105-fixed — 2026-01-12T" + new Date().toISOString
     els.qtd.disabled = access.plan === "free";
 
     log.info("Abrindo modal de config", { plan: access.plan, max: access.maxQuestoes });
+    // 🔓 Garante que nenhum modal anterior deixou o body travado
+    document.body.style.overflow = "";
+    document.body.classList.remove("liora-modal-open");
+    
     openModalSafe("sim-modal-backdrop");
+
   }
 
   // -------------------------------------------------
