@@ -1,20 +1,13 @@
 // =============================================================
 // 🧠 LIORA — SIMULADOS v105-FINAL
-// - Listener correto (document ↔ document)
-// - IA real com timeout (AbortController)
-// - Blindado contra DOM ausente / ordem de carregamento
-// - Free: experiência completa com limites
-// - Premium: ilimitado + histórico
-// - Shuffle real das alternativas
-// - Resultado + explicações no final
+// Marca-d’água: simulados.v105-final — 2026-01-12
 // =============================================================
 
-console.log("🚨 ESTE SIMULADOS NÃO ESTÁ SENDO USADO");
-
+console.log(
+  "🔖 simulados.v105-final — 2026-01-12T" + new Date().toISOString()
+);
 
 (function () {
-  console.log("🟢 Liora Simulados v105 carregado");
-
   // -------------------------------------------------
   // STATE LOCAL
   // -------------------------------------------------
@@ -223,36 +216,31 @@ console.log("🚨 ESTE SIMULADOS NÃO ESTÁ SENDO USADO");
     }
   }
 
-// -------------------------------------------------
-// IA — GERAÇÃO DE QUESTÕES (BLINDADA)
-// -------------------------------------------------
-async function gerarQuestoes(config, signal) {
+  // -------------------------------------------------
+  // IA — GERAÇÃO
+  // -------------------------------------------------
+  async function gerarQuestoes(config, signal) {
+    log.info("Gerando questões via /api/liora", config);
 
-   alert("GERARQUESTOES CHAMADA");
-  
-  console.log("🧠 [Simulados] Gerando questões via /api/liora", config);
-
-  const res = await fetch("/api/liora", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    signal,
-    body: JSON.stringify({
-      system: "Você é Liora, criadora de simulados educacionais.",
-      user: `
+    const res = await fetch("/api/liora", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      signal,
+      body: JSON.stringify({
+        system: "Você é Liora, criadora de simulados educacionais.",
+        user: `
 Retorne APENAS JSON válido.
-NÃO escreva texto explicativo.
 NÃO use markdown.
-NÃO use frases fora do JSON.
+NÃO escreva texto fora do JSON.
 
-Formato obrigatório:
-
+Formato:
 [
   {
     "enunciado": "string",
-    "alternativas": ["string", "string", "string", "string"],
+    "alternativas": ["A", "B", "C", "D"],
     "corretaIndex": 0,
     "explicacaoCorreta": "string",
-    "explicacoesErradas": ["string", "string", "string"]
+    "explicacoesErradas": ["x","y","z"]
   }
 ]
 
@@ -261,55 +249,29 @@ Banca: ${config.banca}.
 Tema: ${config.tema || "geral"}.
 Dificuldade: ${config.dificuldade}.
 `
-    })
-  });
+      })
+    });
 
-  if (!res.ok) {
-    throw new Error(`Erro HTTP ${res.status} ao gerar simulado`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+    const json = await res.json();
+    let raw = json.output;
+
+    if (typeof raw === "string") {
+      raw = raw.replace(/```json/gi, "").replace(/```/g, "").trim();
+    }
+
+    if (typeof raw !== "string" || !raw.startsWith("[")) {
+      throw new Error("IA retornou conteúdo inválido.");
+    }
+
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed) || !parsed.length) {
+      throw new Error("IA retornou lista inválida.");
+    }
+
+    return parsed;
   }
-
-  const json = await res.json();
-  let raw = json.output;
-
-  console.log("🧪 [Simulados] IA raw output:", raw);
-
-  // -------------------------------
-  // LIMPEZA BÁSICA
-  // -------------------------------
-  if (typeof raw === "string") {
-    raw = raw
-      .replace(/```json/gi, "")
-      .replace(/```/g, "")
-      .trim();
-  }
-
-  // -------------------------------
-  // BLINDAGEM CONTRA TEXTO LIVRE
-  // -------------------------------
-  if (typeof raw !== "string" || !raw.startsWith("[")) {
-    console.error("🔴 [Simulados] IA retornou texto inválido:", raw);
-    throw new Error("IA não retornou JSON estruturado.");
-  }
-
-  // -------------------------------
-  // PARSE SEGURO
-  // -------------------------------
-  let parsed;
-  try {
-    parsed = JSON.parse(raw);
-  } catch (e) {
-    console.error("🔴 [Simulados] Erro ao parsear JSON da IA:", raw);
-    throw new Error("Falha ao interpretar resposta da IA.");
-  }
-
-  if (!Array.isArray(parsed) || parsed.length === 0) {
-    throw new Error("IA retornou lista vazia ou inválida.");
-  }
-
-  console.log("🧪 [Simulados] Questões parseadas com sucesso:", parsed.length);
-
-  return parsed;
-}
 
   // -------------------------------------------------
   // PREPARAÇÃO
@@ -365,14 +327,12 @@ Dificuldade: ${config.dificuldade}.
       </div>
     `;
 
-    els.container
-      .querySelectorAll(".sim-alt")
-      .forEach((btn) => {
-        btn.onclick = () => {
-          q.resp = Number(btn.dataset.i);
-          renderQuestao();
-        };
-      });
+    els.container.querySelectorAll(".sim-alt").forEach((btn) => {
+      btn.onclick = () => {
+        q.resp = Number(btn.dataset.i);
+        renderQuestao();
+      };
+    });
 
     els.btnProx.textContent =
       STATE.atual === STATE.questoes.length - 1
@@ -438,49 +398,5 @@ Dificuldade: ${config.dificuldade}.
   });
 
   document.addEventListener("liora:start-simulado", iniciarSimulado);
- 
-// -------------------------------------------------
-// BOOTSTRAP — REGISTRA LISTENERS NO MOMENTO CERTO
-// -------------------------------------------------
-(function bootSimulados() {
-  const register = () => {
-    console.log("🧠 [Simulados] Registrando listeners (boot)");
 
-    // Abrir simulados (config)
-    window.addEventListener("liora:open-simulados", async () => {
-      console.log("🧠 [Simulados] Evento liora:open-simulados recebido");
-
-      const ready = await waitForGlobals();
-      if (!ready) {
-        window.lioraError?.show?.("Sistema ainda inicializando.");
-        return;
-      }
-
-      const access = getSimuladoAccess();
-      if (!access.ok) {
-        if (access.reason === "login") {
-          window.dispatchEvent(new Event("liora:login-required"));
-        }
-        if (access.reason === "limit") {
-          window.dispatchEvent(new Event("liora:premium-bloqueado"));
-        }
-        return;
-      }
-
-      abrirModal(access);
-    });
-
-    // Start simulado (CANÔNICO)
-    document.addEventListener("liora:start-simulado", iniciarSimulado);
-
-    console.log("🧠 [Simulados] Listeners registrados ✅");
-  };
-
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", register);
-  } else {
-    register();
-  }
-})();
-  
 })();
