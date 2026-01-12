@@ -25,6 +25,8 @@
     return;
   }
 
+  // 🔥 CORREÇÃO DEFINITIVA
+  modal.classList.remove("hidden");
   modal.classList.add("is-open");
   modal.setAttribute("aria-hidden", "false");
 
@@ -33,7 +35,6 @@
 
   console.log("🟢 Modal aberto:", id);
 }
-
 
   function close(id) {
     const modal = document.getElementById(id);
