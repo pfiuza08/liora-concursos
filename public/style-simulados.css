@@ -373,29 +373,24 @@ html.light .sim-alt {
 html.light .sim-modal {
   background: #ffffff;
 }
-/* ============================================================
-   FIX — MODAL CONFIGURAR SIMULADO
-============================================================ */
+/* =========================================================
+   FIX — MODAL CONFIGURAR SIMULADO (INTEGRAÇÃO COM LIORA)
+   Fonte única: .is-open (lioraModal)
+========================================================= */
 
 .sim-modal-backdrop {
-  opacity: 0;
-  pointer-events: none;
-  display: flex;
-}
-
-.sim-modal-backdrop.visible {
+  display: none;
   opacity: 1;
   pointer-events: auto;
 }
 
-.sim-modal {
-  transform: translateY(30px);
-  opacity: 0;
-  transition: transform .25s ease, opacity .25s ease;
+.sim-modal-backdrop.is-open {
+  display: flex;
 }
 
-.sim-modal-backdrop.visible .sim-modal {
-  transform: translateY(0);
+.sim-modal {
+  transform: none;
   opacity: 1;
 }
+
 
