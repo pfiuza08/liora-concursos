@@ -1485,3 +1485,33 @@ html.light .liora-quiz-feedback.correct {
 html.light .liora-quiz-feedback.incorrect {
   border-left-color: #dc2626;
 }
+/* =========================================================
+   🔒 SIMULADO — ISOLAMENTO DEFINITIVO DO MODAL
+========================================================= */
+
+#sim-modal-backdrop {
+  all: unset;               /* 🔥 corta herança */
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.72);
+  z-index: 9999;
+}
+
+#sim-modal-backdrop.is-open {
+  display: flex;
+}
+
+#sim-modal-backdrop .liora-modal-card {
+  all: unset;               /* 🔥 corta herança do app */
+  display: block;
+  width: 100%;
+  max-width: 420px;
+  background: var(--card);
+  color: var(--fg);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+}
