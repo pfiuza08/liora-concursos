@@ -1,11 +1,15 @@
 // =======================================================
 // 🎯 LIORA — UI ACTIONS (ORQUESTRADOR ÚNICO)
+// Versão: v105-CANONICAL
+// Data: 2026-01-12
+//
 // - Fonte única de decisões de ação
 // - NÃO renderiza telas
 // - NÃO controla auth modal diretamente
 // - Binder canônico via data-action
 // =======================================================
-alert("UI-ACTIONS CARREGADO");
+
+console.log("🔖 UI-ACTIONS v105-CANONICAL — carregado");
 
 (function () {
   console.log("🎯 UI Actions inicializado");
@@ -18,7 +22,7 @@ alert("UI-ACTIONS CARREGADO");
   // ------------------------------------------------------
   // AÇÕES CANÔNICAS
   // ------------------------------------------------------
-  window.lioraActions = {
+  const actions = {
     // =============================
     // AUTH
     // =============================
@@ -61,12 +65,15 @@ alert("UI-ACTIONS CARREGADO");
         return;
       }
 
+      // Evento único e canônico para abrir configuração
       window.dispatchEvent(new Event("liora:open-simulados"));
     },
 
+    // ⚙ FAB de configuração é apenas um atalho
+    // para o mesmo fluxo de abertura
     openSimConfig() {
-      console.log("🎯 openSimConfig");
-      window.dispatchEvent(new Event("liora:open-sim-config"));
+      console.log("🎯 openSimConfig (alias de openSimulados)");
+      this.openSimulados();
     },
 
     startSimulado() {
@@ -111,6 +118,17 @@ alert("UI-ACTIONS CARREGADO");
     }
   };
 
+  // ------------------------------------------------------
+  // EXPÕE AÇÕES (IMUTÁVEL)
+  // ------------------------------------------------------
+  Object.defineProperty(window, "lioraActions", {
+    value: actions,
+    writable: false,
+    configurable: false
+  });
+
+  console.log("🔒 lioraActions protegido contra sobrescrita");
+
   // =======================================================
   // 🔗 BINDER CANÔNICO — DATA-ACTION
   // =======================================================
@@ -132,12 +150,4 @@ alert("UI-ACTIONS CARREGADO");
     fn.call(window.lioraActions, el);
   });
 
-Object.defineProperty(window, "lioraActions", {
-  configurable: false,
-  writable: false
-});
-console.log("🔒 lioraActions protegido contra sobrescrita");
-
-
-  
 })();
