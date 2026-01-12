@@ -1,11 +1,16 @@
 // =============================================================
-// 🧠 LIORA — SIMULADOS v105-FINAL
-// Marca-d’água: simulados.v105-final — 2026-01-12
+// 🧠 LIORA — SIMULADOS v105-FIXED
+// Marca-d’água: simulados.v105-fixed — 2026-01-12
+//
+// Fixes principais:
+// ✅ 1 listener canônico p/ abrir config (WINDOW)
+// ✅ start canônico (DOCUMENT)
+// ✅ remove "hidden" do backdrop ao abrir (senão .hidden vence com !important)
+// ✅ parser robusto: extrai o primeiro JSON array mesmo com texto extra
+// ✅ sem bootstrap duplicado / sem testes / sem alerts
 // =============================================================
 
-console.log(
-  "🔖 simulados.v105-final — " + new Date().toISOString()
-);
+console.log("🔖 simulados.v105-fixed — 2026-01-12T" + new Date().toISOString());
 
 (function () {
   // -------------------------------------------------
@@ -62,6 +67,7 @@ console.log(
       window.lioraError?.show?.(
         `Simulado não pode iniciar. Elementos ausentes: ${missing.join(", ")}`
       );
+      log.error("IDs ausentes no DOM:", missing);
       return false;
     }
     return true;
@@ -71,12 +77,7 @@ console.log(
   // GLOBAIS
   // -------------------------------------------------
   function globalsReady() {
-    return (
-      window.lioraAuth &&
-      window.lioraState &&
-      window.lioraLimits &&
-      window.lioraUsage
-    );
+    return !!(window.lioraAuth && window.lioraState && window.lioraLimits && window.lioraUsage);
   }
 
   async function waitForGlobals() {
@@ -100,19 +101,55 @@ console.log(
     const limits = window.lioraLimits?.[plan];
     if (!limits) return { ok: false, reason: "config" };
 
-    if (!window.lioraUsage?.podeCriarSimulado(plan)) {
+    if (typeof window.lioraUsage?.podeCriarSimulado !== "function") {
+      return { ok: false, reason: "usage" };
+    }
+
+    if (!window.lioraUsage.podeCriarSimulado(plan)) {
       return { ok: false, reason: "limit" };
     }
 
-    return {
-      ok: true,
-      plan,
-      maxQuestoes: limits.simulados.questoesPorSimulado
-    };
+    const maxQuestoes = limits?.simulados?.questoesPorSimulado;
+    if (!maxQuestoes) return { ok: false, reason: "limits-sim" };
+
+    return { ok: true, plan, maxQuestoes };
   }
 
   // -------------------------------------------------
-  // ABRIR CONFIG (MODAL)
+  // MODAL HELPERS (remove hidden / adiciona hidden)
+  // -------------------------------------------------
+  function openModalSafe(id) {
+    const modal = qs(id);
+    if (!modal) {
+      log.warn("Modal não encontrado:", id);
+      return;
+    }
+
+    // 🔑 CRÍTICO: se tiver .hidden, ele ganha do .is-open (display:none !important)
+    modal.classList.remove("hidden");
+
+    window.lioraModal?.open?.(id);
+
+    // fallback (se lioraModal não existir por algum motivo)
+    modal.classList.add("is-open");
+    modal.setAttribute("aria-hidden", "false");
+  }
+
+  function closeModalSafe(id) {
+    const modal = qs(id);
+    if (!modal) return;
+
+    window.lioraModal?.close?.(id);
+
+    modal.classList.remove("is-open");
+    modal.setAttribute("aria-hidden", "true");
+
+    // Mantém seu padrão: fechado volta a hidden
+    modal.classList.add("hidden");
+  }
+
+  // -------------------------------------------------
+  // ABRIR CONFIG
   // -------------------------------------------------
   function abrirModal(access) {
     if (
@@ -128,10 +165,13 @@ console.log(
     ) return;
 
     const els = getEls();
+
+    // Free: qtd fixa
     els.qtd.value = access.maxQuestoes;
     els.qtd.disabled = access.plan === "free";
 
-    window.lioraModal?.open?.("sim-modal-backdrop");
+    log.info("Abrindo modal de config", { plan: access.plan, max: access.maxQuestoes });
+    openModalSafe("sim-modal-backdrop");
   }
 
   // -------------------------------------------------
@@ -154,16 +194,18 @@ console.log(
     const ready = await waitForGlobals();
     if (!ready) {
       window.lioraError?.show?.("Sistema ainda inicializando.");
+      log.warn("Globais não prontas");
       return;
     }
 
     const access = getSimuladoAccess();
+    log.info("Access check:", access);
+
     if (!access.ok) {
-      if (access.reason === "login") {
-        window.dispatchEvent(new Event("liora:login-required"));
-      }
-      if (access.reason === "limit") {
-        window.dispatchEvent(new Event("liora:premium-bloqueado"));
+      if (access.reason === "login") window.dispatchEvent(new Event("liora:login-required"));
+      if (access.reason === "limit") window.dispatchEvent(new Event("liora:premium-bloqueado"));
+      if (access.reason !== "login" && access.reason !== "limit") {
+        window.lioraError?.show?.("Não foi possível verificar acesso ao simulado.");
       }
       return;
     }
@@ -178,10 +220,11 @@ console.log(
       tempo: Number(els.tempo?.value || 0)
     };
 
-    window.lioraModal?.close?.("sim-modal-backdrop");
+    // Fecha modal de config (de forma segura)
+    closeModalSafe("sim-modal-backdrop");
 
+    // Mostra área do simulado
     els.area.classList.remove("hidden");
-    els.area.style.display = "block";
     els.area.scrollIntoView({ behavior: "smooth", block: "start" });
     qs("sim-hint")?.classList.add("hidden");
 
@@ -189,16 +232,13 @@ console.log(
 
     try {
       const controller = new AbortController();
-      const timeout = setTimeout(
-        () => controller.abort(),
-        BLIND.iaTimeoutMs
-      );
+      const timeout = setTimeout(() => controller.abort(), BLIND.iaTimeoutMs);
 
       const raw = await gerarQuestoes(STATE.config, controller.signal);
       clearTimeout(timeout);
 
       const lista = prepararQuestoes(raw);
-      if (!lista.length) throw new Error("Questões vazias.");
+      if (!lista.length) throw new Error("Questões vazias após preparar.");
 
       STATE.questoes = lista;
       STATE.atual = 0;
@@ -207,16 +247,16 @@ console.log(
       window.lioraLoading?.hide?.();
 
       renderQuestao();
-      log.info("Simulado renderizado com sucesso");
+      log.info("Simulado renderizado com sucesso ✅");
     } catch (e) {
       log.error("Erro ao gerar simulado", e);
       window.lioraLoading?.hide?.();
-      window.lioraError?.show?.("Erro ao gerar simulado.");
+      window.lioraError?.show?.("Erro ao gerar simulado. Tente novamente.");
     }
   }
 
   // -------------------------------------------------
-  // IA
+  // IA — GERAÇÃO (ROBUSTA)
   // -------------------------------------------------
   async function gerarQuestoes(config, signal) {
     log.info("Gerando questões via /api/liora", config);
@@ -228,12 +268,15 @@ console.log(
       body: JSON.stringify({
         system: "Você é Liora, criadora de simulados educacionais.",
         user: `
-Retorne APENAS JSON válido.
+Retorne APENAS JSON válido (um ARRAY).
+NÃO use markdown.
+NÃO escreva texto fora do JSON.
 
+Formato:
 [
   {
     "enunciado": "string",
-    "alternativas": ["A","B","C","D"],
+    "alternativas": ["A", "B", "C", "D"],
     "corretaIndex": 0,
     "explicacaoCorreta": "string",
     "explicacoesErradas": ["x","y","z"]
@@ -250,28 +293,61 @@ Dificuldade: ${config.dificuldade}.
 
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
-    let raw = (await res.json()).output;
+    const json = await res.json();
+    let raw = json.output;
+
+    // Limpeza básica
     if (typeof raw === "string") {
       raw = raw.replace(/```json/gi, "").replace(/```/g, "").trim();
     }
 
-    if (typeof raw !== "string" || !raw.startsWith("[")) {
-      throw new Error("IA retornou conteúdo inválido.");
-    }
+    // Blindagem: extrai o primeiro array JSON, mesmo se vier texto antes/depois
+    const extracted = extractJsonArray(raw);
+    const parsed = safeJsonParse(extracted);
 
-    const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed) || !parsed.length) {
-      throw new Error("IA retornou lista inválida.");
+    if (!Array.isArray(parsed) || parsed.length === 0) {
+      throw new Error("IA retornou lista vazia/ inválida.");
     }
 
     return parsed;
+  }
+
+  function extractJsonArray(raw) {
+    if (Array.isArray(raw)) return raw; // já veio parseado
+    if (typeof raw !== "string") throw new Error("IA retornou conteúdo não-string.");
+
+    // tenta achar o primeiro "[" e o último "]"
+    const start = raw.indexOf("[");
+    const end = raw.lastIndexOf("]");
+    if (start < 0 || end < 0 || end <= start) {
+      throw new Error("Não encontrei um array JSON na resposta da IA.");
+    }
+
+    return raw.slice(start, end + 1);
+  }
+
+  function safeJsonParse(textOrObj) {
+    if (Array.isArray(textOrObj) || (typeof textOrObj === "object" && textOrObj !== null)) {
+      return textOrObj;
+    }
+
+    if (typeof textOrObj !== "string") {
+      throw new Error("Conteúdo inválido para parse.");
+    }
+
+    try {
+      return JSON.parse(textOrObj);
+    } catch (e) {
+      log.error("Falha ao parsear JSON:", textOrObj);
+      throw new Error("Falha ao interpretar resposta da IA como JSON.");
+    }
   }
 
   // -------------------------------------------------
   // PREPARAÇÃO
   // -------------------------------------------------
   function shuffle(arr) {
-    const a = arr.slice();
+    const a = Array.isArray(arr) ? arr.slice() : [];
     for (let i = a.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [a[i], a[j]] = [a[j], a[i]];
@@ -280,14 +356,21 @@ Dificuldade: ${config.dificuldade}.
   }
 
   function prepararQuestoes(lista) {
-    return lista.map((q, i) => {
-      const correta = q.alternativas[q.corretaIndex];
-      const alternativas = shuffle(q.alternativas);
+    return (lista || []).map((q, i) => {
+      const alternativasOrig = Array.isArray(q.alternativas) ? q.alternativas : [];
+      const corretaIndexOrig = Number.isFinite(q.corretaIndex) ? q.corretaIndex : 0;
+
+      const corretaTexto = alternativasOrig[corretaIndexOrig];
+      const alternativas = shuffle(alternativasOrig);
+      const novaCorreta = alternativas.indexOf(corretaTexto);
+
       return {
         indice: i + 1,
-        enunciado: q.enunciado,
+        enunciado: q.enunciado || "(enunciado ausente)",
         alternativas,
-        corretaIndex: alternativas.indexOf(correta),
+        corretaIndex: novaCorreta >= 0 ? novaCorreta : 0,
+        explicacaoCorreta: q.explicacaoCorreta || "",
+        explicacoesErradas: Array.isArray(q.explicacoesErradas) ? q.explicacoesErradas : [],
         resp: null
       };
     });
@@ -299,22 +382,22 @@ Dificuldade: ${config.dificuldade}.
   function renderQuestao() {
     const els = getEls();
     const q = STATE.questoes[STATE.atual];
-    if (!q) return;
+    if (!q || !els.container) return;
 
-    els.resultado.classList.add("hidden");
-    els.nav.classList.remove("hidden");
+    els.resultado?.classList.add("hidden");
+    els.nav?.classList.remove("hidden");
 
     els.container.innerHTML = `
       <div class="sim-questao-card">
         <div class="sim-status">
           Questão ${STATE.atual + 1} de ${STATE.questoes.length}
         </div>
-        <p>${q.enunciado}</p>
+        <p>${escapeHtml(q.enunciado)}</p>
         ${q.alternativas
-          .map(
-            (a, i) =>
-              `<button class="sim-alt ${q.resp === i ? "selected" : ""}" data-i="${i}">${a}</button>`
-          )
+          .map((a, i) => {
+            const selected = q.resp === i ? "selected" : "";
+            return `<button class="sim-alt ${selected}" data-i="${i}">${escapeHtml(a)}</button>`;
+          })
           .join("")}
       </div>
     `;
@@ -326,19 +409,31 @@ Dificuldade: ${config.dificuldade}.
       };
     });
 
-    els.btnProx.textContent =
-      STATE.atual === STATE.questoes.length - 1 ? "Finalizar" : "Próxima";
-    els.btnVoltar.disabled = STATE.atual === 0;
+    if (els.btnProx) {
+      els.btnProx.textContent = STATE.atual === STATE.questoes.length - 1 ? "Finalizar" : "Próxima";
+    }
+    if (els.btnVoltar) {
+      els.btnVoltar.disabled = STATE.atual === 0;
+    }
+  }
+
+  function escapeHtml(str) {
+    return String(str ?? "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
   }
 
   // -------------------------------------------------
-  // FINAL
+  // FINAL (simples, sem mexer no seu fluxo premium ainda)
   // -------------------------------------------------
   function finalizar() {
     const els = getEls();
-    const acertos = STATE.questoes.filter(
-      (q) => q.resp === q.corretaIndex
-    ).length;
+    if (!els.resultado || !els.container || !els.nav) return;
+
+    const acertos = STATE.questoes.filter((q) => q.resp === q.corretaIndex).length;
 
     els.container.innerHTML = "";
     els.nav.classList.add("hidden");
@@ -347,24 +442,22 @@ Dificuldade: ${config.dificuldade}.
       <div class="sim-resultado-card">
         <h3>Resultado</h3>
         <p>${acertos} / ${STATE.questoes.length} acertos</p>
-        <button id="sim-refazer" class="btn-secundario">Novo simulado</button>
+        <button id="sim-refazer" class="btn-secondary">Novo simulado</button>
       </div>
     `;
     els.resultado.classList.remove("hidden");
 
-    qs("sim-refazer")?.addEventListener("click", () =>
-      window.dispatchEvent(new Event("liora:open-simulados"))
-    );
+    qs("sim-refazer")?.addEventListener("click", () => {
+      window.dispatchEvent(new Event("liora:open-simulados"));
+    });
   }
 
   // -------------------------------------------------
-  // NAVEGAÇÃO
+  // NAVEGAÇÃO (delegação)
   // -------------------------------------------------
   document.addEventListener("click", (e) => {
     if (e.target.closest("#sim-btn-proxima")) {
-      STATE.atual < STATE.questoes.length - 1
-        ? (STATE.atual++, renderQuestao())
-        : finalizar();
+      STATE.atual < STATE.questoes.length - 1 ? (STATE.atual++, renderQuestao()) : finalizar();
     }
     if (e.target.closest("#sim-btn-voltar") && STATE.atual > 0) {
       STATE.atual--;
@@ -373,20 +466,35 @@ Dificuldade: ${config.dificuldade}.
   });
 
   // -------------------------------------------------
-  // EVENTOS — ALINHADOS COM UI-ACTIONS
+  // EVENTOS CANÔNICOS
   // -------------------------------------------------
-  window.addEventListener("liora:open-simulados", async () => {
+
+  // ✅ ABRIR CONFIG: vem do ui-actions via WINDOW
+  async function onOpenSimulados() {
     log.info("open-simulados recebido (WINDOW)");
 
     const ready = await waitForGlobals();
-    if (!ready) return;
+    if (!ready) {
+      window.lioraError?.show?.("Sistema ainda inicializando.");
+      return;
+    }
 
     const access = getSimuladoAccess();
-    if (!access.ok) return;
+    if (!access.ok) {
+      if (access.reason === "login") window.dispatchEvent(new Event("liora:login-required"));
+      if (access.reason === "limit") window.dispatchEvent(new Event("liora:premium-bloqueado"));
+      return;
+    }
 
     abrirModal(access);
-  });
+  }
 
+  window.addEventListener("liora:open-simulados", onOpenSimulados);
+
+  // Opcional: se você quiser manter open-sim-config como alias
+  window.addEventListener("liora:open-sim-config", onOpenSimulados);
+
+  // ✅ START: vem do ui-actions via DOCUMENT
   document.addEventListener("liora:start-simulado", iniciarSimulado);
 
 })();
