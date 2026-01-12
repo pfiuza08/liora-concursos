@@ -19,20 +19,21 @@
   }
 
   function open(id) {
-    const modal = document.getElementById(id);
-    if (!modal) {
-      console.warn("⚠️ Modal não encontrado:", id);
-      return;
-    }
-
-    modal.classList.add("is-open");
-    modal.setAttribute("aria-hidden", "false");
-
-    openCount++;
-    lockScroll();
-
-    console.log("🟢 Modal aberto:", id);
+  const modal = document.getElementById(id);
+  if (!modal) {
+    console.warn("⚠️ Modal não encontrado:", id);
+    return;
   }
+
+  modal.classList.add("is-open");
+  modal.setAttribute("aria-hidden", "false");
+
+  openCount++;
+  lockScroll();
+
+  console.log("🟢 Modal aberto:", id);
+}
+
 
   function close(id) {
     const modal = document.getElementById(id);
