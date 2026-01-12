@@ -517,6 +517,6 @@ Dificuldade: ${config.dificuldade}.
   window.addEventListener("liora:open-sim-config", onOpenSimulados);
 
   // ✅ START: vem do ui-actions via DOCUMENT
-  document.addEventListener("liora:start-simulado", iniciarSimulado);
+  document.addEventListener("liora:start-simulado", (e) => iniciarSimulado(e));
 
 })();
