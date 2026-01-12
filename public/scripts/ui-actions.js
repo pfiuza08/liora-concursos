@@ -54,45 +54,36 @@ console.log("🔖 UI-ACTIONS v105-CANONICAL — carregado");
       window.dispatchEvent(new Event("liora:open-estudo-upload"));
     },
 
-    // =============================
+     // =============================
     // SIMULADOS
     // =============================
     openSimulados() {
-      console.log("🎯 openSimulados (start direto)");
+      console.log("🎯 openSimulados (abrir configuração)");
     
       if (!window.lioraAuth?.user) {
         this.openAuth();
         return;
       }
     
-      // 👉 botão Simulados inicia direto
-      document.dispatchEvent(
-        new CustomEvent("liora:start-simulado", {
-          detail: {
-            origem: "home-simulados",
-            timestamp: Date.now()
-          }
-        })
-      );
+      // ✅ SEMPRE abre a configuração
+      window.dispatchEvent(new Event("liora:open-simulados"));
     },
-
-
-    // ⚙ FAB de configuração é apenas um atalho
-    // para o mesmo fluxo de abertura
+    
+    // ⚙ FAB de configuração
     openSimConfig() {
-      console.log("🎯 openSimConfig (alias de openSimulados)");
+      console.log("🎯 openSimConfig (abrir configuração)");
       this.openSimulados();
     },
-
+    
     startSimulado() {
       console.log("🎯 startSimulado");
-
+    
       if (!window.lioraAuth?.user) {
         this.openAuth();
         return;
       }
-
-      // 🔔 DISPARO CANÔNICO DO SIMULADO
+    
+      // 🔔 ÚNICO ponto que inicia simulado
       document.dispatchEvent(
         new CustomEvent("liora:start-simulado", {
           detail: {
