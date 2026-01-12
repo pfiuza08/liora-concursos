@@ -1519,3 +1519,32 @@ html.light .liora-quiz-feedback.incorrect {
 
   overflow-y: auto;
 }
+/* =========================================================
+   🔒 FIX DEFINITIVO — MODAL DE CONFIGURAÇÃO DO SIMULADO
+   Garante comportamento de modal real (viewport-centered)
+========================================================= */
+
+#sim-modal-backdrop {
+  display: none;
+}
+
+#sim-modal-backdrop.is-open {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Card do modal de simulado */
+#sim-modal-backdrop .liora-modal-card {
+  position: relative !important; /* mantém fluxo interno */
+  margin: 0 !important;
+
+  width: 100%;
+  max-width: 420px;
+
+  max-height: 90vh;
+  overflow-y: auto;
+
+  /* segurança visual */
+  z-index: 10001;
+}
