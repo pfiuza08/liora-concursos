@@ -183,102 +183,122 @@ console.log("🔖 simulados.v105-fixed — 2026-01-12T" + new Date().toISOString
   // START SIMULADO (CANÔNICO + BLINDADO)
   // -------------------------------------------------
   async function iniciarSimulado(e) {
-    log.info("START solicitado");
-  
-    // 🛑 BLINDAGEM ABSOLUTA
-    // Só inicia se vier do botão explícito (ui-actions)
-    if (!e || !e.detail || e.detail.origem !== "ui-actions") {
-      log.warn("⛔ iniciarSimulado ignorado — origem inválida", e?.detail);
+  log.info("START solicitado");
+
+  // 🛑 BLINDAGEM ABSOLUTA
+  // Só inicia se vier do botão explícito (ui-actions)
+  if (!e || !e.detail || e.detail.origem !== "ui-actions") {
+    log.warn("⛔ iniciarSimulado ignorado — origem inválida", e?.detail);
+    return;
+  }
+
+  if (
+    !ensure([
+      "area-simulado",
+      "sim-questao-container",
+      "sim-nav",
+      "sim-btn-proxima",
+      "sim-btn-voltar",
+      "sim-resultado"
+    ])
+  ) {
+    log.error("Elementos obrigatórios do simulado ausentes");
+    return;
+  }
+
+  const ready = await waitForGlobals();
+  if (!ready) {
+    window.lioraError?.show?.("Sistema ainda inicializando.");
+    log.warn("Globais não prontas");
+    return;
+  }
+
+  const access = getSimuladoAccess();
+  console.log("🧪 ACCESS (start-simulado):", JSON.stringify(access));
+
+  if (!access.ok) {
+    // 🔐 Login ainda bloqueia start
+    if (access.reason === "login") {
+      window.dispatchEvent(new Event("liora:login-required"));
       return;
-    }
-  
-    if (
-      !ensure([
-        "area-simulado",
-        "sim-questao-container",
-        "sim-nav",
-        "sim-btn-proxima",
-        "sim-btn-voltar",
-        "sim-resultado"
-      ])
-    ) {
-      log.error("Elementos obrigatórios do simulado ausentes");
-      return;
-    }
-  
-    const ready = await waitForGlobals();
-    if (!ready) {
-      window.lioraError?.show?.("Sistema ainda inicializando.");
-      log.warn("Globais não prontas");
-      return;
-    }
-  
-    const access = getSimuladoAccess();
-    //log.info("Access check:", access);
-    console.log("🧪 ACCESS (open-simulados):", JSON.stringify(access));
-  
-    if (!access.ok) {
-      // 🔐 Login ainda bloqueia abertura
-      if (access.reason === "login") {
-        window.dispatchEvent(new Event("liora:login-required"));
-        return;
-      }
-    
-      // ⚠️ Limite NÃO bloqueia config
-      // Apenas marca estado para o start
-      log.warn("Simulado com limite atingido — config liberada");
     }
 
-  
-    const els = getEls();
-  
-    STATE.config = {
-      banca: els.banca?.value || "geral",
-      qtd: access.maxQuestoes,
-      dificuldade: els.dif?.value || "média",
-      tema: els.tema?.value || "",
-      tempo: Number(els.tempo?.value || 0)
-    };
-  
-    // Fecha modal de configuração com segurança
-    closeModalSafe("sim-modal-backdrop");
-  
-    // Mostra área do simulado
-    els.area.classList.remove("hidden");
-    els.area.scrollIntoView({ behavior: "smooth", block: "start" });
-    qs("sim-hint")?.classList.add("hidden");
-  
-    window.lioraLoading?.show?.("Gerando simulado...");
-  
-    try {
-      const controller = new AbortController();
-      const timeout = setTimeout(
-        () => controller.abort(),
-        BLIND.iaTimeoutMs
-      );
-  
-      const raw = await gerarQuestoes(STATE.config, controller.signal);
-      clearTimeout(timeout);
-  
-      const lista = prepararQuestoes(raw);
-      if (!lista.length) {
-        throw new Error("Questões vazias após preparação.");
-      }
-  
-      STATE.questoes = lista;
-      STATE.atual = 0;
-  
-      window.lioraUsage?.registrarSimulado?.();
-      window.lioraLoading?.hide?.();
-  
-      renderQuestao();
-      log.info("Simulado renderizado com sucesso ✅");
-    } catch (err) {
-      log.error("Erro ao gerar simulado", err);
-      window.lioraLoading?.hide?.();
-      window.lioraError?.show?.("Erro ao gerar simulado. Tente novamente.");
-    }
+    // ⚠️ Limite temporariamente ignorado (debug)
+    log.warn("Simulado com limite atingido — start liberado temporariamente");
   }
+
+  const els = getEls();
+
+  STATE.config = {
+    banca: els.banca?.value || "geral",
+    qtd: access.maxQuestoes,
+    dificuldade: els.dif?.value || "média",
+    tema: els.tema?.value || "",
+    tempo: Number(els.tempo?.value || 0)
+  };
+
+  // -------------------------------------------------
+  // 🔒 FECHA MODAL + REMOVE OVERLAY FANTASMA
+  // -------------------------------------------------
+  closeModalSafe("sim-modal-backdrop");
+
+  const layer = document.getElementById("layer-modal");
+  if (layer) {
+    layer.classList.add("hidden");
+    layer.setAttribute("aria-hidden", "true");
+  }
+
+  // Libera foco preso no modal
+  document.activeElement?.blur();
+
+  // -------------------------------------------------
+  // 🔓 ATIVA ÁREA DO SIMULADO (ALINHADO AO LAYOUT LIORA)
+  // -------------------------------------------------
+  showApp?.();
+  hideAllPanels?.();
+
+  els.area.classList.remove("hidden");
+  els.area.classList.add("is-active");
+
+  els.area.scrollIntoView({ behavior: "smooth", block: "start" });
+  qs("sim-hint")?.classList.add("hidden");
+
+  // -------------------------------------------------
+  // 🔄 GERAÇÃO DO SIMULADO
+  // -------------------------------------------------
+  window.lioraLoading?.show?.("Gerando simulado...");
+
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(
+      () => controller.abort(),
+      BLIND.iaTimeoutMs
+    );
+
+    const raw = await gerarQuestoes(STATE.config, controller.signal);
+    clearTimeout(timeout);
+
+    const lista = prepararQuestoes(raw);
+    if (!lista.length) {
+      throw new Error("Questões vazias após preparação.");
+    }
+
+    STATE.questoes = lista;
+    STATE.atual = 0;
+
+    window.lioraUsage?.registrarSimulado?.();
+    window.lioraLoading?.hide?.();
+
+    renderQuestao();
+    log.info("Simulado renderizado com sucesso ✅");
+
+  } catch (err) {
+    log.error("Erro ao gerar simulado", err);
+    window.lioraLoading?.hide?.();
+    window.lioraError?.show?.("Erro ao gerar simulado. Tente novamente.");
+  }
+}
+
 
   // -------------------------------------------------
   // IA — GERAÇÃO (ROBUSTA)
