@@ -84,14 +84,14 @@ console.log("🔖 UI-ACTIONS v105-CANONICAL — carregado");
       }
     
       // 🔔 ÚNICO ponto que inicia simulado
-      document.dispatchEvent(
-        new CustomEvent("liora:start-simulado", {
-          detail: {
-            origem: "ui-actions",
-            timestamp: Date.now()
-          }
-        })
-      );
+      window.dispatchEvent(
+      new CustomEvent("liora:start-simulado", {
+        detail: {
+          origem: "ui-actions",
+          timestamp: Date.now()
+        }
+      })
+    );
     },
 
     // =============================
