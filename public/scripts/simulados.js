@@ -174,7 +174,7 @@ console.log("🔖 simulados.v105-fixed — 2026-01-12T" + new Date().toISOString
     max: access.maxQuestoes
   });
 
-  // 🔓 Garante que nenhum modal anterior deixou o body travado
+  // 🔓 Reset defensivo de estado visual
   document.body.style.overflow = "";
   document.body.classList.remove("liora-modal-open");
 
@@ -182,15 +182,35 @@ console.log("🔖 simulados.v105-fixed — 2026-01-12T" + new Date().toISOString
   openModalSafe("sim-modal-backdrop");
 
   // -------------------------------------------------
-  // 🔗 BLINDAGEM: garante data-action no botão START
+  // 🔥 BIND DIRETO — SEM ui-actions / SEM data-action
   // -------------------------------------------------
   const btnStart = document.getElementById("sim-modal-iniciar");
-  if (btnStart && !btnStart.dataset.action) {
-    btnStart.dataset.action = "startSimulado";
-    btnStart.type = "button"; // blindagem extra
-    log.warn("⚠️ data-action injetado dinamicamente no botão de simulado");
+  if (btnStart) {
+    btnStart.type = "button";
+
+    // Remove handlers antigos (segurança)
+    btnStart.onclick = null;
+
+    btnStart.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      console.log("🔥 START SIMULADO — bind direto");
+
+      window.dispatchEvent(
+        new CustomEvent("liora:start-simulado", {
+          detail: {
+            origem: "ui-actions",
+            timestamp: Date.now()
+          }
+        })
+      );
+    }, { once: true });
+  } else {
+    log.error("Botão sim-modal-iniciar não encontrado no DOM");
   }
 }
+
 
   // -------------------------------------------------
   // START SIMULADO (CANÔNICO + BLINDADO)
