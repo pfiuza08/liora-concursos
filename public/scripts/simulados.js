@@ -218,15 +218,17 @@ console.log("🔖 simulados.v105-fixed — 2026-01-12T" + new Date().toISOString
     console.log("🧪 ACCESS (open-simulados):", JSON.stringify(access));
   
     if (!access.ok) {
+      // 🔐 Login ainda bloqueia abertura
       if (access.reason === "login") {
         window.dispatchEvent(new Event("liora:login-required"));
-      } else if (access.reason === "limit") {
-        window.dispatchEvent(new Event("liora:premium-bloqueado"));
-      } else {
-        window.lioraError?.show?.("Não foi possível verificar acesso ao simulado.");
+        return;
       }
-      return;
+    
+      // ⚠️ Limite NÃO bloqueia config
+      // Apenas marca estado para o start
+      log.warn("Simulado com limite atingido — config liberada");
     }
+
   
     const els = getEls();
   
