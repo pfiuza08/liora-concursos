@@ -137,12 +137,12 @@
       document.getElementById("painel-upload")?.classList.remove("hidden");
     });
 
-    window.addEventListener("liora:open-simulados", () => {
-      showApp();
-      hideAllPanels();
-      document.getElementById("area-simulado")?.classList.remove("hidden");
-      fabSim?.classList.remove("hidden");
-    });
+   // window.addEventListener("liora:open-simulados", () => {
+ //     showApp();
+//      hideAllPanels();
+//      document.getElementById("area-simulado")?.classList.remove("hidden");
+//      fabSim?.classList.remove("hidden");
+//    });
 
     window.addEventListener("liora:open-sim-config", () => {
       showApp();
