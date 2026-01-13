@@ -516,7 +516,6 @@ Dificuldade: ${config.dificuldade}.
   // Opcional: se você quiser manter open-sim-config como alias
   window.addEventListener("liora:open-sim-config", onOpenSimulados);
 
-  // ✅ START: vem do ui-actions via DOCUMENT
-  document.addEventListener("liora:start-simulado", (e) => iniciarSimulado(e));
+  window.addEventListener("liora:start-simulado", (e) => iniciarSimulado(e));
 
 })();
