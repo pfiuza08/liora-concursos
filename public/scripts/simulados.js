@@ -493,24 +493,40 @@ Dificuldade: ${config.dificuldade}.
   // -------------------------------------------------
 
   // ✅ ABRIR CONFIG: vem do ui-actions via WINDOW
-  async function onOpenSimulados() {
-    log.info("open-simulados recebido (WINDOW)");
-
-    const ready = await waitForGlobals();
-    if (!ready) {
-      window.lioraError?.show?.("Sistema ainda inicializando.");
-      return;
+    async function onOpenSimulados() {
+      log.info("open-simulados recebido (WINDOW)");
+    
+      try {
+        const ready = await waitForGlobals();
+        log.info("Globals ready:", ready);
+    
+        if (!ready) {
+          window.lioraError?.show?.("Sistema ainda inicializando.");
+          return;
+        }
+    
+        const access = getSimuladoAccess();
+        log.info("Access check:", access);
+    
+        if (!access.ok) {
+          if (access.reason === "login") {
+            window.dispatchEvent(new Event("liora:login-required"));
+          } else if (access.reason === "limit") {
+            window.dispatchEvent(new Event("liora:premium-bloqueado"));
+          } else {
+            window.lioraError?.show?.("Não foi possível verificar acesso ao simulado.");
+          }
+          return;
+        }
+    
+        abrirModal(access);
+    
+      } catch (err) {
+        console.error("❌ ERRO EM onOpenSimulados:", err);
+        window.lioraError?.show?.("Erro interno ao abrir simulados.");
+      }
     }
 
-    const access = getSimuladoAccess();
-    if (!access.ok) {
-      if (access.reason === "login") window.dispatchEvent(new Event("liora:login-required"));
-      if (access.reason === "limit") window.dispatchEvent(new Event("liora:premium-bloqueado"));
-      return;
-    }
-
-    abrirModal(access);
-  }
 
   window.addEventListener("liora:open-simulados", onOpenSimulados);
 
