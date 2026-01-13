@@ -211,6 +211,36 @@ console.log("🔖 simulados.v105-fixed — 2026-01-12T" + new Date().toISOString
   }
 }
 
+  // -------------------------------------------------
+  // 🔥 BIND DIRETO — SEM ui-actions / SEM data-action
+  // -------------------------------------------------
+  const btnStart = document.getElementById("sim-modal-iniciar");
+  if (btnStart) {
+    btnStart.type = "button";
+
+    // Remove handlers antigos (segurança)
+    btnStart.onclick = null;
+
+    btnStart.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      console.log("🔥 START SIMULADO — bind direto");
+
+      window.dispatchEvent(
+        new CustomEvent("liora:start-simulado", {
+          detail: {
+            origem: "ui-actions",
+            timestamp: Date.now()
+          }
+        })
+      );
+    }, { once: true });
+  } else {
+    log.error("Botão sim-modal-iniciar não encontrado no DOM");
+  }
+}
+
 
   // -------------------------------------------------
   // START SIMULADO (CANÔNICO + BLINDADO)
