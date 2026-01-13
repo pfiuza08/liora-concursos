@@ -214,7 +214,8 @@ console.log("🔖 simulados.v105-fixed — 2026-01-12T" + new Date().toISOString
     }
   
     const access = getSimuladoAccess();
-    log.info("Access check:", access);
+    //log.info("Access check:", access);
+    console.log("🧪 ACCESS (open-simulados):", JSON.stringify(access));
   
     if (!access.ok) {
       if (access.reason === "login") {
