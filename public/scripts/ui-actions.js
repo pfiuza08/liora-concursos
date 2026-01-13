@@ -101,7 +101,7 @@ console.log("🔖 UI-ACTIONS v105-CANONICAL — carregado");
         }
       })
     );
-  }
+  };
 
 
     // =============================
