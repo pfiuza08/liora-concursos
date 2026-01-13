@@ -152,32 +152,45 @@ console.log("🔖 simulados.v105-fixed — 2026-01-12T" + new Date().toISOString
   // ABRIR CONFIG
   // -------------------------------------------------
   function abrirModal(access) {
-        if (
-      !ensure([
-        "sim-modal-backdrop",
-        "sim-modal-banca",
-        "sim-modal-qtd",
-        "sim-modal-tempo",
-        "sim-modal-dificuldade",
-        "sim-modal-tema"
-      ])
-    ) return;
+  if (
+    !ensure([
+      "sim-modal-backdrop",
+      "sim-modal-banca",
+      "sim-modal-qtd",
+      "sim-modal-tempo",
+      "sim-modal-dificuldade",
+      "sim-modal-tema"
+    ])
+  ) return;
 
+  const els = getEls();
 
-    const els = getEls();
+  // Free: qtd fixa
+  els.qtd.value = access.maxQuestoes;
+  els.qtd.disabled = access.plan === "free";
 
-    // Free: qtd fixa
-    els.qtd.value = access.maxQuestoes;
-    els.qtd.disabled = access.plan === "free";
+  log.info("Abrindo modal de config", {
+    plan: access.plan,
+    max: access.maxQuestoes
+  });
 
-    log.info("Abrindo modal de config", { plan: access.plan, max: access.maxQuestoes });
-    // 🔓 Garante que nenhum modal anterior deixou o body travado
-    document.body.style.overflow = "";
-    document.body.classList.remove("liora-modal-open");
-    
-    openModalSafe("sim-modal-backdrop");
+  // 🔓 Garante que nenhum modal anterior deixou o body travado
+  document.body.style.overflow = "";
+  document.body.classList.remove("liora-modal-open");
 
+  // Abre o modal
+  openModalSafe("sim-modal-backdrop");
+
+  // -------------------------------------------------
+  // 🔗 BLINDAGEM: garante data-action no botão START
+  // -------------------------------------------------
+  const btnStart = document.getElementById("sim-modal-iniciar");
+  if (btnStart && !btnStart.dataset.action) {
+    btnStart.dataset.action = "startSimulado";
+    btnStart.type = "button"; // blindagem extra
+    log.warn("⚠️ data-action injetado dinamicamente no botão de simulado");
   }
+}
 
   // -------------------------------------------------
   // START SIMULADO (CANÔNICO + BLINDADO)
