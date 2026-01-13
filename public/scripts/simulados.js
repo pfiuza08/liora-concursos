@@ -105,9 +105,9 @@ console.log("🔖 simulados.v105-fixed — 2026-01-12T" + new Date().toISOString
       return { ok: false, reason: "usage" };
     }
 
-    if (!window.lioraUsage.podeCriarSimulado(plan)) {
-      return { ok: false, reason: "limit" };
-    }
+   // if (!window.lioraUsage.podeCriarSimulado(plan)) {
+   //   return { ok: false, reason: "limit" };
+   // }
 
     const maxQuestoes = limits?.simulados?.questoesPorSimulado;
     if (!maxQuestoes) return { ok: false, reason: "limits-sim" };
