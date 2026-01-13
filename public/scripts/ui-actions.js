@@ -76,15 +76,24 @@ console.log("🔖 UI-ACTIONS v105-CANONICAL — carregado");
     },
     
     startSimulado() {
-      console.log("🎯 startSimulado");
-    
-      if (!window.lioraAuth?.user) {
-        this.openAuth();
-        return;
-      }
-    
-      // 🔔 ÚNICO ponto que inicia simulado
-      window.dispatchEvent(
+    console.log("🎯 startSimulado");
+  
+    // 🔓 Fecha o modal GLOBAL antes de qualquer coisa
+    const layer = document.getElementById("layer-modal");
+    if (layer) {
+      layer.classList.add("hidden");
+      layer.removeAttribute("aria-hidden");
+    }
+  
+    document.activeElement?.blur();
+  
+    if (!window.lioraAuth?.user) {
+      this.openAuth();
+      return;
+    }
+  
+    // 🔔 ÚNICO ponto que inicia simulado
+    window.dispatchEvent(
       new CustomEvent("liora:start-simulado", {
         detail: {
           origem: "ui-actions",
@@ -92,7 +101,8 @@ console.log("🔖 UI-ACTIONS v105-CANONICAL — carregado");
         }
       })
     );
-    },
+  }
+
 
     // =============================
     // DASHBOARD
