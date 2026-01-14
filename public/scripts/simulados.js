@@ -1,20 +1,12 @@
 // =============================================================
 // 🧠 LIORA — SIMULADOS v108-CLEAN
-// Data: 2026-01-14
-//
-// RESPONSABILIDADE ÚNICA:
-// - Abrir modal de configuração
-// - Gerar simulado
-// - Renderizar simulado
-//
-// NÃO FAZ:
-// - Navegação de telas (nav-home)
-// - Decisão de ação (ui-actions)
+// Modal-only • Sem controle de layout • Fluxo único
 // =============================================================
 
-console.log("🔖 simulados.v108-clean —", new Date().toISOString());
+console.log("🔖 simulados.v108-clean carregado");
 
 (function () {
+
   // -------------------------------------------------
   // STATE
   // -------------------------------------------------
@@ -22,15 +14,6 @@ console.log("🔖 simulados.v108-clean —", new Date().toISOString());
     questoes: [],
     atual: 0,
     config: null
-  };
-
-  // -------------------------------------------------
-  // CONFIG
-  // -------------------------------------------------
-  const BLIND = {
-    waitGlobalsMaxTries: 20,
-    waitGlobalsDelay: 250,
-    iaTimeoutMs: 25000
   };
 
   // -------------------------------------------------
@@ -44,71 +27,16 @@ console.log("🔖 simulados.v108-clean —", new Date().toISOString());
     error: (...a) => console.error("🔴 [Simulados]", ...a)
   };
 
-  function getEls() {
-    return {
-      modal: qs("sim-modal-backdrop"),
-
-      banca: qs("sim-modal-banca"),
-      qtd: qs("sim-modal-qtd"),
-      tempo: qs("sim-modal-tempo"),
-      dif: qs("sim-modal-dificuldade"),
-      tema: qs("sim-modal-tema"),
-
-      area: qs("area-simulado"),
-      container: qs("sim-questao-container"),
-      nav: qs("sim-nav"),
-      btnProx: qs("sim-btn-proxima"),
-      btnVoltar: qs("sim-btn-voltar"),
-      resultado: qs("sim-resultado")
-    };
-  }
-
   function ensure(ids) {
-    const missing = ids.filter((id) => !qs(id));
+    const missing = ids.filter(id => !qs(id));
     if (missing.length) {
-      log.error("IDs ausentes:", missing);
       window.lioraError?.show?.(
-        `Simulado indisponível. Estrutura incompleta.`
+        "Simulado não pode iniciar. Estrutura incompleta."
       );
+      log.error("IDs ausentes:", missing);
       return false;
     }
     return true;
-  }
-
-  // -------------------------------------------------
-  // GLOBAIS
-  // -------------------------------------------------
-  function globalsReady() {
-    return !!(
-      window.lioraAuth &&
-      window.lioraState &&
-      window.lioraLimits
-    );
-  }
-
-  async function waitForGlobals() {
-    let tries = 0;
-    while (!globalsReady() && tries < BLIND.waitGlobalsMaxTries) {
-      await new Promise((r) => setTimeout(r, BLIND.waitGlobalsDelay));
-      tries++;
-    }
-    return globalsReady();
-  }
-
-  // -------------------------------------------------
-  // ACESSO
-  // -------------------------------------------------
-  function getSimuladoAccess() {
-    const user = window.lioraAuth?.user;
-    if (!user) return { ok: false, reason: "login" };
-
-    const plan = window.lioraState?.plan || "free";
-    const limits = window.lioraLimits?.[plan];
-    const max = limits?.simulados?.questoesPorSimulado;
-
-    if (!max) return { ok: false, reason: "limits" };
-
-    return { ok: true, plan, maxQuestoes: max };
   }
 
   // -------------------------------------------------
@@ -119,41 +47,54 @@ console.log("🔖 simulados.v108-clean —", new Date().toISOString());
     if (!modal) return;
 
     modal.classList.remove("hidden");
-    modal.classList.add("is-open");
     modal.setAttribute("aria-hidden", "false");
 
     window.lioraModal?.open?.("sim-modal-backdrop");
+
+    bindStartButton();
   }
 
   function closeModal() {
     const modal = qs("sim-modal-backdrop");
     if (!modal) return;
 
-    window.lioraModal?.close?.("sim-modal-backdrop");
-    modal.classList.remove("is-open");
     modal.classList.add("hidden");
     modal.setAttribute("aria-hidden", "true");
 
+    window.lioraModal?.close?.("sim-modal-backdrop");
     document.activeElement?.blur();
   }
 
   // -------------------------------------------------
-  // ABRIR CONFIG (EVENTO)
+  // START BUTTON (LOCAL)
   // -------------------------------------------------
-  async function abrirConfig() {
-    log.info("Abrindo configuração de simulado");
-
-    if (!(await waitForGlobals())) {
-      window.lioraError?.show?.("Sistema ainda inicializando.");
+  function bindStartButton() {
+    const btn = qs("sim-modal-iniciar");
+    if (!btn) {
+      log.error("Botão iniciar não encontrado");
       return;
     }
 
-    const access = getSimuladoAccess();
-    if (!access.ok) {
-      window.dispatchEvent(new Event("liora:login-required"));
-      return;
-    }
+    const clone = btn.cloneNode(true);
+    btn.parentNode.replaceChild(clone, btn);
 
+    clone.type = "button";
+
+    clone.addEventListener("click", () => {
+      log.info("▶ Start simulado (modal)");
+      window.dispatchEvent(
+        new CustomEvent("liora:start-simulado", {
+          detail: { origem: "modal" }
+        })
+      );
+    });
+  }
+
+  // -------------------------------------------------
+  // ABRIR CONFIG
+  // -------------------------------------------------
+  function abrirConfig() {
+    log.info("Abrindo configuração");
     if (
       !ensure([
         "sim-modal-backdrop",
@@ -161,34 +102,9 @@ console.log("🔖 simulados.v108-clean —", new Date().toISOString());
         "sim-modal-qtd",
         "sim-modal-tempo",
         "sim-modal-dificuldade",
-        "sim-modal-tema",
-        "sim-modal-iniciar"
+        "sim-modal-tema"
       ])
     ) return;
-
-    const els = getEls();
-    els.qtd.value = access.maxQuestoes;
-    els.qtd.disabled = access.plan === "free";
-
-    // bind único do botão START
-    const btn = qs("sim-modal-iniciar");
-    btn.type = "button";
-    btn.onclick = null;
-
-    btn.addEventListener(
-      "click",
-      (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-
-        window.dispatchEvent(
-          new CustomEvent("liora:start-simulado", {
-            detail: { origem: "ui-actions", via: "modal" }
-          })
-        );
-      },
-      { once: true }
-    );
 
     openModal();
   }
@@ -196,13 +112,8 @@ console.log("🔖 simulados.v108-clean —", new Date().toISOString());
   // -------------------------------------------------
   // START SIMULADO
   // -------------------------------------------------
-  async function iniciarSimulado(e) {
-    log.info("START recebido", e?.detail);
-
-    if (!e?.detail || e.detail.origem !== "ui-actions") {
-      log.warn("START ignorado (origem inválida)");
-      return;
-    }
+  async function iniciarSimulado() {
+    log.info("Iniciando simulado");
 
     if (
       !ensure([
@@ -215,63 +126,52 @@ console.log("🔖 simulados.v108-clean —", new Date().toISOString());
       ])
     ) return;
 
-    if (!(await waitForGlobals())) {
-      window.lioraError?.show?.("Sistema ainda inicializando.");
-      return;
-    }
-
-    const access = getSimuladoAccess();
-    if (!access.ok) return;
-
-    const els = getEls();
+    const els = {
+      banca: qs("sim-modal-banca"),
+      qtd: qs("sim-modal-qtd"),
+      tempo: qs("sim-modal-tempo"),
+      dif: qs("sim-modal-dificuldade"),
+      tema: qs("sim-modal-tema"),
+      area: qs("area-simulado")
+    };
 
     STATE.config = {
-      banca: els.banca?.value || "geral",
-      qtd: access.maxQuestoes,
-      dificuldade: els.dif?.value || "média",
-      tema: els.tema?.value || "",
-      tempo: Number(els.tempo?.value || 0)
+      banca: els.banca.value,
+      qtd: Number(els.qtd.value),
+      tempo: Number(els.tempo.value),
+      dificuldade: els.dif.value,
+      tema: els.tema.value || ""
     };
 
     closeModal();
 
-    // ativa área (nav-home já deixou visível)
     els.area.classList.remove("hidden");
-    els.area.classList.add("is-active");
 
     window.lioraLoading?.show?.("Gerando simulado...");
 
     try {
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), BLIND.iaTimeoutMs);
-
-      const raw = await gerarQuestoes(STATE.config, controller.signal);
-      clearTimeout(timeout);
-
+      const raw = await gerarQuestoes(STATE.config);
       STATE.questoes = prepararQuestoes(raw);
       STATE.atual = 0;
 
       window.lioraLoading?.hide?.();
       renderQuestao();
-
-      log.info("Simulado iniciado com sucesso ✅");
-    } catch (err) {
+    } catch (e) {
       window.lioraLoading?.hide?.();
       window.lioraError?.show?.("Erro ao gerar simulado.");
-      log.error(err);
+      log.error(e);
     }
   }
 
   // -------------------------------------------------
   // IA
   // -------------------------------------------------
-  async function gerarQuestoes(config, signal) {
+  async function gerarQuestoes(config) {
     const res = await fetch("/api/liora", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      signal,
       body: JSON.stringify({
-        user: `Gere ${config.qtd} questões de ${config.tema || "conhecimento geral"}`
+        user: `Gere ${config.qtd} questões sobre ${config.tema || "conhecimento geral"}`
       })
     });
 
@@ -280,10 +180,10 @@ console.log("🔖 simulados.v108-clean —", new Date().toISOString());
   }
 
   // -------------------------------------------------
-  // PREPARAÇÃO + RENDER
+  // RENDER
   // -------------------------------------------------
   function prepararQuestoes(lista) {
-    return (lista || []).map((q, i) => ({
+    return lista.map((q, i) => ({
       indice: i + 1,
       enunciado: q.enunciado,
       alternativas: q.alternativas,
@@ -293,24 +193,22 @@ console.log("🔖 simulados.v108-clean —", new Date().toISOString());
   }
 
   function renderQuestao() {
-    const els = getEls();
     const q = STATE.questoes[STATE.atual];
     if (!q) return;
 
-    els.container.innerHTML = `
+    const container = qs("sim-questao-container");
+
+    container.innerHTML = `
       <div class="sim-questao-card">
-        <p><b>Questão ${q.indice}</b></p>
+        <p><strong>Questão ${q.indice}</strong></p>
         <p>${q.enunciado}</p>
         ${q.alternativas
-          .map(
-            (a, i) =>
-              `<button class="sim-alt" data-i="${i}">${a}</button>`
-          )
+          .map((a, i) => `<button class="sim-alt" data-i="${i}">${a}</button>`)
           .join("")}
       </div>
     `;
 
-    els.container.querySelectorAll(".sim-alt").forEach((btn) => {
+    container.querySelectorAll(".sim-alt").forEach(btn => {
       btn.onclick = () => {
         q.resp = Number(btn.dataset.i);
         STATE.atual++;
@@ -322,8 +220,7 @@ console.log("🔖 simulados.v108-clean —", new Date().toISOString());
   }
 
   function finalizar() {
-    const els = getEls();
-    els.container.innerHTML = "<h3>Simulado finalizado</h3>";
+    qs("sim-questao-container").innerHTML = "<h3>Simulado finalizado</h3>";
   }
 
   // -------------------------------------------------
