@@ -1,21 +1,22 @@
 // =======================================================
 // 🎯 LIORA — UI ACTIONS (ORQUESTRADOR ÚNICO)
-// Versão: v105-CANONICAL
-// Data: 2026-01-12
+// Versão: v106-CANONICAL-CLEAN
+// Data: 2026-01-14
 //
-// - Fonte única de decisões de ação
+// RESPONSABILIDADE:
+// - Disparar eventos de intenção do usuário
 // - NÃO renderiza telas
-// - NÃO controla auth modal diretamente
-// - Binder canônico via data-action
+// - NÃO abre modais
+// - NÃO controla layout
 // =======================================================
 
-console.log("🔖 UI-ACTIONS v105-CANONICAL — carregado");
+console.log("🔖 UI-ACTIONS v106-CANONICAL-CLEAN — carregado");
 
 (function () {
   console.log("🎯 UI Actions inicializado");
 
   // ------------------------------------------------------
-  // ESTADO GLOBAL DE AUTH (somente leitura aqui)
+  // AUTH STATE (somente leitura aqui)
   // ------------------------------------------------------
   window.lioraAuth = window.lioraAuth || { user: null };
 
@@ -33,12 +34,11 @@ console.log("🔖 UI-ACTIONS v105-CANONICAL — carregado");
 
     logout() {
       console.log("🎯 logout");
-
       window.lioraAuth.user = null;
       localStorage.removeItem("liora:user");
 
-      window.dispatchEvent(new Event("liora:render-auth-ui"));
-      window.dispatchEvent(new Event("liora:go-home"));
+      document.dispatchEvent(new Event("liora:render-auth-ui"));
+      document.dispatchEvent(new Event("liora:go-home"));
     },
 
     // =============================
@@ -54,44 +54,43 @@ console.log("🔖 UI-ACTIONS v105-CANONICAL — carregado");
       window.dispatchEvent(new Event("liora:open-estudo-upload"));
     },
 
-       // =============================
-    // SIMULADOS — CANÔNICO (Opção B)
     // =============================
+    // SIMULADOS — OPÇÃO B
+    // =============================
+
+    // ➜ Entra na ÁREA de simulados (screen)
     openSimulados() {
-      console.log("🎯 openSimulados → entrar na área de simulados");
-    
+      console.log("🎯 openSimulados → área de simulados");
+
       if (!window.lioraAuth?.user) {
         this.openAuth();
         return;
       }
-    
-      // 👉 ENTRA NA ÁREA DE SIMULADOS (screen)
+
       window.dispatchEvent(new Event("liora:open-simulados"));
     },
-    
-    // ⚙ FAB — CONFIGURAÇÃO DO SIMULADO
+
+    // ➜ Abre MODAL de configuração (FAB ⚙)
     openSimConfig() {
-      console.log("🎯 openSimConfig → abrir configuração");
-    
+      console.log("🎯 openSimConfig → modal de configuração");
+
       if (!window.lioraAuth?.user) {
         this.openAuth();
         return;
       }
-    
-      // 👉 ABRE MODAL DE CONFIGURAÇÃO
-     window.dispatchEvent(new Event("liora:open-sim-config"));
+
+      window.dispatchEvent(new Event("liora:open-sim-config"));
     },
-    
-    // ▶ START SIMULADO — CANÔNICO
+
+    // ➜ Start oficial do simulado
     startSimulado() {
-      console.log("🎯 startSimulado");
-    
+      console.log("🎯 startSimulado (ui-actions)");
+
       if (!window.lioraAuth?.user) {
         this.openAuth();
         return;
       }
-    
-      // 🔔 ÚNICO EVENTO DE START
+
       window.dispatchEvent(
         new CustomEvent("liora:start-simulado", {
           detail: {
@@ -126,7 +125,7 @@ console.log("🔖 UI-ACTIONS v105-CANONICAL — carregado");
   };
 
   // ------------------------------------------------------
-  // EXPÕE AÇÕES (IMUTÁVEL)
+  // EXPÕE AÇÕES
   // ------------------------------------------------------
   Object.defineProperty(window, "lioraActions", {
     value: actions,
@@ -134,19 +133,17 @@ console.log("🔖 UI-ACTIONS v105-CANONICAL — carregado");
     configurable: false
   });
 
-  console.log("🔒 lioraActions protegido contra sobrescrita");
+  console.log("🔒 lioraActions protegido");
 
   // =======================================================
-  // 🔗 BINDER CANÔNICO — DATA-ACTION
+  // 🔗 BINDER CANÔNICO — data-action
   // =======================================================
   document.addEventListener("click", (e) => {
     const el = e.target.closest("[data-action]");
     if (!el) return;
 
     const action = el.dataset.action;
-    if (!action) return;
-
-    const fn = window.lioraActions[action];
+    const fn = window.lioraActions?.[action];
 
     if (typeof fn !== "function") {
       console.warn("⚠️ Ação não registrada:", action);
@@ -158,7 +155,7 @@ console.log("🔖 UI-ACTIONS v105-CANONICAL — carregado");
   });
 
   // =======================================================
-  // 🚀 START SIMULADO — BOTÃO FIXO (FORA DO MODAL)
+  // ▶ START SIMULADO — BOTÃO FIXO (fora do modal)
   // =======================================================
   document.addEventListener("click", (e) => {
     const btn = e.target.closest("#btn-start-simulado");
@@ -166,11 +163,11 @@ console.log("🔖 UI-ACTIONS v105-CANONICAL — carregado");
 
     e.preventDefault();
 
-    console.log("🚀 START SIMULADO (fora do modal)");
+    console.log("🚀 START SIMULADO (botão da área)");
 
     window.dispatchEvent(
       new CustomEvent("liora:start-simulado", {
-        detail: { origem: "ui-actions" }
+        detail: { origem: "ui-actions", via: "area-btn" }
       })
     );
   });
