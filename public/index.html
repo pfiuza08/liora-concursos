@@ -398,6 +398,14 @@
 
         <!-- SIMULADOS -->
         <div id="area-simulado" class="hidden space-y-8">
+
+        <button
+          id="btn-start-simulado"
+          class="btn-primary px-6 py-3 mt-4"
+        >
+          Iniciar simulado
+        </button>
+          
           <p id="sim-hint" class="text-sm text-[var(--muted)] max-w-xl">
             Use o botão no canto inferior direito para configurar seu simulado.
           </p>
@@ -469,14 +477,7 @@
               <input id="sim-tema" type="text" class="sim-input">
             </div>
         
-             <button
-              id="sim-modal-iniciar"
-              class="btn-primary w-full"
-              type="button"
-              data-action="startSimulado"
-            >
-              Iniciar simulado
-            </button>
+             <button id="sim-modal-iniciar" class="hidden"></button>
 
           </div>
         </section>
