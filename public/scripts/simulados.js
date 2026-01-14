@@ -569,9 +569,6 @@ Dificuldade: ${config.dificuldade}.
   // EVENTOS CANÔNICOS
   // -------------------------------------------------
   // Config abre via WINDOW (ui-actions atual)
-  window.addEventListener("liora:open-simulados", abrirConfig);
-
-  // Alias (caso você padronize depois)
   window.addEventListener("liora:open-sim-config", abrirConfig);
 
   // Start: aceita WINDOW e DOCUMENT (por compatibilidade)
