@@ -237,51 +237,38 @@ console.log("🔖 simulados.v107-stable —", new Date().toISOString());
   // -------------------------------------------------
   // ABRIR CONFIG
   // -------------------------------------------------
-  async function abrirConfig() {
-    log.info("open-config recebido (WINDOW)");
+ async function abrirConfig() {
+  log.info("open-config recebido (WINDOW)");
 
-    const ready = await waitForGlobals();
-    if (!ready) {
-      window.lioraError?.show?.("Sistema ainda inicializando.");
-      return;
-    }
-
-    const access = getSimuladoAccess();
-    log.info("Access check:", access);
-
-    if (!access.ok) {
-      if (access.reason === "login") window.dispatchEvent(new Event("liora:login-required"));
-      else window.lioraError?.show?.("Não foi possível verificar acesso ao simulado.");
-      return;
-    }
-
-    if (
-      !ensure([
-        "sim-modal-backdrop",
-        "sim-modal-banca",
-        "sim-modal-qtd",
-        "sim-modal-tempo",
-        "sim-modal-dificuldade",
-        "sim-modal-tema",
-        "sim-modal-iniciar"
-      ])
-    ) return;
-
-    const els = getEls();
-
-    // Free: qtd fixa
-    els.qtd.value = access.maxQuestoes;
-    els.qtd.disabled = access.plan === "free";
-
-    // garante body ok
-    document.body.style.overflow = "";
-    document.body.classList.remove("liora-modal-open");
-
-    openModalSafe("sim-modal-backdrop");
-
-    // bind start (robusto)
-    await bindStartButton();
+  if (!(await waitForGlobals())) {
+    window.lioraError?.show?.("Sistema ainda inicializando.");
+    return;
   }
+
+  const access = getSimuladoAccess();
+  if (!access.ok) {
+    window.dispatchEvent(new Event("liora:login-required"));
+    return;
+  }
+
+  if (
+    !ensure([
+      "sim-modal-backdrop",
+      "sim-modal-banca",
+      "sim-modal-qtd",
+      "sim-modal-tempo",
+      "sim-modal-dificuldade",
+      "sim-modal-tema"
+    ])
+  ) return;
+
+  const els = getEls();
+
+  els.qtd.value = access.maxQuestoes;
+  els.qtd.disabled = access.plan === "free";
+
+  openModalSafe("sim-modal-backdrop");
+}
 
   // -------------------------------------------------
   // START SIMULADO
