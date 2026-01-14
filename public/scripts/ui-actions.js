@@ -54,45 +54,44 @@ console.log("🔖 UI-ACTIONS v105-CANONICAL — carregado");
       window.dispatchEvent(new Event("liora:open-estudo-upload"));
     },
 
-    // =============================
-    // SIMULADOS
+       // =============================
+    // SIMULADOS — CANÔNICO (Opção B)
     // =============================
     openSimulados() {
-      console.log("🎯 openSimulados (abrir configuração)");
-
+      console.log("🎯 openSimulados → entrar na área de simulados");
+    
       if (!window.lioraAuth?.user) {
         this.openAuth();
         return;
       }
-
-      // ✅ SEMPRE abre a configuração
+    
+      // 👉 ENTRA NA ÁREA DE SIMULADOS (screen)
       window.dispatchEvent(new Event("liora:open-simulados"));
     },
-
-    // ⚙ FAB de configuração
+    
+    // ⚙ FAB — CONFIGURAÇÃO DO SIMULADO
     openSimConfig() {
-      console.log("🎯 openSimConfig (abrir configuração)");
-      this.openSimulados();
-    },
-
-    startSimulado() {
-      console.log("🎯 startSimulado");
-
-      // 🔓 Fecha o modal GLOBAL antes de qualquer coisa
-      const layer = document.getElementById("layer-modal");
-      if (layer) {
-        layer.classList.add("hidden");
-        layer.removeAttribute("aria-hidden");
-      }
-
-      document.activeElement?.blur();
-
+      console.log("🎯 openSimConfig → abrir configuração");
+    
       if (!window.lioraAuth?.user) {
         this.openAuth();
         return;
       }
-
-      // 🔔 ÚNICO ponto que inicia simulado (via UI-ACTIONS)
+    
+      // 👉 ABRE MODAL DE CONFIGURAÇÃO
+      window.dispatchEvent(new Event("liora:open-sim-config"));
+    },
+    
+    // ▶ START SIMULADO — CANÔNICO
+    startSimulado() {
+      console.log("🎯 startSimulado");
+    
+      if (!window.lioraAuth?.user) {
+        this.openAuth();
+        return;
+      }
+    
+      // 🔔 ÚNICO EVENTO DE START
       window.dispatchEvent(
         new CustomEvent("liora:start-simulado", {
           detail: {
