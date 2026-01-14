@@ -79,7 +79,7 @@ console.log("🔖 UI-ACTIONS v105-CANONICAL — carregado");
       }
     
       // 👉 ABRE MODAL DE CONFIGURAÇÃO
-      window.dispatchEvent(new Event("liora:open-sim-config"));
+     window.dispatchEvent(new Event("liora:open-sim-config"));
     },
     
     // ▶ START SIMULADO — CANÔNICO
