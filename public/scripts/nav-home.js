@@ -137,12 +137,30 @@
       document.getElementById("painel-upload")?.classList.remove("hidden");
     });
 
-   // window.addEventListener("liora:open-simulados", () => {
- //     showApp();
-//      hideAllPanels();
-//      document.getElementById("area-simulado")?.classList.remove("hidden");
-//      fabSim?.classList.remove("hidden");
-//    });
+    // ======================================================
+    // 🎯 SIMULADOS — ENTRAR NA ÁREA (Opção B)
+    // ======================================================
+    window.addEventListener("liora:open-simulados", () => {
+      console.log("🧭 NAV → abrir área de simulados");
+    
+      // Ativa o workspace
+      showApp();
+      hideAllPanels();
+    
+      // Ativa área de simulados
+      const area = document.getElementById("area-simulado");
+      area?.classList.remove("hidden");
+      area?.classList.add("is-active");
+    
+      // Mostra FAB de configuração
+      const fab = document.getElementById("sim-fab");
+      fab?.classList.remove("hidden");
+    
+      // Scroll defensivo
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+      window.scrollTo(0, 0);
+    });
 
     window.addEventListener("liora:open-sim-config", () => {
       showApp();
