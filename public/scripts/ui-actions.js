@@ -54,55 +54,54 @@ console.log("🔖 UI-ACTIONS v105-CANONICAL — carregado");
       window.dispatchEvent(new Event("liora:open-estudo-upload"));
     },
 
-     // =============================
+    // =============================
     // SIMULADOS
     // =============================
     openSimulados() {
       console.log("🎯 openSimulados (abrir configuração)");
-    
+
       if (!window.lioraAuth?.user) {
         this.openAuth();
         return;
       }
-    
+
       // ✅ SEMPRE abre a configuração
       window.dispatchEvent(new Event("liora:open-simulados"));
     },
-    
+
     // ⚙ FAB de configuração
     openSimConfig() {
       console.log("🎯 openSimConfig (abrir configuração)");
       this.openSimulados();
     },
-    
-    startSimulado() {
-    console.log("🎯 startSimulado");
-  
-    // 🔓 Fecha o modal GLOBAL antes de qualquer coisa
-    const layer = document.getElementById("layer-modal");
-    if (layer) {
-      layer.classList.add("hidden");
-      layer.removeAttribute("aria-hidden");
-    }
-  
-    document.activeElement?.blur();
-  
-    if (!window.lioraAuth?.user) {
-      this.openAuth();
-      return;
-    }
-  
-    // 🔔 ÚNICO ponto que inicia simulado
-    window.dispatchEvent(
-      new CustomEvent("liora:start-simulado", {
-        detail: {
-          origem: "ui-actions",
-          timestamp: Date.now()
-        }
-      })
-    );
-  },
 
+    startSimulado() {
+      console.log("🎯 startSimulado");
+
+      // 🔓 Fecha o modal GLOBAL antes de qualquer coisa
+      const layer = document.getElementById("layer-modal");
+      if (layer) {
+        layer.classList.add("hidden");
+        layer.removeAttribute("aria-hidden");
+      }
+
+      document.activeElement?.blur();
+
+      if (!window.lioraAuth?.user) {
+        this.openAuth();
+        return;
+      }
+
+      // 🔔 ÚNICO ponto que inicia simulado (via UI-ACTIONS)
+      window.dispatchEvent(
+        new CustomEvent("liora:start-simulado", {
+          detail: {
+            origem: "ui-actions",
+            timestamp: Date.now()
+          }
+        })
+      );
+    },
 
     // =============================
     // DASHBOARD
@@ -157,6 +156,24 @@ console.log("🔖 UI-ACTIONS v105-CANONICAL — carregado");
 
     console.log("🧭 Ação disparada:", action);
     fn.call(window.lioraActions, el);
+  });
+
+  // =======================================================
+  // 🚀 START SIMULADO — BOTÃO FIXO (FORA DO MODAL)
+  // =======================================================
+  document.addEventListener("click", (e) => {
+    const btn = e.target.closest("#btn-start-simulado");
+    if (!btn) return;
+
+    e.preventDefault();
+
+    console.log("🚀 START SIMULADO (fora do modal)");
+
+    window.dispatchEvent(
+      new CustomEvent("liora:start-simulado", {
+        detail: { origem: "ui-actions" }
+      })
+    );
   });
 
 })();
