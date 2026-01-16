@@ -3,15 +3,12 @@
 <head>
   <meta charset="utf-8" />
 
-  <!-- ============================================================
-       SEO + META
-  ============================================================ -->
+  <!-- ================= META ================= -->
   <title>Liora — Estudo Inteligente</title>
-
   <meta name="description"
-        content="Liora — Estudo Inteligente. Crie planos de estudo, sessões completas e simulados com IA.">
+        content="Liora — Estudo Inteligente. Planos de estudo, sessões completas e simulados com IA.">
   <meta name="keywords"
-        content="Liora, estudo inteligente, IA, simulados, planos de estudo, concursos, ENEM">
+        content="Liora, estudo inteligente, IA, simulados, planos de estudo, concursos">
   <meta name="author" content="Intellih Tecnologia">
   <meta name="robots" content="index, follow">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -23,9 +20,8 @@
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link
-    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
-    rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
 
   <!-- Tailwind (temporário) -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -33,7 +29,7 @@
   <!-- CSS -->
   <link rel="stylesheet" href="/style.css?v=83">
   <link rel="stylesheet" href="/style-auth.css?v=1">
-  <link rel="stylesheet" href="/style-simulados.css?v=8">
+  <link rel="stylesheet" href="/style-simulados.css?v=7">
   <link rel="stylesheet" href="/style-dashboard.css?v=1">
   <link rel="stylesheet" href="/style-wizard.css?v=1">
 </head>
@@ -41,9 +37,7 @@
 <body>
 <div id="liora-shell">
 
-  <!-- ============================================================
-       HEADER
-  ============================================================ -->
+  <!-- ================= HEADER ================= -->
   <header class="max-w-6xl mx-auto px-6 pt-8 flex justify-between items-center">
     <div class="flex items-center gap-3">
       <div class="w-10 h-10 rounded-2xl bg-[var(--brand)] text-white font-black flex items-center justify-center">
@@ -75,16 +69,16 @@
     </div>
   </header>
 
-  <!-- ============================================================
-       MAIN
-  ============================================================ -->
-  <main id="liora-layout" class="max-w-6xl mx-auto px-6 pt-8 pb-16">
+  <!-- ================= MAIN ================= -->
+  <main id="liora-layout" class="max-w-6xl mx-auto px-6 pt-10 pb-20">
 
-    <!-- ================= HOME ================= -->
+    <!-- ============ HOME ============ -->
     <section id="liora-home" class="liora-screen is-active">
       <div class="min-h-[70vh] flex flex-col items-center text-center gap-12 pt-12">
 
-        <h2 class="text-2xl font-semibold">Como deseja estudar hoje?</h2>
+        <h2 class="text-2xl font-semibold">
+          Como deseja estudar hoje?
+        </h2>
 
         <div class="flex gap-4">
           <button class="btn-secondary px-6 py-2"
@@ -109,17 +103,63 @@
             Meu desempenho
           </button>
         </div>
+
       </div>
     </section>
 
-    <!-- ================= WORKSPACE ================= -->
+    <!-- ============ WORKSPACE ============ -->
     <section id="liora-app" class="liora-screen">
 
-      <!-- ========== SIMULADOS (PASSIVO) ========== -->
+      <!-- ====== ESTUDO (TEMA / PDF) ====== -->
+      <div id="painel-estudo" class="hidden space-y-10">
+
+        <!-- TEMA -->
+        <div id="painel-tema" class="hidden space-y-4 max-w-xl">
+          <h3 class="section-title">Plano por Tema</h3>
+
+          <label class="text-sm">Tema</label>
+          <input id="inp-tema"
+                 type="text"
+                 placeholder="Ex.: Direito Constitucional"
+                 class="w-full">
+
+          <label class="text-sm">Nível</label>
+          <select id="sel-nivel" class="w-full">
+            <option value="iniciante">Iniciante</option>
+            <option value="intermediario">Intermediário</option>
+            <option value="avancado">Avançado</option>
+          </select>
+
+          <button id="btn-gerar-tema"
+                  class="btn-primary w-full">
+            Gerar plano
+          </button>
+        </div>
+
+        <!-- PDF -->
+        <div id="painel-upload" class="hidden space-y-4 max-w-xl">
+          <h3 class="section-title">Plano por PDF</h3>
+
+          <input id="inp-file"
+                 type="file"
+                 accept="application/pdf">
+
+          <button id="btn-gerar-pdf"
+                  class="btn-primary w-full">
+            Gerar plano
+          </button>
+        </div>
+      </div>
+
+      <!-- ====== SIMULADOS ====== -->
       <div id="area-simulado" class="hidden space-y-8">
+        <button class="btn-primary px-6 py-3"
+                data-action="openSimConfig">
+          Configurar simulado
+        </button>
 
         <p id="sim-hint" class="text-sm text-[var(--muted)]">
-          Nenhum simulado em andamento. Use o botão ⚙ para configurar um novo.
+          Use o botão ⚙ no canto inferior direito para configurar.
         </p>
 
         <div id="sim-questao-container" class="space-y-4"></div>
@@ -132,8 +172,8 @@
         <div id="sim-resultado" class="hidden"></div>
       </div>
 
-      <!-- ========== DASHBOARD ========== -->
-      <div id="area-dashboard" class="hidden">
+      <!-- ====== DASHBOARD ====== -->
+      <div id="area-dashboard" class="hidden space-y-4">
         <h3 class="section-title">Minha evolução</h3>
         <p class="text-sm text-[var(--muted)]">
           Nenhum simulado realizado ainda.
@@ -147,23 +187,19 @@
             class="liora-fab-home hidden">
       ⬅ Início
     </button>
-
   </main>
 </div>
 
-<!-- ============================================================
-     LAYER MODAL — ÚNICO
-============================================================ -->
+<!-- ================= MODAIS ================= -->
 <section id="layer-modal" aria-hidden="true">
 
-  <!-- ========== LOGIN MODAL ========== -->
+  <!-- LOGIN -->
   <section id="liora-auth"
            class="liora-auth-modal hidden"
            aria-modal="true"
            aria-hidden="true">
     <div class="liora-auth-card">
       <h2 class="text-xl font-semibold mb-4">Acessar Liora</h2>
-
       <form id="liora-auth-form" class="space-y-4">
         <input id="auth-email" type="email" placeholder="E-mail" required>
         <input id="auth-senha" type="password" placeholder="Senha" required>
@@ -172,32 +208,28 @@
     </div>
   </section>
 
-  <!-- ========== SIMULADO CONFIG (ÚNICO PONTO DE START) ========== -->
+  <!-- CONFIG SIMULADO -->
   <div id="sim-modal-backdrop"
        class="liora-modal-backdrop hidden"
        aria-modal="true"
        aria-hidden="true">
-
     <div class="liora-modal-card sim-modal">
-
       <button class="liora-modal-close" data-close>✕</button>
 
       <h3 class="sim-modal-title">Configurar simulado</h3>
 
-      <div class="sim-modal-body space-y-3">
-
+      <div class="sim-modal-body">
         <label>Banca</label>
         <select id="sim-modal-banca">
           <option value="FGV">FGV</option>
           <option value="CESPE">CESPE</option>
-          <option value="VUNESP">VUNESP</option>
         </select>
 
         <label>Quantidade</label>
-        <input id="sim-modal-qtd" type="number" value="5" min="1">
+        <input id="sim-modal-qtd" type="number" value="5">
 
         <label>Tempo (min)</label>
-        <input id="sim-modal-tempo" type="number" value="30" min="5">
+        <input id="sim-modal-tempo" type="number" value="30">
 
         <label>Dificuldade</label>
         <select id="sim-modal-dificuldade">
@@ -209,7 +241,6 @@
 
         <label>Tema (opcional)</label>
         <input id="sim-modal-tema" type="text">
-
       </div>
 
       <div class="sim-modal-footer">
@@ -222,7 +253,7 @@
   </div>
 </section>
 
-<!-- ================= FAB SIMULADO ================= -->
+<!-- FAB SIMULADO -->
 <button id="sim-fab"
         class="sim-fab hidden"
         data-action="openSimConfig"
@@ -230,9 +261,7 @@
   ⚙
 </button>
 
-<!-- ============================================================
-     SCRIPTS — ORDEM CANÔNICA
-============================================================ -->
+<!-- ================= SCRIPTS ================= -->
 <script src="/scripts/state.js"></script>
 <script src="/scripts/limits.js"></script>
 <script src="/scripts/usage.js"></script>
