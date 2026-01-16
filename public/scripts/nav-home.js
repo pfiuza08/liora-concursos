@@ -75,6 +75,10 @@ console.log("🔖 nav-home v102-CLEAN carregado");
       hideAllPanels();
       document.getElementById("area-simulado")?.classList.remove("hidden");
       fabSim?.classList.remove("hidden");
+
+      window.dispatchEvent(new Event("screen:simulados:entered"));
+
+     
     });
 
     window.addEventListener("liora:open-dashboard", () => {
