@@ -1,16 +1,16 @@
 // =============================================================
 // 🧠 LIORA — SIMULADOS (PRODUCT MODE)
-// Versão: v1.1-PRODUCT
+// Versão: v1.2-PRODUCT
 //
 // ✔ SCREEN como runtime
 // ✔ MODAL apenas para configuração
-// ✔ Botão = start direto
-// ✔ FAB = configuração
+// ✔ FAB = abre configuração
+// ✔ MODAL = start simulado
 // ✔ Eventos canônicos (liora:*)
-// ✔ Zero dependência de nav-home
+// ✔ Zero dependência de nav-home / ui-actions
 // =============================================================
 
-console.log("🔖 Simulados v1.1 — Product Mode carregado");
+console.log("🔖 Simulados v1.2 — Product Mode carregado");
 
 (function () {
 
@@ -40,17 +40,17 @@ console.log("🔖 Simulados v1.1 — Product Mode carregado");
   function ensure(ids) {
     const missing = ids.filter(id => !qs(id));
     if (missing.length) {
+      console.error("[Simulados] IDs ausentes:", missing);
       window.lioraError?.show?.(
         `Simulado não pode iniciar. Elementos ausentes: ${missing.join(", ")}`
       );
-      console.error("[Simulados] IDs ausentes:", missing);
       return false;
     }
     return true;
   }
 
   // -------------------------------------------------
-  // CONFIGURAÇÃO (MODAL)
+  // CONFIGURAÇÃO — MODAL
   // -------------------------------------------------
   function abrirConfig() {
 
@@ -91,7 +91,7 @@ console.log("🔖 Simulados v1.1 — Product Mode carregado");
       "sim-resultado"
     ])) return;
 
-    // coleta config ATUAL do modal (mesmo fechado)
+    // coleta config ATUAL do modal
     STATE.config = {
       banca: qs("sim-modal-banca")?.value || STATE.config.banca,
       qtd: Number(qs("sim-modal-qtd")?.value || STATE.config.qtd),
@@ -104,6 +104,7 @@ console.log("🔖 Simulados v1.1 — Product Mode carregado");
 
     qs("sim-resultado")?.classList.add("hidden");
     qs("sim-nav")?.classList.add("hidden");
+    qs("sim-questao-container").innerHTML = "";
 
     window.lioraLoading?.show?.("Gerando simulado...");
 
@@ -126,7 +127,16 @@ console.log("🔖 Simulados v1.1 — Product Mode carregado");
   window.addEventListener("liora:start-simulado", iniciarSimulado);
 
   // -------------------------------------------------
-  // IA
+  // BIND DO BOTÃO DO MODAL (CANÔNICO)
+  // -------------------------------------------------
+  document.addEventListener("click", (e) => {
+    if (e.target.closest("#sim-modal-iniciar")) {
+      window.dispatchEvent(new Event("liora:start-simulado"));
+    }
+  });
+
+  // -------------------------------------------------
+  // IA — GERAÇÃO DE QUESTÕES
   // -------------------------------------------------
   async function gerarQuestoes(config) {
 
@@ -195,7 +205,8 @@ Dificuldade: ${config.dificuldade}.
         </div>
         <p>${q.enunciado}</p>
         ${q.alternativas.map((a, i) =>
-          `<button class="sim-alt ${q.resp === i ? "selected" : ""}" data-i="${i}">${a}</button>`
+          `<button class="sim-alt ${q.resp === i ? "selected" : ""}"
+                   data-i="${i}">${a}</button>`
         ).join("")}
       </div>
     `;
@@ -227,6 +238,9 @@ Dificuldade: ${config.dificuldade}.
     }
   });
 
+  // -------------------------------------------------
+  // FINALIZAÇÃO
+  // -------------------------------------------------
   function finalizar() {
 
     const acertos =
