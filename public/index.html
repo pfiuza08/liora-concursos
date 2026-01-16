@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
 
   <!-- ============================================================
-       META TAGS — SEO + INDEXAÇÃO
+       SEO + META
   ============================================================ -->
   <title>Liora — Estudo Inteligente</title>
 
@@ -23,16 +23,17 @@
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
-        rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
 
   <!-- Tailwind (temporário) -->
   <script src="https://cdn.tailwindcss.com"></script>
 
   <!-- CSS -->
-  <link rel="stylesheet" href="/style.css?v=82">
+  <link rel="stylesheet" href="/style.css?v=83">
   <link rel="stylesheet" href="/style-auth.css?v=1">
-  <link rel="stylesheet" href="/style-simulados.css?v=7">
+  <link rel="stylesheet" href="/style-simulados.css?v=8">
   <link rel="stylesheet" href="/style-dashboard.css?v=1">
   <link rel="stylesheet" href="/style-wizard.css?v=1">
 </head>
@@ -79,9 +80,7 @@
   ============================================================ -->
   <main id="liora-layout" class="max-w-6xl mx-auto px-6 pt-8 pb-16">
 
-    <!-- ============================================================
-         HOME
-    ============================================================ -->
+    <!-- ================= HOME ================= -->
     <section id="liora-home" class="liora-screen is-active">
       <div class="min-h-[70vh] flex flex-col items-center text-center gap-12 pt-12">
 
@@ -89,10 +88,14 @@
 
         <div class="flex gap-4">
           <button class="btn-secondary px-6 py-2"
-                  data-action="openTema">Tema</button>
+                  data-action="openTema">
+            Tema
+          </button>
 
           <button class="btn-secondary px-6 py-2"
-                  data-action="openUpload">PDF</button>
+                  data-action="openUpload">
+            PDF
+          </button>
         </div>
 
         <div class="flex gap-4 mt-6">
@@ -109,22 +112,14 @@
       </div>
     </section>
 
-    <!-- ============================================================
-         WORKSPACE
-    ============================================================ -->
+    <!-- ================= WORKSPACE ================= -->
     <section id="liora-app" class="liora-screen">
 
-      <!-- ================= SIMULADOS ================= -->
+      <!-- ========== SIMULADOS (PASSIVO) ========== -->
       <div id="area-simulado" class="hidden space-y-8">
 
-        <button id="btn-start-simulado"
-                class="btn-primary px-6 py-3"
-                data-action="openSimConfig">
-          Configurar simulado
-        </button>
-
         <p id="sim-hint" class="text-sm text-[var(--muted)]">
-          Use o botão ⚙ no canto inferior direito para configurar.
+          Nenhum simulado em andamento. Use o botão ⚙ para configurar um novo.
         </p>
 
         <div id="sim-questao-container" class="space-y-4"></div>
@@ -137,25 +132,31 @@
         <div id="sim-resultado" class="hidden"></div>
       </div>
 
-      <!-- ================= DASHBOARD ================= -->
+      <!-- ========== DASHBOARD ========== -->
       <div id="area-dashboard" class="hidden">
         <h3 class="section-title">Minha evolução</h3>
-        <p class="text-sm text-[var(--muted)]">Nenhum simulado ainda.</p>
+        <p class="text-sm text-[var(--muted)]">
+          Nenhum simulado realizado ainda.
+        </p>
       </div>
 
     </section>
 
     <!-- FAB HOME -->
-    <button id="fab-home" class="liora-fab-home hidden">⬅ Início</button>
+    <button id="fab-home"
+            class="liora-fab-home hidden">
+      ⬅ Início
+    </button>
+
   </main>
 </div>
 
 <!-- ============================================================
-     LAYER MODAL (CANÔNICO)
+     LAYER MODAL — ÚNICO
 ============================================================ -->
 <section id="layer-modal" aria-hidden="true">
 
-  <!-- ================= LOGIN ================= -->
+  <!-- ========== LOGIN MODAL ========== -->
   <section id="liora-auth"
            class="liora-auth-modal hidden"
            aria-modal="true"
@@ -171,7 +172,7 @@
     </div>
   </section>
 
-  <!-- ================= SIMULADO MODAL ================= -->
+  <!-- ========== SIMULADO CONFIG (ÚNICO PONTO DE START) ========== -->
   <div id="sim-modal-backdrop"
        class="liora-modal-backdrop hidden"
        aria-modal="true"
@@ -183,18 +184,20 @@
 
       <h3 class="sim-modal-title">Configurar simulado</h3>
 
-      <div class="sim-modal-body">
+      <div class="sim-modal-body space-y-3">
+
         <label>Banca</label>
         <select id="sim-modal-banca">
           <option value="FGV">FGV</option>
           <option value="CESPE">CESPE</option>
+          <option value="VUNESP">VUNESP</option>
         </select>
 
         <label>Quantidade</label>
-        <input id="sim-modal-qtd" type="number" value="5">
+        <input id="sim-modal-qtd" type="number" value="5" min="1">
 
         <label>Tempo (min)</label>
-        <input id="sim-modal-tempo" type="number" value="30">
+        <input id="sim-modal-tempo" type="number" value="30" min="5">
 
         <label>Dificuldade</label>
         <select id="sim-modal-dificuldade">
@@ -206,6 +209,7 @@
 
         <label>Tema (opcional)</label>
         <input id="sim-modal-tema" type="text">
+
       </div>
 
       <div class="sim-modal-footer">
@@ -227,7 +231,7 @@
 </button>
 
 <!-- ============================================================
-     SCRIPTS — ORDEM FINAL
+     SCRIPTS — ORDEM CANÔNICA
 ============================================================ -->
 <script src="/scripts/state.js"></script>
 <script src="/scripts/limits.js"></script>
