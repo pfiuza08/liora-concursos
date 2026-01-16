@@ -1,24 +1,30 @@
 // =============================================================
 // 🧠 LIORA — SIMULADOS (PRODUCT MODE)
-// Versão: v1.0-PRODUCT
+// Versão: v1.1-PRODUCT
 //
-// - Baseado em SCREEN ativa
-// - Modal apenas para configuração
-// - Um único fluxo de start
-// - Zero dependência de nav-home
+// ✔ SCREEN como runtime
+// ✔ MODAL apenas para configuração
+// ✔ Botão = start direto
+// ✔ FAB = configuração
+// ✔ Eventos canônicos (liora:*)
+// ✔ Zero dependência de nav-home
 // =============================================================
 
-console.log("🔖 Simulados — Product Mode carregado");
+console.log("🔖 Simulados v1.1 — Product Mode carregado");
 
 (function () {
 
   // -------------------------------------------------
   // ESTADO
   // -------------------------------------------------
-  let screenActive = false;
-
   const STATE = {
-    config: null,
+    config: {
+      banca: "FGV",
+      qtd: 5,
+      dificuldade: "misturado",
+      tema: "",
+      tempo: 30
+    },
     questoes: [],
     atual: 0
   };
@@ -37,24 +43,16 @@ console.log("🔖 Simulados — Product Mode carregado");
       window.lioraError?.show?.(
         `Simulado não pode iniciar. Elementos ausentes: ${missing.join(", ")}`
       );
+      console.error("[Simulados] IDs ausentes:", missing);
       return false;
     }
     return true;
   }
 
   // -------------------------------------------------
-  // SCREEN LIFECYCLE
+  // CONFIGURAÇÃO (MODAL)
   // -------------------------------------------------
-  window.addEventListener("screen:simulados:entered", () => {
-    screenActive = true;
-    log("Screen ativada");
-  });
-
-  // -------------------------------------------------
-  // ABRIR CONFIGURAÇÃO
-  // -------------------------------------------------
-  window.addEventListener("simulados:config", () => {
-    if (!screenActive) return;
+  function abrirConfig() {
 
     if (!ensure([
       "sim-modal-backdrop",
@@ -65,20 +63,27 @@ console.log("🔖 Simulados — Product Mode carregado");
       "sim-modal-tema"
     ])) return;
 
+    // prefill com última config
+    qs("sim-modal-banca").value = STATE.config.banca;
+    qs("sim-modal-qtd").value = STATE.config.qtd;
+    qs("sim-modal-tempo").value = STATE.config.tempo;
+    qs("sim-modal-dificuldade").value = STATE.config.dificuldade;
+    qs("sim-modal-tema").value = STATE.config.tema;
+
     window.lioraModal?.open?.("sim-modal-backdrop");
-  });
+  }
+
+  window.addEventListener("liora:open-sim-config", abrirConfig);
 
   // -------------------------------------------------
   // START SIMULADO (ÚNICO)
   // -------------------------------------------------
-  window.addEventListener("simulados:start", async () => {
-    if (!screenActive) return;
+  async function iniciarSimulado() {
 
-    log("START recebido");
+    log("START solicitado");
 
     if (!ensure([
-      "screen-simulados",
-      "simulados-runtime",
+      "area-simulado",
       "sim-questao-container",
       "sim-nav",
       "sim-btn-proxima",
@@ -86,20 +91,19 @@ console.log("🔖 Simulados — Product Mode carregado");
       "sim-resultado"
     ])) return;
 
-    // coleta config do modal
+    // coleta config ATUAL do modal (mesmo fechado)
     STATE.config = {
-      banca: qs("sim-modal-banca")?.value || "geral",
-      qtd: Number(qs("sim-modal-qtd")?.value || 5),
-      dificuldade: qs("sim-modal-dificuldade")?.value || "misturado",
+      banca: qs("sim-modal-banca")?.value || STATE.config.banca,
+      qtd: Number(qs("sim-modal-qtd")?.value || STATE.config.qtd),
+      dificuldade: qs("sim-modal-dificuldade")?.value || STATE.config.dificuldade,
       tema: qs("sim-modal-tema")?.value || "",
-      tempo: Number(qs("sim-modal-tempo")?.value || 0)
+      tempo: Number(qs("sim-modal-tempo")?.value || STATE.config.tempo)
     };
 
     window.lioraModal?.close?.("sim-modal-backdrop");
 
-    // ativa runtime
-    qs("simulados-runtime")?.classList.remove("hidden");
     qs("sim-resultado")?.classList.add("hidden");
+    qs("sim-nav")?.classList.add("hidden");
 
     window.lioraLoading?.show?.("Gerando simulado...");
 
@@ -117,12 +121,17 @@ console.log("🔖 Simulados — Product Mode carregado");
       window.lioraError?.show?.("Erro ao gerar simulado.");
       console.error(err);
     }
-  });
+  }
+
+  window.addEventListener("liora:start-simulado", iniciarSimulado);
 
   // -------------------------------------------------
   // IA
   // -------------------------------------------------
   async function gerarQuestoes(config) {
+
+    log("Gerando questões", config);
+
     const res = await fetch("/api/liora", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -151,7 +160,9 @@ Dificuldade: ${config.dificuldade}.
     });
 
     const json = await res.json();
-    return Array.isArray(json.output) ? json.output : JSON.parse(json.output);
+    return Array.isArray(json.output)
+      ? json.output
+      : JSON.parse(json.output);
   }
 
   // -------------------------------------------------
@@ -171,6 +182,7 @@ Dificuldade: ${config.dificuldade}.
   // RENDER
   // -------------------------------------------------
   function renderQuestao() {
+
     const q = STATE.questoes[STATE.atual];
     const box = qs("sim-questao-container");
 
@@ -202,6 +214,7 @@ Dificuldade: ${config.dificuldade}.
   // NAVEGAÇÃO
   // -------------------------------------------------
   document.addEventListener("click", (e) => {
+
     if (e.target.closest("#sim-btn-proxima")) {
       STATE.atual < STATE.questoes.length - 1
         ? (STATE.atual++, renderQuestao())
@@ -215,7 +228,9 @@ Dificuldade: ${config.dificuldade}.
   });
 
   function finalizar() {
-    const acertos = STATE.questoes.filter(q => q.resp === q.corretaIndex).length;
+
+    const acertos =
+      STATE.questoes.filter(q => q.resp === q.corretaIndex).length;
 
     qs("sim-questao-container").innerHTML = "";
     qs("sim-nav")?.classList.add("hidden");
@@ -224,7 +239,8 @@ Dificuldade: ${config.dificuldade}.
       <div class="sim-resultado-card">
         <h3>Resultado</h3>
         <p>${acertos} / ${STATE.questoes.length} acertos</p>
-        <button class="btn-secondary" data-action="simulados:config">
+        <button class="btn-secondary"
+                onclick="window.dispatchEvent(new Event('liora:open-sim-config'))">
           Novo simulado
         </button>
       </div>
