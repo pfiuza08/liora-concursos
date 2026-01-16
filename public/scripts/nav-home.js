@@ -1,9 +1,9 @@
 // =======================================================
-// 🧭 LIORA — NAV HOME v101-CLEAN
+// 🧭 LIORA — NAV HOME v102-CLEAN
 // Controle exclusivo de layout / screens
 // =======================================================
 
-console.log("🔖 nav-home v101-CLEAN carregado");
+console.log("🔖 nav-home v102-CLEAN carregado");
 
 (function () {
 
@@ -20,7 +20,7 @@ console.log("🔖 nav-home v101-CLEAN carregado");
     // --------------------------------------------------
     function hideAllPanels() {
       app?.querySelectorAll(
-        "#painel-estudo, #painel-tema, #painel-upload, #area-plano, #liora-sessoes, #area-simulado, #area-dashboard"
+        "#painel-estudo, #painel-tema, #painel-upload, #area-simulado, #area-dashboard"
       ).forEach(el => el.classList.add("hidden"));
     }
 
@@ -42,6 +42,10 @@ console.log("🔖 nav-home v101-CLEAN carregado");
 
       fabHome?.classList.remove("hidden");
     }
+
+    // 🔑 expõe para outros módulos (simulados)
+    window.showApp = showApp;
+    window.hideAllPanels = hideAllPanels;
 
     // --------------------------------------------------
     // EVENTOS
@@ -69,7 +73,6 @@ console.log("🔖 nav-home v101-CLEAN carregado");
 
       showApp();
       hideAllPanels();
-
       document.getElementById("area-simulado")?.classList.remove("hidden");
       fabSim?.classList.remove("hidden");
     });
@@ -78,15 +81,6 @@ console.log("🔖 nav-home v101-CLEAN carregado");
       showApp();
       hideAllPanels();
       document.getElementById("area-dashboard")?.classList.remove("hidden");
-      fabSim?.classList.add("hidden");
-    });
-
-    window.addEventListener("liora:open-premium", () => {
-      document.querySelectorAll(".liora-screen").forEach(el =>
-        el.classList.remove("is-active")
-      );
-      document.getElementById("liora-premium")?.classList.add("is-active");
-      fabHome?.classList.remove("hidden");
       fabSim?.classList.add("hidden");
     });
 
