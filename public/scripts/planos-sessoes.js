@@ -306,4 +306,78 @@ console.log("🧠 planos-sessoes v1.0-RESTORE carregado");
     qs("fab-home")?.classList.remove("hidden");
   });
 
+  // ----------------------------------------------------------
+// 📖 Render de Sessão (v1)
+// ----------------------------------------------------------
+function renderSessao(sessao, index) {
+  const painelEstudo = document.getElementById("painel-estudo");
+  if (!painelEstudo) return;
+
+  let area = document.getElementById("area-sessao");
+  if (!area) {
+    area = document.createElement("div");
+    area.id = "area-sessao";
+    area.className = "space-y-6 max-w-3xl";
+    painelEstudo.appendChild(area);
+  }
+
+  area.innerHTML = `
+    <div class="flex items-center gap-3">
+      <button id="btn-voltar-sessoes"
+              class="btn-secondary text-sm">
+        ← Sessões
+      </button>
+
+      <span class="text-sm text-[var(--muted)]">
+        Sessão ${index + 1}
+      </span>
+    </div>
+
+    <h3 class="section-title">
+      ${sessao.titulo || "Sessão"}
+    </h3>
+
+    <div class="p-5 rounded-xl border border-[var(--border)] bg-[var(--card)] space-y-3">
+      <p class="text-sm text-[var(--muted)]">
+        Origem: <b>${sessao.origem || "IA"}</b>
+      </p>
+
+      <p class="text-base">
+        Conteúdo da sessão ainda em construção.
+        <br>
+        Esta área será integrada ao <b>Study Manager</b>.
+      </p>
+    </div>
+  `;
+
+  // esconde lista de sessões
+  document.getElementById("area-sessoes")?.classList.add("hidden");
+
+  // mostra sessão
+  area.classList.remove("hidden");
+
+  // botão voltar
+  document
+    .getElementById("btn-voltar-sessoes")
+    ?.addEventListener("click", () => {
+      area.classList.add("hidden");
+      document.getElementById("area-sessoes")?.classList.remove("hidden");
+    });
+}
+// ----------------------------------------------------------
+// 📌 Abrir Sessão (evento canônico)
+// ----------------------------------------------------------
+window.addEventListener("liora:abrir-sessao", (e) => {
+  const { sessao, index } = e.detail || {};
+
+  if (!sessao) {
+    console.warn("Sessão inválida:", e.detail);
+    return;
+  }
+
+  console.log("📖 Abrindo sessão", index, sessao);
+
+  renderSessao(sessao, index ?? 0);
+});
+
 })();
