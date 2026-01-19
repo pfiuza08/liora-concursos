@@ -460,12 +460,13 @@ window.addEventListener("liora:abrir-sessao", (e) => {
 
 
 // ----------------------------------------------------------
-// 📚 Study Manager v1 — estado e persistência
+// 📚 Study Manager v2 — estado, progresso e conteúdo
 // ----------------------------------------------------------
 window.lioraStudy = window.lioraStudy || {
   estado: {
     sessaoAtual: null,
-    progresso: {} // { sessaoId: { status, startedAt, finishedAt } }
+    progresso: {}, // { sessaoId: { status, startedAt, finishedAt } }
+    conteudo: {}   // { sessaoId: "texto gerado da IA" }
   },
 
   carregar() {
@@ -473,7 +474,8 @@ window.lioraStudy = window.lioraStudy || {
       const raw = JSON.parse(localStorage.getItem("liora:study") || "{}");
       this.estado = {
         sessaoAtual: raw.sessaoAtual || null,
-        progresso: raw.progresso || {}
+        progresso: raw.progresso || {},
+        conteudo: raw.conteudo || {}
       };
     } catch (_) {}
   },
@@ -482,6 +484,9 @@ window.lioraStudy = window.lioraStudy || {
     localStorage.setItem("liora:study", JSON.stringify(this.estado));
   },
 
+  // -----------------------------
+  // Sessão: início / conclusão
+  // -----------------------------
   iniciarSessao(sessao, index) {
     const id = sessao.id || `sessao-${index}`;
     this.estado.sessaoAtual = id;
@@ -512,6 +517,20 @@ window.lioraStudy = window.lioraStudy || {
   statusSessao(sessao, index) {
     const id = sessao.id || `sessao-${index}`;
     return this.estado.progresso[id]?.status || "pendente";
+  },
+
+  // -----------------------------
+  // Conteúdo da sessão (IA)
+  // -----------------------------
+  salvarConteudo(sessao, index, texto) {
+    const id = sessao.id || `sessao-${index}`;
+    this.estado.conteudo[id] = texto;
+    this.salvar();
+  },
+
+  obterConteudo(sessao, index) {
+    const id = sessao.id || `sessao-${index}`;
+    return this.estado.conteudo[id] || null;
   }
 };
 
@@ -534,6 +553,31 @@ function calcProgressoPlano() {
   const pct = total > 0 ? Math.round((concluidas / total) * 100) : 0;
 
   return { total, concluidas, pct };
+}
+// ----------------------------------------------------------
+// 🤖 IA — Geração de Conteúdo da Sessão
+// ----------------------------------------------------------
+async function gerarConteudoSessaoIA(sessao, index) {
+  const plano = window.lioraEstudos?.plano;
+  const meta = window.lioraEstudos?.meta || {};
+
+  const payload = {
+    planoTitulo: meta?.titulo || plano?.titulo || "Plano de estudo",
+    nivel: meta?.nivel || "iniciante",
+    sessaoTitulo: sessao.titulo || `Sessão ${index + 1}`,
+    indice: index + 1
+  };
+
+  const res = await fetch("/api/gerarSessao.js", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  });
+
+  const data = await res.json();
+  if (!res.ok) throw new Error(data?.error || "Erro ao gerar sessão");
+
+  return data?.conteudo || data?.texto || data;
 }
 
   
