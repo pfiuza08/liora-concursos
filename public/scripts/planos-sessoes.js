@@ -123,12 +123,22 @@ console.log("🧠 planos-sessoes v1.0-RESTORE carregado");
 
     const { plano, sessoes, origem, meta } = window.lioraEstudos;
 
+    const prog = calcProgressoPlano();
+
     resumo.innerHTML = `
       <div class="text-sm text-[var(--muted)]">Origem: <b>${origem || "-"}</b></div>
-      <div class="mt-2 text-base font-semibold">${(meta?.titulo || plano?.titulo || meta?.tema || "Plano gerado")}</div>
+    
+      <div class="mt-2 text-base font-semibold">
+        ${(meta?.titulo || plano?.titulo || meta?.tema || "Plano gerado")}
+      </div>
+    
       <div class="text-sm text-[var(--muted)] mt-1">
         ${(meta?.nivel ? `Nível: <b>${meta.nivel}</b> · ` : "")}
-        Sessões: <b>${Array.isArray(sessoes) ? sessoes.length : 0}</b>
+        Sessões: <b>${prog.total}</b> · Concluídas: <b>${prog.concluidas}</b> · Progresso: <b>${prog.pct}%</b>
+      </div>
+    
+      <div class="mt-3 h-2 rounded-full bg-black/30 overflow-hidden">
+        <div class="h-2 rounded-full bg-[var(--brand)]" style="width:${prog.pct}%"></div>
       </div>
     `;
 
@@ -467,8 +477,24 @@ window.lioraStudy = window.lioraStudy || {
 
 window.lioraStudy.carregar();
 
+// ----------------------------------------------------------
+// 📈 Progresso do Plano
+// ----------------------------------------------------------
+function calcProgressoPlano() {
+  const sessoes = window.lioraEstudos?.sessoes || [];
+  const total = sessoes.length || 0;
 
+  let concluidas = 0;
+  for (let i = 0; i < total; i++) {
+    const s = sessoes[i];
+    const st = window.lioraStudy?.statusSessao?.(s, i) || "pendente";
+    if (st === "concluida") concluidas++;
+  }
 
+  const pct = total > 0 ? Math.round((concluidas / total) * 100) : 0;
+
+  return { total, concluidas, pct };
+}
 
   
 })();
