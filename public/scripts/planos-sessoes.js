@@ -134,7 +134,11 @@ console.log("🧠 planos-sessoes v1.0-RESTORE carregado");
     
       <div class="text-sm text-[var(--muted)] mt-1">
         ${(meta?.nivel ? `Nível: <b>${meta.nivel}</b> · ` : "")}
-        Sessões: <b>${prog.total}</b> · Concluídas: <b>${prog.concluidas}</b> · Progresso: <b>${prog.pct}%</b>
+        Sessões: <b>${prog.total}</b>
+        · Concluídas: <b>${prog.concluidas}</b>
+        · Progresso: <b>${prog.pct}%</b>
+        · Tempo estudado: <b>${Math.round(tempoTotalPlano() / 60000)} min</b>
+        b>
       </div>
     
       <div class="mt-3 h-2 rounded-full bg-black/30 overflow-hidden">
@@ -393,6 +397,9 @@ function renderSessao(sessao, index) {
     <div class="p-5 rounded-xl border border-[var(--border)] bg-[var(--card)] space-y-4">
       <p class="text-sm text-[var(--muted)]">
         Origem: <b>${sessao.origem || "IA"}</b>
+        <span class="mx-2">·</span>
+        Tempo estudado:
+        <b>${Math.round((window.lioraStudy.tempoSessao(sessao, index) || 0) / 60000)} min</b>
       </p>
 
       <div id="sessao-conteudo"
@@ -509,37 +516,43 @@ window.lioraStudy = window.lioraStudy || {
   // -----------------------------
   // Sessão: início / conclusão
   // -----------------------------
-  iniciarSessao(sessao, index) {
+    iniciarSessao(sessao, index) {
     const id = sessao.id || `sessao-${index}`;
     this.estado.sessaoAtual = id;
-
+  
     if (!this.estado.progresso[id]) {
       this.estado.progresso[id] = {
         status: "em_andamento",
-        startedAt: Date.now()
+        startedAt: Date.now(),
+        totalTime: 0
       };
     } else {
       this.estado.progresso[id].status = "em_andamento";
+      this.estado.progresso[id].startedAt = Date.now();
     }
-
+  
     this.salvar();
-  },
+  }
 
-  concluirSessao(sessao, index) {
+
+   concluirSessao(sessao, index) {
     const id = sessao.id || `sessao-${index}`;
-    if (!this.estado.progresso[id]) return;
-
-    this.estado.progresso[id].status = "concluida";
-    this.estado.progresso[id].finishedAt = Date.now();
+    const p = this.estado.progresso[id];
+    if (!p) return;
+  
+    const now = Date.now();
+  
+    if (p.startedAt) {
+      p.totalTime = (p.totalTime || 0) + (now - p.startedAt);
+    }
+  
+    p.status = "concluida";
+    p.finishedAt = now;
+    p.startedAt = null;
+  
     this.estado.sessaoAtual = null;
-
     this.salvar();
-  },
-
-  statusSessao(sessao, index) {
-    const id = sessao.id || `sessao-${index}`;
-    return this.estado.progresso[id]?.status || "pendente";
-  },
+  }
 
   // -----------------------------
   // Conteúdo da sessão (IA)
@@ -554,6 +567,13 @@ window.lioraStudy = window.lioraStudy || {
     const id = sessao.id || `sessao-${index}`;
     return this.estado.conteudo[id] || null;
   }
+
+  tempoSessao(sessao, index) {
+    const id = sessao.id || `sessao-${index}`;
+    const p = this.estado.progresso[id];
+    return p?.totalTime || 0;
+  }
+
 };
 
 window.lioraStudy.carregar();
@@ -600,6 +620,19 @@ async function gerarConteudoSessaoIA(sessao, index) {
   if (!res.ok) throw new Error(data?.error || "Erro ao gerar sessão");
 
   return data?.conteudo || data?.texto || data;
+}
+// ----------------------------------------------------------
+// ⏱️ Tempo total do plano
+// ----------------------------------------------------------
+function tempoTotalPlano() {
+  const sessoes = window.lioraEstudos?.sessoes || [];
+  let total = 0;
+
+  sessoes.forEach((s, i) => {
+    total += window.lioraStudy.tempoSessao(s, i);
+  });
+
+  return total; // ms
 }
 
   
