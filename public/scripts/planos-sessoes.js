@@ -344,8 +344,8 @@ console.log("🧠 planos-sessoes v1.0-RESTORE carregado");
     qs("fab-home")?.classList.remove("hidden");
   });
 
-  // ----------------------------------------------------------
-// 📖 Render de Sessão (v1)
+// ----------------------------------------------------------
+// 📖 Render de Sessão (v2 — Study Manager integrado)
 // ----------------------------------------------------------
 function renderSessao(sessao, index) {
   const painelEstudo = document.getElementById("painel-estudo");
@@ -359,6 +359,8 @@ function renderSessao(sessao, index) {
     painelEstudo.appendChild(area);
   }
 
+  const statusAtual = window.lioraStudy?.statusSessao(sessao, index) || "pendente";
+
   area.innerHTML = `
     <div class="flex items-center gap-3">
       <button id="btn-voltar-sessoes"
@@ -369,13 +371,26 @@ function renderSessao(sessao, index) {
       <span class="text-sm text-[var(--muted)]">
         Sessão ${index + 1}
       </span>
+
+      <span class="ml-2 text-xs px-2 py-1 rounded-full
+        ${statusAtual === "concluida"
+          ? "bg-green-600 text-white"
+          : statusAtual === "em_andamento"
+          ? "bg-yellow-500 text-black"
+          : "bg-gray-600 text-white"}">
+        ${statusAtual === "concluida"
+          ? "Concluída"
+          : statusAtual === "em_andamento"
+          ? "Em andamento"
+          : "Pendente"}
+      </span>
     </div>
 
     <h3 class="section-title">
       ${sessao.titulo || "Sessão"}
     </h3>
 
-    <div class="p-5 rounded-xl border border-[var(--border)] bg-[var(--card)] space-y-3">
+    <div class="p-5 rounded-xl border border-[var(--border)] bg-[var(--card)] space-y-4">
       <p class="text-sm text-[var(--muted)]">
         Origem: <b>${sessao.origem || "IA"}</b>
       </p>
@@ -385,6 +400,17 @@ function renderSessao(sessao, index) {
         <br>
         Esta área será integrada ao <b>Study Manager</b>.
       </p>
+
+      ${
+        statusAtual !== "concluida"
+          ? `<button id="btn-concluir-sessao"
+                     class="btn-primary w-full">
+               Concluir sessão
+             </button>`
+          : `<p class="text-sm text-green-500 font-medium">
+               ✔ Sessão concluída
+             </p>`
+      }
     </div>
   `;
 
@@ -401,7 +427,21 @@ function renderSessao(sessao, index) {
       area.classList.add("hidden");
       document.getElementById("area-sessoes")?.classList.remove("hidden");
     });
+
+  // botão concluir sessão
+  document
+    .getElementById("btn-concluir-sessao")
+    ?.addEventListener("click", () => {
+      window.lioraStudy.concluirSessao(sessao, index);
+
+      area.classList.add("hidden");
+      document.getElementById("area-sessoes")?.classList.remove("hidden");
+
+      // recalcula progresso + atualiza lista
+      renderPlanoESessoes();
+    });
 }
+
 // ----------------------------------------------------------
 // 📌 Abrir Sessão + Study Manager
 // ----------------------------------------------------------
