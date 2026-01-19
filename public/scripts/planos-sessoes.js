@@ -84,53 +84,34 @@ console.log("🧠 planos-sessoes v1.0-RESTORE carregado");
   // ----------------------------------------------------------
   // Render (fallback): injeta uma área de sessões no workspace
   // ----------------------------------------------------------
-  function ensureSessoesArea() {
-    const painelEstudo = qs("painel-estudo");
+   function ensureSessoesArea() {
+    const painelEstudo = document.getElementById("painel-estudo");
     if (!painelEstudo) return null;
-
-    let area = qs("area-sessoes");
+  
+    let area = document.getElementById("area-sessoes");
     if (!area) {
       area = document.createElement("div");
       area.id = "area-sessoes";
       area.className = "hidden space-y-4 max-w-3xl";
+  
       area.innerHTML = `
-      <div class="flex items-center gap-3">
-        <button id="btn-voltar-sessoes"
-                class="btn-secondary text-sm">
-          ← Sessões
-        </button>
-    
-        <span class="text-sm text-[var(--muted)]">
-          Sessão ${index + 1}
-        </span>
-      </div>
-    
-      <h3 class="section-title">
-        ${sessao.titulo || "Sessão"}
-      </h3>
-    
-      <div class="p-5 rounded-xl border border-[var(--border)] bg-[var(--card)] space-y-4">
-        <p class="text-sm text-[var(--muted)]">
-          Origem: <b>${sessao.origem || "IA"}</b>
-        </p>
-    
-        <p class="text-base">
-          Conteúdo da sessão ainda em construção.
-          <br>
-          Esta área será integrada ao <b>Study Manager</b>.
-        </p>
-    
-        <button id="btn-concluir-sessao"
-                class="btn-primary w-full">
-          Concluir sessão
-        </button>
-      </div>
-    `;
-
+        <h3 class="section-title">Sessões</h3>
+  
+        <div id="liora-plano-resumo"
+             class="p-4 rounded-xl border border-[var(--border)] bg-[var(--card)]">
+        </div>
+  
+        <div id="liora-sessoes-lista"
+             class="grid gap-3">
+        </div>
+      `;
+  
       painelEstudo.appendChild(area);
     }
+  
     return area;
   }
+
 
   function renderPlanoESessoes() {
     const area = ensureSessoesArea();
