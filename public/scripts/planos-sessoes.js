@@ -395,11 +395,10 @@ function renderSessao(sessao, index) {
         Origem: <b>${sessao.origem || "IA"}</b>
       </p>
 
-      <p class="text-base">
-        Conteúdo da sessão ainda em construção.
-        <br>
-        Esta área será integrada ao <b>Study Manager</b>.
-      </p>
+      <div id="sessao-conteudo"
+           class="text-base leading-relaxed text-[var(--text)]">
+        <span class="text-sm text-[var(--muted)]">Gerando conteúdo…</span>
+      </div>
 
       ${
         statusAtual !== "concluida"
@@ -440,6 +439,29 @@ function renderSessao(sessao, index) {
       // recalcula progresso + atualiza lista
       renderPlanoESessoes();
     });
+  // --------------------------------------------------
+  // Conteúdo da sessão (IA sob demanda)
+  // --------------------------------------------------
+  const conteudoSalvo = window.lioraStudy.obterConteudo(sessao, index);
+  const container = document.getElementById("sessao-conteudo");
+  
+  if (container) {
+    if (conteudoSalvo) {
+      container.innerHTML = conteudoSalvo;
+    } else {
+      gerarConteudoSessaoIA(sessao, index)
+        .then((texto) => {
+          container.innerHTML = texto;
+          window.lioraStudy.salvarConteudo(sessao, index, texto);
+        })
+        .catch((err) => {
+          console.error(err);
+          container.innerHTML =
+            "<p class='text-red-500'>Erro ao gerar conteúdo da sessão.</p>";
+        });
+    }
+  }
+
 }
 
 // ----------------------------------------------------------
