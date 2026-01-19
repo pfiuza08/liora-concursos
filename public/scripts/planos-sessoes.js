@@ -192,23 +192,54 @@ console.log("🧠 planos-sessoes v1.0-RESTORE carregado");
 
   // Normaliza diferentes formatos de resposta
   function normalizeResponse(origem, payloadMeta, data) {
-    // Tentativas comuns:
-    const plano = data?.plano || data?.plan || data?.resultado?.plano || data?.data?.plano || data;
-    const sessoes =
-      data?.sessoes ||
-      data?.sessions ||
-      data?.resultado?.sessoes ||
-      data?.data?.sessoes ||
-      plano?.sessoes ||
-      [];
+  const plano =
+    data?.plano ||
+    data?.plan ||
+    data?.resultado?.plano ||
+    data?.data?.plano ||
+    data;
 
-    const meta = {
-      ...payloadMeta,
-      titulo: plano?.titulo || plano?.title || payloadMeta?.tema || "Plano"
-    };
+  let sessoes =
+    data?.sessoes ||
+    data?.sessions ||
+    data?.resultado?.sessoes ||
+    data?.data?.sessoes ||
+    plano?.sessoes ||
+    [];
 
-    return { plano, sessoes, meta };
+  // --------------------------------------------------
+  // 🛟 FALLBACK — cria sessões mínimas se vier vazio
+  // --------------------------------------------------
+  if (!Array.isArray(sessoes) || sessoes.length === 0) {
+    console.warn("⚠️ Sessões ausentes. Gerando fallback mínimo.");
+
+    const baseTitulo =
+      plano?.titulo ||
+      plano?.title ||
+      payloadMeta?.tema ||
+      "Sessão";
+
+    const qtd = 5;
+
+    sessoes = Array.from({ length: qtd }).map((_, i) => ({
+      id: `auto-${i + 1}`,
+      titulo: `${baseTitulo} — Parte ${i + 1}`,
+      topicos: [],
+      origem: "fallback"
+    }));
   }
+
+  const meta = {
+    ...payloadMeta,
+    titulo:
+      plano?.titulo ||
+      plano?.title ||
+      payloadMeta?.tema ||
+      "Plano"
+  };
+
+  return { plano, sessoes, meta };
+}
 
   // ----------------------------------------------------------
   // Listener central: liora:gerar-plano
