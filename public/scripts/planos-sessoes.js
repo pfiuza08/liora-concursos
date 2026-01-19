@@ -125,15 +125,33 @@ console.log("🧠 planos-sessoes v1.0-RESTORE carregado");
     lista.innerHTML = "";
 
     (sessoes || []).forEach((s, i) => {
+     const status = window.lioraStudy.statusSessao(s, i);
+
       const card = document.createElement("button");
       card.type = "button";
-      card.className = "text-left p-4 rounded-xl border border-[var(--border)] bg-[var(--card)] hover:opacity-95";
+      card.className = `
+        text-left p-4 rounded-xl border
+        border-[var(--border)]
+        bg-[var(--card)]
+        hover:opacity-95
+        flex items-center justify-between gap-4
+      `;
+      
+      const badge =
+        status === "concluida"
+          ? `<span class="text-xs px-2 py-1 rounded-full bg-green-600 text-white">Concluída</span>`
+          : status === "em_andamento"
+          ? `<span class="text-xs px-2 py-1 rounded-full bg-yellow-500 text-black">Em andamento</span>`
+          : `<span class="text-xs px-2 py-1 rounded-full bg-gray-600 text-white">Pendente</span>`;
+      
       const titulo = s?.titulo || s?.title || `Sessão ${i + 1}`;
-      const topicos = s?.topicos || s?.topics || s?.itens || [];
-      const hint = Array.isArray(topicos) && topicos.length ? `${topicos.length} tópicos` : (s?.duracao ? `${s.duracao} min` : "abrir");
+      
       card.innerHTML = `
-        <div class="font-semibold">${titulo}</div>
-        <div class="text-sm text-[var(--muted)] mt-1">${hint}</div>
+        <div>
+          <div class="font-semibold">${titulo}</div>
+          <div class="text-sm text-[var(--muted)] mt-1">${badge}</div>
+        </div>
+        <div class="text-xs text-[var(--muted)]">Abrir</div>
       `;
 
       // Evento canônico para “abrir sessão”
@@ -365,19 +383,78 @@ function renderSessao(sessao, index) {
     });
 }
 // ----------------------------------------------------------
-// 📌 Abrir Sessão (evento canônico)
+// 📌 Abrir Sessão + Study Manager
 // ----------------------------------------------------------
 window.addEventListener("liora:abrir-sessao", (e) => {
   const { sessao, index } = e.detail || {};
+  if (!sessao) return;
 
-  if (!sessao) {
-    console.warn("Sessão inválida:", e.detail);
-    return;
-  }
+  console.log("📖 Abrindo sessão (Study Manager)", index, sessao);
 
-  console.log("📖 Abrindo sessão", index, sessao);
-
-  renderSessao(sessao, index ?? 0);
+  window.lioraStudy.iniciarSessao(sessao, index);
+  renderSessao(sessao, index);
 });
 
+// ----------------------------------------------------------
+// 📚 Study Manager v1 — estado e persistência
+// ----------------------------------------------------------
+window.lioraStudy = window.lioraStudy || {
+  estado: {
+    sessaoAtual: null,
+    progresso: {} // { sessaoId: { status, startedAt, finishedAt } }
+  },
+
+  carregar() {
+    try {
+      const raw = JSON.parse(localStorage.getItem("liora:study") || "{}");
+      this.estado = {
+        sessaoAtual: raw.sessaoAtual || null,
+        progresso: raw.progresso || {}
+      };
+    } catch (_) {}
+  },
+
+  salvar() {
+    localStorage.setItem("liora:study", JSON.stringify(this.estado));
+  },
+
+  iniciarSessao(sessao, index) {
+    const id = sessao.id || `sessao-${index}`;
+    this.estado.sessaoAtual = id;
+
+    if (!this.estado.progresso[id]) {
+      this.estado.progresso[id] = {
+        status: "em_andamento",
+        startedAt: Date.now()
+      };
+    } else {
+      this.estado.progresso[id].status = "em_andamento";
+    }
+
+    this.salvar();
+  },
+
+  concluirSessao(sessao, index) {
+    const id = sessao.id || `sessao-${index}`;
+    if (!this.estado.progresso[id]) return;
+
+    this.estado.progresso[id].status = "concluida";
+    this.estado.progresso[id].finishedAt = Date.now();
+    this.estado.sessaoAtual = null;
+
+    this.salvar();
+  },
+
+  statusSessao(sessao, index) {
+    const id = sessao.id || `sessao-${index}`;
+    return this.estado.progresso[id]?.status || "pendente";
+  }
+};
+
+window.lioraStudy.carregar();
+
+
+
+
+  
 })();
