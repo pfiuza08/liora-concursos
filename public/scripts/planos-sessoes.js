@@ -420,9 +420,13 @@ window.addEventListener("liora:abrir-sessao", (e) => {
 
   console.log("📖 Abrindo sessão (Study Manager)", index, sessao);
 
+  // registra início da sessão
   window.lioraStudy.iniciarSessao(sessao, index);
+
+  // renderiza a sessão
   renderSessao(sessao, index);
 });
+
 
 // ----------------------------------------------------------
 // 📚 Study Manager v1 — estado e persistência
