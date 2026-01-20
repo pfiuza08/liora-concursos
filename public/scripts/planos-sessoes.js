@@ -116,20 +116,27 @@ console.log("🧠 planos-sessoes v2.2-STUDY-TIME-CONTENT carregado");
   window.lioraStudy = window.lioraStudy || {
     estado: {
       sessaoAtual: null,
-      progresso: {}, // { key: { status, startedAt, finishedAt, totalTime } }
-      conteudo: {}   // { key: "<html>" }
+      progresso: {},
+      conteudo: {},
+      streak: {
+        atual: 0,
+        recorde: 0,
+        ultimaData: null
+      }
     },
-  
-    carregar() {
+
+   carregar() {
       try {
         const raw = JSON.parse(localStorage.getItem("liora:study") || "{}");
         this.estado = {
           sessaoAtual: raw.sessaoAtual || null,
           progresso: raw.progresso || {},
-          conteudo: raw.conteudo || {}
+          conteudo: raw.conteudo || {},
+          streak: raw.streak || { atual: 0, recorde: 0, ultimaData: null }
         };
       } catch (_) {}
     },
+
   
     salvar() {
       localStorage.setItem("liora:study", JSON.stringify(this.estado));
@@ -173,6 +180,7 @@ console.log("🧠 planos-sessoes v2.2-STUDY-TIME-CONTENT carregado");
       p.finishedAt = Date.now();
   
       this.estado.sessaoAtual = null;
+      this.atualizarStreakHoje();
       this.salvar();
     },
   
@@ -196,6 +204,35 @@ console.log("🧠 planos-sessoes v2.2-STUDY-TIME-CONTENT carregado");
       const key = _getSessaoKey(sessao, index);
       return this.estado.conteudo[key] || null;
     }
+
+    atualizarStreakHoje() {
+    const hoje = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+    const s = this.estado.streak;
+  
+    if (s.ultimaData === hoje) {
+      return; // já contou hoje
+    }
+  
+    if (s.ultimaData) {
+      const ontem = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+  
+      if (s.ultimaData === ontem) {
+        s.atual += 1;
+      } else {
+        s.atual = 1;
+      }
+    } else {
+      s.atual = 1;
+    }
+  
+    if (s.atual > s.recorde) {
+      s.recorde = s.atual;
+    }
+  
+    s.ultimaData = hoje;
+    this.salvar();
+  },
+  
   };
   
   window.lioraStudy.carregar();
@@ -269,25 +306,29 @@ console.log("🧠 planos-sessoes v2.2-STUDY-TIME-CONTENT carregado");
     const prog = calcProgressoPlano();
     const tempoMin = Math.round(tempoTotalPlano() / 60000);
 
+    const streak = window.lioraStudy.estado.streak;
+
     resumo.innerHTML = `
       <div class="text-sm text-[var(--muted)]">Origem: <b>${origem || "-"}</b></div>
-
+    
       <div class="mt-2 text-base font-semibold">
         ${(meta?.titulo || plano?.titulo || meta?.tema || "Plano gerado")}
       </div>
-
+    
       <div class="text-sm text-[var(--muted)] mt-1">
         ${(meta?.nivel ? `Nível: <b>${meta.nivel}</b> · ` : "")}
         Sessões: <b>${prog.total}</b>
         · Concluídas: <b>${prog.concluidas}</b>
         · Progresso: <b>${prog.pct}%</b>
         · Tempo estudado: <b>${tempoMin} min</b>
+        · 🔥 Streak: <b>${streak.atual} dias</b>
       </div>
-
+    
       <div class="mt-3 h-2 rounded-full bg-black/30 overflow-hidden">
         <div class="h-2 rounded-full bg-[var(--brand)]" style="width:${prog.pct}%"></div>
       </div>
     `;
+
 
     lista.innerHTML = "";
 
