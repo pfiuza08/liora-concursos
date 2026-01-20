@@ -184,10 +184,10 @@ console.log("🧠 planos-sessoes v2.2-STUDY-TIME-CONTENT carregado");
    }
 
     tempoSessao(sessao, index) {
-      const id = _getSessaoId(sessao, index);
-      const p = this.estado.progresso[id];
+      const key = _getSessaoKey(sessao, index);
+      const p = this.estado.progresso[key];
       return (p?.totalTime || 0);
-    },
+    }
 
     salvarConteudo(sessao, index, texto) {
     const key = _getSessaoKey(sessao, index);
