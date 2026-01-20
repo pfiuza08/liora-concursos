@@ -1528,3 +1528,92 @@ html.light .liora-quiz-feedback.incorrect {
   overflow-y: auto;
   z-index: 10001;
 }
+/* ==========================================================
+   🌗 LIORA — THEME SYSTEM (CANÔNICO)
+   - Dark é o padrão
+   - Light ativado via html.light
+========================================================== */
+
+/* Garantia explícita */
+html {
+  color-scheme: dark;
+}
+
+html.light {
+  color-scheme: light;
+}
+
+/* ==========================================================
+   🌗 BOTÃO DE TEMA (LUA / SOL)
+========================================================== */
+
+.theme-toggle {
+  position: relative;
+  width: 40px;
+  height: 40px;
+
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--bg2);
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  padding: 0;
+}
+
+/* Hover elegante */
+.theme-toggle:hover {
+  border-color: var(--brand);
+  background: var(--hover);
+}
+
+/* Ícones */
+.theme-toggle span {
+  position: absolute;
+  font-size: 1.05rem;
+  line-height: 1;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+/* 🌞 Sol visível no DARK (para ir ao light) */
+html:not(.light) .theme-toggle .icon-sun {
+  opacity: 1;
+  transform: scale(1);
+}
+
+html:not(.light) .theme-toggle .icon-moon {
+  opacity: 0;
+  transform: scale(0.6);
+}
+
+/* 🌙 Lua visível no LIGHT (para ir ao dark) */
+html.light .theme-toggle .icon-sun {
+  opacity: 0;
+  transform: scale(0.6);
+}
+
+html.light .theme-toggle .icon-moon {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* ==========================================================
+   📱 MOBILE — botão nunca some
+========================================================== */
+
+.theme-toggle {
+  flex: 0 0 auto;
+}
+
+/* ==========================================================
+   🔐 HEADER — integração limpa
+========================================================== */
+
+header .theme-toggle {
+  margin-right: 2px;
+}
