@@ -86,40 +86,40 @@ console.log("🧠 planos-sessoes v2.2-STUDY-TIME-CONTENT carregado");
 
   window.lioraEstudos.carregar();
 
-  // ----------------------------------------------------------
+ // ----------------------------------------------------------
   // 📚 Study Manager v2 — status, tempo e conteúdo
   // ----------------------------------------------------------
+  
   function _getSessaoKey(sessao, index) {
-  const planoId = window.lioraEstudos?.meta?.planoId || "plano";
-  const sessaoId = sessao?.id || `sessao-${index}`;
-  return `${planoId}::${sessaoId}`;
+    const planoId = window.lioraEstudos?.meta?.planoId || "plano";
+    const sessaoId = sessao?.id || `sessao-${index}`;
+    return `${planoId}::${sessaoId}`;
   }
-
-
-  function _acumularTempo(id) {
-    const p = window.lioraStudy.estado.progresso[id];
+  
+  function _acumularTempo(key) {
+    const p = window.lioraStudy.estado.progresso[key];
     if (!p) return;
-
+  
     const now = Date.now();
     const startedAt = p.startedAt;
-
+  
     if (typeof startedAt === "number" && startedAt > 0) {
       const delta = now - startedAt;
       if (delta > 0 && Number.isFinite(delta)) {
         p.totalTime = (p.totalTime || 0) + delta;
       }
     }
-
+  
     p.startedAt = null;
   }
-
+  
   window.lioraStudy = window.lioraStudy || {
     estado: {
       sessaoAtual: null,
-      progresso: {}, // { id: { status, startedAt, finishedAt, totalTime } }
-      conteudo: {}   // { id: "<html>" }
+      progresso: {}, // { key: { status, startedAt, finishedAt, totalTime } }
+      conteudo: {}   // { key: "<html>" }
     },
-
+  
     carregar() {
       try {
         const raw = JSON.parse(localStorage.getItem("liora:study") || "{}");
@@ -130,78 +130,74 @@ console.log("🧠 planos-sessoes v2.2-STUDY-TIME-CONTENT carregado");
         };
       } catch (_) {}
     },
-
+  
     salvar() {
       localStorage.setItem("liora:study", JSON.stringify(this.estado));
     },
-
-     iniciarSessao(sessao, index) {
-        const key = _getSessaoKey(sessao, index);
-        this.estado.sessaoAtual = key;
-      
-        if (!this.estado.progresso[key]) {
-          this.estado.progresso[key] = {
-            status: "em_andamento",
-            startedAt: Date.now(),
-            totalTime: 0
-          };
-        } else {
-          const p = this.estado.progresso[key];
-          p.status = "em_andamento";
-          p.startedAt = Date.now();
-          if (typeof p.totalTime !== "number") p.totalTime = 0;
-        }
-      
-        this.salvar();
-      }
-
-     concluirSessao(sessao, index) {
-        const key = _getSessaoKey(sessao, index);
-      
-        // garante registro mesmo se iniciarSessao não tiver sido chamado
-        if (!this.estado.progresso[key]) {
-          this.estado.progresso[key] = {
-            status: "em_andamento",
-            startedAt: Date.now(),
-            totalTime: 0
-          };
-        }
-      
-        _acumularTempo(key);
-      
+  
+    iniciarSessao(sessao, index) {
+      const key = _getSessaoKey(sessao, index);
+      this.estado.sessaoAtual = key;
+  
+      if (!this.estado.progresso[key]) {
+        this.estado.progresso[key] = {
+          status: "em_andamento",
+          startedAt: Date.now(),
+          totalTime: 0
+        };
+      } else {
         const p = this.estado.progresso[key];
-        p.status = "concluida";
-        p.finishedAt = Date.now();
-      
-        this.estado.sessaoAtual = null;
-        this.salvar();
+        p.status = "em_andamento";
+        p.startedAt = Date.now();
+        if (typeof p.totalTime !== "number") p.totalTime = 0;
       }
-
-
+  
+      this.salvar();
+    },
+  
+    concluirSessao(sessao, index) {
+      const key = _getSessaoKey(sessao, index);
+  
+      if (!this.estado.progresso[key]) {
+        this.estado.progresso[key] = {
+          status: "em_andamento",
+          startedAt: Date.now(),
+          totalTime: 0
+        };
+      }
+  
+      _acumularTempo(key);
+  
+      const p = this.estado.progresso[key];
+      p.status = "concluida";
+      p.finishedAt = Date.now();
+  
+      this.estado.sessaoAtual = null;
+      this.salvar();
+    },
+  
     statusSessao(sessao, index) {
-    const key = _getSessaoKey(sessao, index);
-    return this.estado.progresso[key]?.status || "pendente";
-   }
-
+      const key = _getSessaoKey(sessao, index);
+      return this.estado.progresso[key]?.status || "pendente";
+    },
+  
     tempoSessao(sessao, index) {
       const key = _getSessaoKey(sessao, index);
-      const p = this.estado.progresso[key];
-      return (p?.totalTime || 0);
-    }
-
+      return this.estado.progresso[key]?.totalTime || 0;
+    },
+  
     salvarConteudo(sessao, index, texto) {
-    const key = _getSessaoKey(sessao, index);
-    this.estado.conteudo[key] = texto;
-    this.salvar();
+      const key = _getSessaoKey(sessao, index);
+      this.estado.conteudo[key] = texto;
+      this.salvar();
     },
   
     obterConteudo(sessao, index) {
-    const key = _getSessaoKey(sessao, index);
-    return this.estado.conteudo[key] || null;
+      const key = _getSessaoKey(sessao, index);
+      return this.estado.conteudo[key] || null;
     }
-
   };
-
+  
   window.lioraStudy.carregar();
 
   // ----------------------------------------------------------
