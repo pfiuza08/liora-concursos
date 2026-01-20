@@ -203,7 +203,7 @@ console.log("🧠 planos-sessoes v2.2-STUDY-TIME-CONTENT carregado");
     obterConteudo(sessao, index) {
       const key = _getSessaoKey(sessao, index);
       return this.estado.conteudo[key] || null;
-    }
+    },
 
     atualizarStreakHoje() {
     const hoje = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
