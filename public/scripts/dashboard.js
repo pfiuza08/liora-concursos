@@ -269,4 +269,125 @@
   // Lazy hook
   // ------------------------------------------------------
   document.addEventListener("ui:liora-app", initDashboard);
+
+  // ==========================================================
+  // 🧠 LIORA — DASHBOARD COGNITIVO v1
+  // ==========================================================
+  
+  function renderDashboardCognitivo() {
+    const containerId = "dash-cognitivo";
+    let container = document.getElementById(containerId);
+  
+    if (!container) {
+      container = document.createElement("div");
+      container.id = containerId;
+      container.className = "sim-dashboard";
+      document.getElementById("area-dashboard")?.appendChild(container);
+    }
+  
+    const hoje = new Date().toISOString().slice(0, 10);
+    const estudos = window.lioraEstudos?.sessoes || [];
+    const progresso = window.lioraStudy?.estado?.progresso || {};
+    const conteudos = window.lioraStudy?.estado?.conteudo || {};
+    const streak = window.lioraStudy?.estado?.streak || {};
+  
+    // --------------------------------------------------
+    // Flashcards vencidos
+    // --------------------------------------------------
+    const planoId = window.lioraEstudos?.meta?.planoId;
+    const flashVencidos =
+      window.lioraFlashcards?.listarVencidosDoPlano?.(planoId) || [];
+  
+    // --------------------------------------------------
+    // Sessões para revisão
+    // --------------------------------------------------
+    const sessoesRevisar = estudos.filter((s, i) =>
+      typeof sessaoPrecisaRevisao === "function"
+        ? sessaoPrecisaRevisao(s, i)
+        : false
+    );
+  
+    // --------------------------------------------------
+    // Tempo de estudo
+    // --------------------------------------------------
+    let tempoHoje = 0;
+    let tempoSemana = 0;
+  
+    Object.values(progresso).forEach((p) => {
+      if (!p.finishedAt) return;
+  
+      const data = new Date(p.finishedAt).toISOString().slice(0, 10);
+      const dias = (Date.now() - p.finishedAt) / 86400000;
+  
+      if (data === hoje) tempoHoje += p.totalTime || 0;
+      if (dias <= 7) tempoSemana += p.totalTime || 0;
+    });
+  
+    const fmt = (ms) => {
+      const m = Math.floor(ms / 60000);
+      return `${m} min`;
+    };
+  
+    // --------------------------------------------------
+    // Flashcards difíceis
+    // --------------------------------------------------
+    const flashDificeis = [];
+  
+    Object.values(conteudos).forEach((c) => {
+      if (!Array.isArray(c.flashcards)) return;
+      c.flashcards.forEach((f) => {
+        if (f.ease && f.ease < 2.0) {
+          flashDificeis.push(f);
+        }
+      });
+    });
+  
+    // --------------------------------------------------
+    // Render
+    // --------------------------------------------------
+    container.innerHTML = `
+      <h4 class="sim-subtitulo">Painel Cognitivo</h4>
+  
+      <div class="grid gap-4">
+  
+        <div class="p-4 rounded-xl border bg-[var(--card)]">
+          <div class="font-semibold">Hoje</div>
+          <div class="text-sm text-[var(--muted)] mt-1">
+            Flashcards vencidos: <b>${flashVencidos.length}</b><br>
+            Sessões para revisão: <b>${sessoesRevisar.length}</b>
+          </div>
+        </div>
+  
+        <div class="p-4 rounded-xl border bg-[var(--card)]">
+          <div class="font-semibold">Treino</div>
+          <div class="text-sm text-[var(--muted)] mt-1">
+            Tempo hoje: <b>${fmt(tempoHoje)}</b><br>
+            Tempo na semana: <b>${fmt(tempoSemana)}</b><br>
+            Streak atual: <b>${streak.atual || 0} dias</b>
+          </div>
+        </div>
+  
+        <div class="p-4 rounded-xl border bg-[var(--card)]">
+          <div class="font-semibold">Fragilidades</div>
+          <div class="text-sm text-[var(--muted)] mt-1">
+            Sessões frágeis: <b>${sessoesRevisar.length}</b><br>
+            Flashcards difíceis: <b>${flashDificeis.length}</b>
+          </div>
+        </div>
+  
+      </div>
+    `;
+  }
+  
+  // --------------------------------------------------
+  // Hook automático no dashboard existente
+  // --------------------------------------------------
+  document.addEventListener("ui:liora-app", () => {
+    try {
+      renderDashboardCognitivo();
+    } catch (e) {
+      console.error("Erro no Dashboard Cognitivo", e);
+    }
+  });
+  
 })();
