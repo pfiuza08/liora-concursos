@@ -538,7 +538,7 @@ async function renderSessao(sessao, index) {
   // -------------------------------
   // Render FINAL (único)
   // -------------------------------
-  const precisaRevisao = sessaoPrecisaRevisao(sessao, index);
+  // const precisaRevisao = sessaoPrecisaRevisao(sessao, index);
   area.innerHTML = `
     <div class="flex items-center gap-3">
       <button id="btn-voltar-sessoes"
