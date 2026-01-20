@@ -93,6 +93,213 @@ console.log("🧠 planos-sessoes v2.2-STUDY-TIME-CONTENT carregado");
     return window.lioraStudy.estado.conteudo[key]?.flashcards || null;
   }
 
+// ==========================================================
+// Flashcard Engine v2 (spaced repetition leve)
+// - Estado por flashcard: novo | aprendizado | revisao | consolidado
+// - Métricas: ease, acertos, erros, tempos
+// - Próxima revisão: nextReviewAt
+// ==========================================================
+
+const LIORA_DAY_MS = 24 * 60 * 60 * 1000;
+
+function _clamp(n, min, max) {
+  return Math.max(min, Math.min(max, n));
+}
+
+function _uid(prefix = "fc") {
+  return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function _avaliarResposta(acertou, tempoMs) {
+  if (!acertou) return "erro";
+  const t = Number(tempoMs) || 0;
+  if (t > 8000) return "lento";
+  if (t > 4000) return "medio";
+  return "rapido";
+}
+
+function _calcularNextReview(estado, ease) {
+  const now = Date.now();
+  const e = Number(ease) || 2.5;
+
+  if (estado === "novo") return now + 1 * LIORA_DAY_MS;
+  if (estado === "aprendizado") return now + 3 * LIORA_DAY_MS;
+  if (estado === "revisao") return now + Math.round(5 * e) * LIORA_DAY_MS;
+  if (estado === "consolidado") return now + Math.round(14 * e) * LIORA_DAY_MS;
+
+  return now + 1 * LIORA_DAY_MS;
+}
+
+function _atualizarEstado(card) {
+  const acertos = Number(card.acertos) || 0;
+  const erros = Number(card.erros) || 0;
+  const ease = Number(card.ease) || 2.5;
+
+  // queda rápida se errou muito
+  if (erros >= 2) return "aprendizado";
+
+  // progressão
+  if (acertos >= 6 && ease >= 2.5) return "consolidado";
+  if (acertos >= 3 && ease >= 2.2) return "revisao";
+
+  // se já foi revisado pelo menos uma vez e ainda não atingiu limiar, aprendizado
+  if (card.lastReviewedAt) return "aprendizado";
+
+  return "novo";
+}
+
+function _atualizarEase(easeAtual, resultado) {
+  const e = Number.isFinite(Number(easeAtual)) ? Number(easeAtual) : 2.5;
+
+  if (resultado === "erro") return _clamp(e - 0.3, 1.3, 2.8);
+  if (resultado === "lento") return _clamp(e - 0.15, 1.3, 2.8);
+  if (resultado === "medio") return _clamp(e, 1.3, 2.8);
+  if (resultado === "rapido") return _clamp(e + 0.1, 1.3, 2.8);
+
+  return _clamp(e, 1.3, 2.8);
+}
+
+function _mediaAtualizada(media, novoValor) {
+  const m = Number(media);
+  const v = Number(novoValor);
+  if (!Number.isFinite(v)) return Number.isFinite(m) ? m : null;
+  if (!Number.isFinite(m)) return v;
+  return Math.round(((m * 0.7) + (v * 0.3))); // média móvel simples
+}
+
+function _getSessaoIds(sessao, index) {
+  const planoId = window.lioraEstudos?.meta?.planoId || "plano";
+  const sessaoId = sessao?.id || `sessao-${index}`;
+  return { planoId, sessaoId };
+}
+
+function _normalizarCards(cards, sessao, index) {
+  const { planoId, sessaoId } = _getSessaoIds(sessao, index);
+  const arr = Array.isArray(cards) ? cards : [];
+
+  return arr.map((c) => {
+    const id = c?.id || _uid("fc");
+    const pergunta = String(c?.pergunta || "").trim();
+    const resposta = String(c?.resposta || "").trim();
+
+    return {
+      id,
+      planoId,
+      sessaoId,
+      pergunta,
+      resposta,
+
+      ease: Number.isFinite(Number(c?.ease)) ? Number(c.ease) : 2.5,
+      acertos: Number(c?.acertos || 0),
+      erros: Number(c?.erros || 0),
+
+      lastReviewedAt: c?.lastReviewedAt || null,
+      nextReviewAt: c?.nextReviewAt || Date.now(),
+
+      avgResponseTime: c?.avgResponseTime ?? null,
+      lastResponseTime: c?.lastResponseTime ?? null,
+
+      estado: c?.estado || "novo"
+    };
+  }).filter(c => c.pergunta && c.resposta);
+}
+
+// ----------------------------------------------------------
+// API do Engine
+// ----------------------------------------------------------
+window.lioraFlashcards = window.lioraFlashcards || {
+  // cria flashcards iniciais v2 a partir de uma lista simples [{pergunta,resposta}]
+  criarInicial(sessao, index, cardsSimples) {
+    const norm = _normalizarCards(cardsSimples, sessao, index).map((c) => {
+      c.estado = "novo";
+      c.nextReviewAt = Date.now(); // disponíveis imediatamente
+      return c;
+    });
+    return norm;
+  },
+
+  // retorna todos flashcards de uma sessão (v2)
+  obterDaSessao(sessao, index) {
+    const key = _getSessaoKey(sessao, index);
+    const bloco = window.lioraStudy?.estado?.conteudo?.[key];
+    const cards = bloco?.flashcards || null;
+    return Array.isArray(cards) ? _normalizarCards(cards, sessao, index) : null;
+  },
+
+  // salva flashcards v2 na sessão
+  salvarNaSessao(sessao, index, cardsV2) {
+    const key = _getSessaoKey(sessao, index);
+    const atual = window.lioraStudy.estado.conteudo[key] || {};
+    window.lioraStudy.estado.conteudo[key] = {
+      ...atual,
+      flashcards: _normalizarCards(cardsV2, sessao, index)
+    };
+    window.lioraStudy.salvar();
+  },
+
+  // registra uma revisão (acerto/erro + tempo) e atualiza métricas
+  registrarResposta(sessao, index, cardId, acertou, tempoMs) {
+    const cards = this.obterDaSessao(sessao, index) || [];
+    const i = cards.findIndex((c) => c.id === cardId);
+    if (i < 0) return null;
+
+    const card = cards[i];
+    const resultado = _avaliarResposta(!!acertou, tempoMs);
+
+    // contadores
+    if (resultado === "erro") card.erros = (Number(card.erros) || 0) + 1;
+    else card.acertos = (Number(card.acertos) || 0) + 1;
+
+    // tempos
+    card.lastResponseTime = Number(tempoMs) || 0;
+    card.avgResponseTime = _mediaAtualizada(card.avgResponseTime, card.lastResponseTime);
+
+    // ease
+    card.ease = _atualizarEase(card.ease, resultado);
+
+    // marca review
+    card.lastReviewedAt = Date.now();
+
+    // estado e nextReview
+    card.estado = _atualizarEstado(card);
+    card.nextReviewAt = _calcularNextReview(card.estado, card.ease);
+
+    cards[i] = card;
+    this.salvarNaSessao(sessao, index, cards);
+
+    return card;
+  },
+
+  // lista cards vencidos por plano (para revisão diária / dashboard)
+  listarVencidosDoPlano(planoId) {
+    const pid = planoId || window.lioraEstudos?.meta?.planoId || "plano";
+    const conteudos = window.lioraStudy?.estado?.conteudo || {};
+
+    const out = [];
+    const now = Date.now();
+
+    Object.keys(conteudos).forEach((key) => {
+      const bloco = conteudos[key];
+      const cards = bloco?.flashcards;
+      if (!Array.isArray(cards)) return;
+
+      cards.forEach((c) => {
+        if (c?.planoId !== pid) return;
+        if ((c?.nextReviewAt || 0) <= now) out.push(c);
+      });
+    });
+
+    // ordena por mais atrasado primeiro
+    out.sort((a, b) => (a.nextReviewAt || 0) - (b.nextReviewAt || 0));
+    return out;
+  }
+};
+
+
+
+
+
+  
   // ----------------------------------------------------------
 // 🔁 Revisão Inteligente v1 — heurística simples
 // ----------------------------------------------------------
@@ -527,13 +734,12 @@ async function renderSessao(sessao, index) {
   // Flashcards
   // -------------------------------
   let flashcards = obterFlashcardsSessao(sessao, index);
-  if (!flashcards) {
-    flashcards = await gerarFlashcardsSessao(
-      sessao,
-      window.lioraEstudos?.meta
-    );
-    salvarFlashcardsSessao(sessao, index, flashcards);
-  }
+
+    if (!flashcards) {
+      const simples = await gerarFlashcardsSessao(sessao, window.lioraEstudos?.meta);
+      flashcards = window.lioraFlashcards.criarInicial(sessao, index, simples);
+      salvarFlashcardsSessao(sessao, index, flashcards);
+    }
 
   // -------------------------------
   // Render FINAL (único)
