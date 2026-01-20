@@ -440,8 +440,16 @@ async function gerarFlashcardsSessao(sessao, meta) {
     }
   ];
 }
+
+function formatarTempo(ms = 0) {
+  const total = Math.floor(ms / 1000);
+  const min = Math.floor(total / 60);
+  const seg = total % 60;
+  return `${min}m ${seg.toString().padStart(2, "0")}s`;
+}
+
 // ----------------------------------------------------------
-// 📖 Render de Sessão v2.3 — conteúdo + reflexão + flashcards
+// 📖 Render de Sessão v2.4 — conteúdo + reflexão + flashcards + tempo
 // ----------------------------------------------------------
 async function renderSessao(sessao, index) {
   const painelEstudo = document.getElementById("painel-estudo");
@@ -459,7 +467,7 @@ async function renderSessao(sessao, index) {
   document.getElementById("area-sessoes")?.classList.add("hidden");
   area.classList.remove("hidden");
 
-  // inicia sessão
+  // inicia sessão (status + tempo)
   window.lioraStudy.iniciarSessao(sessao, index);
 
   // -------------------------------
@@ -468,7 +476,11 @@ async function renderSessao(sessao, index) {
   let conteudo = window.lioraStudy.obterConteudo(sessao, index);
 
   if (!conteudo) {
-    area.innerHTML = `<p class="text-sm text-[var(--muted)]">Gerando conteúdo da sessão...</p>`;
+    area.innerHTML = `
+      <p class="text-sm text-[var(--muted)]">
+        Gerando conteúdo da sessão...
+      </p>
+    `;
     conteudo = await gerarConteudoSessao(sessao, window.lioraEstudos?.meta);
     window.lioraStudy.salvarConteudo(sessao, index, conteudo);
   }
@@ -483,7 +495,10 @@ async function renderSessao(sessao, index) {
   // -------------------------------
   let flashcards = obterFlashcardsSessao(sessao, index);
   if (!flashcards) {
-    flashcards = await gerarFlashcardsSessao(sessao, window.lioraEstudos?.meta);
+    flashcards = await gerarFlashcardsSessao(
+      sessao,
+      window.lioraEstudos?.meta
+    );
     salvarFlashcardsSessao(sessao, index, flashcards);
   }
 
@@ -492,11 +507,24 @@ async function renderSessao(sessao, index) {
   // -------------------------------
   area.innerHTML = `
     <div class="flex items-center gap-3">
-      <button id="btn-voltar-sessoes" class="btn-secondary text-sm">← Sessões</button>
-      <span class="text-sm text-[var(--muted)]">Sessão ${index + 1}</span>
+      <button id="btn-voltar-sessoes"
+              class="btn-secondary text-sm">
+        ← Sessões
+      </button>
+
+      <span class="text-sm text-[var(--muted)]">
+        Sessão ${index + 1}
+      </span>
+
+      <span id="tempo-sessao"
+            class="ml-auto text-xs text-[var(--muted)]">
+        Tempo: 0m 00s
+      </span>
     </div>
 
-    <h3 class="section-title">${sessao.titulo || "Sessão"}</h3>
+    <h3 class="section-title">
+      ${sessao.titulo || "Sessão"}
+    </h3>
 
     <div class="p-5 rounded-xl border bg-[var(--card)] space-y-6">
       ${conteudo}
@@ -506,13 +534,19 @@ async function renderSessao(sessao, index) {
       <section class="space-y-3">
         <h5 class="font-semibold">Reflexão</h5>
 
-        <label class="text-sm">1. Explique com suas palavras</label>
+        <label class="text-sm">
+          1. Explique com suas palavras
+        </label>
         <textarea id="ref-q1" rows="3" class="w-full"></textarea>
 
-        <label class="text-sm">2. O que ficou menos claro?</label>
+        <label class="text-sm">
+          2. O que ficou menos claro?
+        </label>
         <textarea id="ref-q2" rows="3" class="w-full"></textarea>
 
-        <label class="text-sm">Anotações</label>
+        <label class="text-sm">
+          Anotações
+        </label>
         <textarea id="ref-notas" rows="4" class="w-full"></textarea>
       </section>
 
@@ -520,12 +554,18 @@ async function renderSessao(sessao, index) {
 
       <section class="space-y-4">
         <h5 class="font-semibold">Flashcards</h5>
+
         ${flashcards.map((c, i) => `
           <div class="p-4 border rounded space-y-2">
-            <div class="font-medium">${i + 1}. ${c.pergunta}</div>
-            <button class="btn-secondary text-xs" data-flash="${i}">
+            <div class="font-medium">
+              ${i + 1}. ${c.pergunta}
+            </div>
+
+            <button class="btn-secondary text-xs"
+                    data-flash="${i}">
               Mostrar resposta
             </button>
+
             <div class="flash-resp hidden text-sm text-[var(--muted)]">
               ${c.resposta}
             </div>
@@ -535,12 +575,31 @@ async function renderSessao(sessao, index) {
     </div>
 
     <div class="flex justify-end">
-      <button id="btn-concluir-sessao" class="btn-primary">Concluir sessão</button>
+      <button id="btn-concluir-sessao"
+              class="btn-primary">
+        Concluir sessão
+      </button>
     </div>
   `;
 
   // -------------------------------
-  // Reflexão persistência
+  // ⏱️ Tempo visível da sessão
+  // -------------------------------
+  const tempoEl = document.getElementById("tempo-sessao");
+  let timerId = null;
+
+  if (tempoEl) {
+    timerId = setInterval(() => {
+      const ms = window.lioraStudy.tempoSessao(sessao, index);
+      const total = Math.floor(ms / 1000);
+      const min = Math.floor(total / 60);
+      const seg = total % 60;
+      tempoEl.textContent = `Tempo: ${min}m ${seg.toString().padStart(2, "0")}s`;
+    }, 1000);
+  }
+
+  // -------------------------------
+  // Reflexão — persistência
   // -------------------------------
   const q1 = qs("ref-q1");
   const q2 = qs("ref-q2");
@@ -550,11 +609,12 @@ async function renderSessao(sessao, index) {
   q2.value = reflexao.q2 || "";
   notas.value = reflexao.notas || "";
 
-  const salvar = () => salvarReflexaoSessao(sessao, index, {
-    q1: q1.value,
-    q2: q2.value,
-    notas: notas.value
-  });
+  const salvar = () =>
+    salvarReflexaoSessao(sessao, index, {
+      q1: q1.value,
+      q2: q2.value,
+      notas: notas.value
+    });
 
   q1.onblur = salvar;
   q2.onblur = salvar;
@@ -577,11 +637,13 @@ async function renderSessao(sessao, index) {
   // Navegação
   // -------------------------------
   qs("btn-voltar-sessoes").onclick = () => {
+    if (timerId) clearInterval(timerId);
     area.classList.add("hidden");
     qs("area-sessoes").classList.remove("hidden");
   };
 
   qs("btn-concluir-sessao").onclick = () => {
+    if (timerId) clearInterval(timerId);
     window.lioraStudy.concluirSessao(sessao, index);
     area.classList.add("hidden");
     qs("area-sessoes").classList.remove("hidden");
