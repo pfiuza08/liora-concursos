@@ -586,37 +586,99 @@ console.log("🧠 planos-sessoes v2.2-STUDY-TIME-CONTENT carregado");
     return { plano, sessoes, meta };
   }
 
-  // ----------------------------------------------------------
-  // 🧠 Geração de Conteúdo da Sessão (v1)
+   // ----------------------------------------------------------
+  // 🧠 Geração de Conteúdo da Sessão (v2 — estruturado)
   // ----------------------------------------------------------
   async function gerarConteudoSessao(sessao, meta) {
-    // 🔒 versão v1: conteúdo estruturado simples
-    // depois pode virar chamada real de IA
-  
-    const titulo = sessao.titulo || "Sessão de Estudo";
+    const tituloSessao = sessao.titulo || "Sessão de Estudo";
     const tema = meta?.tema || meta?.titulo || "Tema";
   
     return `
-      <h4>${titulo}</h4>
+      <section class="space-y-4">
   
-      <p>
-        Nesta sessão, você irá estudar os conceitos fundamentais de
-        <b>${tema}</b>, com foco em compreender as ideias centrais
-        antes de avançar para aplicações mais complexas.
-      </p>
+        <h4 class="text-lg font-semibold">
+          ${tituloSessao}
+        </h4>
   
-      <ul>
-        <li>Definições essenciais</li>
-        <li>Principais conceitos</li>
-        <li>Exemplos introdutórios</li>
-      </ul>
+        <p>
+          Nesta sessão, você irá estudar um dos blocos fundamentais de
+          <b>${tema}</b>. O objetivo aqui é construir uma compreensão
+          clara dos conceitos, sem pressa, antes de avançar para aplicações
+          mais complexas.
+        </p>
   
-      <p class="mt-3">
-        Ao final desta sessão, você deverá ser capaz de explicar
-        os conceitos principais com suas próprias palavras.
-      </p>
+        <hr class="opacity-30">
+  
+        <h5 class="font-semibold">
+          📌 Conceito central
+        </h5>
+  
+        <p>
+          Todo estudo começa pela compreensão do conceito central.
+          Em <b>${tema}</b>, isso significa entender <i>o que é</i>,
+          <i>para que serve</i> e <i>em que contexto</i> esse conteúdo é aplicado.
+        </p>
+  
+        <p>
+          Não tente memorizar definições neste momento.
+          Foque em compreender a ideia geral e como ela se conecta
+          com o que você já sabe.
+        </p>
+  
+        <hr class="opacity-30">
+  
+        <h5 class="font-semibold">
+          🧩 Desdobramento do conceito
+        </h5>
+  
+        <ul class="list-disc list-inside space-y-1">
+          <li>Quais problemas esse conceito ajuda a resolver</li>
+          <li>Quais são seus elementos principais</li>
+          <li>Como ele aparece na prática</li>
+        </ul>
+  
+        <p>
+          Esses pontos formam a base para estudos mais aprofundados
+          nas próximas sessões.
+        </p>
+  
+        <hr class="opacity-30">
+  
+        <h5 class="font-semibold">
+          ✏️ Exemplo introdutório
+        </h5>
+  
+        <p>
+          Pense em um exemplo simples relacionado a <b>${tema}</b>.
+          Mesmo que você ainda não saiba resolver completamente,
+          tente identificar onde o conceito estudado aparece.
+        </p>
+  
+        <p>
+          Esse exercício mental ajuda o cérebro a criar conexões,
+          facilitando a aprendizagem nas próximas etapas.
+        </p>
+  
+        <hr class="opacity-30">
+  
+        <h5 class="font-semibold">
+          ✅ Fechamento da sessão
+        </h5>
+  
+        <p>
+          Ao final desta sessão, você deve ser capaz de:
+        </p>
+  
+        <ul class="list-disc list-inside space-y-1">
+          <li>Explicar o conceito central com suas próprias palavras</li>
+          <li>Reconhecer situações onde ele é aplicado</li>
+          <li>Sentir-se preparado para avançar para a próxima sessão</li>
+        </ul>
+  
+      </section>
     `;
   }
+
   
   // ----------------------------------------------------------
   // Listener central: liora:gerar-plano
