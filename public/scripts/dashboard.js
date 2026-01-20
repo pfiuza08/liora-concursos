@@ -347,17 +347,24 @@
     // --------------------------------------------------
     container.innerHTML = `
       <h4 class="sim-subtitulo">Painel Cognitivo</h4>
-  
+    
       <div class="grid gap-4">
-  
+    
         <div class="p-4 rounded-xl border bg-[var(--card)]">
           <div class="font-semibold">Hoje</div>
           <div class="text-sm text-[var(--muted)] mt-1">
             Flashcards vencidos: <b>${flashVencidos.length}</b><br>
             Sessões para revisão: <b>${sessoesRevisar.length}</b>
           </div>
+    
+          <div class="mt-3">
+            <button id="btn-revisar-agora"
+                    class="btn-primary w-full">
+              Revisar agora
+            </button>
+          </div>
         </div>
-  
+    
         <div class="p-4 rounded-xl border bg-[var(--card)]">
           <div class="font-semibold">Treino</div>
           <div class="text-sm text-[var(--muted)] mt-1">
@@ -366,17 +373,87 @@
             Streak atual: <b>${streak.atual || 0} dias</b>
           </div>
         </div>
-  
+    
         <div class="p-4 rounded-xl border bg-[var(--card)]">
           <div class="font-semibold">Fragilidades</div>
           <div class="text-sm text-[var(--muted)] mt-1">
-            Sessões frágeis: <b>${sessoesRevisar.length}</b><br>
-            Flashcards difíceis: <b>${flashDificeis.length}</b>
+            <button id="btn-ver-sessoes-fracas"
+                    class="btn-secondary text-sm w-full mb-2">
+              Sessões frágeis (${sessoesRevisar.length})
+            </button>
+    
+            <button id="btn-ver-flashcards"
+                    class="btn-secondary text-sm w-full">
+              Flashcards difíceis (${flashDificeis.length})
+            </button>
           </div>
         </div>
-  
+    
       </div>
     `;
+
+    // ======================================================
+    // 🎯 Ações do Dashboard Cognitivo (v1.1)
+    // ======================================================
+    
+    // Revisar agora
+    document
+      .getElementById("btn-revisar-agora")
+      ?.addEventListener("click", () => {
+    
+        if (flashVencidos.length > 0) {
+          abrirRevisaoFlashcards();
+          return;
+        }
+    
+        if (sessoesRevisar.length > 0) {
+          const idx = window.lioraEstudos.sessoes.findIndex(
+            (s, i) => sessaoPrecisaRevisao(s, i)
+          );
+    
+          if (idx >= 0) {
+            window.dispatchEvent(
+              new CustomEvent("liora:abrir-sessao", {
+                detail: {
+                  index: idx,
+                  sessao: window.lioraEstudos.sessoes[idx]
+                }
+              })
+            );
+          }
+        }
+      });
+    
+    // Abrir sessão frágil
+    document
+      .getElementById("btn-ver-sessoes-fracas")
+      ?.addEventListener("click", () => {
+    
+        if (!sessoesRevisar.length) return;
+    
+        const idx = window.lioraEstudos.sessoes.findIndex(
+          (s, i) => sessaoPrecisaRevisao(s, i)
+        );
+    
+        if (idx >= 0) {
+          window.dispatchEvent(
+            new CustomEvent("liora:abrir-sessao", {
+              detail: {
+                index: idx,
+                sessao: window.lioraEstudos.sessoes[idx]
+              }
+            })
+          );
+        }
+      });
+    
+    // Abrir revisão de flashcards
+    document
+      .getElementById("btn-ver-flashcards")
+      ?.addEventListener("click", () => {
+        abrirRevisaoFlashcards();
+      });
+        
   }
   
   // --------------------------------------------------
