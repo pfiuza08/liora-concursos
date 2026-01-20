@@ -89,9 +89,12 @@ console.log("🧠 planos-sessoes v2.2-STUDY-TIME-CONTENT carregado");
   // ----------------------------------------------------------
   // 📚 Study Manager v2 — status, tempo e conteúdo
   // ----------------------------------------------------------
-  function _getSessaoId(sessao, index) {
-    return sessao?.id || `sessao-${index}`;
+  function _getSessaoKey(sessao, index) {
+  const planoId = window.lioraEstudos?.meta?.planoId || "plano";
+  const sessaoId = sessao?.id || `sessao-${index}`;
+  return `${planoId}::${sessaoId}`;
   }
+
 
   function _acumularTempo(id) {
     const p = window.lioraStudy.estado.progresso[id];
@@ -187,15 +190,16 @@ console.log("🧠 planos-sessoes v2.2-STUDY-TIME-CONTENT carregado");
     },
 
     salvarConteudo(sessao, index, texto) {
-      const id = _getSessaoId(sessao, index);
-      this.estado.conteudo[id] = texto;
-      this.salvar();
+    const key = _getSessaoKey(sessao, index);
+    this.estado.conteudo[key] = texto;
+    this.salvar();
     },
-
+  
     obterConteudo(sessao, index) {
-      const id = _getSessaoId(sessao, index);
-      return this.estado.conteudo[id] || null;
+    const key = _getSessaoKey(sessao, index);
+    return this.estado.conteudo[key] || null;
     }
+
   };
 
   window.lioraStudy.carregar();
@@ -576,7 +580,17 @@ console.log("🧠 planos-sessoes v2.2-STUDY-TIME-CONTENT carregado");
 
       const { plano, sessoes, meta } = normalizeResponse(origem, metaBase, data);
 
-      window.lioraEstudos.salvar(plano, sessoes, origem, meta);
+      // 🔑 ID único do plano (isola cache)
+      const planoId = `plano-${Date.now()}`;
+      
+      window.lioraEstudos.salvar(plano, sessoes, origem, {
+        ...meta,
+        planoId
+      });
+      
+      // 🧹 limpa conteúdo de sessões anteriores
+      window.lioraStudy.estado.conteudo = {};
+      window.lioraStudy.salvar();
 
       console.log("✅ Plano e sessões salvos", { sessoesQtd: (sessoes || []).length });
 
