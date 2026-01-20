@@ -92,7 +92,34 @@ console.log("🧠 planos-sessoes v2.2-STUDY-TIME-CONTENT carregado");
     const key = _getSessaoKey(sessao, index);
     return window.lioraStudy.estado.conteudo[key]?.flashcards || null;
   }
-     
+
+  // ----------------------------------------------------------
+// 🔁 Revisão Inteligente v1 — heurística simples
+// ----------------------------------------------------------
+function sessaoPrecisaRevisao(sessao, index) {
+  const key = _getSessaoKey(sessao, index);
+  const prog = window.lioraStudy.estado.progresso[key];
+  const conteudo = window.lioraStudy.estado.conteudo[key];
+
+  if (!prog || prog.status !== "concluida") return false;
+
+  // 1. pouco tempo (<5 min)
+  if ((prog.totalTime || 0) < 5 * 60 * 1000) return true;
+
+  // 2. reflexão fraca
+  const ref = conteudo?.reflexao;
+  if (!ref || (!ref.q1 && !ref.q2)) return true;
+
+  // 3. sessão antiga (>7 dias)
+  if (prog.finishedAt) {
+    const dias =
+      (Date.now() - prog.finishedAt) / (1000 * 60 * 60 * 24);
+    if (dias >= 7) return true;
+  }
+
+  return false;
+}
+  
   // ----------------------------------------------------------
   // Store de estudo (plano/sessões)
   // ----------------------------------------------------------
@@ -375,9 +402,13 @@ console.log("🧠 planos-sessoes v2.2-STUDY-TIME-CONTENT carregado");
     (sessoes || []).forEach((s, i) => {
       const status = window.lioraStudy.statusSessao(s, i);
 
+      const precisaRevisao = sessaoPrecisaRevisao(s, i);
+
       const badge =
         status === "concluida"
-          ? `<span class="text-xs px-2 py-1 rounded-full bg-green-600 text-white">Concluída</span>`
+          ? precisaRevisao
+            ? `<span class="text-xs px-2 py-1 rounded-full bg-orange-500 text-black">Revisar</span>`
+            : `<span class="text-xs px-2 py-1 rounded-full bg-green-600 text-white">Concluída</span>`
           : status === "em_andamento"
           ? `<span class="text-xs px-2 py-1 rounded-full bg-yellow-500 text-black">Em andamento</span>`
           : `<span class="text-xs px-2 py-1 rounded-full bg-gray-600 text-white">Pendente</span>`;
@@ -469,6 +500,8 @@ async function renderSessao(sessao, index) {
 
   // inicia sessão (status + tempo)
   window.lioraStudy.iniciarSessao(sessao, index);
+  const precisaRevisao = sessaoPrecisaRevisao(sessao, index);
+
 
   // -------------------------------
   // Conteúdo (cache first)
@@ -505,6 +538,7 @@ async function renderSessao(sessao, index) {
   // -------------------------------
   // Render FINAL (único)
   // -------------------------------
+  const precisaRevisao = sessaoPrecisaRevisao(sessao, index);
   area.innerHTML = `
     <div class="flex items-center gap-3">
       <button id="btn-voltar-sessoes"
@@ -525,7 +559,11 @@ async function renderSessao(sessao, index) {
     <h3 class="section-title">
       ${sessao.titulo || "Sessão"}
     </h3>
-
+     ${precisaRevisao ? `
+    <div class="p-3 rounded-lg bg-orange-100 text-orange-800 text-sm">
+    Esta sessão é uma boa candidata para revisão.
+    </div>
+    ` : ""}
     <div class="p-5 rounded-xl border bg-[var(--card)] space-y-6">
       ${conteudo}
 
