@@ -135,53 +135,53 @@ console.log("🧠 planos-sessoes v2.2-STUDY-TIME-CONTENT carregado");
       localStorage.setItem("liora:study", JSON.stringify(this.estado));
     },
 
-    iniciarSessao(sessao, index) {
-      const id = _getSessaoId(sessao, index);
-      this.estado.sessaoAtual = id;
-
-      if (!this.estado.progresso[id]) {
-        this.estado.progresso[id] = {
-          status: "em_andamento",
-          startedAt: Date.now(),
-          totalTime: 0
-        };
-      } else {
-        const p = this.estado.progresso[id];
-        p.status = "em_andamento";
-        p.startedAt = Date.now();
-        if (typeof p.totalTime !== "number") p.totalTime = 0;
+     iniciarSessao(sessao, index) {
+        const key = _getSessaoKey(sessao, index);
+        this.estado.sessaoAtual = key;
+      
+        if (!this.estado.progresso[key]) {
+          this.estado.progresso[key] = {
+            status: "em_andamento",
+            startedAt: Date.now(),
+            totalTime: 0
+          };
+        } else {
+          const p = this.estado.progresso[key];
+          p.status = "em_andamento";
+          p.startedAt = Date.now();
+          if (typeof p.totalTime !== "number") p.totalTime = 0;
+        }
+      
+        this.salvar();
       }
 
-      this.salvar();
-    },
-
-    // ✅ CORRIGIDO: sempre garante registro + acumula tempo com segurança
-    concluirSessao(sessao, index) {
-      const id = _getSessaoId(sessao, index);
-
-      // garante registro (evita erro quando clicar concluir sem iniciar)
-      if (!this.estado.progresso[id]) {
-        this.estado.progresso[id] = {
-          status: "em_andamento",
-          startedAt: Date.now(),
-          totalTime: 0
-        };
+     concluirSessao(sessao, index) {
+        const key = _getSessaoKey(sessao, index);
+      
+        // garante registro mesmo se iniciarSessao não tiver sido chamado
+        if (!this.estado.progresso[key]) {
+          this.estado.progresso[key] = {
+            status: "em_andamento",
+            startedAt: Date.now(),
+            totalTime: 0
+          };
+        }
+      
+        _acumularTempo(key);
+      
+        const p = this.estado.progresso[key];
+        p.status = "concluida";
+        p.finishedAt = Date.now();
+      
+        this.estado.sessaoAtual = null;
+        this.salvar();
       }
 
-      _acumularTempo(id);
-
-      const p = this.estado.progresso[id];
-      p.status = "concluida";
-      p.finishedAt = Date.now();
-
-      this.estado.sessaoAtual = null;
-      this.salvar();
-    },
 
     statusSessao(sessao, index) {
-      const id = _getSessaoId(sessao, index);
-      return this.estado.progresso[id]?.status || "pendente";
-    },
+    const key = _getSessaoKey(sessao, index);
+    return this.estado.progresso[key]?.status || "pendente";
+   }
 
     tempoSessao(sessao, index) {
       const id = _getSessaoId(sessao, index);
