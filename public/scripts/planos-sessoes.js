@@ -825,7 +825,7 @@ async function renderSessao(sessao, index) {
         <hr class="opacity-30">
   
         <h5 class="font-semibold">
-          📌 Conceito central
+           Conceito central
         </h5>
   
         <p>
@@ -843,7 +843,7 @@ async function renderSessao(sessao, index) {
         <hr class="opacity-30">
   
         <h5 class="font-semibold">
-          🧩 Desdobramento do conceito
+           Desdobramento do conceito
         </h5>
   
         <ul class="list-disc list-inside space-y-1">
@@ -860,7 +860,7 @@ async function renderSessao(sessao, index) {
         <hr class="opacity-30">
   
         <h5 class="font-semibold">
-          ✏️ Exemplo introdutório
+           Exemplo introdutório
         </h5>
   
         <p>
@@ -877,7 +877,7 @@ async function renderSessao(sessao, index) {
         <hr class="opacity-30">
   
         <h5 class="font-semibold">
-          ✅ Fechamento da sessão
+           Fechamento da sessão
         </h5>
   
         <p>
