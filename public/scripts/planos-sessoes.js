@@ -295,6 +295,130 @@ window.lioraFlashcards = window.lioraFlashcards || {
   }
 };
 
+// ==========================================================
+// 📚 Revisão Diária de Flashcards (v1)
+// ==========================================================
+
+function abrirRevisaoFlashcards() {
+  const painel = document.getElementById("painel-estudo");
+  if (!painel) return;
+
+  // cria container se não existir
+  let area = document.getElementById("area-revisao");
+  if (!area) {
+    area = document.createElement("div");
+    area.id = "area-revisao";
+    area.className = "space-y-6 max-w-3xl";
+    painel.appendChild(area);
+  }
+
+  // esconde outras áreas
+  document.getElementById("area-sessoes")?.classList.add("hidden");
+  document.getElementById("area-sessao")?.classList.add("hidden");
+
+  area.classList.remove("hidden");
+
+  const planoId = window.lioraEstudos?.meta?.planoId;
+  let cards = window.lioraFlashcards.listarVencidosDoPlano(planoId);
+  let index = 0;
+  let inicioResposta = null;
+
+  function renderAtual() {
+    if (!cards.length) {
+      area.innerHTML = `
+        <h3 class="section-title">Revisão do dia</h3>
+        <div class="p-5 rounded-xl border bg-[var(--card)]">
+          <p class="text-sm text-[var(--muted)]">
+            Nenhum flashcard pendente para hoje.
+          </p>
+        </div>
+        <button class="btn-secondary" id="btn-voltar-revisao">
+          Voltar
+        </button>
+      `;
+
+      document.getElementById("btn-voltar-revisao").onclick = fecharRevisao;
+      return;
+    }
+
+    const card = cards[index];
+    inicioResposta = Date.now();
+
+    area.innerHTML = `
+      <div class="flex items-center justify-between">
+        <h3 class="section-title">Revisão do dia</h3>
+        <span class="text-xs text-[var(--muted)]">
+          ${index + 1} / ${cards.length}
+        </span>
+      </div>
+
+      <div class="p-5 rounded-xl border bg-[var(--card)] space-y-4">
+        <div class="text-base font-medium">
+          ${card.pergunta}
+        </div>
+
+        <button id="btn-mostrar-resposta"
+                class="btn-secondary text-sm">
+          Mostrar resposta
+        </button>
+
+        <div id="resp" class="hidden text-sm text-[var(--muted)]">
+          ${card.resposta}
+        </div>
+      </div>
+
+      <div class="flex gap-3 justify-end">
+        <button id="btn-errei" class="btn-secondary">
+          Errei
+        </button>
+        <button id="btn-acertei" class="btn-primary">
+          Acertei
+        </button>
+      </div>
+    `;
+
+    document.getElementById("btn-mostrar-resposta").onclick = () => {
+      document.getElementById("resp")?.classList.remove("hidden");
+    };
+
+    document.getElementById("btn-errei").onclick = () =>
+      responder(false);
+
+    document.getElementById("btn-acertei").onclick = () =>
+      responder(true);
+  }
+
+  function responder(acertou) {
+    const card = cards[index];
+    const tempo = Date.now() - inicioResposta;
+
+    window.lioraFlashcards.registrarResposta(
+      { id: card.sessaoId },
+      0,
+      card.id,
+      acertou,
+      tempo
+    );
+
+    index++;
+
+    if (index >= cards.length) {
+      // recarrega vencidos (pode ter mudado)
+      cards = window.lioraFlashcards.listarVencidosDoPlano(planoId);
+      index = 0;
+    }
+
+    renderAtual();
+  }
+
+  function fecharRevisao() {
+    area.classList.add("hidden");
+    document.getElementById("area-sessoes")?.classList.remove("hidden");
+    window.lioraDashboard?.atualizar?.();
+  }
+
+  renderAtual();
+}
 
 
 
