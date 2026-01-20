@@ -440,227 +440,154 @@ async function gerarFlashcardsSessao(sessao, meta) {
     }
   ];
 }
-    // ----------------------------------------------------------
-    // 📖 Render de Sessão v2 — conteúdo + reflexão + dashboard
-    // ----------------------------------------------------------
-    async function renderSessao(sessao, index) {
-      const painelEstudo = document.getElementById("painel-estudo");
-      if (!painelEstudo) return;
-    
-      let area = document.getElementById("area-sessao");
-      if (!area) {
-        area = document.createElement("div");
-        area.id = "area-sessao";
-        area.className = "space-y-6 max-w-3xl";
-        painelEstudo.appendChild(area);
-      }
-    
-      // esconde lista de sessões imediatamente
-      document.getElementById("area-sessoes")?.classList.add("hidden");
-      area.classList.remove("hidden");
-    
-      // marca início da sessão (tempo + status)
-      window.lioraStudy?.iniciarSessao?.(sessao, index);
-    
-      // --------------------------------------------------
-      // Conteúdo da sessão (cache first)
-      // --------------------------------------------------
-      let conteudo = window.lioraStudy.obterConteudo(sessao, index);
-    
-      if (!conteudo) {
-        area.innerHTML = `
-          <p class="text-sm text-[var(--muted)]">
-            Gerando conteúdo da sessão...
-          </p>
-        `;
-    
-        conteudo = await gerarConteudoSessao(
-          sessao,
-          window.lioraEstudos?.meta
-        );
-    
-        window.lioraStudy.salvarConteudo(sessao, index, conteudo);
-      }
-    
-      // --------------------------------------------------
-      // Reflexão — carregar estado salvo
-      // --------------------------------------------------
-      const reflexao = obterReflexaoSessao(sessao, index);
+// ----------------------------------------------------------
+// 📖 Render de Sessão v2.3 — conteúdo + reflexão + flashcards
+// ----------------------------------------------------------
+async function renderSessao(sessao, index) {
+  const painelEstudo = document.getElementById("painel-estudo");
+  if (!painelEstudo) return;
 
-      // --------------------------------------------------
-      // Flashcards — carregar ou gerar
-      // --------------------------------------------------
-      let flashcards = obterFlashcardsSessao(sessao, index);
-      
-      if (!flashcards) {
-        flashcards = await gerarFlashcardsSessao(
-          sessao,
-          window.lioraEstudos?.meta
-        );
-        salvarFlashcardsSessao(sessao, index, flashcards);
-      }
-     
-      // --------------------------------------------------
-      // Render FINAL (único)
-      // --------------------------------------------------
-      area.innerHTML = `
-        <div class="flex items-center gap-3">
-          <button id="btn-voltar-sessoes"
-                  class="btn-secondary text-sm">
-            ← Sessões
-          </button>
-    
-          <span class="text-sm text-[var(--muted)]">
-            Sessão ${index + 1}
-          </span>
-        </div>
-    
-        <h3 class="section-title">
-          ${sessao.titulo || "Sessão"}
-        </h3>
-    
-        <div class="p-5 rounded-xl border border-[var(--border)] bg-[var(--card)] space-y-6">
-    
-          ${conteudo}
-    
-          <hr class="opacity-30">
-    
-          <section class="space-y-3">
-            <h5 class="font-semibold">Reflexão</h5>
-    
-            <label class="block text-sm">
-              1. Como você explicaria este conteúdo com suas próprias palavras?
-            </label>
-            <textarea id="ref-q1"
-                      rows="3"
-                      class="w-full"
-                      placeholder="Escreva livremente..."></textarea>
-    
-            <label class="block text-sm">
-              2. Qual parte ficou menos clara ou merece revisão?
-            </label>
-            <textarea id="ref-q2"
-                      rows="3"
-                      class="w-full"
-                      placeholder="Identifique pontos de dúvida..."></textarea>
-    
-            <label class="block text-sm">
-              Anotações pessoais
-            </label>
-            <textarea id="ref-notas"
-                      rows="4"
-                      class="w-full"
-                      placeholder="Use este espaço como quiser..."></textarea>
-    
-            <div class="text-xs text-[var(--muted)]">
-              Suas reflexões ficam salvas nesta sessão.
-            </div>
-          </section>
-    
-        </div>
-    
-        <div class="flex justify-end gap-3">
-          <button id="btn-concluir-sessao"
-                  class="btn-primary">
-            Concluir sessão
-          </button>
-        </div>
-      `;
-
-  // --------------------------------------------------
-  // Reflexão — preencher e persistir
-  // --------------------------------------------------
-  const q1 = document.getElementById("ref-q1");
-  const q2 = document.getElementById("ref-q2");
-  const notas = document.getElementById("ref-notas");
-
-  if (q1 && q2 && notas) {
-    q1.value = reflexao.q1 || "";
-    q2.value = reflexao.q2 || "";
-    notas.value = reflexao.notas || "";
-
-    const salvar = () => {
-      salvarReflexaoSessao(sessao, index, {
-        q1: q1.value,
-        q2: q2.value,
-        notas: notas.value
-      });
-    };
-
-    q1.addEventListener("blur", salvar);
-    q2.addEventListener("blur", salvar);
-    notas.addEventListener("blur", salvar);
+  let area = document.getElementById("area-sessao");
+  if (!area) {
+    area = document.createElement("div");
+    area.id = "area-sessao";
+    area.className = "space-y-6 max-w-3xl";
+    painelEstudo.appendChild(area);
   }
 
-    <hr class="opacity-30">
-    
-    <section class="space-y-4">
-      <h5 class="font-semibold">Flashcards</h5>
-    
-      <div class="space-y-3">
-        ${flashcards
-          .map(
-            (c, i) => `
-            <div class="p-4 rounded-lg border bg-[var(--card)] space-y-2">
-              <div class="text-sm font-medium">
-                ${i + 1}. ${c.pergunta}
-              </div>
-    
-              <button class="btn-secondary text-xs mt-2"
-                      data-flashcard="${i}">
-                Mostrar resposta
-              </button>
-    
-              <div class="flashcard-resposta hidden mt-2 text-sm text-[var(--muted)]">
-                ${c.resposta}
-              </div>
-            </div>
-          `
-          )
-          .join("")}
-      </div>
-    </section>
-    
-  // --------------------------------------------------
-  // Voltar
-  // --------------------------------------------------
-  document
-    .getElementById("btn-voltar-sessoes")
-    ?.addEventListener("click", () => {
-      area.classList.add("hidden");
-      document.getElementById("area-sessoes")?.classList.remove("hidden");
-    });
+  // esconde lista
+  document.getElementById("area-sessoes")?.classList.add("hidden");
+  area.classList.remove("hidden");
 
-  // --------------------------------------------------
-  // Flashcards — interação
-  // --------------------------------------------------
-  area.querySelectorAll("[data-flashcard]").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const card = btn.closest("div");
-      const resp = card?.querySelector(".flashcard-resposta");
-      if (!resp) return;
-  
-      const visible = !resp.classList.contains("hidden");
-      resp.classList.toggle("hidden", visible);
-      btn.textContent = visible ? "Mostrar resposta" : "Ocultar resposta";
-    });
+  // inicia sessão
+  window.lioraStudy.iniciarSessao(sessao, index);
+
+  // -------------------------------
+  // Conteúdo (cache first)
+  // -------------------------------
+  let conteudo = window.lioraStudy.obterConteudo(sessao, index);
+
+  if (!conteudo) {
+    area.innerHTML = `<p class="text-sm text-[var(--muted)]">Gerando conteúdo da sessão...</p>`;
+    conteudo = await gerarConteudoSessao(sessao, window.lioraEstudos?.meta);
+    window.lioraStudy.salvarConteudo(sessao, index, conteudo);
+  }
+
+  // -------------------------------
+  // Reflexão
+  // -------------------------------
+  const reflexao = obterReflexaoSessao(sessao, index);
+
+  // -------------------------------
+  // Flashcards
+  // -------------------------------
+  let flashcards = obterFlashcardsSessao(sessao, index);
+  if (!flashcards) {
+    flashcards = await gerarFlashcardsSessao(sessao, window.lioraEstudos?.meta);
+    salvarFlashcardsSessao(sessao, index, flashcards);
+  }
+
+  // -------------------------------
+  // Render FINAL (único)
+  // -------------------------------
+  area.innerHTML = `
+    <div class="flex items-center gap-3">
+      <button id="btn-voltar-sessoes" class="btn-secondary text-sm">← Sessões</button>
+      <span class="text-sm text-[var(--muted)]">Sessão ${index + 1}</span>
+    </div>
+
+    <h3 class="section-title">${sessao.titulo || "Sessão"}</h3>
+
+    <div class="p-5 rounded-xl border bg-[var(--card)] space-y-6">
+      ${conteudo}
+
+      <hr class="opacity-30">
+
+      <section class="space-y-3">
+        <h5 class="font-semibold">Reflexão</h5>
+
+        <label class="text-sm">1. Explique com suas palavras</label>
+        <textarea id="ref-q1" rows="3" class="w-full"></textarea>
+
+        <label class="text-sm">2. O que ficou menos claro?</label>
+        <textarea id="ref-q2" rows="3" class="w-full"></textarea>
+
+        <label class="text-sm">Anotações</label>
+        <textarea id="ref-notas" rows="4" class="w-full"></textarea>
+      </section>
+
+      <hr class="opacity-30">
+
+      <section class="space-y-4">
+        <h5 class="font-semibold">Flashcards</h5>
+        ${flashcards.map((c, i) => `
+          <div class="p-4 border rounded space-y-2">
+            <div class="font-medium">${i + 1}. ${c.pergunta}</div>
+            <button class="btn-secondary text-xs" data-flash="${i}">
+              Mostrar resposta
+            </button>
+            <div class="flash-resp hidden text-sm text-[var(--muted)]">
+              ${c.resposta}
+            </div>
+          </div>
+        `).join("")}
+      </section>
+    </div>
+
+    <div class="flex justify-end">
+      <button id="btn-concluir-sessao" class="btn-primary">Concluir sessão</button>
+    </div>
+  `;
+
+  // -------------------------------
+  // Reflexão persistência
+  // -------------------------------
+  const q1 = qs("ref-q1");
+  const q2 = qs("ref-q2");
+  const notas = qs("ref-notas");
+
+  q1.value = reflexao.q1 || "";
+  q2.value = reflexao.q2 || "";
+  notas.value = reflexao.notas || "";
+
+  const salvar = () => salvarReflexaoSessao(sessao, index, {
+    q1: q1.value,
+    q2: q2.value,
+    notas: notas.value
   });
 
-     
-  // --------------------------------------------------
-  // Concluir sessão
-  // --------------------------------------------------
-  document
-    .getElementById("btn-concluir-sessao")
-    ?.addEventListener("click", () => {
-      window.lioraStudy?.concluirSessao?.(sessao, index);
-      area.classList.add("hidden");
-      document.getElementById("area-sessoes")?.classList.remove("hidden");
+  q1.onblur = salvar;
+  q2.onblur = salvar;
+  notas.onblur = salvar;
 
-      // atualiza plano e dashboard
-      window.renderPlanoESessoes?.();
-      window.lioraDashboard?.atualizar?.();
-    });
+  // -------------------------------
+  // Flashcards interação
+  // -------------------------------
+  area.querySelectorAll("[data-flash]").forEach(btn => {
+    btn.onclick = () => {
+      const r = btn.nextElementSibling;
+      r.classList.toggle("hidden");
+      btn.textContent = r.classList.contains("hidden")
+        ? "Mostrar resposta"
+        : "Ocultar resposta";
+    };
+  });
+
+  // -------------------------------
+  // Navegação
+  // -------------------------------
+  qs("btn-voltar-sessoes").onclick = () => {
+    area.classList.add("hidden");
+    qs("area-sessoes").classList.remove("hidden");
+  };
+
+  qs("btn-concluir-sessao").onclick = () => {
+    window.lioraStudy.concluirSessao(sessao, index);
+    area.classList.add("hidden");
+    qs("area-sessoes").classList.remove("hidden");
+    window.renderPlanoESessoes?.();
+    window.lioraDashboard?.atualizar?.();
+  };
 }
 
   // ----------------------------------------------------------
