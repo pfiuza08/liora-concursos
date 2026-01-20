@@ -38,36 +38,46 @@
 <div id="liora-shell">
 
   <!-- ================= HEADER ================= -->
-  <header class="max-w-6xl mx-auto px-6 pt-8 flex justify-between items-center">
-    <div class="flex items-center gap-3">
-      <div class="w-10 h-10 rounded-2xl bg-[var(--brand)] text-white font-black flex items-center justify-center">
-        Li
-      </div>
-      <div>
-        <h1 class="text-xl font-bold">Liora — Estudo Inteligente</h1>
-        <p class="text-sm text-[var(--muted)]">
-          Planos de estudo, sessões completas e simulados com IA.
-        </p>
-      </div>
+ <header class="max-w-6xl mx-auto px-6 pt-8 flex justify-between items-center">
+  <div class="flex items-center gap-3">
+    <div class="w-10 h-10 rounded-2xl bg-[var(--brand)] text-white font-black flex items-center justify-center">
+      Li
+    </div>
+    <div>
+      <h1 class="text-xl font-bold">Liora — Estudo Inteligente</h1>
+      <p class="text-sm text-[var(--muted)]">
+        Planos de estudo, sessões completas e simulados com IA.
+      </p>
+    </div>
+  </div>
+
+  <div class="flex items-center gap-4">
+
+    <!-- 🌗 Toggle Tema -->
+    <button id="btn-toggle-theme"
+            class="theme-toggle"
+            aria-label="Alternar tema">
+      <span class="icon-sun">☀️</span>
+      <span class="icon-moon">🌙</span>
+    </button>
+
+    <div id="liora-user-info" class="hidden flex-col text-right">
+      <span id="liora-user-name" class="text-sm font-medium"></span>
     </div>
 
-    <div class="flex items-center gap-4">
-      <div id="liora-user-info" class="hidden flex-col text-right">
-        <span id="liora-user-name" class="text-sm font-medium"></span>
-      </div>
+    <button id="btn-login"
+            class="btn-secondary text-sm px-3 py-1.5"
+            data-action="openAuth">
+      Entrar
+    </button>
 
-      <button id="btn-login"
-              class="btn-secondary text-sm px-3 py-1.5"
-              data-action="openAuth">
-        Entrar
-      </button>
+    <button id="btn-logout"
+            class="btn-secondary text-sm px-3 py-1.5 hidden">
+      Sair
+    </button>
+  </div>
+</header>
 
-      <button id="btn-logout"
-              class="btn-secondary text-sm px-3 py-1.5 hidden">
-        Sair
-      </button>
-    </div>
-  </header>
 
   <!-- ================= MAIN ================= -->
   <main id="liora-layout" class="max-w-6xl mx-auto px-6 pt-10 pb-20">
