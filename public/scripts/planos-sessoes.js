@@ -74,8 +74,25 @@ console.log("🧠 planos-sessoes v2.2-STUDY-TIME-CONTENT carregado");
       notas: ""
     };
   }
-
- 
+  
+   // ----------------------------------------------------------
+  // 🗂️ Flashcards — helpers
+  // ----------------------------------------------------------
+  function salvarFlashcardsSessao(sessao, index, cards) {
+    const key = _getSessaoKey(sessao, index);
+    const atual = window.lioraStudy.estado.conteudo[key] || {};
+    window.lioraStudy.estado.conteudo[key] = {
+      ...atual,
+      flashcards: cards
+    };
+    window.lioraStudy.salvar();
+  }
+  
+  function obterFlashcardsSessao(sessao, index) {
+    const key = _getSessaoKey(sessao, index);
+    return window.lioraStudy.estado.conteudo[key]?.flashcards || null;
+  }
+     
   // ----------------------------------------------------------
   // Store de estudo (plano/sessões)
   // ----------------------------------------------------------
@@ -402,7 +419,27 @@ console.log("🧠 planos-sessoes v2.2-STUDY-TIME-CONTENT carregado");
     // garante workspace
     window.dispatchEvent(new Event("liora:open-workspace"));
   }
+  // ----------------------------------------------------------
+// 🧠 Geração de Flashcards da Sessão (v1)
+// ----------------------------------------------------------
+async function gerarFlashcardsSessao(sessao, meta) {
+  const tema = meta?.tema || meta?.titulo || "Tema";
 
+  return [
+    {
+      pergunta: `Qual é a ideia central estudada nesta sessão sobre ${tema}?`,
+      resposta: `A ideia central envolve compreender os conceitos fundamentais de ${tema} e como eles se conectam.`
+    },
+    {
+      pergunta: `Por que este conteúdo é importante dentro de ${tema}?`,
+      resposta: `Porque ele serve como base para entender tópicos mais avançados e aplicações práticas.`
+    },
+    {
+      pergunta: `Como este conceito pode aparecer na prática?`,
+      resposta: `Ele pode aparecer na resolução de problemas, análises ou situações reais relacionadas a ${tema}.`
+    }
+  ];
+}
     // ----------------------------------------------------------
     // 📖 Render de Sessão v2 — conteúdo + reflexão + dashboard
     // ----------------------------------------------------------
@@ -449,7 +486,20 @@ console.log("🧠 planos-sessoes v2.2-STUDY-TIME-CONTENT carregado");
       // Reflexão — carregar estado salvo
       // --------------------------------------------------
       const reflexao = obterReflexaoSessao(sessao, index);
-    
+
+      // --------------------------------------------------
+      // Flashcards — carregar ou gerar
+      // --------------------------------------------------
+      let flashcards = obterFlashcardsSessao(sessao, index);
+      
+      if (!flashcards) {
+        flashcards = await gerarFlashcardsSessao(
+          sessao,
+          window.lioraEstudos?.meta
+        );
+        salvarFlashcardsSessao(sessao, index, flashcards);
+      }
+     
       // --------------------------------------------------
       // Render FINAL (único)
       // --------------------------------------------------
@@ -542,6 +592,35 @@ console.log("🧠 planos-sessoes v2.2-STUDY-TIME-CONTENT carregado");
     notas.addEventListener("blur", salvar);
   }
 
+    <hr class="opacity-30">
+    
+    <section class="space-y-4">
+      <h5 class="font-semibold">Flashcards</h5>
+    
+      <div class="space-y-3">
+        ${flashcards
+          .map(
+            (c, i) => `
+            <div class="p-4 rounded-lg border bg-[var(--card)] space-y-2">
+              <div class="text-sm font-medium">
+                ${i + 1}. ${c.pergunta}
+              </div>
+    
+              <button class="btn-secondary text-xs mt-2"
+                      data-flashcard="${i}">
+                Mostrar resposta
+              </button>
+    
+              <div class="flashcard-resposta hidden mt-2 text-sm text-[var(--muted)]">
+                ${c.resposta}
+              </div>
+            </div>
+          `
+          )
+          .join("")}
+      </div>
+    </section>
+    
   // --------------------------------------------------
   // Voltar
   // --------------------------------------------------
@@ -552,6 +631,22 @@ console.log("🧠 planos-sessoes v2.2-STUDY-TIME-CONTENT carregado");
       document.getElementById("area-sessoes")?.classList.remove("hidden");
     });
 
+  // --------------------------------------------------
+  // Flashcards — interação
+  // --------------------------------------------------
+  area.querySelectorAll("[data-flashcard]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const card = btn.closest("div");
+      const resp = card?.querySelector(".flashcard-resposta");
+      if (!resp) return;
+  
+      const visible = !resp.classList.contains("hidden");
+      resp.classList.toggle("hidden", visible);
+      btn.textContent = visible ? "Mostrar resposta" : "Ocultar resposta";
+    });
+  });
+
+     
   // --------------------------------------------------
   // Concluir sessão
   // --------------------------------------------------
