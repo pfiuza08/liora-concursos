@@ -381,107 +381,99 @@ console.log("🧠 planos-sessoes v2.2-STUDY-TIME-CONTENT carregado");
   }
 
   // ----------------------------------------------------------
-  // 📖 Render de Sessão (Study + tempo + conteúdo)
+  // 📖 Render de Sessão (v2 — conteúdo persistente)
   // ----------------------------------------------------------
-  function renderSessao(sessao, index) {
-    const painelEstudo = qs("painel-estudo");
+  async function renderSessao(sessao, index) {
+    const painelEstudo = document.getElementById("painel-estudo");
     if (!painelEstudo) return;
-
-    let area = qs("area-sessao");
+  
+    let area = document.getElementById("area-sessao");
     if (!area) {
       area = document.createElement("div");
       area.id = "area-sessao";
       area.className = "space-y-6 max-w-3xl";
       painelEstudo.appendChild(area);
     }
-
-    const statusAtual = window.lioraStudy?.statusSessao(sessao, index) || "pendente";
-    const tempoMin = Math.round((window.lioraStudy.tempoSessao(sessao, index) || 0) / 60000);
-
+  
+    // --------------------------------------------------
+    // Conteúdo da sessão (cache first)
+    // --------------------------------------------------
+    let conteudo = window.lioraStudy.obterConteudo(sessao, index);
+  
+    if (!conteudo) {
+      area.innerHTML = `
+        <p class="text-sm text-[var(--muted)]">
+          Gerando conteúdo da sessão...
+        </p>
+      `;
+  
+      conteudo = await gerarConteudoSessao(
+        sessao,
+        window.lioraEstudos?.meta
+      );
+  
+      window.lioraStudy.salvarConteudo(sessao, index, conteudo);
+    }
+  
+    // --------------------------------------------------
+    // Render final
+    // --------------------------------------------------
     area.innerHTML = `
       <div class="flex items-center gap-3">
-        <button id="btn-voltar-sessoes" class="btn-secondary text-sm">← Sessões</button>
-
-        <span class="text-sm text-[var(--muted)]">Sessão ${index + 1}</span>
-
-        <span class="ml-2 text-xs px-2 py-1 rounded-full
-          ${statusAtual === "concluida"
-            ? "bg-green-600 text-white"
-            : statusAtual === "em_andamento"
-            ? "bg-yellow-500 text-black"
-            : "bg-gray-600 text-white"}">
-          ${statusAtual === "concluida"
-            ? "Concluída"
-            : statusAtual === "em_andamento"
-            ? "Em andamento"
-            : "Pendente"}
+        <button id="btn-voltar-sessoes"
+                class="btn-secondary text-sm">
+          ← Sessões
+        </button>
+  
+        <span class="text-sm text-[var(--muted)]">
+          Sessão ${index + 1}
         </span>
       </div>
-
-      <h3 class="section-title">${sessao.titulo || "Sessão"}</h3>
-
+  
+      <h3 class="section-title">
+        ${sessao.titulo || "Sessão"}
+      </h3>
+  
       <div class="p-5 rounded-xl border border-[var(--border)] bg-[var(--card)] space-y-4">
-        <p class="text-sm text-[var(--muted)]">
-          Origem: <b>${sessao.origem || "IA"}</b>
-          <span class="mx-2">·</span>
-          Tempo estudado: <b>${tempoMin} min</b>
-        </p>
-
-        <div id="sessao-conteudo" class="text-base leading-relaxed text-[var(--text)]">
-          <span class="text-sm text-[var(--muted)]">Carregando conteúdo…</span>
-        </div>
-
-        ${
-          statusAtual !== "concluida"
-            ? `<button id="btn-concluir-sessao" class="btn-primary w-full">Concluir sessão</button>`
-            : `<p class="text-sm text-green-500 font-medium">✔ Sessão concluída</p>`
-        }
+        ${conteudo}
+      </div>
+  
+      <div class="flex justify-end gap-3">
+        <button id="btn-concluir-sessao"
+                class="btn-primary">
+          Concluir sessão
+        </button>
       </div>
     `;
-
+  
     // esconde lista de sessões
-    qs("area-sessoes")?.classList.add("hidden");
-
-    // mostra sessão
+    document.getElementById("area-sessoes")?.classList.add("hidden");
     area.classList.remove("hidden");
-
+  
+    // marca início da sessão
+    window.lioraStudy.iniciarSessao(sessao, index);
+  
     // voltar
-    qs("btn-voltar-sessoes")?.addEventListener("click", () => {
-      area.classList.add("hidden");
-      qs("area-sessoes")?.classList.remove("hidden");
-      renderPlanoESessoes();
-    });
-
+    document
+      .getElementById("btn-voltar-sessoes")
+      ?.addEventListener("click", () => {
+        area.classList.add("hidden");
+        document.getElementById("area-sessoes")?.classList.remove("hidden");
+      });
+  
     // concluir
-    qs("btn-concluir-sessao")?.addEventListener("click", () => {
-      window.lioraStudy.concluirSessao(sessao, index);
-
-      area.classList.add("hidden");
-      qs("area-sessoes")?.classList.remove("hidden");
-
-      renderPlanoESessoes();
-    });
-
-    // conteúdo (cache → IA)
-    const container = qs("sessao-conteudo");
-    if (container) {
-      const cached = window.lioraStudy.obterConteudo(sessao, index);
-      if (cached) {
-        container.innerHTML = cached;
-      } else {
-        container.innerHTML = `<span class="text-sm text-[var(--muted)]">Gerando conteúdo…</span>`;
-        gerarConteudoSessaoIA(sessao, index)
-          .then((html) => {
-            container.innerHTML = html;
-            window.lioraStudy.salvarConteudo(sessao, index, html);
-          })
-          .catch((err) => {
-            console.error(err);
-            container.innerHTML = `<p class="text-red-500">Erro ao gerar conteúdo da sessão.</p>`;
-          });
-      }
-    }
+    document
+      .getElementById("btn-concluir-sessao")
+      ?.addEventListener("click", () => {
+        window.lioraStudy.concluirSessao(sessao, index);
+        area.classList.add("hidden");
+        document.getElementById("area-sessoes")?.classList.remove("hidden");
+  
+        // atualiza dashboard se estiver ativo
+        window.lioraDashboard?.atualizar?.();
+      });
   }
+  
 
   // ----------------------------------------------------------
   // 🤖 IA — Conteúdo da Sessão (endpoint)
@@ -594,6 +586,38 @@ console.log("🧠 planos-sessoes v2.2-STUDY-TIME-CONTENT carregado");
     return { plano, sessoes, meta };
   }
 
+  // ----------------------------------------------------------
+  // 🧠 Geração de Conteúdo da Sessão (v1)
+  // ----------------------------------------------------------
+  async function gerarConteudoSessao(sessao, meta) {
+    // 🔒 versão v1: conteúdo estruturado simples
+    // depois pode virar chamada real de IA
+  
+    const titulo = sessao.titulo || "Sessão de Estudo";
+    const tema = meta?.tema || meta?.titulo || "Tema";
+  
+    return `
+      <h4>${titulo}</h4>
+  
+      <p>
+        Nesta sessão, você irá estudar os conceitos fundamentais de
+        <b>${tema}</b>, com foco em compreender as ideias centrais
+        antes de avançar para aplicações mais complexas.
+      </p>
+  
+      <ul>
+        <li>Definições essenciais</li>
+        <li>Principais conceitos</li>
+        <li>Exemplos introdutórios</li>
+      </ul>
+  
+      <p class="mt-3">
+        Ao final desta sessão, você deverá ser capaz de explicar
+        os conceitos principais com suas próprias palavras.
+      </p>
+    `;
+  }
+  
   // ----------------------------------------------------------
   // Listener central: liora:gerar-plano
   // ----------------------------------------------------------
