@@ -54,6 +54,29 @@ console.log("🧠 planos-sessoes v2.2-STUDY-TIME-CONTENT carregado");
   }
 
   // ----------------------------------------------------------
+  // ✍️ Reflexão da Sessão — helpers
+  // ----------------------------------------------------------
+  function salvarReflexaoSessao(sessao, index, dados) {
+    const key = _getSessaoKey(sessao, index);
+    const atual = window.lioraStudy.estado.conteudo[key] || {};
+    window.lioraStudy.estado.conteudo[key] = {
+      ...atual,
+      reflexao: dados
+    };
+    window.lioraStudy.salvar();
+  }
+  
+  function obterReflexaoSessao(sessao, index) {
+    const key = _getSessaoKey(sessao, index);
+    return window.lioraStudy.estado.conteudo[key]?.reflexao || {
+      q1: "",
+      q2: "",
+      notas: ""
+    };
+  }
+
+ 
+  // ----------------------------------------------------------
   // Store de estudo (plano/sessões)
   // ----------------------------------------------------------
   window.lioraEstudos = window.lioraEstudos || {
@@ -380,100 +403,170 @@ console.log("🧠 planos-sessoes v2.2-STUDY-TIME-CONTENT carregado");
     window.dispatchEvent(new Event("liora:open-workspace"));
   }
 
-  // ----------------------------------------------------------
-  // 📖 Render de Sessão (v2 — conteúdo persistente)
-  // ----------------------------------------------------------
-  async function renderSessao(sessao, index) {
-    const painelEstudo = document.getElementById("painel-estudo");
-    if (!painelEstudo) return;
-  
-    let area = document.getElementById("area-sessao");
-    if (!area) {
-      area = document.createElement("div");
-      area.id = "area-sessao";
-      area.className = "space-y-6 max-w-3xl";
-      painelEstudo.appendChild(area);
-    }
-  
-    // --------------------------------------------------
-    // Conteúdo da sessão (cache first)
-    // --------------------------------------------------
-    let conteudo = window.lioraStudy.obterConteudo(sessao, index);
-  
-    if (!conteudo) {
+    // ----------------------------------------------------------
+    // 📖 Render de Sessão v2 — conteúdo + reflexão + dashboard
+    // ----------------------------------------------------------
+    async function renderSessao(sessao, index) {
+      const painelEstudo = document.getElementById("painel-estudo");
+      if (!painelEstudo) return;
+    
+      let area = document.getElementById("area-sessao");
+      if (!area) {
+        area = document.createElement("div");
+        area.id = "area-sessao";
+        area.className = "space-y-6 max-w-3xl";
+        painelEstudo.appendChild(area);
+      }
+    
+      // esconde lista de sessões imediatamente
+      document.getElementById("area-sessoes")?.classList.add("hidden");
+      area.classList.remove("hidden");
+    
+      // marca início da sessão (tempo + status)
+      window.lioraStudy?.iniciarSessao?.(sessao, index);
+    
+      // --------------------------------------------------
+      // Conteúdo da sessão (cache first)
+      // --------------------------------------------------
+      let conteudo = window.lioraStudy.obterConteudo(sessao, index);
+    
+      if (!conteudo) {
+        area.innerHTML = `
+          <p class="text-sm text-[var(--muted)]">
+            Gerando conteúdo da sessão...
+          </p>
+        `;
+    
+        conteudo = await gerarConteudoSessao(
+          sessao,
+          window.lioraEstudos?.meta
+        );
+    
+        window.lioraStudy.salvarConteudo(sessao, index, conteudo);
+      }
+    
+      // --------------------------------------------------
+      // Reflexão — carregar estado salvo
+      // --------------------------------------------------
+      const reflexao = obterReflexaoSessao(sessao, index);
+    
+      // --------------------------------------------------
+      // Render FINAL (único)
+      // --------------------------------------------------
       area.innerHTML = `
-        <p class="text-sm text-[var(--muted)]">
-          Gerando conteúdo da sessão...
-        </p>
+        <div class="flex items-center gap-3">
+          <button id="btn-voltar-sessoes"
+                  class="btn-secondary text-sm">
+            ← Sessões
+          </button>
+    
+          <span class="text-sm text-[var(--muted)]">
+            Sessão ${index + 1}
+          </span>
+        </div>
+    
+        <h3 class="section-title">
+          ${sessao.titulo || "Sessão"}
+        </h3>
+    
+        <div class="p-5 rounded-xl border border-[var(--border)] bg-[var(--card)] space-y-6">
+    
+          ${conteudo}
+    
+          <hr class="opacity-30">
+    
+          <section class="space-y-3">
+            <h5 class="font-semibold">Reflexão</h5>
+    
+            <label class="block text-sm">
+              1. Como você explicaria este conteúdo com suas próprias palavras?
+            </label>
+            <textarea id="ref-q1"
+                      rows="3"
+                      class="w-full"
+                      placeholder="Escreva livremente..."></textarea>
+    
+            <label class="block text-sm">
+              2. Qual parte ficou menos clara ou merece revisão?
+            </label>
+            <textarea id="ref-q2"
+                      rows="3"
+                      class="w-full"
+                      placeholder="Identifique pontos de dúvida..."></textarea>
+    
+            <label class="block text-sm">
+              Anotações pessoais
+            </label>
+            <textarea id="ref-notas"
+                      rows="4"
+                      class="w-full"
+                      placeholder="Use este espaço como quiser..."></textarea>
+    
+            <div class="text-xs text-[var(--muted)]">
+              Suas reflexões ficam salvas nesta sessão.
+            </div>
+          </section>
+    
+        </div>
+    
+        <div class="flex justify-end gap-3">
+          <button id="btn-concluir-sessao"
+                  class="btn-primary">
+            Concluir sessão
+          </button>
+        </div>
       `;
-  
-      conteudo = await gerarConteudoSessao(
-        sessao,
-        window.lioraEstudos?.meta
-      );
-  
-      window.lioraStudy.salvarConteudo(sessao, index, conteudo);
-    }
-  
-    // --------------------------------------------------
-    // Render final
-    // --------------------------------------------------
-    area.innerHTML = `
-      <div class="flex items-center gap-3">
-        <button id="btn-voltar-sessoes"
-                class="btn-secondary text-sm">
-          ← Sessões
-        </button>
-  
-        <span class="text-sm text-[var(--muted)]">
-          Sessão ${index + 1}
-        </span>
-      </div>
-  
-      <h3 class="section-title">
-        ${sessao.titulo || "Sessão"}
-      </h3>
-  
-      <div class="p-5 rounded-xl border border-[var(--border)] bg-[var(--card)] space-y-4">
-        ${conteudo}
-      </div>
-  
-      <div class="flex justify-end gap-3">
-        <button id="btn-concluir-sessao"
-                class="btn-primary">
-          Concluir sessão
-        </button>
-      </div>
-    `;
-  
-    // esconde lista de sessões
-    document.getElementById("area-sessoes")?.classList.add("hidden");
-    area.classList.remove("hidden");
-  
-    // marca início da sessão
-    window.lioraStudy.iniciarSessao(sessao, index);
-  
-    // voltar
-    document
-      .getElementById("btn-voltar-sessoes")
-      ?.addEventListener("click", () => {
-        area.classList.add("hidden");
-        document.getElementById("area-sessoes")?.classList.remove("hidden");
+
+  // --------------------------------------------------
+  // Reflexão — preencher e persistir
+  // --------------------------------------------------
+  const q1 = document.getElementById("ref-q1");
+  const q2 = document.getElementById("ref-q2");
+  const notas = document.getElementById("ref-notas");
+
+  if (q1 && q2 && notas) {
+    q1.value = reflexao.q1 || "";
+    q2.value = reflexao.q2 || "";
+    notas.value = reflexao.notas || "";
+
+    const salvar = () => {
+      salvarReflexaoSessao(sessao, index, {
+        q1: q1.value,
+        q2: q2.value,
+        notas: notas.value
       });
-  
-    // concluir
-    document
-      .getElementById("btn-concluir-sessao")
-      ?.addEventListener("click", () => {
-        window.lioraStudy.concluirSessao(sessao, index);
-        area.classList.add("hidden");
-        document.getElementById("area-sessoes")?.classList.remove("hidden");
-  
-        // atualiza dashboard se estiver ativo
-        window.lioraDashboard?.atualizar?.();
-      });
+    };
+
+    q1.addEventListener("blur", salvar);
+    q2.addEventListener("blur", salvar);
+    notas.addEventListener("blur", salvar);
   }
-  
+
+  // --------------------------------------------------
+  // Voltar
+  // --------------------------------------------------
+  document
+    .getElementById("btn-voltar-sessoes")
+    ?.addEventListener("click", () => {
+      area.classList.add("hidden");
+      document.getElementById("area-sessoes")?.classList.remove("hidden");
+    });
+
+  // --------------------------------------------------
+  // Concluir sessão
+  // --------------------------------------------------
+  document
+    .getElementById("btn-concluir-sessao")
+    ?.addEventListener("click", () => {
+      window.lioraStudy?.concluirSessao?.(sessao, index);
+      area.classList.add("hidden");
+      document.getElementById("area-sessoes")?.classList.remove("hidden");
+
+      // atualiza plano e dashboard
+      window.renderPlanoESessoes?.();
+      window.lioraDashboard?.atualizar?.();
+    });
+}
 
   // ----------------------------------------------------------
   // 🤖 IA — Conteúdo da Sessão (endpoint)
