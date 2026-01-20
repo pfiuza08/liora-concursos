@@ -1,10 +1,14 @@
 // ==========================================================
-// 🧠 LIORA — PLANOS & SESSÕES (RESTORE PIPELINE)
-// Listener central: liora:gerar-plano → API → salvar → render
-// Versão: v1.0-RESTORE
+// 🧠 LIORA — PLANOS & SESSÕES + STUDY MANAGER (FULL)
+// Versão: v2.2-STUDY-TIME-CONTENT
+// - liora:gerar-plano → API → salvar → render
+// - Fallback de sessões se API não retornar
+// - Study Manager: status + conteúdo + tempo
+// - Progresso do plano (%)
+// - Tempo total do plano
 // ==========================================================
 
-console.log("🧠 planos-sessoes v1.0-RESTORE carregado");
+console.log("🧠 planos-sessoes v2.2-STUDY-TIME-CONTENT carregado");
 
 (function () {
   const qs = (id) => document.getElementById(id);
@@ -32,7 +36,8 @@ console.log("🧠 planos-sessoes v1.0-RESTORE carregado");
         </div>`;
       document.body.appendChild(el);
     } else {
-      qs("liora-loading-text").textContent = msg;
+      const t = qs("liora-loading-text");
+      if (t) t.textContent = msg;
       el.style.display = "flex";
     }
   }
@@ -49,7 +54,7 @@ console.log("🧠 planos-sessoes v1.0-RESTORE carregado");
   }
 
   // ----------------------------------------------------------
-  // Store (window.lioraEstudos) — garante persistência mínima
+  // Store de estudo (plano/sessões)
   // ----------------------------------------------------------
   window.lioraEstudos = window.lioraEstudos || {
     plano: null,
@@ -82,37 +87,175 @@ console.log("🧠 planos-sessoes v1.0-RESTORE carregado");
   window.lioraEstudos.carregar();
 
   // ----------------------------------------------------------
-  // Render (fallback): injeta uma área de sessões no workspace
+  // 📚 Study Manager v2 — status, tempo e conteúdo
   // ----------------------------------------------------------
-   function ensureSessoesArea() {
-    const painelEstudo = document.getElementById("painel-estudo");
+  function _getSessaoId(sessao, index) {
+    return sessao?.id || `sessao-${index}`;
+  }
+
+  function _acumularTempo(id) {
+    const p = window.lioraStudy.estado.progresso[id];
+    if (!p) return;
+
+    const now = Date.now();
+    const startedAt = p.startedAt;
+
+    if (typeof startedAt === "number" && startedAt > 0) {
+      const delta = now - startedAt;
+      if (delta > 0 && Number.isFinite(delta)) {
+        p.totalTime = (p.totalTime || 0) + delta;
+      }
+    }
+
+    p.startedAt = null;
+  }
+
+  window.lioraStudy = window.lioraStudy || {
+    estado: {
+      sessaoAtual: null,
+      progresso: {}, // { id: { status, startedAt, finishedAt, totalTime } }
+      conteudo: {}   // { id: "<html>" }
+    },
+
+    carregar() {
+      try {
+        const raw = JSON.parse(localStorage.getItem("liora:study") || "{}");
+        this.estado = {
+          sessaoAtual: raw.sessaoAtual || null,
+          progresso: raw.progresso || {},
+          conteudo: raw.conteudo || {}
+        };
+      } catch (_) {}
+    },
+
+    salvar() {
+      localStorage.setItem("liora:study", JSON.stringify(this.estado));
+    },
+
+    iniciarSessao(sessao, index) {
+      const id = _getSessaoId(sessao, index);
+      this.estado.sessaoAtual = id;
+
+      if (!this.estado.progresso[id]) {
+        this.estado.progresso[id] = {
+          status: "em_andamento",
+          startedAt: Date.now(),
+          totalTime: 0
+        };
+      } else {
+        const p = this.estado.progresso[id];
+        p.status = "em_andamento";
+        p.startedAt = Date.now();
+        if (typeof p.totalTime !== "number") p.totalTime = 0;
+      }
+
+      this.salvar();
+    },
+
+    // ✅ CORRIGIDO: sempre garante registro + acumula tempo com segurança
+    concluirSessao(sessao, index) {
+      const id = _getSessaoId(sessao, index);
+
+      // garante registro (evita erro quando clicar concluir sem iniciar)
+      if (!this.estado.progresso[id]) {
+        this.estado.progresso[id] = {
+          status: "em_andamento",
+          startedAt: Date.now(),
+          totalTime: 0
+        };
+      }
+
+      _acumularTempo(id);
+
+      const p = this.estado.progresso[id];
+      p.status = "concluida";
+      p.finishedAt = Date.now();
+
+      this.estado.sessaoAtual = null;
+      this.salvar();
+    },
+
+    statusSessao(sessao, index) {
+      const id = _getSessaoId(sessao, index);
+      return this.estado.progresso[id]?.status || "pendente";
+    },
+
+    tempoSessao(sessao, index) {
+      const id = _getSessaoId(sessao, index);
+      const p = this.estado.progresso[id];
+      return (p?.totalTime || 0);
+    },
+
+    salvarConteudo(sessao, index, texto) {
+      const id = _getSessaoId(sessao, index);
+      this.estado.conteudo[id] = texto;
+      this.salvar();
+    },
+
+    obterConteudo(sessao, index) {
+      const id = _getSessaoId(sessao, index);
+      return this.estado.conteudo[id] || null;
+    }
+  };
+
+  window.lioraStudy.carregar();
+
+  // ----------------------------------------------------------
+  // Render containers
+  // ----------------------------------------------------------
+  function ensureSessoesArea() {
+    const painelEstudo = qs("painel-estudo");
     if (!painelEstudo) return null;
-  
-    let area = document.getElementById("area-sessoes");
+
+    let area = qs("area-sessoes");
     if (!area) {
       area = document.createElement("div");
       area.id = "area-sessoes";
       area.className = "hidden space-y-4 max-w-3xl";
-  
       area.innerHTML = `
         <h3 class="section-title">Sessões</h3>
-  
-        <div id="liora-plano-resumo"
-             class="p-4 rounded-xl border border-[var(--border)] bg-[var(--card)]">
-        </div>
-  
-        <div id="liora-sessoes-lista"
-             class="grid gap-3">
-        </div>
+        <div id="liora-plano-resumo" class="p-4 rounded-xl border border-[var(--border)] bg-[var(--card)]"></div>
+        <div id="liora-sessoes-lista" class="grid gap-3"></div>
       `;
-  
       painelEstudo.appendChild(area);
     }
-  
+
     return area;
   }
 
+  // ----------------------------------------------------------
+  // 📈 Progresso do Plano
+  // ----------------------------------------------------------
+  function calcProgressoPlano() {
+    const sessoes = window.lioraEstudos?.sessoes || [];
+    const total = sessoes.length || 0;
 
+    let concluidas = 0;
+    for (let i = 0; i < total; i++) {
+      const s = sessoes[i];
+      const st = window.lioraStudy?.statusSessao?.(s, i) || "pendente";
+      if (st === "concluida") concluidas++;
+    }
+
+    const pct = total > 0 ? Math.round((concluidas / total) * 100) : 0;
+    return { total, concluidas, pct };
+  }
+
+  // ----------------------------------------------------------
+  // ⏱️ Tempo total do plano
+  // ----------------------------------------------------------
+  function tempoTotalPlano() {
+    const sessoes = window.lioraEstudos?.sessoes || [];
+    let total = 0;
+    sessoes.forEach((s, i) => {
+      total += window.lioraStudy.tempoSessao(s, i);
+    });
+    return total; // ms
+  }
+
+  // ----------------------------------------------------------
+  // Render lista de sessões + resumo
+  // ----------------------------------------------------------
   function renderPlanoESessoes() {
     const area = ensureSessoesArea();
     if (!area) return;
@@ -124,23 +267,23 @@ console.log("🧠 planos-sessoes v1.0-RESTORE carregado");
     const { plano, sessoes, origem, meta } = window.lioraEstudos;
 
     const prog = calcProgressoPlano();
+    const tempoMin = Math.round(tempoTotalPlano() / 60000);
 
     resumo.innerHTML = `
       <div class="text-sm text-[var(--muted)]">Origem: <b>${origem || "-"}</b></div>
-    
+
       <div class="mt-2 text-base font-semibold">
         ${(meta?.titulo || plano?.titulo || meta?.tema || "Plano gerado")}
       </div>
-    
+
       <div class="text-sm text-[var(--muted)] mt-1">
         ${(meta?.nivel ? `Nível: <b>${meta.nivel}</b> · ` : "")}
         Sessões: <b>${prog.total}</b>
         · Concluídas: <b>${prog.concluidas}</b>
         · Progresso: <b>${prog.pct}%</b>
-        · Tempo estudado: <b>${Math.round(tempoTotalPlano() / 60000)} min</b>
-        b>
+        · Tempo estudado: <b>${tempoMin} min</b>
       </div>
-    
+
       <div class="mt-3 h-2 rounded-full bg-black/30 overflow-hidden">
         <div class="h-2 rounded-full bg-[var(--brand)]" style="width:${prog.pct}%"></div>
       </div>
@@ -149,7 +292,16 @@ console.log("🧠 planos-sessoes v1.0-RESTORE carregado");
     lista.innerHTML = "";
 
     (sessoes || []).forEach((s, i) => {
-     const status = window.lioraStudy.statusSessao(s, i);
+      const status = window.lioraStudy.statusSessao(s, i);
+
+      const badge =
+        status === "concluida"
+          ? `<span class="text-xs px-2 py-1 rounded-full bg-green-600 text-white">Concluída</span>`
+          : status === "em_andamento"
+          ? `<span class="text-xs px-2 py-1 rounded-full bg-yellow-500 text-black">Em andamento</span>`
+          : `<span class="text-xs px-2 py-1 rounded-full bg-gray-600 text-white">Pendente</span>`;
+
+      const titulo = s?.titulo || s?.title || `Sessão ${i + 1}`;
 
       const card = document.createElement("button");
       card.type = "button";
@@ -160,16 +312,7 @@ console.log("🧠 planos-sessoes v1.0-RESTORE carregado");
         hover:opacity-95
         flex items-center justify-between gap-4
       `;
-      
-      const badge =
-        status === "concluida"
-          ? `<span class="text-xs px-2 py-1 rounded-full bg-green-600 text-white">Concluída</span>`
-          : status === "em_andamento"
-          ? `<span class="text-xs px-2 py-1 rounded-full bg-yellow-500 text-black">Em andamento</span>`
-          : `<span class="text-xs px-2 py-1 rounded-full bg-gray-600 text-white">Pendente</span>`;
-      
-      const titulo = s?.titulo || s?.title || `Sessão ${i + 1}`;
-      
+
       card.innerHTML = `
         <div>
           <div class="font-semibold">${titulo}</div>
@@ -178,7 +321,6 @@ console.log("🧠 planos-sessoes v1.0-RESTORE carregado");
         <div class="text-xs text-[var(--muted)]">Abrir</div>
       `;
 
-      // Evento canônico para “abrir sessão”
       card.addEventListener("click", () => {
         window.dispatchEvent(new CustomEvent("liora:abrir-sessao", {
           detail: { index: i, sessao: s }
@@ -188,17 +330,149 @@ console.log("🧠 planos-sessoes v1.0-RESTORE carregado");
       lista.appendChild(card);
     });
 
-    // Mostra só a área de sessões dentro do painel estudo
+    // mostra apenas a área de sessões dentro do painel estudo
     qs("painel-tema")?.classList.add("hidden");
     qs("painel-upload")?.classList.add("hidden");
     area.classList.remove("hidden");
 
-    // Garante que estamos no workspace
+    // garante workspace
     window.dispatchEvent(new Event("liora:open-workspace"));
   }
 
   // ----------------------------------------------------------
-  // API calls (assumidas pelas tuas versões anteriores)
+  // 📖 Render de Sessão (Study + tempo + conteúdo)
+  // ----------------------------------------------------------
+  function renderSessao(sessao, index) {
+    const painelEstudo = qs("painel-estudo");
+    if (!painelEstudo) return;
+
+    let area = qs("area-sessao");
+    if (!area) {
+      area = document.createElement("div");
+      area.id = "area-sessao";
+      area.className = "space-y-6 max-w-3xl";
+      painelEstudo.appendChild(area);
+    }
+
+    const statusAtual = window.lioraStudy?.statusSessao(sessao, index) || "pendente";
+    const tempoMin = Math.round((window.lioraStudy.tempoSessao(sessao, index) || 0) / 60000);
+
+    area.innerHTML = `
+      <div class="flex items-center gap-3">
+        <button id="btn-voltar-sessoes" class="btn-secondary text-sm">← Sessões</button>
+
+        <span class="text-sm text-[var(--muted)]">Sessão ${index + 1}</span>
+
+        <span class="ml-2 text-xs px-2 py-1 rounded-full
+          ${statusAtual === "concluida"
+            ? "bg-green-600 text-white"
+            : statusAtual === "em_andamento"
+            ? "bg-yellow-500 text-black"
+            : "bg-gray-600 text-white"}">
+          ${statusAtual === "concluida"
+            ? "Concluída"
+            : statusAtual === "em_andamento"
+            ? "Em andamento"
+            : "Pendente"}
+        </span>
+      </div>
+
+      <h3 class="section-title">${sessao.titulo || "Sessão"}</h3>
+
+      <div class="p-5 rounded-xl border border-[var(--border)] bg-[var(--card)] space-y-4">
+        <p class="text-sm text-[var(--muted)]">
+          Origem: <b>${sessao.origem || "IA"}</b>
+          <span class="mx-2">·</span>
+          Tempo estudado: <b>${tempoMin} min</b>
+        </p>
+
+        <div id="sessao-conteudo" class="text-base leading-relaxed text-[var(--text)]">
+          <span class="text-sm text-[var(--muted)]">Carregando conteúdo…</span>
+        </div>
+
+        ${
+          statusAtual !== "concluida"
+            ? `<button id="btn-concluir-sessao" class="btn-primary w-full">Concluir sessão</button>`
+            : `<p class="text-sm text-green-500 font-medium">✔ Sessão concluída</p>`
+        }
+      </div>
+    `;
+
+    // esconde lista de sessões
+    qs("area-sessoes")?.classList.add("hidden");
+
+    // mostra sessão
+    area.classList.remove("hidden");
+
+    // voltar
+    qs("btn-voltar-sessoes")?.addEventListener("click", () => {
+      area.classList.add("hidden");
+      qs("area-sessoes")?.classList.remove("hidden");
+      renderPlanoESessoes();
+    });
+
+    // concluir
+    qs("btn-concluir-sessao")?.addEventListener("click", () => {
+      window.lioraStudy.concluirSessao(sessao, index);
+
+      area.classList.add("hidden");
+      qs("area-sessoes")?.classList.remove("hidden");
+
+      renderPlanoESessoes();
+    });
+
+    // conteúdo (cache → IA)
+    const container = qs("sessao-conteudo");
+    if (container) {
+      const cached = window.lioraStudy.obterConteudo(sessao, index);
+      if (cached) {
+        container.innerHTML = cached;
+      } else {
+        container.innerHTML = `<span class="text-sm text-[var(--muted)]">Gerando conteúdo…</span>`;
+        gerarConteudoSessaoIA(sessao, index)
+          .then((html) => {
+            container.innerHTML = html;
+            window.lioraStudy.salvarConteudo(sessao, index, html);
+          })
+          .catch((err) => {
+            console.error(err);
+            container.innerHTML = `<p class="text-red-500">Erro ao gerar conteúdo da sessão.</p>`;
+          });
+      }
+    }
+  }
+
+  // ----------------------------------------------------------
+  // 🤖 IA — Conteúdo da Sessão (endpoint)
+  // ----------------------------------------------------------
+  async function gerarConteudoSessaoIA(sessao, index) {
+    const plano = window.lioraEstudos?.plano;
+    const meta = window.lioraEstudos?.meta || {};
+
+    const payload = {
+      planoTitulo: meta?.titulo || plano?.titulo || meta?.tema || "Plano de estudo",
+      nivel: meta?.nivel || "iniciante",
+      sessaoTitulo: sessao?.titulo || `Sessão ${index + 1}`,
+      indice: index + 1
+    };
+
+    const res = await fetch("/api/gerarSessao.js", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+
+    const text = await res.text();
+    let data = null;
+    try { data = JSON.parse(text); } catch (_) { data = { raw: text }; }
+
+    if (!res.ok) throw new Error(data?.error || data?.message || `HTTP ${res.status}`);
+
+    return data?.conteudo || data?.texto || data?.raw || "Conteúdo indisponível.";
+  }
+
+  // ----------------------------------------------------------
+  // API calls (Tema/PDF)
   // ----------------------------------------------------------
   async function callGerarPlanoTema({ tema, nivel }) {
     const res = await fetch("/api/gerarPlano.js", {
@@ -219,7 +493,7 @@ console.log("🧠 planos-sessoes v1.0-RESTORE carregado");
     const fd = new FormData();
     fd.append("file", file);
 
-    const res = await fetch("/api/liora", { // ajuste aqui se seu endpoint for outro
+    const res = await fetch("/api/liora", {
       method: "POST",
       body: fd
     });
@@ -232,56 +506,52 @@ console.log("🧠 planos-sessoes v1.0-RESTORE carregado");
     return data;
   }
 
-  // Normaliza diferentes formatos de resposta
+  // ----------------------------------------------------------
+  // Normaliza resposta (com fallback de sessões)
+  // ----------------------------------------------------------
   function normalizeResponse(origem, payloadMeta, data) {
-  const plano =
-    data?.plano ||
-    data?.plan ||
-    data?.resultado?.plano ||
-    data?.data?.plano ||
-    data;
+    const plano =
+      data?.plano ||
+      data?.plan ||
+      data?.resultado?.plano ||
+      data?.data?.plano ||
+      data;
 
-  let sessoes =
-    data?.sessoes ||
-    data?.sessions ||
-    data?.resultado?.sessoes ||
-    data?.data?.sessoes ||
-    plano?.sessoes ||
-    [];
+    let sessoes =
+      data?.sessoes ||
+      data?.sessions ||
+      data?.resultado?.sessoes ||
+      data?.data?.sessoes ||
+      plano?.sessoes ||
+      [];
 
-  // --------------------------------------------------
-  // 🛟 FALLBACK — cria sessões mínimas se vier vazio
-  // --------------------------------------------------
-  if (!Array.isArray(sessoes) || sessoes.length === 0) {
-    console.warn("⚠️ Sessões ausentes. Gerando fallback mínimo.");
+    if (!Array.isArray(sessoes) || sessoes.length === 0) {
+      console.warn("⚠️ Sessões ausentes. Gerando fallback mínimo.");
 
-    const baseTitulo =
-      plano?.titulo ||
-      plano?.title ||
-      payloadMeta?.tema ||
-      "Sessão";
+      const baseTitulo =
+        plano?.titulo ||
+        plano?.title ||
+        payloadMeta?.tema ||
+        payloadMeta?.titulo ||
+        "Sessão";
 
-    const qtd = 5;
+      const qtd = 5;
 
-    sessoes = Array.from({ length: qtd }).map((_, i) => ({
-      id: `auto-${i + 1}`,
-      titulo: `${baseTitulo} — Parte ${i + 1}`,
-      topicos: [],
-      origem: "fallback"
-    }));
+      sessoes = Array.from({ length: qtd }).map((_, i) => ({
+        id: `auto-${i + 1}`,
+        titulo: `${baseTitulo} — Parte ${i + 1}`,
+        topicos: [],
+        origem: "fallback"
+      }));
+    }
+
+    const meta = {
+      ...payloadMeta,
+      titulo: plano?.titulo || plano?.title || payloadMeta?.tema || "Plano"
+    };
+
+    return { plano, sessoes, meta };
   }
-
-  const meta = {
-    ...payloadMeta,
-    titulo:
-      plano?.titulo ||
-      plano?.title ||
-      payloadMeta?.tema ||
-      "Plano"
-  };
-
-  return { plano, sessoes, meta };
-}
 
   // ----------------------------------------------------------
   // Listener central: liora:gerar-plano
@@ -292,23 +562,13 @@ console.log("🧠 planos-sessoes v1.0-RESTORE carregado");
 
     console.log("🧠 Evento recebido: liora:gerar-plano", { origem, payload });
 
-    // Regras básicas de acesso (se você quiser exigir login, ativa aqui)
-    // if (!window.lioraAuth?.user) {
-    //   window.dispatchEvent(new Event("liora:open-auth"));
-    //   return;
-    // }
-
     try {
-      showLoading(origem === "pdf" ? "Lendo PDF e gerando sessões…" : "Gerando plano e sessões…");
+      showLoading(origem === "pdf" ? "Lendo PDF e gerando sessões..." : "Gerando plano e sessões...");
 
       let data;
-      if (origem === "tema") {
-        data = await callGerarPlanoTema(payload);
-      } else if (origem === "pdf") {
-        data = await callGerarPlanoPDF(payload);
-      } else {
-        throw new Error("Origem inválida para geração.");
-      }
+      if (origem === "tema") data = await callGerarPlanoTema(payload);
+      else if (origem === "pdf") data = await callGerarPlanoPDF(payload);
+      else throw new Error("Origem inválida para geração.");
 
       const metaBase = origem === "tema"
         ? { tema: payload.tema, nivel: payload.nivel }
@@ -318,16 +578,18 @@ console.log("🧠 planos-sessoes v1.0-RESTORE carregado");
 
       window.lioraEstudos.salvar(plano, sessoes, origem, meta);
 
-      console.log("✅ Plano e sessões salvos", { plano, sessoesQtd: (sessoes || []).length });
+      console.log("✅ Plano e sessões salvos", { sessoesQtd: (sessoes || []).length });
 
-      // Render imediato (fallback)
       renderPlanoESessoes();
 
-      // Evento canônico para outros módulos (Study Manager, etc.)
       window.dispatchEvent(new CustomEvent("liora:plano-gerado", {
-        detail: { origem, plano: window.lioraEstudos.plano, sessoes: window.lioraEstudos.sessoes, meta: window.lioraEstudos.meta }
+        detail: {
+          origem,
+          plano: window.lioraEstudos.plano,
+          sessoes: window.lioraEstudos.sessoes,
+          meta: window.lioraEstudos.meta
+        }
       }));
-
     } catch (err) {
       console.error("❌ Erro ao gerar plano/sessões:", err);
       showError(err?.message || "Erro ao gerar plano/sessões.");
@@ -337,10 +599,22 @@ console.log("🧠 planos-sessoes v1.0-RESTORE carregado");
   });
 
   // ----------------------------------------------------------
-  // Open workspace handler (caso ainda não exista)
+  // Abrir sessão (canônico) + Study Manager
+  // ----------------------------------------------------------
+  window.addEventListener("liora:abrir-sessao", (e) => {
+    const { sessao, index } = e.detail || {};
+    if (!sessao) return;
+
+    console.log("📖 Abrindo sessão (Study Manager)", index, sessao);
+
+    window.lioraStudy.iniciarSessao(sessao, index);
+    renderSessao(sessao, index);
+  });
+
+  // ----------------------------------------------------------
+  // Open workspace handler (caso não exista)
   // ----------------------------------------------------------
   window.addEventListener("liora:open-workspace", () => {
-    // Se você já tiver roteador, ele pode ignorar isso.
     qs("liora-home")?.classList.remove("is-active");
     qs("liora-app")?.classList.add("is-active");
 
@@ -348,292 +622,4 @@ console.log("🧠 planos-sessoes v1.0-RESTORE carregado");
     qs("fab-home")?.classList.remove("hidden");
   });
 
-// ----------------------------------------------------------
-// 📖 Render de Sessão (v2 — Study Manager integrado)
-// ----------------------------------------------------------
-function renderSessao(sessao, index) {
-  const painelEstudo = document.getElementById("painel-estudo");
-  if (!painelEstudo) return;
-
-  let area = document.getElementById("area-sessao");
-  if (!area) {
-    area = document.createElement("div");
-    area.id = "area-sessao";
-    area.className = "space-y-6 max-w-3xl";
-    painelEstudo.appendChild(area);
-  }
-
-  const statusAtual = window.lioraStudy?.statusSessao(sessao, index) || "pendente";
-
-  area.innerHTML = `
-    <div class="flex items-center gap-3">
-      <button id="btn-voltar-sessoes"
-              class="btn-secondary text-sm">
-        ← Sessões
-      </button>
-
-      <span class="text-sm text-[var(--muted)]">
-        Sessão ${index + 1}
-      </span>
-
-      <span class="ml-2 text-xs px-2 py-1 rounded-full
-        ${statusAtual === "concluida"
-          ? "bg-green-600 text-white"
-          : statusAtual === "em_andamento"
-          ? "bg-yellow-500 text-black"
-          : "bg-gray-600 text-white"}">
-        ${statusAtual === "concluida"
-          ? "Concluída"
-          : statusAtual === "em_andamento"
-          ? "Em andamento"
-          : "Pendente"}
-      </span>
-    </div>
-
-    <h3 class="section-title">
-      ${sessao.titulo || "Sessão"}
-    </h3>
-
-    <div class="p-5 rounded-xl border border-[var(--border)] bg-[var(--card)] space-y-4">
-      <p class="text-sm text-[var(--muted)]">
-        Origem: <b>${sessao.origem || "IA"}</b>
-        <span class="mx-2">·</span>
-        Tempo estudado:
-        <b>${Math.round((window.lioraStudy.tempoSessao(sessao, index) || 0) / 60000)} min</b>
-      </p>
-
-      <div id="sessao-conteudo"
-           class="text-base leading-relaxed text-[var(--text)]">
-        <span class="text-sm text-[var(--muted)]">Gerando conteúdo…</span>
-      </div>
-
-      ${
-        statusAtual !== "concluida"
-          ? `<button id="btn-concluir-sessao"
-                     class="btn-primary w-full">
-               Concluir sessão
-             </button>`
-          : `<p class="text-sm text-green-500 font-medium">
-               ✔ Sessão concluída
-             </p>`
-      }
-    </div>
-  `;
-
-  // esconde lista de sessões
-  document.getElementById("area-sessoes")?.classList.add("hidden");
-
-  // mostra sessão
-  area.classList.remove("hidden");
-
-  // botão voltar
-  document
-    .getElementById("btn-voltar-sessoes")
-    ?.addEventListener("click", () => {
-      area.classList.add("hidden");
-      document.getElementById("area-sessoes")?.classList.remove("hidden");
-    });
-
-  // botão concluir sessão
-  document
-    .getElementById("btn-concluir-sessao")
-    ?.addEventListener("click", () => {
-      window.lioraStudy.concluirSessao(sessao, index);
-
-      area.classList.add("hidden");
-      document.getElementById("area-sessoes")?.classList.remove("hidden");
-
-      // recalcula progresso + atualiza lista
-      renderPlanoESessoes();
-    });
-  // --------------------------------------------------
-  // Conteúdo da sessão (IA sob demanda)
-  // --------------------------------------------------
-  const conteudoSalvo = window.lioraStudy.obterConteudo(sessao, index);
-  const container = document.getElementById("sessao-conteudo");
-  
-  if (container) {
-    if (conteudoSalvo) {
-      container.innerHTML = conteudoSalvo;
-    } else {
-      gerarConteudoSessaoIA(sessao, index)
-        .then((texto) => {
-          container.innerHTML = texto;
-          window.lioraStudy.salvarConteudo(sessao, index, texto);
-        })
-        .catch((err) => {
-          console.error(err);
-          container.innerHTML =
-            "<p class='text-red-500'>Erro ao gerar conteúdo da sessão.</p>";
-        });
-    }
-  }
-
-}
-
-// ----------------------------------------------------------
-// 📌 Abrir Sessão + Study Manager
-// ----------------------------------------------------------
-window.addEventListener("liora:abrir-sessao", (e) => {
-  const { sessao, index } = e.detail || {};
-  if (!sessao) return;
-
-  console.log("📖 Abrindo sessão (Study Manager)", index, sessao);
-
-  // registra início da sessão
-  window.lioraStudy.iniciarSessao(sessao, index);
-
-  // renderiza a sessão
-  renderSessao(sessao, index);
-});
-
-
-// ----------------------------------------------------------
-// 📚 Study Manager v2 — estado, progresso e conteúdo
-// ----------------------------------------------------------
-window.lioraStudy = window.lioraStudy || {
-  estado: {
-    sessaoAtual: null,
-    progresso: {}, // { sessaoId: { status, startedAt, finishedAt } }
-    conteudo: {}   // { sessaoId: "texto gerado da IA" }
-  },
-
-  carregar() {
-    try {
-      const raw = JSON.parse(localStorage.getItem("liora:study") || "{}");
-      this.estado = {
-        sessaoAtual: raw.sessaoAtual || null,
-        progresso: raw.progresso || {},
-        conteudo: raw.conteudo || {}
-      };
-    } catch (_) {}
-  },
-
-  salvar() {
-    localStorage.setItem("liora:study", JSON.stringify(this.estado));
-  },
-
-  // -----------------------------
-  // Sessão: início / conclusão
-  // -----------------------------
-    iniciarSessao(sessao, index) {
-    const id = sessao.id || `sessao-${index}`;
-    this.estado.sessaoAtual = id;
-  
-    if (!this.estado.progresso[id]) {
-      this.estado.progresso[id] = {
-        status: "em_andamento",
-        startedAt: Date.now(),
-        totalTime: 0
-      };
-    } else {
-      this.estado.progresso[id].status = "em_andamento";
-      this.estado.progresso[id].startedAt = Date.now();
-    }
-  
-    this.salvar();
-  }
-
-
-   concluirSessao(sessao, index) {
-    const id = sessao.id || `sessao-${index}`;
-    const p = this.estado.progresso[id];
-    if (!p) return;
-  
-    const now = Date.now();
-  
-    if (p.startedAt) {
-      p.totalTime = (p.totalTime || 0) + (now - p.startedAt);
-    }
-  
-    p.status = "concluida";
-    p.finishedAt = now;
-    p.startedAt = null;
-  
-    this.estado.sessaoAtual = null;
-    this.salvar();
-  }
-
-  // -----------------------------
-  // Conteúdo da sessão (IA)
-  // -----------------------------
-  salvarConteudo(sessao, index, texto) {
-    const id = sessao.id || `sessao-${index}`;
-    this.estado.conteudo[id] = texto;
-    this.salvar();
-  },
-
-  obterConteudo(sessao, index) {
-    const id = sessao.id || `sessao-${index}`;
-    return this.estado.conteudo[id] || null;
-  }
-
-  tempoSessao(sessao, index) {
-    const id = sessao.id || `sessao-${index}`;
-    const p = this.estado.progresso[id];
-    return p?.totalTime || 0;
-  }
-
-};
-
-window.lioraStudy.carregar();
-
-// ----------------------------------------------------------
-// 📈 Progresso do Plano
-// ----------------------------------------------------------
-function calcProgressoPlano() {
-  const sessoes = window.lioraEstudos?.sessoes || [];
-  const total = sessoes.length || 0;
-
-  let concluidas = 0;
-  for (let i = 0; i < total; i++) {
-    const s = sessoes[i];
-    const st = window.lioraStudy?.statusSessao?.(s, i) || "pendente";
-    if (st === "concluida") concluidas++;
-  }
-
-  const pct = total > 0 ? Math.round((concluidas / total) * 100) : 0;
-
-  return { total, concluidas, pct };
-}
-// ----------------------------------------------------------
-// 🤖 IA — Geração de Conteúdo da Sessão
-// ----------------------------------------------------------
-async function gerarConteudoSessaoIA(sessao, index) {
-  const plano = window.lioraEstudos?.plano;
-  const meta = window.lioraEstudos?.meta || {};
-
-  const payload = {
-    planoTitulo: meta?.titulo || plano?.titulo || "Plano de estudo",
-    nivel: meta?.nivel || "iniciante",
-    sessaoTitulo: sessao.titulo || `Sessão ${index + 1}`,
-    indice: index + 1
-  };
-
-  const res = await fetch("/api/gerarSessao.js", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload)
-  });
-
-  const data = await res.json();
-  if (!res.ok) throw new Error(data?.error || "Erro ao gerar sessão");
-
-  return data?.conteudo || data?.texto || data;
-}
-// ----------------------------------------------------------
-// ⏱️ Tempo total do plano
-// ----------------------------------------------------------
-function tempoTotalPlano() {
-  const sessoes = window.lioraEstudos?.sessoes || [];
-  let total = 0;
-
-  sessoes.forEach((s, i) => {
-    total += window.lioraStudy.tempoSessao(s, i);
-  });
-
-  return total; // ms
-}
-
-  
 })();
