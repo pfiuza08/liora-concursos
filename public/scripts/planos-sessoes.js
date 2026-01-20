@@ -719,7 +719,7 @@ function sessaoPrecisaRevisao(sessao, index) {
         · Concluídas: <b>${prog.concluidas}</b>
         · Progresso: <b>${prog.pct}%</b>
         · Tempo estudado: <b>${tempoMin} min</b>
-        · 🔥 Streak: <b>${streak.atual} dias</b>
+        · Streak: <b>${streak.atual} dias</b>
       </div>
     
       <div class="mt-3 h-2 rounded-full bg-black/30 overflow-hidden">
