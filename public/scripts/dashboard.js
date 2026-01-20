@@ -1,10 +1,8 @@
 // ==========================================================
-// 📊 LIORA — DASHBOARD CANONICAL (v7.3-LAZY)
-// - Vive em liora-app
+// 📊 LIORA — DASHBOARD CANONICAL (v8.0-STUDY)
+// - Integra Study Manager (planos, sessões, tempo, streak)
+// - Simulados continuam como histórico complementar
 // - Lazy init via ui-router (ui:liora-app)
-// - Histórico: localStorage "liora:simulados:historico"
-// - Estudos: lioraEstudos.listarRecentes / getAll
-// - API global: window.lioraDashboard.atualizar()
 // ==========================================================
 
 (function () {
@@ -12,7 +10,7 @@
   let initialized = false;
   let els = null;
 
-  console.log("🔵 Liora Dashboard v7.3 carregado (lazy)");
+  console.log("🔵 Liora Dashboard v8.0-STUDY carregado (lazy)");
 
   // ------------------------------------------------------
   // Utilitário
@@ -30,29 +28,72 @@
     els = {
       dashEmpty: $("dash-empty"),
       dashResumo: $("dash-resumo"),
-      dashBancas: $("dash-bancas"),
       dashUltimos: $("dash-ultimos"),
     };
 
-    if (
-      !els.dashEmpty ||
-      !els.dashResumo ||
-      !els.dashBancas ||
-      !els.dashUltimos
-    ) {
-      // UI ainda não ativa → não inicializa
-      return;
+    if (!els.dashEmpty || !els.dashResumo || !els.dashUltimos) {
+      return; // UI ainda não ativa
     }
 
     initialized = true;
-    console.log("🟢 Dashboard v7.3 inicializado");
+    console.log("🟢 Dashboard v8.0 inicializado");
     renderDashboard();
   }
 
   // ======================================================
-  // HELPERS
+  // HELPERS — ESTUDOS
   // ======================================================
+  function getResumoPlanoAtual() {
+    const estudos = window.lioraEstudos;
+    const sessoes = estudos?.sessoes || [];
+    const meta = estudos?.meta || {};
 
+    if (!sessoes.length) return null;
+
+    let concluidas = 0;
+    sessoes.forEach((s, i) => {
+      if (window.lioraStudy.statusSessao(s, i) === "concluida") concluidas++;
+    });
+
+    const pct = Math.round((concluidas / sessoes.length) * 100);
+
+    return {
+      titulo: meta.titulo || meta.tema || "Plano atual",
+      total: sessoes.length,
+      concluidas,
+      pct,
+    };
+  }
+
+  function getTempoTotalMin() {
+    const sessoes = window.lioraEstudos?.sessoes || [];
+    let totalMs = 0;
+    sessoes.forEach((s, i) => {
+      totalMs += window.lioraStudy.tempoSessao(s, i);
+    });
+    return Math.round(totalMs / 60000);
+  }
+
+  function getStreak() {
+    return window.lioraStudy.estado?.streak || {
+      atual: 0,
+      recorde: 0,
+    };
+  }
+
+  function getProximaSessao() {
+    const sessoes = window.lioraEstudos?.sessoes || [];
+    for (let i = 0; i < sessoes.length; i++) {
+      if (window.lioraStudy.statusSessao(sessoes[i], i) !== "concluida") {
+        return { index: i, sessao: sessoes[i] };
+      }
+    }
+    return null;
+  }
+
+  // ======================================================
+  // HELPERS — SIMULADOS
+  // ======================================================
   function carregarHistoricoSimulados() {
     try {
       const raw = localStorage.getItem(HIST_KEY);
@@ -64,47 +105,13 @@
     }
   }
 
-  function carregarEstudos() {
-    try {
-      if (!window.lioraEstudos) return [];
-
-      if (typeof window.lioraEstudos.getAll === "function") {
-        return window.lioraEstudos.getAll() || [];
-      }
-
-      if (typeof window.lioraEstudos.listarRecentes === "function") {
-        const planos = window.lioraEstudos.listarRecentes(10) || [];
-        return planos.map((p) => {
-          const sessoes = Array.isArray(p.sessoes) ? p.sessoes : [];
-          const concluidas = sessoes.filter(
-            (s) => (s.progresso || 0) >= 100
-          ).length;
-
-          return {
-            tema: p.tema || "Plano sem título",
-            origem: p.origem || "tema",
-            nivel: p.nivel || "—",
-            sessoesTotal: sessoes.length,
-            sessoesConcluidas: concluidas,
-            atualizadoEm:
-              p.atualizadoEm || p.criadoEm || new Date().toISOString(),
-          };
-        });
-      }
-
-      return [];
-    } catch {
-      return [];
-    }
-  }
-
   function formatarData(value) {
     const d = new Date(value || Date.now());
     if (isNaN(d.getTime())) return "—";
-    return `${d.toLocaleDateString("pt-BR")} · ${d.toLocaleTimeString(
-      "pt-BR",
-      { hour: "2-digit", minute: "2-digit" }
-    )}`;
+    return `${d.toLocaleDateString("pt-BR")} · ${d.toLocaleTimeString("pt-BR", {
+      hour: "2-digit",
+      minute: "2-digit",
+    })}`;
   }
 
   function criarBarra(valor) {
@@ -116,50 +123,30 @@
     `;
   }
 
-  function calcularProgresso(estudo) {
-    const t = Number(estudo.sessoesTotal || 0);
-    const c = Number(estudo.sessoesConcluidas || 0);
-    return t > 0 ? Math.round((c / t) * 100) : 0;
-  }
-
-  function ordenarPorData(hist) {
-    return hist
-      .slice()
-      .sort(
-        (a, b) =>
-          new Date(a.dataISO || 0).getTime() -
-          new Date(b.dataISO || 0).getTime()
-      );
-  }
-
   // ======================================================
   // RENDER
   // ======================================================
   function renderDashboard() {
     if (!initialized || !els) return;
 
+    const plano = getResumoPlanoAtual();
+    const tempoMin = getTempoTotalMin();
+    const streak = getStreak();
+    const prox = getProximaSessao();
     const hist = carregarHistoricoSimulados();
-    const estudos = carregarEstudos();
-
-    const temSimulados = hist.length > 0;
-    const temEstudos = estudos.length > 0;
 
     els.dashResumo.innerHTML = "";
-    els.dashBancas.innerHTML = "";
     els.dashUltimos.innerHTML = "";
 
-    // ------------------------------
-    // ESTADO VAZIO REAL
-    // ------------------------------
-    if (!temSimulados && !temEstudos) {
+    if (!plano && hist.length === 0) {
       els.dashEmpty.classList.remove("hidden");
       els.dashEmpty.innerHTML = `
         <div class="text-center opacity-80">
           <p class="text-sm">
-            Você ainda não fez simulados nem criou planos de estudo.
+            Você ainda não iniciou estudos nem simulados.
           </p>
           <p class="text-xs text-[var(--muted)] mt-1">
-            Assim que começar a estudar, sua evolução aparecerá aqui.
+            Assim que começar, sua evolução aparecerá aqui.
           </p>
         </div>
       `;
@@ -167,176 +154,105 @@
     }
 
     els.dashEmpty.classList.add("hidden");
-    els.dashEmpty.innerHTML = "";
 
-    // ======================================================
-    // RESUMO GERAL
-    // ======================================================
-    let mediaPerc = 0;
-    let totalQuestoes = 0;
-    let tempoMin = 0;
-
-    if (temSimulados) {
-      mediaPerc =
-        Math.round(
-          (hist.reduce((a, h) => a + Number(h.perc || 0), 0) /
-            hist.length) *
-            10
-        ) / 10;
-
-      totalQuestoes = hist.reduce((a, h) => a + Number(h.qtd || 0), 0);
-      tempoMin = Math.round(
-        hist.reduce((a, h) => a + Number(h.tempoSeg || 0), 0) / 60
-      );
-    }
-
-    const totalEstudos = estudos.length;
-    const mediaProgresso =
-      totalEstudos > 0
-        ? Math.round(
-            (estudos.reduce(
-              (a, e) => a + calcularProgresso(e),
-              0
-            ) /
-              totalEstudos) *
-              10
-          ) / 10
-        : 0;
-
+    // ------------------------------
+    // RESUMO CENTRAL
+    // ------------------------------
     els.dashResumo.innerHTML = `
-      <div class="sim-resultado-card">
-        <div class="sim-resultado-titulo">Visão geral</div>
-        <div class="sim-score">${temSimulados ? `${mediaPerc}%` : "—"}</div>
-        <p class="sim-desc">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+        <div class="p-4 rounded-xl border bg-[var(--card)]">
+          <div class="text-sm text-[var(--muted)]">Plano atual</div>
+          <div class="font-semibold mt-1">${plano?.titulo || "—"}</div>
           ${
-            temSimulados
-              ? "Média geral de desempenho nos simulados."
-              : "Faça seu primeiro simulado para ver métricas aqui."
+            plano
+              ? `
+            <div class="text-sm mt-2">
+              ${plano.concluidas}/${plano.total} sessões · ${plano.pct}%
+            </div>
+            <div class="mt-3 h-2 rounded-full bg-black/30 overflow-hidden">
+              <div class="h-2 rounded-full bg-[var(--brand)]" style="width:${plano.pct}%"></div>
+            </div>
+          `
+              : `<p class="text-sm mt-2">Nenhum plano ativo</p>`
           }
-        </p>
-        <p class="sim-detail mt-1">
-          Simulados: <strong>${hist.length}</strong><br>
-          Questões: <strong>${totalQuestoes}</strong><br>
-          Tempo total: <strong>${tempoMin} min</strong><br>
-          Planos ativos: <strong>${totalEstudos}</strong><br>
-          Progresso médio dos planos: <strong>${mediaProgresso}%</strong>
-        </p>
+        </div>
+
+        <div class="p-4 rounded-xl border bg-[var(--card)]">
+          <div class="text-sm text-[var(--muted)]">Tempo estudado</div>
+          <div class="text-2xl font-bold mt-1">${tempoMin} min</div>
+          <div class="text-xs text-[var(--muted)] mt-1">Tempo real acumulado</div>
+        </div>
+
+        <div class="p-4 rounded-xl border bg-[var(--card)]">
+          <div class="text-sm text-[var(--muted)]">Ritmo</div>
+          <div class="text-2xl font-bold mt-1">🔥 ${streak.atual}</div>
+          <div class="text-xs text-[var(--muted)] mt-1">
+            ${streak.atual === 0 ? "Comece hoje" : "dias consecutivos"}
+          </div>
+        </div>
+
       </div>
     `;
 
-    // ======================================================
-    // DESEMPENHO POR BANCA
-    // ======================================================
-    if (temSimulados) {
-      const stats = {};
-      hist.forEach((h) => {
-        const b = (h.banca || "OUTRA").toUpperCase();
-        if (!stats[b]) stats[b] = { qtd: 0, soma: 0 };
-        stats[b].qtd++;
-        stats[b].soma += Number(h.perc || 0);
-      });
+    // ------------------------------
+    // AÇÃO RECOMENDADA
+    // ------------------------------
+    els.dashUltimos.innerHTML = `
+      <div class="p-5 rounded-xl border bg-[var(--card)]">
+        <div class="font-semibold mb-2">Próxima ação</div>
+        ${
+          prox
+            ? `
+          <button class="btn-primary" id="btn-dashboard-continuar">
+            Continuar: ${prox.sessao.titulo || `Sessão ${prox.index + 1}`}
+          </button>
+        `
+            : `<p class="text-sm text-[var(--muted)]">🎉 Todas as sessões concluídas.</p>`
+        }
+      </div>
 
-      els.dashBancas.innerHTML = `
-        <div class="sim-dashboard">
-          <h4 class="sim-subtitulo">Desempenho por banca</h4>
-          <table class="sim-dashboard-table">
-            <thead>
-              <tr>
-                <th>Banca</th>
-                <th>Simulados</th>
-                <th>Média</th>
-                <th>Progresso</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${Object.entries(stats)
-                .map(([b, s]) => {
-                  const m = Math.round((s.soma / s.qtd) * 10) / 10;
-                  return `
-                    <tr>
-                      <td>${b}</td>
-                      <td>${s.qtd}</td>
-                      <td>${m}%</td>
-                      <td>${criarBarra(m)}</td>
-                    </tr>
-                  `;
-                })
-                .join("")}
-            </tbody>
-          </table>
-        </div>
-      `;
-    }
-
-    // ======================================================
-    // ÚLTIMOS SIMULADOS + ESTUDOS
-    // ======================================================
-    const blocos = [];
-
-    if (temSimulados) {
-      const ult = ordenarPorData(hist).slice(-5).reverse();
-      blocos.push(`
-        <div class="sim-dashboard">
+      ${
+        hist.length
+          ? `
+        <div class="sim-dashboard mt-6">
           <h4 class="sim-subtitulo">Últimos simulados</h4>
           <ul class="sim-lista-resultados">
-            ${ult
+            ${hist
+              .slice(-5)
+              .reverse()
               .map(
                 (h) => `
-                <li class="sim-resultado-item">
-                  <div class="sim-resultado-header">
-                    <span>${formatarData(h.dataISO)}</span>
-                    <span>${h.banca}</span>
-                  </div>
-                  <p class="text-xs text-[var(--muted)]">
-                    Tema: ${h.tema || "—"}
-                  </p>
-                  <div class="sim-resultado-info">
-                    <span>${h.acertos}/${h.qtd}</span>
-                    <span class="sim-badge">${h.perc}%</span>
-                  </div>
-                  ${criarBarra(h.perc)}
-                </li>
-              `
+              <li class="sim-resultado-item">
+                <div class="sim-resultado-header">
+                  <span>${formatarData(h.dataISO)}</span>
+                  <span>${h.banca}</span>
+                </div>
+                <div class="sim-resultado-info">
+                  <span>${h.acertos}/${h.qtd}</span>
+                  <span class="sim-badge">${h.perc}%</span>
+                </div>
+                ${criarBarra(h.perc)}
+              </li>
+            `
               )
               .join("")}
           </ul>
         </div>
-      `);
-    }
+      `
+          : ""
+      }
+    `;
 
-    if (temEstudos) {
-      blocos.push(`
-        <div class="sim-dashboard" style="margin-top:1rem">
-          <h4 class="sim-subtitulo">Estudos recentes</h4>
-          <ul class="sim-lista-resultados">
-            ${estudos
-              .slice(0, 5)
-              .map((e) => {
-                const p = calcularProgresso(e);
-                return `
-                  <li class="sim-resultado-item">
-                    <div class="sim-resultado-header">
-                      <span>${formatarData(e.atualizadoEm)}</span>
-                      <span>${e.origem === "upload" ? "PDF" : "Tema"}</span>
-                    </div>
-                    <p class="text-xs text-[var(--muted)]">
-                      ${e.tema} · Nível ${e.nivel}
-                    </p>
-                    <div class="sim-resultado-info">
-                      <span>${e.sessoesConcluidas}/${e.sessoesTotal}</span>
-                      <span class="sim-badge">${p}%</span>
-                    </div>
-                    ${criarBarra(p)}
-                  </li>
-                `;
-              })
-              .join("")}
-          </ul>
-        </div>
-      `);
-    }
-
-    els.dashUltimos.innerHTML = blocos.join("");
+    document
+      .getElementById("btn-dashboard-continuar")
+      ?.addEventListener("click", () => {
+        window.dispatchEvent(
+          new CustomEvent("liora:abrir-sessao", {
+            detail: prox,
+          })
+        );
+      });
   }
 
   // ======================================================
@@ -344,18 +260,8 @@
   // ======================================================
   window.lioraDashboard = {
     atualizar() {
-      try {
-        window.lioraLoading?.show?.("Carregando dashboard...");
-        initDashboard();
-        renderDashboard();
-      } catch (e) {
-        console.error(e);
-        window.lioraError?.show?.(
-          "Não foi possível carregar o dashboard agora."
-        );
-      } finally {
-        window.lioraLoading?.hide?.();
-      }
+      initDashboard();
+      renderDashboard();
     },
   };
 
