@@ -1580,26 +1580,26 @@ html.light {
   transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
-/* 🌞 Sol visível no DARK (para ir ao light) */
-html:not(.light) .theme-toggle .icon-sun {
+/* 🌙 Lua visível no DARK (estado atual) */
+html:not(.light) .theme-toggle .icon-moon {
   opacity: 1;
   transform: scale(1);
 }
 
-html:not(.light) .theme-toggle .icon-moon {
+html:not(.light) .theme-toggle .icon-sun {
   opacity: 0;
   transform: scale(0.6);
 }
 
-/* 🌙 Lua visível no LIGHT (para ir ao dark) */
+/* ☀️ Sol visível no LIGHT (estado atual) */
 html.light .theme-toggle .icon-sun {
-  opacity: 0;
-  transform: scale(0.6);
+  opacity: 1;
+  transform: scale(1);
 }
 
 html.light .theme-toggle .icon-moon {
-  opacity: 1;
-  transform: scale(1);
+  opacity: 0;
+  transform: scale(0.6);
 }
 
 
