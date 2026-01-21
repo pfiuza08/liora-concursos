@@ -219,31 +219,35 @@
       return !!(wizard.sessoes && wizard.sessoes.length);
     };
 
-    // --------------------------------------------------------
-    // 🌗 THEME (LIGHT / DARK)
-    // --------------------------------------------------------
-    (function themeSetup() {
-      const btn = els.themeBtn;
-      if (!btn) return;
-
-      function apply(th) {
-        document.documentElement.classList.remove("light", "dark");
-        document.documentElement.classList.add(th);
-        document.body.classList.remove("light", "dark");
-        document.body.classList.add(th);
-        localStorage.setItem("liora-theme", th);
-        btn.textContent = th === "light" ? "☀️" : "🌙";
+  // --------------------------------------------------------
+  // 🌗 THEME (LIGHT / DARK) — CANÔNICO
+  // --------------------------------------------------------
+  (function themeSetup() {
+    const btn = els.themeBtn;
+    if (!btn) return;
+  
+    function apply(th) {
+      document.documentElement.classList.remove("light");
+      document.body.classList.remove("light");
+  
+      if (th === "light") {
+        document.documentElement.classList.add("light");
+        document.body.classList.add("light");
       }
-
-      apply(localStorage.getItem("liora-theme") || "dark");
-
-      btn.addEventListener("click", () => {
-        const newTheme = document.documentElement.classList.contains("light")
-          ? "dark"
-          : "light";
-        apply(newTheme);
-      });
-    })();
+  
+      localStorage.setItem("liora-theme", th);
+    }
+  
+    // estado inicial
+    apply(localStorage.getItem("liora-theme") || "dark");
+  
+    // toggle
+    btn.addEventListener("click", () => {
+      const isLight =
+        document.documentElement.classList.contains("light");
+      apply(isLight ? "dark" : "light");
+    });
+  })();
 
     // --------------------------------------------------------
     // 🧠 MEMÓRIA DE ESTUDOS (Study Manager)
