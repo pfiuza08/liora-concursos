@@ -127,46 +127,44 @@
     // ELEMENTOS
     // --------------------------------------------------------
     const els = {
-      // tema
-      inpTema: document.getElementById("inp-tema"),
-      selNivel: document.getElementById("sel-nivel"),
-      btnGerar: document.getElementById("btn-gerar"),
-      status: document.getElementById("status"),
+  // tema
+  inpTema: document.getElementById("inp-tema"),
+  selNivel: document.getElementById("sel-nivel"),
+  btnGerar: document.getElementById("btn-gerar-tema"),
+  status: document.getElementById("status"),
 
-      // upload
-      inpFile: document.getElementById("inp-file"),
-      btnGerarUpload: document.getElementById("btn-gerar-upload"),
-      statusUpload: document.getElementById("status-upload"),
+  // pdf
+  inpFile: document.getElementById("inp-file"),
+  btnGerarUpload: document.getElementById("btn-gerar-pdf"),
+  statusUpload: document.getElementById("status-upload"),
 
-      // progresso
-      barraTemaFill: document.getElementById("barra-tema-fill"),
-      barraUploadFill: document.getElementById("barra-upload-fill"),
+  // progresso (se não existir no HTML, ok ficar null)
+  barraTemaFill: document.getElementById("barra-tema-fill"),
+  barraUploadFill: document.getElementById("barra-upload-fill"),
 
-      // plano lateral
-      areaPlano: document.getElementById("area-plano"),
-      plano: document.getElementById("plano"),
-      ctx: document.getElementById("ctx"),
+  // plano lateral / wizard (podem estar null no layout novo)
+  areaPlano: document.getElementById("area-plano"),
+  plano: document.getElementById("plano"),
+  ctx: document.getElementById("ctx"),
 
-      // wizard
-      wizardContainer: document.getElementById("liora-sessoes"),
-      wizardTema: document.getElementById("liora-tema-ativo"),
-      wizardTitulo: document.getElementById("liora-sessao-titulo"),
-      wizardObjetivo: document.getElementById("liora-sessao-objetivo"),
-      wizardConteudo: document.getElementById("liora-sessao-conteudo"),
-      wizardAnalogias: document.getElementById("liora-sessao-analogias"),
-      wizardAtivacao: document.getElementById("liora-sessao-ativacao"),
-      wizardQuiz: document.getElementById("liora-sessao-quiz"),
-      wizardQuizFeedback: document.getElementById("liora-sessao-quiz-feedback"),
-      wizardFlashcards: document.getElementById("liora-sessao-flashcards"),
-      wizardMapa: document.getElementById("liora-sessao-mapa"),
-      wizardVoltar: document.getElementById("liora-btn-voltar"),
-      wizardProxima: document.getElementById("liora-btn-proxima"),
-      wizardRevisar: document.getElementById("liora-btn-revisar"),
+  wizardContainer: document.getElementById("liora-sessoes"),
+  wizardTema: document.getElementById("liora-tema-ativo"),
+  wizardTitulo: document.getElementById("liora-sessao-titulo"),
+  wizardObjetivo: document.getElementById("liora-sessao-objetivo"),
+  wizardConteudo: document.getElementById("liora-sessao-conteudo"),
+  wizardAnalogias: document.getElementById("liora-sessao-analogias"),
+  wizardAtivacao: document.getElementById("liora-sessao-ativacao"),
+  wizardQuiz: document.getElementById("liora-sessao-quiz"),
+  wizardQuizFeedback: document.getElementById("liora-sessao-quiz-feedback"),
+  wizardFlashcards: document.getElementById("liora-sessao-flashcards"),
+  wizardMapa: document.getElementById("liora-sessao-mapa"),
+  wizardVoltar: document.getElementById("liora-btn-voltar"),
+  wizardProxima: document.getElementById("liora-btn-proxima"),
+  wizardRevisar: document.getElementById("liora-btn-revisar"),
 
-      // upload UX (label e spinner)
-      uploadText: document.getElementById("upload-text"),
-      uploadSpinner: document.getElementById("upload-spinner"),
-    };
+  uploadText: document.getElementById("upload-text"),
+  uploadSpinner: document.getElementById("upload-spinner"),
+};
 
     if (els.plano) {
       els.plano.innerHTML =
