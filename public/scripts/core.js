@@ -220,34 +220,32 @@
     };
 
   // --------------------------------------------------------
-  // 🌗 THEME (LIGHT / DARK) — CANÔNICO
+  // 🌗 THEME (LIGHT / DARK) — FIX DEFINITIVO
   // --------------------------------------------------------
   (function themeSetup() {
-    const btn = els.themeBtn;
-    if (!btn) return;
+    const btn = document.getElementById("btn-theme");
+    if (!btn) {
+      console.warn("🌗 Botão de tema não encontrado");
+      return;
+    }
   
-    function apply(th) {
-      document.documentElement.classList.remove("light");
-      document.body.classList.remove("light");
-  
-      if (th === "light") {
-        document.documentElement.classList.add("light");
-        document.body.classList.add("light");
-      }
-  
-      localStorage.setItem("liora-theme", th);
+    function apply(theme) {
+      document.documentElement.classList.toggle("light", theme === "light");
+      document.body.classList.toggle("light", theme === "light");
+      localStorage.setItem("liora-theme", theme);
     }
   
     // estado inicial
     apply(localStorage.getItem("liora-theme") || "dark");
   
-    // toggle
+    // clique
     btn.addEventListener("click", () => {
       const isLight =
         document.documentElement.classList.contains("light");
       apply(isLight ? "dark" : "light");
     });
   })();
+
 
     // --------------------------------------------------------
     // 🧠 MEMÓRIA DE ESTUDOS (Study Manager)
