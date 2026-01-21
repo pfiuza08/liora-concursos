@@ -217,7 +217,7 @@
     };
 
      // --------------------------------------------------------
-    // 🌗 THEME (LIGHT / DARK) — CANÔNICO + ROUTER-SAFE + PREMIUM
+    // 🌗 THEME (LIGHT / DARK) — CANÔNICO + ROUTER-SAFE
     // --------------------------------------------------------
     (function themeSetup() {
     
@@ -229,15 +229,7 @@
         localStorage.setItem("liora-theme", th);
       }
     
-      // 🔒 Gate premium (fallback seguro)
-      function canToggleTheme() {
-        if (window.lioraGate?.temaAvancado) {
-          return window.lioraGate.temaAvancado();
-        }
-        return true; // se gate não existir, libera
-      }
-    
-      // 🔁 Aplica tema salvo (dark é padrão)
+      // 🔁 aplica tema salvo (dark default)
       const saved = localStorage.getItem("liora-theme") || "dark";
       apply(saved);
     
@@ -246,22 +238,19 @@
         btn.__themeBound = true;
     
         btn.addEventListener("click", () => {
-          // 🚫 FREE → abre upgrade, não troca tema
-          if (!canToggleTheme()) return;
-    
           const isLight =
             document.documentElement.classList.contains("light");
     
           apply(isLight ? "dark" : "light");
         });
     
-        console.log("🌗 Theme button ligado (premium-aware)");
+        console.log("🌗 Theme button ligado (free + premium)");
       }
     
       // tenta ligar imediatamente
       attach(document.getElementById("btn-theme"));
     
-      // observa mudanças no DOM (router / telas dinâmicas)
+      // router / telas dinâmicas
       const obs = new MutationObserver(() => {
         attach(document.getElementById("btn-theme"));
       });
@@ -272,6 +261,7 @@
       });
     
     })();
+
 
 
     // --------------------------------------------------------
