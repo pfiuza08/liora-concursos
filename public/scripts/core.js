@@ -1087,7 +1087,7 @@ e sempre inclua de 3 a 6 flashcards.
         const resp = await fetch("/api/gerarPlano.js", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ tema, nivel, sessoes }),
+          body: JSON.stringify({ tema, nivel }),
         });
 
         const data = await resp.json();
@@ -1158,7 +1158,7 @@ e sempre inclua de 3 a 6 flashcards.
         window.lioraLoading.show("Gerando plano...");
         atualizarStatus("tema", "Chamando IA...", 20);
 
-        const parsed = await lioraGerarPlanoTema({ tema, nivel, sessoes });
+        const parsed = await lioraGerarPlanoTema({ tema, nivel });
 
         atualizarStatus("tema", "Construindo sessões...", 60);
 
