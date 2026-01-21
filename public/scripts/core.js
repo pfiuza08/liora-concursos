@@ -217,9 +217,10 @@
     };
 
   // --------------------------------------------------------
-  // 🌗 THEME (LIGHT / DARK) — CANÔNICO E À PROVA DE DOM DINÂMICO
+  // 🌗 THEME (LIGHT / DARK) — CANÔNICO + ROUTER-SAFE
   // --------------------------------------------------------
   (function themeSetup() {
+  
     function apply(th) {
       document.documentElement.classList.toggle("light", th === "light");
       document.documentElement.classList.toggle("dark", th === "dark");
@@ -232,24 +233,34 @@
     const saved = localStorage.getItem("liora-theme") || "dark";
     apply(saved);
   
-    // liga o botão quando ele EXISTIR
-    function bind() {
-      const btn = document.getElementById("btn-theme");
-      if (!btn) return false;
+    function attach(btn) {
+      if (btn.__themeBound) return;
+      btn.__themeBound = true;
   
       btn.addEventListener("click", () => {
-        const isLight = document.documentElement.classList.contains("light");
+        const isLight =
+          document.documentElement.classList.contains("light");
         apply(isLight ? "dark" : "light");
       });
   
-      return true;
+      console.log("🌗 Theme button ligado");
     }
   
-    // tenta agora
-    if (bind()) return;
+    // tenta ligar imediatamente
+    const immediate = document.getElementById("btn-theme");
+    if (immediate) attach(immediate);
   
-    // fallback: espera o DOM terminar
-    document.addEventListener("DOMContentLoaded", bind);
+    // observa mudanças no DOM (router / telas)
+    const obs = new MutationObserver(() => {
+      const btn = document.getElementById("btn-theme");
+      if (btn) attach(btn);
+    });
+  
+    obs.observe(document.body, {
+      childList: true,
+      subtree: true
+    });
+  
   })();
 
 
