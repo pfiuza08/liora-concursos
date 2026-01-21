@@ -219,26 +219,29 @@
       return !!(wizard.sessoes && wizard.sessoes.length);
     };
 
-    // --------------------------------------------------------
-    // 🌗 THEME (LIGHT / DARK) — CANÔNICO FINAL
-    // --------------------------------------------------------
-    (function themeSetup() {
-      const btn = document.getElementById("btn-theme");
-      if (!btn) return;
-    
-      function apply(theme) {
-        document.documentElement.classList.toggle("light", theme === "light");
-        document.body.classList.toggle("light", theme === "light");
-        localStorage.setItem("liora-theme", theme);
-      }
-    
-      apply(localStorage.getItem("liora-theme") || "dark");
-    
-      btn.addEventListener("click", () => {
-        const isLight = document.documentElement.classList.contains("light");
-        apply(isLight ? "dark" : "light");
-      });
-    })();
+  // --------------------------------------------------------
+  // 🌗 THEME (LIGHT / DARK) — CANÔNICO
+  // --------------------------------------------------------
+  (function themeSetup() {
+    const btn = document.getElementById("btn-theme");
+    if (!btn) return;
+  
+    function apply(th) {
+      document.documentElement.classList.toggle("light", th === "light");
+      document.documentElement.classList.toggle("dark", th === "dark");
+      document.body.classList.toggle("light", th === "light");
+      document.body.classList.toggle("dark", th === "dark");
+      localStorage.setItem("liora-theme", th);
+    }
+  
+    const saved = localStorage.getItem("liora-theme") || "dark";
+    apply(saved);
+  
+    btn.addEventListener("click", () => {
+      const isLight = document.documentElement.classList.contains("light");
+      apply(isLight ? "dark" : "light");
+    });
+  })();
 
 
     // --------------------------------------------------------
