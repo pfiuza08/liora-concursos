@@ -163,9 +163,6 @@
       wizardProxima: document.getElementById("liora-btn-proxima"),
       wizardRevisar: document.getElementById("liora-btn-revisar"),
 
-      // tema claro/escuro
-      themeBtn: document.getElementById("btn-theme"),
-
       // upload UX (label e spinner)
       uploadText: document.getElementById("upload-text"),
       uploadSpinner: document.getElementById("upload-spinner"),
@@ -220,12 +217,9 @@
     };
 
   // --------------------------------------------------------
-  // 🌗 THEME (LIGHT / DARK) — CANÔNICO
+  // 🌗 THEME (LIGHT / DARK) — CANÔNICO E À PROVA DE DOM DINÂMICO
   // --------------------------------------------------------
   (function themeSetup() {
-    const btn = document.getElementById("btn-theme");
-    if (!btn) return;
-  
     function apply(th) {
       document.documentElement.classList.toggle("light", th === "light");
       document.documentElement.classList.toggle("dark", th === "dark");
@@ -234,13 +228,28 @@
       localStorage.setItem("liora-theme", th);
     }
   
+    // aplica tema salvo
     const saved = localStorage.getItem("liora-theme") || "dark";
     apply(saved);
   
-    btn.addEventListener("click", () => {
-      const isLight = document.documentElement.classList.contains("light");
-      apply(isLight ? "dark" : "light");
-    });
+    // liga o botão quando ele EXISTIR
+    function bind() {
+      const btn = document.getElementById("btn-theme");
+      if (!btn) return false;
+  
+      btn.addEventListener("click", () => {
+        const isLight = document.documentElement.classList.contains("light");
+        apply(isLight ? "dark" : "light");
+      });
+  
+      return true;
+    }
+  
+    // tenta agora
+    if (bind()) return;
+  
+    // fallback: espera o DOM terminar
+    document.addEventListener("DOMContentLoaded", bind);
   })();
 
 
