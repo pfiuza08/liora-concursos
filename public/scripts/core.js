@@ -219,32 +219,26 @@
       return !!(wizard.sessoes && wizard.sessoes.length);
     };
 
-  // --------------------------------------------------------
-  // 🌗 THEME (LIGHT / DARK) — FIX DEFINITIVO
-  // --------------------------------------------------------
-  (function themeSetup() {
-    const btn = document.getElementById("btn-theme");
-    if (!btn) {
-      console.warn("🌗 Botão de tema não encontrado");
-      return;
-    }
-  
-    function apply(theme) {
-      document.documentElement.classList.toggle("light", theme === "light");
-      document.body.classList.toggle("light", theme === "light");
-      localStorage.setItem("liora-theme", theme);
-    }
-  
-    // estado inicial
-    apply(localStorage.getItem("liora-theme") || "dark");
-  
-    // clique
-    btn.addEventListener("click", () => {
-      const isLight =
-        document.documentElement.classList.contains("light");
-      apply(isLight ? "dark" : "light");
-    });
-  })();
+    // --------------------------------------------------------
+    // 🌗 THEME (LIGHT / DARK) — CANÔNICO FINAL
+    // --------------------------------------------------------
+    (function themeSetup() {
+      const btn = document.getElementById("btn-theme");
+      if (!btn) return;
+    
+      function apply(theme) {
+        document.documentElement.classList.toggle("light", theme === "light");
+        document.body.classList.toggle("light", theme === "light");
+        localStorage.setItem("liora-theme", theme);
+      }
+    
+      apply(localStorage.getItem("liora-theme") || "dark");
+    
+      btn.addEventListener("click", () => {
+        const isLight = document.documentElement.classList.contains("light");
+        apply(isLight ? "dark" : "light");
+      });
+    })();
 
 
     // --------------------------------------------------------
