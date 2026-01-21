@@ -216,52 +216,62 @@
       return !!(wizard.sessoes && wizard.sessoes.length);
     };
 
-  // --------------------------------------------------------
-  // 🌗 THEME (LIGHT / DARK) — CANÔNICO + ROUTER-SAFE
-  // --------------------------------------------------------
-  (function themeSetup() {
-  
-    function apply(th) {
-      document.documentElement.classList.toggle("light", th === "light");
-      document.documentElement.classList.toggle("dark", th === "dark");
-      document.body.classList.toggle("light", th === "light");
-      document.body.classList.toggle("dark", th === "dark");
-      localStorage.setItem("liora-theme", th);
-    }
-  
-    // aplica tema salvo
-    const saved = localStorage.getItem("liora-theme") || "dark";
-    apply(saved);
-  
-    function attach(btn) {
-      if (btn.__themeBound) return;
-      btn.__themeBound = true;
-  
-      btn.addEventListener("click", () => {
-        const isLight =
-          document.documentElement.classList.contains("light");
-        apply(isLight ? "dark" : "light");
+     // --------------------------------------------------------
+    // 🌗 THEME (LIGHT / DARK) — CANÔNICO + ROUTER-SAFE + PREMIUM
+    // --------------------------------------------------------
+    (function themeSetup() {
+    
+      function apply(th) {
+        document.documentElement.classList.toggle("light", th === "light");
+        document.documentElement.classList.toggle("dark", th === "dark");
+        document.body.classList.toggle("light", th === "light");
+        document.body.classList.toggle("dark", th === "dark");
+        localStorage.setItem("liora-theme", th);
+      }
+    
+      // 🔒 Gate premium (fallback seguro)
+      function canToggleTheme() {
+        if (window.lioraGate?.temaAvancado) {
+          return window.lioraGate.temaAvancado();
+        }
+        return true; // se gate não existir, libera
+      }
+    
+      // 🔁 Aplica tema salvo (dark é padrão)
+      const saved = localStorage.getItem("liora-theme") || "dark";
+      apply(saved);
+    
+      function attach(btn) {
+        if (!btn || btn.__themeBound) return;
+        btn.__themeBound = true;
+    
+        btn.addEventListener("click", () => {
+          // 🚫 FREE → abre upgrade, não troca tema
+          if (!canToggleTheme()) return;
+    
+          const isLight =
+            document.documentElement.classList.contains("light");
+    
+          apply(isLight ? "dark" : "light");
+        });
+    
+        console.log("🌗 Theme button ligado (premium-aware)");
+      }
+    
+      // tenta ligar imediatamente
+      attach(document.getElementById("btn-theme"));
+    
+      // observa mudanças no DOM (router / telas dinâmicas)
+      const obs = new MutationObserver(() => {
+        attach(document.getElementById("btn-theme"));
       });
-  
-      console.log("🌗 Theme button ligado");
-    }
-  
-    // tenta ligar imediatamente
-    const immediate = document.getElementById("btn-theme");
-    if (immediate) attach(immediate);
-  
-    // observa mudanças no DOM (router / telas)
-    const obs = new MutationObserver(() => {
-      const btn = document.getElementById("btn-theme");
-      if (btn) attach(btn);
-    });
-  
-    obs.observe(document.body, {
-      childList: true,
-      subtree: true
-    });
-  
-  })();
+    
+      obs.observe(document.body, {
+        childList: true,
+        subtree: true
+      });
+    
+    })();
 
 
     // --------------------------------------------------------
