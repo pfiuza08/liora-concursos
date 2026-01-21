@@ -1618,3 +1618,6 @@ html.light .theme-toggle .icon-moon {
 header .theme-toggle {
   margin-right: 2px;
 }
+#btn-theme {
+  z-index: 5;
+}
