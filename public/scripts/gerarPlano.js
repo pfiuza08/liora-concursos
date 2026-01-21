@@ -1,262 +1,202 @@
+// /api/gerarPlano.js
 // ==========================================================
-// 🧠 /api/gerarPlano.js — LIORA Plano por TEMA (AUTO sessões)
-// ----------------------------------------------------------
-// Entrada:  { tema, nivel }
-// Saída:    { plano: "<string JSON com array de sessões>" }
-//
-// - IA escolhe a quantidade de sessões (4..10) com base em:
-//   nível + complexidade do tema
-// - Compatível com core v78
+// 🧠 LIORA — GERAR PLANO + SESSÕES (TEMA)
+// - Decide quantidade de sessões (auto) baseado em: tema + nível
+// - Retorna sessões completas (conteúdo + quiz + flashcards + mindmap)
+// - Formato esperado pelo CORE v78: { plano: "JSON_STRING" }
 // ==========================================================
 
-export const config = { runtime: "edge" };
-
-const OPENAI_API_URL = "https://api.openai.com/v1/chat/completions";
-const OPENAI_MODEL = process.env.LIORA_PLAN_MODEL || "gpt-4.1-mini";
-
-function normalizarNivel(nivelRaw) {
-  const n = String(nivelRaw || "").toLowerCase();
-
-  if (n.includes("inic")) return "iniciante";
-  if (n.includes("inter")) return "intermediario";
-  if (n.includes("avan")) return "avancado";
-  if (n.includes("revis")) return "revisao";
-
-  return "intermediario";
-}
-
-function safeJsonFromLLM(raw) {
-  if (!raw || typeof raw !== "string") throw new Error("Resposta vazia.");
-
-  let txt = raw.trim();
-
-  const block =
-    txt.match(/```json([\s\S]*?)```/i) ||
-    txt.match(/```([\s\S]*?)```/i);
-
-  if (block) txt = block[1];
-
-  const first = txt.search(/[\[\{]/);
-  const last = Math.max(txt.lastIndexOf("]"), txt.lastIndexOf("}"));
-
-  if (first !== -1 && last !== -1 && last > first) {
-    txt = txt.slice(first, last + 1);
-  }
-
-  txt = txt.replace(/[\u0000-\u0008\u000B-\u000C\u000E-\u001F]/g, " ");
-
-  const parsed = JSON.parse(txt);
-  if (!Array.isArray(parsed)) throw new Error("Plano não é array.");
-
-  return parsed;
-}
-
-function systemPrompt() {
-  return `
-Você é Liora, IA educacional especializada em criar sessões completas de estudo
-de forma didática e comercial.
-
-REGRAS OBRIGATÓRIAS:
-- Retorne APENAS JSON válido: um ARRAY JSON (sem texto antes ou depois).
-- Não use markdown. Não use blocos de código.
-- Linguagem clara, profissional, objetiva.
-- Cada sessão deve ser útil sozinha (não dependa de outra para fazer sentido).
-- Evite invenções externas e mantenha consistência.
-`;
-}
-
-function userPrompt(tema, nivel) {
-  const nivelHumano =
-    nivel === "iniciante"
-      ? "iniciante (base fraca ou zero)"
-      : nivel === "intermediario"
-      ? "intermediário (já viu, mas não domina)"
-      : nivel === "avancado"
-      ? "avançado (quer profundidade e pegadinhas)"
-      : "revisão (consolidar e acelerar)";
-
-  return `
-TEMA:
-"${tema}"
-
-NÍVEL:
-${nivelHumano}
-
-TAREFA:
-Crie um PLANO com SESSÕES COMPLETAS.
-
-✅ A IA DEVE ESCOLHER a quantidade de sessões automaticamente,
-entre 4 e 10, baseado na complexidade do tema e no nível.
-
-FORMATO EXATO:
-Retorne APENAS um ARRAY JSON com as sessões.
-
-Cada sessão precisa ter OBRIGATORIAMENTE este formato:
-
-[
-  {
-    "titulo": "Sessão 1 — ...",
-    "objetivo": "...",
-    "duracaoMinutos": 40,
-    "conteudo": {
-      "introducao": "...",
-      "conceitos": ["...", "..."],
-      "exemplos": ["...", "..."],
-      "aplicacoes": ["...", "..."],
-      "resumoRapido": ["...", "...", "..."]
-    },
-    "analogias": ["..."],
-    "ativacao": ["Pergunta 1", "Pergunta 2", "Pergunta 3"],
-    "quiz": {
-      "pergunta": "...",
-      "alternativas": ["A", "B", "C", "D"],
-      "corretaIndex": 0,
-      "explicacao": "...",
-      "explicacoes": ["...", "...", "...", "..."]
-    },
-    "flashcards": [
-      { "q": "...", "a": "..." },
-      { "q": "...", "a": "..." },
-      { "q": "...", "a": "..." }
-    ],
-    "mindmap": "Mapa mental textual com 2-3 níveis e quebras de linha."
-  }
-]
-
-REGRAS DE QUALIDADE:
-- Iniciante: mais intuição e exemplos fáceis.
-- Intermediário: equilíbrio definição + prática.
-- Avançado: detalhes, confusões comuns e “pegadinhas”.
-- Revisão: mais resumo, flashcards fortes, sessões compactas.
-- resumoRapido: 3 a 6 bullets essenciais.
-- quiz: sempre 4 alternativas e corretaIndex válido.
-- flashcards: 3 a 6 cards por sessão.
-`;
-}
-
-function sanitizarSessao(s, idx, tema, nivel) {
-  const dur = Number(s?.duracaoMinutos);
-  const duracaoMinutos = Number.isFinite(dur) ? dur : 40;
-
-  const conteudo = s?.conteudo || {};
-
-  const quiz = s?.quiz || {};
-  const alternativas = Array.isArray(quiz.alternativas) ? quiz.alternativas : [];
-
-  let corretaIndex =
-    typeof quiz.corretaIndex === "number" ? quiz.corretaIndex : 0;
-
-  if (corretaIndex < 0 || corretaIndex >= alternativas.length) corretaIndex = 0;
-
-  return {
-    titulo: s?.titulo || `Sessão ${idx + 1} — ${tema}`,
-    objetivo:
-      s?.objetivo ||
-      `Compreender o tema "${tema}" em nível ${nivel}.`,
-    duracaoMinutos,
-    conteudo: {
-      introducao: String(conteudo.introducao || ""),
-      conceitos: Array.isArray(conteudo.conceitos) ? conteudo.conceitos : [],
-      exemplos: Array.isArray(conteudo.exemplos) ? conteudo.exemplos : [],
-      aplicacoes: Array.isArray(conteudo.aplicacoes) ? conteudo.aplicacoes : [],
-      resumoRapido: Array.isArray(conteudo.resumoRapido)
-        ? conteudo.resumoRapido
-        : [],
-    },
-    analogias: Array.isArray(s?.analogias) ? s.analogias : [],
-    ativacao: Array.isArray(s?.ativacao) ? s.ativacao : [],
-    quiz: {
-      pergunta: String(quiz.pergunta || ""),
-      alternativas,
-      corretaIndex,
-      explicacao: String(quiz.explicacao || ""),
-      explicacoes: Array.isArray(quiz.explicacoes) ? quiz.explicacoes : [],
-    },
-    flashcards: Array.isArray(s?.flashcards) ? s.flashcards : [],
-    mindmap: String(s?.mindmap || s?.mapaMental || ""),
-  };
-}
-
-export default async function handler(req) {
+module.exports = async (req, res) => {
   try {
     if (req.method !== "POST") {
-      return new Response(JSON.stringify({ error: "Use POST." }), {
-        status: 405,
-        headers: { "Content-Type": "application/json" },
-      });
+      return res.status(405).json({ error: "Use POST" });
     }
 
-    const apiKey = process.env.OPENAI_API_KEY;
-    if (!apiKey) {
-      return new Response(JSON.stringify({ error: "OPENAI_API_KEY ausente." }), {
-        status: 500,
-        headers: { "Content-Type": "application/json" },
-      });
-    }
+    // Vercel às vezes entrega req.body como string
+    const body =
+      typeof req.body === "string" ? JSON.parse(req.body || "{}") : req.body || {};
 
-    const body = await req.json().catch(() => ({}));
     const tema = String(body.tema || "").trim();
-    const nivel = normalizarNivel(body.nivel);
+    const nivel = String(body.nivel || "iniciante").trim();
 
     if (!tema) {
-      return new Response(JSON.stringify({ error: "Tema obrigatório." }), {
-        status: 400,
-        headers: { "Content-Type": "application/json" },
+      return res.status(400).json({ error: "Tema obrigatório." });
+    }
+
+    const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+    if (!OPENAI_API_KEY) {
+      return res.status(500).json({
+        error:
+          "OPENAI_API_KEY não configurada no ambiente (Vercel > Settings > Environment Variables).",
       });
     }
 
-    const system = systemPrompt();
-    const user = userPrompt(tema, nivel);
+    // Modelo recomendado (barato e ótimo)
+    // Modelos válidos (docs OpenAI): gpt-5-mini / gpt-5.2 / gpt-5.2-chat-latest
+    const MODEL = process.env.LIORA_PLAN_MODEL || "gpt-5-mini";
 
-    const openaiRes = await fetch(OPENAI_API_URL, {
+    // -----------------------------
+    // Heurística de faixa de sessões por nível
+    // (A IA escolhe dentro da faixa, considerando complexidade do tema)
+    // -----------------------------
+    const ranges = {
+      iniciante: { min: 5, max: 8 },
+      intermediario: { min: 7, max: 10 },
+      avancado: { min: 9, max: 12 },
+    };
+
+    const r = ranges[nivel.toLowerCase()] || ranges.iniciante;
+
+    // -----------------------------
+    // Prompt
+    // -----------------------------
+    const system = `
+Você é a Liora, uma IA educacional que cria planos de estudo e sessões completas.
+Regras:
+- Retorne APENAS JSON válido (sem markdown, sem texto extra).
+- Retorne um ARRAY JSON com N sessões.
+- O número de sessões N deve estar ENTRE ${r.min} e ${r.max}.
+- O conteúdo deve ser coerente com o nível: ${nivel}.
+- Linguagem em PT-BR, didática, objetiva, com exemplos práticos.
+- NÃO invente bibliografias. Não cite livros por nome.
+- Cada sessão deve ter: titulo, objetivo, conteudo(introducao, conceitos[], exemplos[], aplicacoes[], resumoRapido[]),
+  analogias[], ativacao[], quiz{pergunta, alternativas[4], corretaIndex, explicacao}, flashcards[{q,a}], mindmap.
+- mindmap: string curta no formato "Raiz | Ramo > Subramo | Ramo2 > Subramo2".
+`;
+
+    const user = `
+TEMA: ${tema}
+NÍVEL: ${nivel}
+
+Tarefa:
+1) Escolha N sessões (entre ${r.min} e ${r.max}) baseado na complexidade do tema.
+2) Gere sessões completas e progressivas: do básico ao avançado (respeitando o nível).
+3) Evite títulos genéricos. Use títulos específicos e úteis.
+4) Para o quiz: alternativas plausíveis, 1 correta. Explique o porquê.
+
+Formato obrigatório de cada item do array:
+{
+  "titulo": "...",
+  "objetivo": "...",
+  "conteudo": {
+    "introducao": "...",
+    "conceitos": ["...", "..."],
+    "exemplos": ["...", "..."],
+    "aplicacoes": ["...", "..."],
+    "resumoRapido": ["...", "..."]
+  },
+  "analogias": ["...", "..."],
+  "ativacao": ["...", "...", "..."],
+  "quiz": {
+    "pergunta": "...",
+    "alternativas": ["A", "B", "C", "D"],
+    "corretaIndex": 0,
+    "explicacao": "..."
+  },
+  "flashcards": [
+    {"q":"...","a":"..."},
+    {"q":"...","a":"..."},
+    {"q":"...","a":"..."}
+  ],
+  "mindmap": "Raiz | Ramo > Subramo | Ramo2 > Subramo2"
+}
+`;
+
+    // -----------------------------
+    // Chamada OpenAI (Chat Completions)
+    // -----------------------------
+    const openaiResp = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
+        Authorization: `Bearer ${OPENAI_API_KEY}`,
         "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: OPENAI_MODEL,
+        model: MODEL,
+        temperature: 0.35,
         messages: [
-          { role: "system", content: system },
-          { role: "user", content: user },
+          { role: "system", content: system.trim() },
+          { role: "user", content: user.trim() },
         ],
-        temperature: 0.55,
       }),
     });
 
-    if (!openaiRes.ok) {
-      const errText = await openaiRes.text().catch(() => "");
-      console.error("❌ OpenAI erro:", openaiRes.status, errText);
-      return new Response(JSON.stringify({ error: "Falha na IA." }), {
-        status: 500,
-        headers: { "Content-Type": "application/json" },
+    const data = await openaiResp.json().catch(() => ({}));
+
+    if (!openaiResp.ok) {
+      console.error("OpenAI error:", data);
+      return res.status(openaiResp.status).json({
+        error: data?.error?.message || "Erro ao chamar OpenAI",
       });
     }
 
-    const json = await openaiRes.json();
-    const content = json?.choices?.[0]?.message?.content || "";
+    const raw = data?.choices?.[0]?.message?.content || "";
 
-    let planoArray = safeJsonFromLLM(content);
+    // -----------------------------
+    // Extrair JSON com tolerância
+    // -----------------------------
+    const extractJson = (txt) => {
+      let s = String(txt || "").trim();
 
-    // limita segurança (anti explosão)
-    if (planoArray.length > 12) planoArray = planoArray.slice(0, 12);
-    if (planoArray.length < 3) {
-      throw new Error("Plano curto demais, inválido para Liora.");
+      // remove ```json ... ```
+      const block =
+        s.match(/```json([\s\S]*?)```/i) || s.match(/```([\s\S]*?)```/i);
+      if (block) s = block[1];
+
+      // pega do primeiro '[' até o último ']'
+      const first = s.indexOf("[");
+      const last = s.lastIndexOf("]");
+      if (first !== -1 && last !== -1 && last > first) {
+        s = s.slice(first, last + 1);
+      }
+
+      // limpeza
+      s = s.replace(/[\u0000-\u001F]/g, " ");
+      return s;
+    };
+
+    const jsonText = extractJson(raw);
+
+    let arr = null;
+    try {
+      arr = JSON.parse(jsonText);
+    } catch (e) {
+      console.error("Falha parse JSON:", e, jsonText);
+      arr = null;
     }
 
-    const planoSanitizado = planoArray.map((s, idx) =>
-      sanitizarSessao(s, idx, tema, nivel)
-    );
+    // Fallback mínimo (se a IA vier torta)
+    if (!Array.isArray(arr) || arr.length === 0) {
+      const fallbackN = Math.max(r.min, Math.min(r.max, 6));
+      arr = Array.from({ length: fallbackN }).map((_, i) => ({
+        titulo: `Sessão ${i + 1} — ${tema}`,
+        objetivo: `Construir base do tema: ${tema}`,
+        conteudo: {
+          introducao: `Introdução guiada para ${tema}.`,
+          conceitos: [`Conceito ${i + 1} de ${tema}`],
+          exemplos: [],
+          aplicacoes: [],
+          resumoRapido: [`Ponto-chave ${i + 1}`],
+        },
+        analogias: [],
+        ativacao: [],
+        quiz: {
+          pergunta: "",
+          alternativas: ["", "", "", ""],
+          corretaIndex: 0,
+          explicacao: "",
+        },
+        flashcards: [],
+        mindmap: `${tema} | Base > Conceitos`,
+      }));
+    }
 
-    return new Response(
-      JSON.stringify({ plano: JSON.stringify(planoSanitizado) }),
-      { status: 200, headers: { "Content-Type": "application/json" } }
-    );
-  } catch (e) {
-    console.error("❌ gerarPlano.js erro:", e);
-    return new Response(JSON.stringify({ error: "Erro ao gerar plano." }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" },
+    // O CORE v78 faz JSON.parse(data.plano)
+    return res.status(200).json({
+      plano: JSON.stringify(arr),
     });
+  } catch (err) {
+    console.error("❌ /api/gerarPlano.js erro:", err);
+    return res.status(500).json({ error: "Erro interno ao gerar plano." });
   }
-}
+};
