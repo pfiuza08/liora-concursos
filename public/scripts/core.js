@@ -1483,6 +1483,12 @@ com boa didática, exemplos práticos e foco em aplicação real dos conceitos.
     // --------------------------------------------------------
     // FIM DO CORE
     // --------------------------------------------------------
+
+    console.log("🔥 CORE ATIVO — theme test");
+
+window.__LIORA_THEME_TEST__ = true;
+
+    
     console.log("🟢 Liora Core v78-FREEMIUM-A4 totalmente carregado.");
   });
 })();
